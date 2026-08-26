@@ -1,0 +1,354 @@
+{
+  "schema_version": 1,
+  "game_id": "pack-the-keep",
+  "content_version": "0.1.0",
+  "campaign": {
+    "title": "The Bell at Dusk",
+    "premise": "A small keep is granted one season to become a refuge before a coalition of raiders, sappers, climbers, and siege beasts tests every defensive doctrine at once.",
+    "player_role": "A newly appointed keeper who must choose a commander, open coherent packs, and turn a neglected fort into a place that can survive pressure.",
+    "regional_objective": "Hold the keep long enough to evacuate nearby households or prove that the keep can become their permanent refuge.",
+    "invasion_force": "The Ashen Host is not one army but several practical pressures: raiders seek the gate, sappers seek weak structures, climbers seek walls that only look secure, and siege beasts punish static layouts.",
+    "chapters": [
+      {
+        "id": "chapter_1_open_the_armory",
+        "title": "Open the Armory",
+        "summary": "Choose a commander, open the first pack, and make the keep readable before the first warning bell.",
+        "entry_condition": "wave_index == 0",
+        "exit_condition": "commander_selected and owned_packs >= 1 and pieces >= 2",
+        "player_question": "What does this keep believe it is good at?",
+        "beats": ["commander_choice", "first_pack", "room_inspection", "first_forecast"]
+      },
+      {
+        "id": "chapter_2_first_bell",
+        "title": "The First Bell",
+        "summary": "The first invasion teaches one doctrine cleanly enough that the player can identify the counter before the wave ends.",
+        "entry_condition": "pieces >= 2",
+        "exit_condition": "wave_1_resolved",
+        "player_question": "Can my layout answer the threat I expected?",
+        "beats": ["gate_assault_forecast", "first_wave", "pause_and_read", "first_repair"]
+      },
+      {
+        "id": "chapter_3_the_wrong_wall",
+        "title": "The Wrong Wall",
+        "summary": "A combined doctrine exposes a weakness that cannot be solved by placing more of the same piece.",
+        "entry_condition": "wave_index >= 1",
+        "exit_condition": "wave_2_resolved and breach_level >= 0",
+        "player_question": "Which defensive idea failed, and what does the keep need instead?",
+        "beats": ["pack_choice", "distributed_sabotage", "partial_breach", "repair_phase"]
+      },
+      {
+        "id": "chapter_4_the_refuge_bell",
+        "title": "The Refuge Bell",
+        "summary": "The final wave forces a choice between holding the keep intact, preserving people through a scarred defense, or abandoning the walls with a plan.",
+        "entry_condition": "wave_index >= 2",
+        "exit_condition": "campaign_outcome_selected",
+        "player_question": "Is the keep a fortress, a refuge, or a tool for buying time?",
+        "beats": ["siege_beast_warning", "final_pack", "last_intervention", "keep_report"]
+      }
+    ]
+  },
+  "commanders": [
+    {
+      "id": "castellan",
+      "name": "The Castellan",
+      "public_doctrine": "A keep survives by making every room support the room beside it.",
+      "passive": "Adjacent rooms reinforce one another.",
+      "ability": "lockdown",
+      "strength": "Compact layered defense and strong recovery when the interior remains connected.",
+      "drawback": "Repositioning is slow, so exposed outer rooms are expensive to save.",
+      "character_voice": "Measured, architectural, and protective of the keep as a place rather than a weapon.",
+      "story_arc": ["inherits_a_keep_without_a_plan", "admits_compactness_can_become_a_trap", "chooses_people_over_the_perfect_layout"],
+      "favored_packs": ["pike_line", "field_engineers"]
+    },
+    {
+      "id": "warden",
+      "name": "The Warden",
+      "public_doctrine": "A defender who can move is worth more than a wall that cannot answer a new threat.",
+      "passive": "Defenders reposition more quickly.",
+      "ability": "rally",
+      "strength": "Mobile response and strong recovery after a threat bypasses the first line.",
+      "drawback": "The keep begins with fewer materials and needs exposed routes for rapid movement.",
+      "character_voice": "Direct, impatient with static plans, and attentive to who is trapped behind the line.",
+      "story_arc": ["arrives_with_a_mobile_doctrine", "learns_that_movement_needs_signal_and_space", "chooses_when_not_to_counterattack"],
+      "favored_packs": ["scouts", "firekeepers"]
+    }
+  ],
+  "packs": [
+    {
+      "id": "pike_line",
+      "name": "Pike Line",
+      "purpose": "Turn a narrow approach into a deliberate pressure point.",
+      "pieces": ["pike_squad", "narrow_gate"],
+      "doctrine": "compact_corridors",
+      "limitation": "Strong in corridors and weak when the enemy spreads across open yard.",
+      "choice_text": "Spend space to make one approach exceptionally readable."
+    },
+    {
+      "id": "field_engineers",
+      "name": "Field Engineers",
+      "purpose": "Make the keep recoverable after a structure is damaged.",
+      "pieces": ["repair_station", "brace"],
+      "doctrine": "redundancy",
+      "limitation": "Consumes materials and creates a high-value support target.",
+      "choice_text": "Spend immediate strength on the ability to survive a later mistake."
+    },
+    {
+      "id": "firekeepers",
+      "name": "Firekeepers",
+      "purpose": "Deny open space and punish a predictable approach.",
+      "pieces": ["fire_team", "fire_brazier"],
+      "doctrine": "denial_zones",
+      "limitation": "Needs clear sightlines and can create unsafe movement lanes for friendly defenders.",
+      "choice_text": "Shape the battlefield rather than simply add another body."
+    },
+    {
+      "id": "scouts",
+      "name": "Scouts",
+      "purpose": "Reveal the invasion’s approach and improve response time.",
+      "pieces": ["scout_post", "signal_beacon"],
+      "doctrine": "early_warning",
+      "limitation": "Information does not stop a breach unless the keep can act on it.",
+      "choice_text": "Spend a pack on knowing where the next problem will be."
+    }
+  ],
+  "pieces": [
+    {"id": "pike_squad", "name": "Pike Squad", "role": "holds corridors", "size": [2, 1]},
+    {"id": "narrow_gate", "name": "Narrow Gate", "role": "concentrates pressure", "size": [1, 2]},
+    {"id": "repair_station", "name": "Repair Station", "role": "restores nearby structures", "size": [2, 1]},
+    {"id": "brace", "name": "Wall Brace", "role": "reduces breach damage", "size": [1, 1]},
+    {"id": "fire_team", "name": "Fire Team", "role": "controls open space", "size": [2, 1]},
+    {"id": "fire_brazier", "name": "Fire Brazier", "role": "creates a denial zone", "size": [1, 1]},
+    {"id": "scout_post", "name": "Scout Post", "role": "reveals threats", "size": [1, 1]},
+    {"id": "signal_beacon", "name": "Signal Beacon", "role": "improves response time", "size": [1, 1]}
+  ],
+  "rooms": [
+    {
+      "id": "outer_wall",
+      "name": "Outer Wall",
+      "role": "first boundary",
+      "story_function": "The visible promise that the keep can buy time.",
+      "visual_motif": "Patched stone, colored pennants, and repair braces that show the wall’s history.",
+      "threats": ["raider", "climber", "siege_beast"]
+    },
+    {
+      "id": "inner_yard",
+      "name": "Inner Yard",
+      "role": "flexible response space",
+      "story_function": "The room that makes the keep adaptable or exposes how little room the player left.",
+      "visual_motif": "Packed earth, movable carts, rain barrels, and clear lanes between buildings.",
+      "threats": ["climber", "siege_beast"]
+    },
+    {
+      "id": "gate",
+      "name": "Gate",
+      "role": "pressure point",
+      "story_function": "The obvious target that teaches concentration without making every wave a gate test.",
+      "visual_motif": "Heavy timber, iron braces, a winch, and a bell rope visible from the yard.",
+      "threats": ["raider", "sapper"]
+    },
+    {
+      "id": "armory",
+      "name": "Armory",
+      "role": "pack staging room",
+      "story_function": "The place where a doctrine becomes physical equipment.",
+      "visual_motif": "Open racks, labeled bundles, and empty hooks that reveal what the keep lacks.",
+      "threats": ["sapper"]
+    },
+    {
+      "id": "workshop",
+      "name": "Workshop",
+      "role": "repair support",
+      "story_function": "A practical room that turns materials into another chance.",
+      "visual_motif": "Braces, hammers, oil lamps, and chalk diagrams of weak joints.",
+      "threats": ["sapper", "siege_beast"]
+    },
+    {
+      "id": "barracks",
+      "name": "Barracks",
+      "role": "defender rest and assignment",
+      "story_function": "The room that makes defenders people with limits rather than permanent turrets.",
+      "visual_motif": "Bunks, folded blankets, practice staves, and a board of changing assignments.",
+      "threats": ["climber", "raider"]
+    },
+    {
+      "id": "supply_room",
+      "name": "Supply Room",
+      "role": "resource dependency",
+      "story_function": "The room whose safety determines how long the keep can recover.",
+      "visual_motif": "Stacked crates, ration tags, and a narrow door that makes inventory visible.",
+      "threats": ["sapper", "raider"]
+    },
+    {
+      "id": "north_tower",
+      "name": "North Tower",
+      "role": "expandable signal room",
+      "story_function": "A future space that becomes valuable only if the player invests in information.",
+      "visual_motif": "Unfinished stairs, a wind gauge, and a view of the approach.",
+      "threats": ["climber", "siege_beast"]
+    },
+    {
+      "id": "old_chapel",
+      "name": "Old Chapel",
+      "role": "expandable morale room",
+      "story_function": "A contested space where the keep decides whether it is a barracks, refuge, or monument.",
+      "visual_motif": "Broken icon panels, stored blankets, and a bell whose rope has been replaced twice.",
+      "threats": ["raider", "siege_beast"]
+    }
+  ],
+  "enemies": [
+    {
+      "id": "raider",
+      "name": "Raider",
+      "role": "gate pressure",
+      "teaching_question": "Can the player concentrate enough strength at the obvious entrance?",
+      "counter_options": ["pike_line", "narrow_gate", "rally", "gate_reinforcement"]
+    },
+    {
+      "id": "sapper",
+      "name": "Sapper",
+      "role": "structure damage",
+      "teaching_question": "Can the player protect support pieces rather than only the front wall?",
+      "counter_options": ["field_engineers", "scouts", "repair_station", "mobile_response"]
+    },
+    {
+      "id": "climber",
+      "name": "Climber",
+      "role": "wall bypass",
+      "teaching_question": "Has the player left an interior response and clear movement space?",
+      "counter_options": ["scouts", "firekeepers", "inner_yard", "warden_mobility"]
+    },
+    {
+      "id": "siege_beast",
+      "name": "Siege Beast",
+      "role": "area pressure",
+      "teaching_question": "Can the player preserve a recovery option when the enemy damages several pieces at once?",
+      "counter_options": ["firekeepers", "field_engineers", "lockdown", "rally"]
+    }
+  ],
+  "events": [
+    {
+      "id": "commander_choice",
+      "title": "Two Keys, One Keep",
+      "type": "setup",
+      "chapter": "chapter_1_open_the_armory",
+      "locations": ["armory", "barracks"],
+      "trigger": "wave_index == 0",
+      "setup": "The keep has two keys and two doctrines. One promises a connected defense; the other promises movement when the plan breaks.",
+      "choices": [
+        {"id": "choose_castellan", "label": "Give the keys to the Castellan.", "requirements": [], "effects": ["commander:castellan", "materials:+0", "morale:+0"], "visible_result": "The keep becomes a problem of adjacency, layers, and disciplined space."},
+        {"id": "choose_warden", "label": "Give the keys to the Warden.", "requirements": [], "effects": ["commander:warden", "materials:-4", "morale:+2"], "visible_result": "The keep becomes a problem of movement, signals, and timely intervention."}
+      ],
+      "follow_up": "first_pack"
+    },
+    {
+      "id": "first_forecast",
+      "title": "The Bell Has a Pattern",
+      "type": "forecast",
+      "chapter": "chapter_2_first_bell",
+      "locations": ["gate", "outer_wall", "north_tower"],
+      "trigger": "pieces >= 2 and wave_index == 0",
+      "setup": "A scout returns with a simple warning: the first attackers are not hidden, but they are testing whether the gate is the only place the keep knows how to defend.",
+      "choices": [
+        {"id": "strengthen_gate", "label": "Concentrate the first line at the gate.", "requirements": ["owned_packs includes pike_line"], "effects": ["doctrine_response:gate_assault", "gate_strength:+", "yard_flexibility:-"], "visible_result": "The obvious answer becomes strong, but the inner yard must remain usable."},
+        {"id": "keep_reserve", "label": "Leave a reserve in the inner yard.", "requirements": ["commander:warden or owned_packs includes scouts"], "effects": ["response_time:+", "gate_strength:0", "mobile_reserve:+"], "visible_result": "The first line is less impressive, but a bypass will not be free."},
+        {"id": "signal_and_wait", "label": "Use the forecast to delay the bell and finish one support piece.", "requirements": ["owned_packs includes scouts", "command_points >= 1"], "effects": ["command_points:-1", "support_piece:complete", "wave_timing:delayed"], "visible_result": "Information buys a small amount of time, not a free defense."}
+      ],
+      "follow_up": "first_wave"
+    },
+    {
+      "id": "partial_breach",
+      "title": "The Wrong Wall",
+      "type": "invasion",
+      "chapter": "chapter_3_the_wrong_wall",
+      "locations": ["outer_wall", "supply_room", "inner_yard"],
+      "trigger": "enemy_doctrine == distributed_sabotage and breach_level >= 1",
+      "setup": "The wall did not fail where the player expected. A supply room brace is split, one route is blocked, and the keep still has enough strength for one clear repair choice.",
+      "choices": [
+        {"id": "repair_support", "label": "Repair the supply room and preserve recovery.", "requirements": ["owned_packs includes field_engineers", "materials >= 6"], "effects": ["materials:-6", "supply_room:stable", "recovery:+"], "visible_result": "The keep loses a little immediate strength but keeps its ability to recover."},
+        {"id": "counterattack_gap", "label": "Move defenders through the yard and close the gap.", "requirements": ["commander == warden", "command_points >= 1"], "effects": ["command_points:-1", "breach_pressure:-1", "yard:exposed"], "visible_result": "The Warden turns movement into time, but the yard becomes the next pressure point."},
+        {"id": "seal_the_room", "label": "Seal the damaged room and defend a smaller keep.", "requirements": ["commander == castellan", "materials >= 4"], "effects": ["materials:-4", "room:supply_room:closed", "compact_bonus:+"], "visible_result": "The perimeter shrinks, the interior becomes stronger, and nearby resources are lost."}
+      ],
+      "follow_up": "repair_phase"
+    },
+    {
+      "id": "siege_beast_warning",
+      "title": "Something Large at the Tree Line",
+      "type": "campaign",
+      "chapter": "chapter_4_the_refuge_bell",
+      "locations": ["north_tower", "inner_yard", "old_chapel"],
+      "trigger": "wave_index >= 2 and enemy_doctrine == area_pressure",
+      "setup": "The final warning is not a number. It is the sound of trees breaking beyond the old road. The beast will damage whatever the keep has made most important.",
+      "choices": [
+        {"id": "hold_compact", "label": "Lock the keep into a compact layered defense.", "requirements": ["commander == castellan", "owned_packs includes pike_line"], "effects": ["ending:keep_holds", "compact_bonus:+", "outer_space:sacrificed"], "visible_result": "The keep becomes harder to enter and less able to protect the ground outside it."},
+        {"id": "open_response_lanes", "label": "Clear lanes for a mobile response.", "requirements": ["commander == warden", "owned_packs includes scouts"], "effects": ["ending:refuge_survives", "yard_mobility:+", "materials:-8"], "visible_result": "The keep gives up some construction strength to preserve movement and evacuation."},
+        {"id": "ring_the_refuge_bell", "label": "Open the chapel as a refuge and prepare a controlled withdrawal.", "requirements": ["old_chapel_unlocked == true", "morale >= 5"], "effects": ["ending:evacuation", "morale:-1", "civilian_safety:+"], "visible_result": "The keep’s victory becomes measured by who reaches shelter, not only which walls remain."}
+      ],
+      "follow_up": "keep_report"
+    }
+  ],
+  "progression": {
+    "tracks": [
+      {
+        "id": "fortification_doctrine",
+        "name": "Fortification Doctrine",
+        "purpose": "Unlocks spatial rules that make different layouts viable.",
+        "nodes": [
+          {"id": "layered_rooms", "cost": 1, "effect": "adjacent_support:+", "choice_created": "build a compact interior that rewards connected rooms"},
+          {"id": "reserve_slots", "cost": 2, "effect": "mobile_reserve:available", "choice_created": "keep a defender unassigned until the threat reveals itself"},
+          {"id": "controlled_gates", "cost": 3, "effect": "gate_modes:available", "choice_created": "trade access and pressure between open, narrow, and sealed gates"}
+        ]
+      },
+      {
+        "id": "keep_recovery",
+        "name": "Keep Recovery",
+        "purpose": "Makes partial breach informative and survivable without erasing damage.",
+        "nodes": [
+          {"id": "repair_protocol", "cost": 1, "effect": "repair_phase:clear", "choice_created": "repair the support system before rebuilding the front"},
+          {"id": "reserve_materials", "cost": 2, "effect": "materials_reserve:+", "choice_created": "hold back materials for the final wave"},
+          {"id": "refuge_plan", "cost": 3, "effect": "civilian_evacuation:available", "choice_created": "turn a partial loss into a successful evacuation outcome"}
+        ]
+      }
+    ],
+    "milestones": [
+      {"id": "doctrine_declared", "condition": "commander_selected and owned_packs >= 1", "reward": "fortification_doctrine:layered_rooms"},
+      {"id": "first_wave_read", "condition": "wave_1_resolved and used_pause_or_intervention", "reward": "keep_recovery:repair_protocol"},
+      {"id": "partial_breach_recovered", "condition": "breach_level >= 1 and repair_phase_completed", "reward": "keep_recovery:reserve_materials"},
+      {"id": "two_pack_doctrine", "condition": "owned_packs >= 2 and packs_have_different_doctrines", "reward": "fortification_doctrine:reserve_slots"},
+      {"id": "refuge_bell", "condition": "wave_index >= 2", "reward": "ending selection"}
+    ]
+  },
+  "endings": [
+    {
+      "id": "ending_keep_holds",
+      "title": "Stone With a Memory",
+      "requirements": ["breach_level == 0", "morale >= 4"],
+      "summary": "The keep holds intact because its layout expressed one doctrine clearly and kept enough reserve to answer the final pressure.",
+      "regional_changes": ["keep_condition:strong", "refuge_capacity:limited", "commander_doctrine:celebrated"],
+      "character_note": "The Castellan or Warden names the one room that made the difference, making the victory teachable."
+    },
+    {
+      "id": "ending_refuge_survives",
+      "title": "The Open Yard",
+      "requirements": ["civilian_safety >= 1", "breach_level <= 1"],
+      "summary": "The keep is scarred, but its open lanes let defenders and civilians move before the walls became a trap.",
+      "regional_changes": ["keep_condition:scarred", "refuge_capacity:+", "repair_debt:+"],
+      "character_note": "The report praises the space the player left empty on purpose."
+    },
+    {
+      "id": "ending_evacuation",
+      "title": "The Bell Carries",
+      "requirements": ["civilian_safety >= 2", "old_chapel_unlocked == true"],
+      "summary": "The keep does not remain fully defensible, but the refuge plan moves people and essential packs to a safer second position.",
+      "regional_changes": ["keep_condition:partial_loss", "civilian_safety:high", "new_forward_keep:available"],
+      "character_note": "The final bell is heard beyond the walls, where the next defense will be built."
+    },
+    {
+      "id": "ending_collapse",
+      "title": "A Lesson in Empty Space",
+      "requirements": ["breach_level >= 2", "civilian_safety < 1"],
+      "summary": "The keep collapses as a defensible position. The campaign report identifies which doctrine, room, or missing recovery option caused the failure and unlocks a shorter retry with that lesson visible.",
+      "regional_changes": ["keep_condition:lost", "recovery_scenario:unlocked", "enemy_doctrine:understood"],
+      "character_note": "Neither commander calls the loss inevitable; the report names the choice that made it likely."
+    }
+  ]
+}
