@@ -4,7 +4,7 @@
 
 Content is authored as both a human-readable design bible and a machine-readable manifest. The design bible explains the dramatic purpose, player-facing language, and progression logic. `content/content_manifest.json` contains stable identifiers and structured fields that future Godot systems can load without parsing prose.
 
-The content layer is deliberately separate from simulation code. Events describe requirements and intended effects, but runtime code must translate those effects into explicit validated commands. Narrative text must never be used as a hidden scripting language.
+The content layer is deliberately separate from simulation code. Events describe requirements and intended effects, but runtime code must translate those effects into explicit validated commands. Narrative text must never be used as a hidden scripting language. Pack the Keep also keeps its unit, pack, enemy, resource, and solo-balance framework in `content/gameplay_framework.json`; this file is design data, not executable balancing logic.
 
 ## Repository structure
 
@@ -12,7 +12,9 @@ The content layer is deliberately separate from simulation code. Events describe
 | --- | --- |
 | `design/content_bible.md` | Narrative premise, tone, locations or rooms, characters or commanders, event rules, progression, endings, and implementation guidance. |
 | `content/content_manifest.json` | Stable IDs and structured authored content for campaign chapters, locations, events, progression tracks, and endings. |
+| `content/gameplay_framework.json` | Stable-ID gameplay framework for units, pack families, enemy doctrines, resources, spatial rules, progression, and solo-balance constraints. |
 | `tools/validate_content.py` | Deterministic JSON/reference validator used by CI. |
+| `tools/validate_gameplay_framework.py` | Pack-specific validator for gameplay-framework references and design minimums. |
 | `ci/quality_contract.md` | Game-specific review criteria used by the multi-agent reviewer. |
 
 ## Authoring contract
