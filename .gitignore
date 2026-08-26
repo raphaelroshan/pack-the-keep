@@ -7,3 +7,8 @@ export_presets.cfg
 build/
 .DS_Store
 Thumbs.db
+
+artifacts/
+
+__pycache__/
+*.pyc
