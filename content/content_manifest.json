@@ -33,6 +33,15 @@
     "validation": "36-run legacy balance baseline, 12-run Relief Road matrix, deterministic mechanic tests, save/load coverage, and preparation/battle/results UI smoke",
     "next_slice": "p8_authored_events"
   },
+  "p8_authored_events": {
+    "status": "implemented",
+    "scenario": "relief_road",
+    "event_chain": ["relief_road_warning", "relief_road_recovery", "relief_road_report"],
+    "effect_model": "validated_typed_operations_owned_by_keep_state",
+    "persistence": "save_schema_3_with_active_resolved_flags_and_history_plus_schema_2_migration",
+    "validation": "catalog_negative_cases_atomic_command_rejection_same_seed_replay_save_load_and_full_ui_chain",
+    "next_slice": "p9_run_progression"
+  },
   "campaign": {
     "title": "The Bell at Dusk",
     "premise": "A small keep is granted one season to become a refuge before a coalition of raiders, sappers, climbers, and siege beasts tests every defensive doctrine at once.",

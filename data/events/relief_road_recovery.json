@@ -1,0 +1,34 @@
+{
+  "id": "relief_road_recovery",
+  "content_version": 1,
+  "status": "active",
+  "title": "The Workshop Can Wait",
+  "short_role": "Trade one recovery action for stores or morale before the pressure changes.",
+  "type": "recovery",
+  "scenario": "relief_road",
+  "trigger": {"phase": "recovery", "wave": 1},
+  "setup": "The road crews can unload field stores or steady the refuge, but either task consumes one of this interval's two actions.",
+  "choices": [
+    {
+      "id": "release_field_stores",
+      "label": "Release field stores (1 action)",
+      "requirements": {"recovery_actions": {"gte": 1}},
+      "effects": [
+        {"op": "spend_recovery_action", "amount": 1},
+        {"op": "add_materials", "amount": 5}
+      ],
+      "visible_result": "Five materials reach the keep, leaving one fewer action for repair or assignment."
+    },
+    {
+      "id": "steady_the_refuge",
+      "label": "Steady refuge (1 action)",
+      "requirements": {"recovery_actions": {"gte": 1}, "morale": {"lt": 10}},
+      "effects": [
+        {"op": "spend_recovery_action", "amount": 1},
+        {"op": "add_morale", "amount": 1}
+      ],
+      "visible_result": "The refuge steadies, leaving one fewer action for structural recovery."
+    }
+  ],
+  "follow_up": "relief_road_report"
+}

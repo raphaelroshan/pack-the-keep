@@ -207,3 +207,11 @@
 **Reason:** Variations only have meaning relative to the scenario whose lesson they preserve. Co-locating them makes review and reference validation explicit without changing deterministic selection.
 
 **Trade-off:** Scenario files contain nested wave and variation arrays, but remain small, independent, and easier to audit than one global scenario table.
+
+## ADR-027: Authored events use validated typed effects
+
+**Decision:** Store authored events as individual JSON definitions and execute them only through `PackKeepState.choose_event_option()`. Event requirements and effects use a small allowlist of typed operations; UI code renders previews and sends choice IDs but never applies consequences.
+
+**Reason:** Events need to change resources and battle preparation without becoming arbitrary scripts or a second simulation authority. Preflighting the complete choice before mutation makes rejection atomic, deterministic, saveable, and testable.
+
+**Trade-off:** The first event vocabulary is deliberately narrow and the first chain is linear. New operations require validator, simulation, migration, and regression coverage before authored content can use them.

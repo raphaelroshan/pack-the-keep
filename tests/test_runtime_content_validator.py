@@ -75,6 +75,18 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         for expected in ("exactly three", "variation id", "materials", "target_room", "standard_bell"):
             self.assertIn(expected, joined)
 
+    def test_event_rejects_unknown_effect_trigger_and_duplicate_choice(self) -> None:
+        event = copy.deepcopy(load("data/events/relief_road_warning.json"))
+        event["trigger"] = {"phase": "missing", "wave": 7}
+        event["choices"][0]["effects"] = [{"op": "run_script", "code": "unsafe"}]
+        event["choices"].append(copy.deepcopy(event["choices"][0]))
+        event["follow_up"] = "relief_road_warning"
+        errors: list[str] = []
+        validator.validate_event(Path("wrong_filename.json"), event, {"relief_road"}, set(), errors)
+        joined = "\n".join(errors)
+        for expected in ("does not match filename", "unsupported trigger phase", "trigger wave", "unsupported effect", "duplicate choice", "follow itself"):
+            self.assertIn(expected, joined)
+
 
 if __name__ == "__main__":
     unittest.main()

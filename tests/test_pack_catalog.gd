@@ -37,6 +37,19 @@ func _initialize() -> void:
 	var doctrine_errors: Array[String] = catalog.validate_doctrine_definition(malformed_doctrine, "wrong_filename", catalog.enemy_ids())
 	_check(doctrine_errors.size() >= 4, "catalog validator did not reject missing fields, ID mismatch, enemy references, and incomplete counters")
 	_check(catalog.scenario_ids() == ["gatehouse_lock", "wrong_wall", "open_yard_net", "relief_road"], "scenario catalog order or active IDs changed")
+	_check(catalog.event_ids() == ["relief_road_warning", "relief_road_recovery", "relief_road_report"], "event catalog order or active IDs changed")
+	var warning_event: Dictionary = catalog.event_definition("relief_road_warning")
+	_check(String(warning_event.get("scenario", "")) == "relief_road" and warning_event.get("choices", []).size() == 2, "Relief Road warning event did not load its authored choices")
+	var copied_event: Dictionary = catalog.event_definition("relief_road_warning")
+	copied_event.choices.clear()
+	_check(catalog.event_definition("relief_road_warning").get("choices", []).size() == 2, "callers can mutate the catalog's stored event definition")
+	var malformed_event: Dictionary = catalog.event_definition("relief_road_warning")
+	malformed_event.trigger = {"phase": "missing", "wave": 7}
+	malformed_event.choices[0].effects = [{"op": "run_script", "code": "unsafe"}]
+	malformed_event.choices.append(malformed_event.choices[0].duplicate(true))
+	malformed_event.follow_up = "relief_road_warning"
+	var event_errors: Array[String] = catalog.validate_event_definition(malformed_event, "wrong_filename")
+	_check(event_errors.size() >= 5, "catalog validator did not reject event ID, trigger, effect, duplicate choice, and self-follow-up failures")
 	var gatehouse: Dictionary = catalog.scenario_definition("gatehouse_lock")
 	_check(String(gatehouse.get("starting_doctrine", "")) == "gate_assault" and gatehouse.get("wave_plans", []).size() == 3, "Gatehouse Lock sequence changed during externalization")
 	_check(gatehouse.get("variations", []).size() == 3 and String(gatehouse.variations[1].get("id", "")) == "thin_supply", "Gatehouse Lock variations changed during externalization")
@@ -157,7 +170,7 @@ func _initialize() -> void:
 
 	var first: PackKeepState = PackKeepState.new(3307)
 	var second: PackKeepState = PackKeepState.new(3307)
-	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("pack_count", 0)) == 6 and int(first.content_catalog_status().get("commander_count", 0)) == 2 and int(first.content_catalog_status().get("piece_count", 0)) == 12 and int(first.content_catalog_status().get("enemy_count", 0)) == 4 and int(first.content_catalog_status().get("doctrine_count", 0)) == 5 and int(first.content_catalog_status().get("scenario_count", 0)) == 4, "KeepState did not expose the complete P7 runtime catalog")
+	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("pack_count", 0)) == 6 and int(first.content_catalog_status().get("commander_count", 0)) == 2 and int(first.content_catalog_status().get("piece_count", 0)) == 12 and int(first.content_catalog_status().get("enemy_count", 0)) == 4 and int(first.content_catalog_status().get("doctrine_count", 0)) == 5 and int(first.content_catalog_status().get("scenario_count", 0)) == 4 and int(first.content_catalog_status().get("event_count", 0)) == 3, "KeepState did not expose the complete P8 runtime catalog")
 	_check(first.piece_ids() == catalog.piece_ids(), "KeepState did not preserve stable piece order")
 	_check(first.enemy_ids() == catalog.enemy_ids(), "KeepState did not preserve stable enemy order")
 	_check(first.doctrine_ids() == catalog.doctrine_ids(), "KeepState did not preserve stable doctrine order")

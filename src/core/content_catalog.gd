@@ -51,6 +51,12 @@ const SCENARIO_PATHS: Array[String] = [
 	"res://data/scenarios/relief_road.json"
 ]
 
+const EVENT_PATHS: Array[String] = [
+	"res://data/events/relief_road_warning.json",
+	"res://data/events/relief_road_recovery.json",
+	"res://data/events/relief_road_report.json"
+]
+
 const REQUIRED_PACK_FIELDS: Array[String] = [
 	"id",
 	"content_version",
@@ -151,6 +157,11 @@ const REQUIRED_DOCTRINE_FIELDS: Array[String] = [
 ]
 
 const REQUIRED_SCENARIO_FIELDS: Array[String] = ["id", "content_version", "status", "name", "short_role", "question", "objective", "lesson", "starting_doctrine", "doctrines", "wave_plans", "variations"]
+const REQUIRED_EVENT_FIELDS: Array[String] = ["id", "content_version", "status", "title", "short_role", "type", "scenario", "trigger", "setup", "choices", "follow_up"]
+const SUPPORTED_EVENT_TYPES: Array[String] = ["forecast", "recovery", "scenario_conclusion"]
+const SUPPORTED_EVENT_PHASES: Array[String] = ["preparation", "recovery", "results"]
+const SUPPORTED_EVENT_REQUIREMENTS: Array[String] = ["command_points", "recovery_actions", "morale"]
+const SUPPORTED_EVENT_EFFECTS: Array[String] = ["spend_command_points", "spend_recovery_action", "add_materials", "add_morale", "set_flag", "record_outcome"]
 
 var _packs: Dictionary = {}
 var _commanders: Dictionary = {}
@@ -158,6 +169,7 @@ var _pieces: Dictionary = {}
 var _enemies: Dictionary = {}
 var _doctrines: Dictionary = {}
 var _scenarios: Dictionary = {}
+var _events: Dictionary = {}
 var errors: Array[String] = []
 
 func load_default(known_room_ids: Array = []) -> Dictionary:
@@ -167,6 +179,7 @@ func load_default(known_room_ids: Array = []) -> Dictionary:
 	_enemies.clear()
 	_doctrines.clear()
 	_scenarios.clear()
+	_events.clear()
 	errors.clear()
 	for path in DOCTRINE_PATHS:
 		_load_doctrine(path)
@@ -180,9 +193,13 @@ func load_default(known_room_ids: Array = []) -> Dictionary:
 		_load_enemy(path, known_room_ids, doctrine_ids())
 	for path in SCENARIO_PATHS:
 		_load_scenario(path, known_room_ids)
+	for path in EVENT_PATHS:
+		_load_event(path)
 	_validate_piece_availability()
 	_validate_doctrine_enemy_references()
-	return {"ok": errors.is_empty(), "commanders": _commanders.duplicate(true), "pieces": _pieces.duplicate(true), "packs": _packs.duplicate(true), "enemies": _enemies.duplicate(true), "doctrines": _doctrines.duplicate(true), "scenarios": _scenarios.duplicate(true), "errors": errors.duplicate()}
+	_validate_event_follow_ups()
+	_validate_scenario_event_references()
+	return {"ok": errors.is_empty(), "commanders": _commanders.duplicate(true), "pieces": _pieces.duplicate(true), "packs": _packs.duplicate(true), "enemies": _enemies.duplicate(true), "doctrines": _doctrines.duplicate(true), "scenarios": _scenarios.duplicate(true), "events": _events.duplicate(true), "errors": errors.duplicate()}
 
 func commander_ids() -> Array[String]:
 	var result: Array[String] = []
@@ -238,6 +255,17 @@ func scenario_ids() -> Array[String]:
 
 func scenario_definition(scenario_id: String) -> Dictionary:
 	return _scenarios.get(scenario_id, {}).duplicate(true)
+
+func event_ids() -> Array[String]:
+	var result: Array[String] = []
+	for path in EVENT_PATHS:
+		var expected_id: String = path.get_file().get_basename()
+		if _events.has(expected_id):
+			result.append(expected_id)
+	return result
+
+func event_definition(event_id: String) -> Dictionary:
+	return _events.get(event_id, {}).duplicate(true)
 
 func pack_ids() -> Array[String]:
 	var result: Array[String] = []
@@ -475,6 +503,99 @@ func validate_scenario_definition(scenario: Dictionary, expected_id: String, kno
 		validation_errors.append("scenario %s must include standard_bell variation" % scenario_id)
 	return validation_errors
 
+func validate_event_definition(event: Dictionary, expected_id: String) -> Array[String]:
+	var validation_errors: Array[String] = []
+	for field in REQUIRED_EVENT_FIELDS:
+		if not event.has(field):
+			validation_errors.append("%s is missing required field: %s" % [expected_id, field])
+	var event_id: String = String(event.get("id", ""))
+	if event_id != expected_id:
+		validation_errors.append("event id %s does not match filename %s" % [event_id, expected_id])
+	if not _is_snake_case_id(event_id):
+		validation_errors.append("event id %s must be snake_case" % event_id)
+	if String(event.get("status", "")) != "active":
+		validation_errors.append("event %s must have active status" % event_id)
+	_validate_integer_minimum(event, "content_version", event_id, "event", 1, validation_errors)
+	for field in ["title", "short_role", "setup"]:
+		if not event.get(field) is String or String(event.get(field, "")).strip_edges().is_empty():
+			validation_errors.append("event %s must have non-empty text for %s" % [event_id, field])
+	if not SUPPORTED_EVENT_TYPES.has(String(event.get("type", ""))):
+		validation_errors.append("event %s has unsupported type" % event_id)
+	if not _known_scenario_ids().has(String(event.get("scenario", ""))):
+		validation_errors.append("event %s references unknown scenario" % event_id)
+	var trigger: Variant = event.get("trigger", {})
+	if not trigger is Dictionary:
+		validation_errors.append("event %s trigger must be an object" % event_id)
+	else:
+		if not SUPPORTED_EVENT_PHASES.has(String(trigger.get("phase", ""))):
+			validation_errors.append("event %s trigger phase is unsupported" % event_id)
+		if not _is_integer_number(trigger.get("wave")) or int(trigger.get("wave", -1)) < 0 or int(trigger.get("wave", -1)) > 3:
+			validation_errors.append("event %s trigger wave must be an integer from 0 to 3" % event_id)
+	var choices: Variant = event.get("choices", [])
+	var choice_ids: Array[String] = []
+	if not choices is Array or choices.is_empty():
+		validation_errors.append("event %s must define at least one choice" % event_id)
+	else:
+		for choice in choices:
+			if not choice is Dictionary:
+				validation_errors.append("event %s choice must be an object" % event_id)
+				continue
+			var choice_id: String = String(choice.get("id", ""))
+			if not _is_snake_case_id(choice_id):
+				validation_errors.append("event %s has invalid choice id: %s" % [event_id, choice_id])
+			elif choice_ids.has(choice_id):
+				validation_errors.append("event %s has duplicate choice id: %s" % [event_id, choice_id])
+			else:
+				choice_ids.append(choice_id)
+			for field in ["label", "visible_result"]:
+				if not choice.get(field) is String or String(choice.get(field, "")).strip_edges().is_empty():
+					validation_errors.append("event %s choice %s must have non-empty %s" % [event_id, choice_id, field])
+			_validate_event_requirements(event_id, choice_id, choice.get("requirements", {}), validation_errors)
+			_validate_event_effects(event_id, choice_id, choice.get("effects", []), validation_errors)
+	var follow_up: Variant = event.get("follow_up", "")
+	if not follow_up is String or (not String(follow_up).is_empty() and not _is_snake_case_id(String(follow_up))):
+		validation_errors.append("event %s follow_up must be empty or snake_case" % event_id)
+	if String(follow_up) == event_id:
+		validation_errors.append("event %s cannot follow itself" % event_id)
+	return validation_errors
+
+func _validate_event_requirements(event_id: String, choice_id: String, requirements: Variant, validation_errors: Array[String]) -> void:
+	if not requirements is Dictionary:
+		validation_errors.append("event %s choice %s requirements must be an object" % [event_id, choice_id])
+		return
+	for requirement_id in requirements.keys():
+		if not SUPPORTED_EVENT_REQUIREMENTS.has(String(requirement_id)):
+			validation_errors.append("event %s choice %s has unsupported requirement: %s" % [event_id, choice_id, String(requirement_id)])
+			continue
+		var constraint: Variant = requirements[requirement_id]
+		if not constraint is Dictionary or constraint.size() != 1:
+			validation_errors.append("event %s choice %s requirement %s must contain one constraint" % [event_id, choice_id, String(requirement_id)])
+			continue
+		var operator_id: String = String(constraint.keys()[0])
+		if not ["gte", "lt"].has(operator_id) or not _is_integer_number(constraint[operator_id]):
+			validation_errors.append("event %s choice %s requirement %s has invalid constraint" % [event_id, choice_id, String(requirement_id)])
+
+func _validate_event_effects(event_id: String, choice_id: String, effects: Variant, validation_errors: Array[String]) -> void:
+	if not effects is Array or effects.is_empty():
+		validation_errors.append("event %s choice %s must define typed effects" % [event_id, choice_id])
+		return
+	for effect in effects:
+		if not effect is Dictionary:
+			validation_errors.append("event %s choice %s effect must be an object" % [event_id, choice_id])
+			continue
+		var operation: String = String(effect.get("op", ""))
+		if not SUPPORTED_EVENT_EFFECTS.has(operation):
+			validation_errors.append("event %s choice %s has unsupported effect: %s" % [event_id, choice_id, operation])
+			continue
+		if ["spend_command_points", "spend_recovery_action", "add_materials", "add_morale"].has(operation):
+			if not _is_integer_number(effect.get("amount")) or int(effect.get("amount", 0)) <= 0:
+				validation_errors.append("event %s choice %s effect %s needs a positive integer amount" % [event_id, choice_id, operation])
+		elif operation == "set_flag":
+			if not _is_snake_case_id(String(effect.get("flag", ""))) or not effect.get("value") is bool:
+				validation_errors.append("event %s choice %s set_flag needs a snake_case flag and boolean value" % [event_id, choice_id])
+		elif operation == "record_outcome" and not _is_snake_case_id(String(effect.get("tag", ""))):
+			validation_errors.append("event %s choice %s record_outcome needs a snake_case tag" % [event_id, choice_id])
+
 func validate_commander_definition(commander: Dictionary, expected_id: String) -> Array[String]:
 	var validation_errors: Array[String] = []
 	for field in REQUIRED_COMMANDER_FIELDS:
@@ -637,6 +758,28 @@ func _load_scenario(path: String, known_room_ids: Array) -> void:
 	if validation_errors.is_empty():
 		_scenarios[scenario_id] = scenario.duplicate(true)
 
+func _load_event(path: String) -> void:
+	if not FileAccess.file_exists(path):
+		errors.append("missing event file: %s" % path)
+		return
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		errors.append("could not open event file: %s" % path)
+		return
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		errors.append("event file must contain one JSON object: %s" % path)
+		return
+	var event: Dictionary = parsed
+	var event_id: String = String(event.get("id", ""))
+	var validation_errors: Array[String] = validate_event_definition(event, path.get_file().get_basename())
+	if _events.has(event_id):
+		validation_errors.append("duplicate event id: %s" % event_id)
+	for validation_error in validation_errors:
+		errors.append("%s: %s" % [path, validation_error])
+	if validation_errors.is_empty():
+		_events[event_id] = event.duplicate(true)
+
 func _load_pack(path: String, known_piece_ids: Array) -> void:
 	if not FileAccess.file_exists(path):
 		errors.append("missing pack file: %s" % path)
@@ -674,6 +817,34 @@ func _validate_doctrine_enemy_references() -> void:
 		for enemy_id in _doctrines[doctrine_id].get("composition", []):
 			if not _enemies.has(String(enemy_id)):
 				errors.append("doctrine %s composition references unavailable enemy: %s" % [doctrine_id, String(enemy_id)])
+
+func _validate_event_follow_ups() -> void:
+	for event_id in event_ids():
+		var follow_up: String = String(_events[event_id].get("follow_up", ""))
+		if not follow_up.is_empty() and not _events.has(follow_up):
+			errors.append("event %s references unavailable follow_up: %s" % [event_id, follow_up])
+
+func _validate_scenario_event_references() -> void:
+	for scenario_id in scenario_ids():
+		var chain: Variant = _scenarios[scenario_id].get("event_chain", [])
+		if not chain is Array:
+			errors.append("scenario %s event_chain must be an array" % scenario_id)
+			continue
+		var seen: Array[String] = []
+		for index in range(chain.size()):
+			var event_id: String = String(chain[index])
+			if seen.has(event_id):
+				errors.append("scenario %s event_chain contains duplicate event: %s" % [scenario_id, event_id])
+			else:
+				seen.append(event_id)
+			if not _events.has(String(event_id)):
+				errors.append("scenario %s references unavailable event: %s" % [scenario_id, String(event_id)])
+			elif String(_events[String(event_id)].get("scenario", "")) != scenario_id:
+				errors.append("scenario %s event %s belongs to another scenario" % [scenario_id, String(event_id)])
+			else:
+				var expected_follow_up: String = String(chain[index + 1]) if index + 1 < chain.size() else ""
+				if String(_events[event_id].get("follow_up", "")) != expected_follow_up:
+					errors.append("scenario %s event %s follow_up does not match chain order" % [scenario_id, event_id])
 
 func _validate_positive_integer(definition: Dictionary, field: String, definition_id: String, validation_errors: Array[String]) -> void:
 	var value: Variant = definition.get(field)
@@ -747,6 +918,12 @@ func _known_piece_targets() -> Array:
 func _known_enemy_ids() -> Array[String]:
 	var result: Array[String] = []
 	for path in ENEMY_PATHS:
+		result.append(path.get_file().get_basename())
+	return result
+
+func _known_scenario_ids() -> Array[String]:
+	var result: Array[String] = []
+	for path in SCENARIO_PATHS:
 		result.append(path.get_file().get_basename())
 	return result
 

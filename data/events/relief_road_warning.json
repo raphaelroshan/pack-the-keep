@@ -1,0 +1,31 @@
+{
+  "id": "relief_road_warning",
+  "content_version": 1,
+  "status": "active",
+  "title": "The Bell Has a Pattern",
+  "short_role": "Commit command attention before the first warning becomes a crisis.",
+  "type": "forecast",
+  "scenario": "relief_road",
+  "trigger": {"phase": "preparation", "wave": 0},
+  "setup": "A road scout can mark the support lane now, but doing so consumes the command signal that might be needed during contact.",
+  "choices": [
+    {
+      "id": "mark_support_lane",
+      "label": "Mark support lane (1 command)",
+      "requirements": {"command_points": {"gte": 1}},
+      "effects": [
+        {"op": "spend_command_points", "amount": 1},
+        {"op": "set_flag", "flag": "support_lane_marked", "value": true}
+      ],
+      "visible_result": "The first Sapper contact will deal one less damage; one commander intervention is no longer available."
+    },
+    {
+      "id": "keep_command_ready",
+      "label": "Keep command ready",
+      "requirements": {},
+      "effects": [{"op": "set_flag", "flag": "command_held", "value": true}],
+      "visible_result": "No command point is spent, but the support lane receives no advance mitigation."
+    }
+  ],
+  "follow_up": "relief_road_recovery"
+}

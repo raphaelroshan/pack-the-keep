@@ -31,6 +31,7 @@ func _initialize() -> void:
 	ui.keep.place_piece("supply_cache", Vector2i(6, 3), "ground")
 	ui.keep.place_piece("rear_guard", Vector2i(4, 4), "ground")
 	ui.keep.place_piece("breakaway_barricade", Vector2i(3, 3), "ground")
+	ui.keep.choose_event_option("keep_command_ready")
 	ui._refresh_ui()
 	await process_frame
 
@@ -58,12 +59,16 @@ func _initialize() -> void:
 	_check(String(ui.scorecard_label.text).contains("The Relief Road") and String(ui.scorecard_label.text).contains("W1"), "first-wave Results did not identify Relief Road and its scorecard row")
 
 	while ui.keep.has_next_wave():
+		if ui.keep.active_event_id == "relief_road_recovery":
+			ui.keep.choose_event_option("release_field_stores")
 		var continued: Dictionary = ui.keep.finish_repair_interval()
 		_check(bool(continued.get("next_wave_started", false)), "Relief Road recovery did not start the next authored wave")
 		ui._set_screen("battle")
 		await _resolve_wave(ui)
 		ui._set_screen("results")
 	if ui.keep.repair_interval_active:
+		if ui.keep.active_event_id == "relief_road_report":
+			ui.keep.choose_event_option("record_the_cost")
 		ui.keep.finish_repair_interval()
 	ui._set_screen("results")
 	await process_frame

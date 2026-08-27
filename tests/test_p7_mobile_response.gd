@@ -126,6 +126,7 @@ func _run_relief_road(commander_id: String, layout_name: String, run_seed: int) 
 	var keep: PackKeepState = PackKeepState.new(run_seed)
 	keep.select_commander(commander_id)
 	keep.select_scenario("relief_road")
+	keep.choose_event_option("keep_command_ready")
 	keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
 	if layout_name == "open_response" or layout_name == "layered_response":
 		keep.open_pack("runner_network")
@@ -142,6 +143,10 @@ func _run_relief_road(commander_id: String, layout_name: String, run_seed: int) 
 			while keep.wave_active:
 				keep.advance_wave(1.0)
 		elif keep.repair_interval_active:
+			if keep.active_event_id == "relief_road_recovery":
+				keep.choose_event_option("release_field_stores")
+			elif keep.active_event_id == "relief_road_report":
+				keep.choose_event_option("record_the_cost")
 			var continuation: Dictionary = keep.finish_repair_interval()
 			if not bool(continuation.get("next_wave_started", false)):
 				break

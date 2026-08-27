@@ -7,6 +7,7 @@
   "starting_doctrine": "feint_and_flank",
   "doctrines": ["feint_and_flank", "distributed_sabotage", "rolling_breach"],
   "wave_plans": [["raider", "climber"], ["raider", "sapper", "climber"], ["raider", "sapper", "siege_beast"]],
+  "event_chain": ["relief_road_warning", "relief_road_recovery", "relief_road_report"],
   "variations": [
     {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
     {"id": "short_stores", "materials": -3, "morale": 1, "target_room": "supply_room"},
