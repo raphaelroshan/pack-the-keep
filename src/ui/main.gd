@@ -1242,6 +1242,41 @@ class KeepCanvas extends Control:
 		var room: Dictionary = PackKeepState.ROOMS[room_id]
 		return Rect2(origin + Vector2(room.origin.x * CELL_X, room.origin.y * CELL_Y), Vector2(room.size.x * CELL_X, room.size.y * CELL_Y))
 
+	func _placement_box_rect(room_id: String, origin: Vector2) -> Rect2:
+		var room: Dictionary = PackKeepState.ROOMS[room_id]
+		var box_width: int = mini(2, int(room.size.x))
+		var box_height: int = mini(1, int(room.size.y))
+		var box_origin: Vector2i = room.origin
+		return Rect2(origin + Vector2(box_origin.x * CELL_X, box_origin.y * CELL_Y) + Vector2(3, 3), Vector2(box_width * CELL_X - 6, box_height * CELL_Y - 6))
+
+	func _placement_box_occupied(box: Rect2, floor_name: String, origin: Vector2) -> bool:
+		if keep == null:
+			return false
+		for instance in keep.pieces.values():
+			if String(instance.get("floor", "ground")) != floor_name:
+				continue
+			var piece_id: String = String(instance.get("piece_id", ""))
+			if not PackKeepState.PIECES.has(piece_id):
+				continue
+			var piece: Dictionary = PackKeepState.PIECES[piece_id]
+			var piece_origin: Vector2i = instance.get("origin", Vector2i.ZERO)
+			var piece_rect := Rect2(origin + Vector2(piece_origin.x * CELL_X, piece_origin.y * CELL_Y), Vector2(piece.size.x * CELL_X, piece.size.y * CELL_Y))
+			if box.intersects(piece_rect):
+				return true
+		return false
+
+	func _draw_placement_boxes(floor_name: String, origin: Vector2, outline_only: bool = false) -> void:
+		for room_id in PackKeepState.ROOMS.keys():
+			var room: Dictionary = PackKeepState.ROOMS[room_id]
+			if String(room.get("floor", "ground")) != floor_name:
+				continue
+			var box: Rect2 = _placement_box_rect(String(room_id), origin)
+			var occupied: bool = _placement_box_occupied(box, floor_name, origin)
+			var box_color := Color(0.93, 0.75, 0.42, 0.72) if not occupied else Color(0.78, 0.88, 0.71, 0.58)
+			draw_rect(box, box_color, false, 2.0)
+			if not outline_only and not occupied:
+				draw_string(ThemeDB.fallback_font, box.position + Vector2(3, 10), "PLACE", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(0.98, 0.88, 0.62, 0.9))
+
 	func _room_color(room_id: String) -> Color:
 		if keep == null:
 			return Color("#3b3344")
@@ -1319,6 +1354,7 @@ class KeepCanvas extends Control:
 			var state_text: String = keep.room_state(String(room_id)).to_upper()
 			draw_rect(Rect2(rect.position + Vector2(2, rect.size.y - 12), Vector2(maxf(4.0, (rect.size.x - 4.0) * float(condition) / 100.0), 4)), Color("#bfe8cf") if condition >= 70 else Color("#d7a35b") if condition >= 35 else Color("#d26155"), true)
 			draw_string(ThemeDB.fallback_font, rect.position + Vector2(2, rect.size.y - 3), "%s %d%%" % [state_text, condition], HORIZONTAL_ALIGNMENT_LEFT, rect.size.x - 4, 8, Color("#fff4df"))
+		_draw_placement_boxes(floor_name, origin)
 		for instance in keep.pieces.values():
 			if String(instance.get("floor", "ground")) != floor_name:
 				continue
@@ -1349,6 +1385,7 @@ class KeepCanvas extends Control:
 			draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(2, piece_rect.size.y - 3), zone.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, piece_rect.size.x - 4, 7, Color("#201a25"))
 			if float(instance.get("condition", 0.0)) < 1.0 or not assignment.is_empty() or high_contrast_mode:
 				draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(2, piece_rect.size.y - 11), piece_status, HORIZONTAL_ALIGNMENT_LEFT, piece_rect.size.x - 4, 7, Color("#201a25"))
+		_draw_placement_boxes(floor_name, origin, true)
 
 	func _draw_piece_glyph(rect: Rect2, piece_id: String, color: Color) -> void:
 		var center: Vector2 = rect.position + Vector2(rect.size.x - 9.0, rect.size.y * 0.5 + 2.0)

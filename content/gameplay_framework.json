@@ -58,6 +58,13 @@
     "combat_readability": ["newest_first_event_feed", "causal_result_metrics", "outcome_interpretation"],
     "determinism_rule": "guidance_event_feed_and_result_explanation_read_state_without_mutating_authoritative_outcomes"
   },
+  "v083_placement_boxes": {
+    "status": "implemented",
+    "room_and_wall_slots": "each_authoritative_room_exposes_a_low_contrast_grid_aligned_recommended_box",
+    "placement_rule": "existing_floor_footprint_overlap_material_and_assignment_validation_remains_authoritative",
+    "combat_visibility": "boxes_remain_visible_without_replacing_enemy_target_health_ammo_or_breach_overlays",
+    "determinism_rule": "box_rendering_and_inspection_do_not_mutate_serialized_keep_state"
+  },
   "visual_fort_initial_run": {
     "status": "implemented_procedural_fallback",
     "map_presentation": ["square_keep", "thick_outer_walls", "open_courtyard", "open_gate", "gate_approach", "upper_wall_walk"],

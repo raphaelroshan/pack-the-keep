@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.8.2-testability` — guided first battle, recommended starter layout, and causal combat readability
+**Current build identity:** `0.8.3-placement-boxes` — reference-informed fort rooms, wall slots, and readable placement boxes
 
 ## Purpose
 
@@ -9,6 +9,12 @@ This package is an internal pre-alpha test release, not a commercial demo or sto
 ## v0.8.2 testability additions
 
 Preparation now displays a numbered first-battle guide that recommends the authoritative starter arrangement and explains what to read before starting. The command table includes **Use recommended starter layout**, which places Pike Squad and Narrow Gate at fixed, readable ground-floor origins through the same validated placement API used by direct map placement; it is a recommendation, not a forced opening build. During battle, the left panel presents the latest four authoritative battle-report lines in a newest-first **Combat Event Feed**. Results present a **Causal Result** panel with outcome, breach, morale, defeated enemies, room damage, piece damage, and a plain-language interpretation of what to test next. Guidance changes between preparation, battle, and results while the fort remains visible.
+
+## v0.8.3 placement-box additions
+
+The procedural fort now exposes a visible placement box in each authoritative room and upper-floor area. Empty boxes use a low-contrast warm `PLACE` outline; occupied boxes retain their slot outline beneath the placed piece. These boxes are aligned to the existing floor grid and are affordances only: the existing `keep_state.gd` footprint, overlap, materials, availability, and assignment validation remains authoritative. The ground courtyard, gate, keep rooms, upper wall walk, North Tower, and Old Chapel remain visible during preparation and combat.
+
+The supplied fort image informed only the high-level composition of a centered stronghold with distinct rooms, wall sections, visible approaches, and side controls. It is not copied into the build and no exact external UI or asset is claimed.
 
 ## Included playable loop
 
@@ -41,6 +47,10 @@ A tester should begin Preparation, compare The Castellan and The Warden profiles
 ## v0.8.2 acceptance checks
 
 On a fresh run, enter Preparation and confirm the first-battle guide names the recommended starter layout. Use the recommendation and verify that Pike Squad appears in the courtyard and Narrow Gate is placed near the gate, then modify the arrangement if desired. Start the invasion and confirm the guide explains that the fort remains visible, the event feed shows the deterministic forecast, and a manual step adds newer causal lines above older ones. Let the wave resolve, confirm the screen switches to Results, and verify that the causal panel names outcome, breach, morale, defeated enemies, room damage, piece damage, and recovery advice. Refresh the guide and result panel without commands and confirm the serialized keep state remains unchanged.
+
+## v0.8.3 acceptance checks
+
+On a fresh preparation screen, verify that each visible ground room and upper-floor area has a placement box. Arm Pike Squad, Fire Team, Repair Station, or another available piece and move the cursor across the floor grids; confirm the normal valid/invalid preview still controls placement. Place a piece inside or near a visible box and confirm the box remains readable under the piece. Start a battle and verify the boxes do not replace the gate-entry path, enemy marker, target line, health bars, ammo counters, breach state, focus outline, or causal event text. Select a room or piece and confirm the placement-box layer is presentation-only by comparing serialized state before and after inspection.
 
 ## Known boundaries
 
