@@ -15,6 +15,7 @@ if command -v godot >/dev/null 2>&1; then
   godot --headless --audio-driver Dummy --path . --script res://tests/test_quick_playtest.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_multi_wave.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_multi_wave_ui.gd
+  godot --headless --audio-driver Dummy --path . --script res://tests/test_p5_recovery_ui.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_initial_combat.gd
 elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --editor --quit
@@ -27,6 +28,7 @@ elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_quick_playtest.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_multi_wave.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_multi_wave_ui.gd
+  godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p5_recovery_ui.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_initial_combat.gd
 else
   echo "Godot 4.x is not installed or not on PATH."

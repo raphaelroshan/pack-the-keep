@@ -15,6 +15,7 @@ func _init() -> void:
 	_test_partial_breach_is_recoverable()
 	_test_repair_interval_and_assignments()
 	_test_assignment_rules_and_action_budget()
+	_test_recovery_action_previews()
 	_test_deterministic_battle_report()
 	_test_save_round_trip()
 	_test_p0_pack_preview_and_reserve()
@@ -191,6 +192,35 @@ func _test_assignment_rules_and_action_budget() -> void:
 	_expect(not bool(keep.assign_piece_to_room("pike_squad_0", "gate").get("ok", false)), "an already assigned piece should not be assigned twice")
 	_expect(not bool(keep.repair_room("gate").get("ok", false)), "no third interval action should be available")
 	_expect(bool(keep.finish_repair_interval().get("ok", false)), "interval should close after assignment actions")
+
+func _test_recovery_action_previews() -> void:
+	var keep: PackKeepState = PackKeepState.new(3307)
+	keep.place_piece("pike_squad", Vector2i(3, 3), "ground")
+	var closed_preview: Dictionary = keep.recovery_action_preview("assign_piece", "pike_squad_0", "gate")
+	_expect(not bool(closed_preview.get("ok", false)) and String(closed_preview.get("reason", "")).contains("no recovery interval"), "recovery previews should reject actions outside recovery")
+	keep.rooms["gate"].condition = 40
+	keep._update_room_state("gate")
+	keep._set_piece_health("pike_squad_0", 7)
+	keep.repair_interval_active = true
+	keep.repair_actions_remaining = 2
+	var serialized_before: String = JSON.stringify(keep.serialize())
+	var room_preview: Dictionary = keep.recovery_action_preview("repair_room", "", "gate")
+	var piece_preview: Dictionary = keep.recovery_action_preview("repair_piece", "pike_squad_0")
+	var assignment_preview: Dictionary = keep.recovery_action_preview("assign_piece", "pike_squad_0", "gate")
+	var invalid_assignment: Dictionary = keep.recovery_action_preview("assign_piece", "pike_squad_0", "workshop")
+	var clear_preview: Dictionary = keep.recovery_action_preview("clear_assignment", "pike_squad_0")
+	_expect(bool(room_preview.get("ok", false)) and int(room_preview.get("material_cost", 0)) == 8, "room preview should expose legal cost before mutation")
+	_expect(bool(piece_preview.get("ok", false)) and int(piece_preview.get("material_cost", 0)) == 6, "piece preview should expose legal cost before mutation")
+	_expect(bool(assignment_preview.get("ok", false)), "assignment preview should accept a legal adjacent specialist target")
+	_expect(not bool(invalid_assignment.get("ok", false)) and String(invalid_assignment.get("reason", "")).contains("Gate"), "assignment preview should explain the specialist room restriction")
+	_expect(not bool(clear_preview.get("ok", false)) and String(clear_preview.get("reason", "")).contains("no room assignment"), "clear preview should explain when no assignment exists")
+	_expect(JSON.stringify(keep.serialize()) == serialized_before, "recovery previews must not mutate serialized state")
+	var repaired: Dictionary = keep.repair_room("gate")
+	_expect(bool(repaired.get("ok", false)) and not repaired.get("state_changes", []).is_empty(), "room repair should report structured state changes")
+	var assigned: Dictionary = keep.assign_piece_to_room("pike_squad_0", "gate")
+	_expect(bool(assigned.get("ok", false)) and not assigned.get("state_changes", []).is_empty(), "assignment should report structured state changes")
+	var exhausted: Dictionary = keep.recovery_action_preview("repair_piece", "pike_squad_0")
+	_expect(not bool(exhausted.get("ok", false)) and String(exhausted.get("reason", "")).contains("no recovery actions"), "preview should expose an exhausted action budget")
 
 func _test_deterministic_battle_report() -> void:
 	var first: PackKeepState = PackKeepState.new(17)

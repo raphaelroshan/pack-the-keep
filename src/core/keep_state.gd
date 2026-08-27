@@ -476,50 +476,134 @@ func remove_piece(instance_id: String) -> Dictionary:
 	pieces.erase(instance_id)
 	return {"ok": true, "message": "Removed defensive piece; materials are not refunded during an active run."}
 
-func assign_piece_to_room(instance_id: String, room_id: String) -> Dictionary:
+func recovery_action_preview(action_id: String, instance_id: String = "", room_id: String = "") -> Dictionary:
+	var preview: Dictionary = {
+		"action_id": action_id,
+		"ok": false,
+		"reason": "unknown recovery action",
+		"target_id": "",
+		"target_name": "Select a target",
+		"material_cost": 0,
+		"action_cost": 1,
+		"benefit": "",
+		"tradeoff": "Consumes one of the two recovery actions."
+	}
+	if action_id == "repair_room":
+		preview.material_cost = 8
+		preview.target_id = room_id
+		preview.target_name = String(ROOMS.get(room_id, {}).get("name", "Select a room"))
+		preview.benefit = "Restore up to 30 condition to the selected keep function."
+		preview.tradeoff = "Spend 8 materials and one recovery action instead of changing an assignment."
+	elif action_id == "repair_piece":
+		preview.material_cost = 6
+		preview.target_id = instance_id
+		var repair_piece_id: String = String(pieces.get(instance_id, {}).get("piece_id", ""))
+		preview.target_name = String(PIECES.get(repair_piece_id, {}).get("name", "Select a placed piece"))
+		preview.benefit = "Restore 30% of the selected defender's maximum health."
+		preview.tradeoff = "Spend 6 materials and one recovery action instead of restoring a room."
+	elif action_id == "assign_piece":
+		preview.target_id = instance_id
+		var assign_piece_id: String = String(pieces.get(instance_id, {}).get("piece_id", ""))
+		var assign_piece_name: String = String(PIECES.get(assign_piece_id, {}).get("name", "Select a placed piece"))
+		var assign_room_name: String = String(ROOMS.get(room_id, {}).get("name", "Select a room"))
+		preview.target_name = "%s -> %s" % [assign_piece_name, assign_room_name]
+		preview.benefit = String(ASSIGNMENT_RULES.get(assign_piece_id, {}).get("effect", "Activate the piece's specialist room behavior."))
+		preview.tradeoff = "Spend one recovery action and commit this piece to one room."
+	elif action_id == "clear_assignment":
+		preview.target_id = instance_id
+		var clear_piece_id: String = String(pieces.get(instance_id, {}).get("piece_id", ""))
+		preview.target_name = String(PIECES.get(clear_piece_id, {}).get("name", "Select an assigned piece"))
+		preview.benefit = "Free the selected piece for a different specialist assignment later."
+		preview.tradeoff = "Spend one recovery action and lose the current room benefit."
+	else:
+		return preview
 	if not repair_interval_active:
-		return {"ok": false, "reason": "room assignments are made during the repair interval"}
+		preview.reason = "no recovery interval is open"
+		return preview
 	if repair_actions_remaining <= 0:
-		return {"ok": false, "reason": "no repair actions remain"}
-	if not pieces.has(instance_id):
-		return {"ok": false, "reason": "unknown defensive piece"}
-	if not rooms.has(room_id):
-		return {"ok": false, "reason": "unknown keep room"}
+		preview.reason = "no recovery actions remain"
+		return preview
+	match action_id:
+		"repair_room":
+			if not rooms.has(room_id):
+				preview.reason = "select a keep room"
+			elif materials < 8:
+				preview.reason = "not enough materials"
+			elif room_condition(room_id) >= 100:
+				preview.reason = "room is already stable"
+			else:
+				preview.ok = true
+				preview.reason = ""
+		"repair_piece":
+			if not pieces.has(instance_id):
+				preview.reason = "select a placed defensive piece"
+			elif float(pieces[instance_id].get("condition", 0.0)) >= 1.0:
+				preview.reason = "piece is already stable"
+			elif materials < 6:
+				preview.reason = "not enough materials"
+			else:
+				preview.ok = true
+				preview.reason = ""
+		"assign_piece":
+			if not pieces.has(instance_id):
+				preview.reason = "select a placed defensive piece"
+			elif not rooms.has(room_id):
+				preview.reason = "select a keep room"
+			else:
+				var piece_id: String = String(pieces[instance_id].get("piece_id", ""))
+				if not ASSIGNMENT_RULES.has(piece_id):
+					preview.reason = "%s has no room assignment behavior" % PIECES[piece_id].name
+				else:
+					var rule: Dictionary = ASSIGNMENT_RULES[piece_id]
+					if String(rule.get("room", "")) != room_id:
+						preview.reason = "%s can only be assigned to %s" % [PIECES[piece_id].name, ROOMS[String(rule.get("room", ""))].name]
+					elif String(pieces[instance_id].get("floor", "ground")) != String(ROOMS[room_id].get("floor", "ground")):
+						preview.reason = "piece and assigned room must share a floor"
+					elif not _piece_is_adjacent_to_room(pieces[instance_id], room_id):
+						preview.reason = "piece must be inside or adjacent to its assigned room"
+					elif assigned_rooms.has(room_id) and String(assigned_rooms[room_id]) != instance_id:
+						preview.reason = "%s already has an assigned piece" % ROOMS[room_id].name
+					else:
+						var existing_assignment: String = String(pieces[instance_id].get("assignment", ""))
+						if not existing_assignment.is_empty():
+							preview.reason = "piece is already assigned to %s; clear it during the interval first" % ROOMS[existing_assignment].name
+						else:
+							preview.ok = true
+							preview.reason = ""
+		"clear_assignment":
+			if not pieces.has(instance_id):
+				preview.reason = "select a placed defensive piece"
+			else:
+				var assignment: String = String(pieces[instance_id].get("assignment", ""))
+				if assignment.is_empty():
+					preview.reason = "piece has no room assignment"
+				else:
+					preview.target_name = "%s <- %s" % [String(PIECES[String(pieces[instance_id].get("piece_id", ""))].name), String(ROOMS[assignment].name)]
+					preview.ok = true
+					preview.reason = ""
+	return preview
+
+func assign_piece_to_room(instance_id: String, room_id: String) -> Dictionary:
+	var preview: Dictionary = recovery_action_preview("assign_piece", instance_id, room_id)
+	if not bool(preview.get("ok", false)):
+		return {"ok": false, "reason": String(preview.get("reason", "assignment is unavailable")), "state_changes": []}
 	var piece_id: String = String(pieces[instance_id].get("piece_id", ""))
-	if not ASSIGNMENT_RULES.has(piece_id):
-		return {"ok": false, "reason": "%s has no room assignment behavior" % PIECES[piece_id].name}
 	var rule: Dictionary = ASSIGNMENT_RULES[piece_id]
-	if String(rule.get("room", "")) != room_id:
-		return {"ok": false, "reason": "%s can only be assigned to %s" % [PIECES[piece_id].name, ROOMS[String(rule.get("room", ""))].name]}
-	if String(pieces[instance_id].get("floor", "ground")) != String(ROOMS[room_id].get("floor", "ground")):
-		return {"ok": false, "reason": "piece and assigned room must share a floor"}
-	if not _piece_is_adjacent_to_room(pieces[instance_id], room_id):
-		return {"ok": false, "reason": "piece must be inside or adjacent to its assigned room"}
-	if assigned_rooms.has(room_id) and String(assigned_rooms[room_id]) != instance_id:
-		return {"ok": false, "reason": "%s already has an assigned piece" % ROOMS[room_id].name}
-	var existing_assignment: String = String(pieces[instance_id].get("assignment", ""))
-	if not existing_assignment.is_empty():
-		return {"ok": false, "reason": "piece is already assigned to %s; clear it during the interval first" % ROOMS[existing_assignment].name}
 	assigned_rooms[room_id] = instance_id
 	pieces[instance_id].assignment = room_id
 	repair_actions_remaining -= 1
 	_log("Assigned %s to %s: %s." % [PIECES[piece_id].name, ROOMS[room_id].name, rule.effect])
-	return {"ok": true, "message": "Assigned %s to %s: %s." % [PIECES[piece_id].name, ROOMS[room_id].name, rule.effect], "actions_remaining": repair_actions_remaining}
+	return {"ok": true, "message": "Assigned %s to %s: %s." % [PIECES[piece_id].name, ROOMS[room_id].name, rule.effect], "actions_remaining": repair_actions_remaining, "state_changes": [{"op": "assign_piece", "piece": instance_id, "room": room_id}]}
 
 func clear_piece_assignment(instance_id: String) -> Dictionary:
-	if not repair_interval_active:
-		return {"ok": false, "reason": "assignment changes are made during the repair interval"}
-	if repair_actions_remaining <= 0:
-		return {"ok": false, "reason": "no repair actions remain"}
-	if not pieces.has(instance_id):
-		return {"ok": false, "reason": "unknown defensive piece"}
+	var preview: Dictionary = recovery_action_preview("clear_assignment", instance_id)
+	if not bool(preview.get("ok", false)):
+		return {"ok": false, "reason": String(preview.get("reason", "assignment clearing is unavailable")), "state_changes": []}
 	var assignment: String = String(pieces[instance_id].get("assignment", ""))
-	if assignment.is_empty():
-		return {"ok": false, "reason": "piece has no room assignment"}
 	assigned_rooms.erase(assignment)
 	pieces[instance_id].assignment = ""
 	repair_actions_remaining -= 1
-	return {"ok": true, "message": "Cleared %s from %s." % [PIECES[String(pieces[instance_id].get("piece_id", ""))].name, ROOMS[assignment].name], "actions_remaining": repair_actions_remaining}
+	return {"ok": true, "message": "Cleared %s from %s." % [PIECES[String(pieces[instance_id].get("piece_id", ""))].name, ROOMS[assignment].name], "actions_remaining": repair_actions_remaining, "state_changes": [{"op": "clear_assignment", "piece": instance_id, "room": assignment}]}
 
 func room_condition(room_id: String) -> int:
 	if not rooms.has(room_id):
@@ -1000,40 +1084,26 @@ func use_commander_ability() -> Dictionary:
 	return {"ok": false, "reason": "unknown active commander"}
 
 func repair_piece(instance_id: String) -> Dictionary:
-	if not repair_interval_active:
-		return {"ok": false, "reason": "piece repairs are made during the Greywatch repair interval"}
-	if repair_actions_remaining <= 0:
-		return {"ok": false, "reason": "no repair actions remain"}
-	if not pieces.has(instance_id):
-		return {"ok": false, "reason": "unknown defensive piece"}
-	if float(pieces[instance_id].get("condition", 0.0)) >= 1.0:
-		return {"ok": false, "reason": "piece is already stable"}
-	if materials < 6:
-		return {"ok": false, "reason": "not enough materials"}
+	var preview: Dictionary = recovery_action_preview("repair_piece", instance_id)
+	if not bool(preview.get("ok", false)):
+		return {"ok": false, "reason": String(preview.get("reason", "piece repair is unavailable")), "state_changes": []}
 	materials -= 6
 	var max_health: int = int(pieces[instance_id].get("max_health", PIECES[String(pieces[instance_id].get("piece_id", ""))].get("max_health", 10)))
 	_set_piece_health(instance_id, int(pieces[instance_id].get("health", max_health)) + maxi(1, int(round(float(max_health) * 0.30))))
 	combat_metrics["repairs"] = int(combat_metrics.get("repairs", 0)) + 30
 	repair_actions_remaining -= 1
-	return {"ok": true, "health": pieces[instance_id].health, "max_health": max_health, "condition": pieces[instance_id].condition, "actions_remaining": repair_actions_remaining, "message": "Repair restored the named piece without erasing its battle history."}
+	return {"ok": true, "health": pieces[instance_id].health, "max_health": max_health, "condition": pieces[instance_id].condition, "actions_remaining": repair_actions_remaining, "message": "Repair restored the named piece without erasing its battle history.", "state_changes": [{"op": "repair_piece", "piece": instance_id, "health": pieces[instance_id].health}]}
 
 func repair_room(room_id: String) -> Dictionary:
-	if not repair_interval_active:
-		return {"ok": false, "reason": "room repairs are made during the Greywatch repair interval"}
-	if repair_actions_remaining <= 0:
-		return {"ok": false, "reason": "no repair actions remain"}
-	if not rooms.has(room_id):
-		return {"ok": false, "reason": "unknown keep room"}
-	if materials < 8:
-		return {"ok": false, "reason": "not enough materials"}
-	if room_condition(room_id) >= 100:
-		return {"ok": false, "reason": "room is already stable"}
+	var preview: Dictionary = recovery_action_preview("repair_room", "", room_id)
+	if not bool(preview.get("ok", false)):
+		return {"ok": false, "reason": String(preview.get("reason", "room repair is unavailable")), "state_changes": []}
 	materials -= 8
 	rooms[room_id].condition = mini(100, room_condition(room_id) + 30)
 	_update_room_state(room_id)
 	combat_metrics["repairs"] = int(combat_metrics.get("repairs", 0)) + 30
 	repair_actions_remaining -= 1
-	return {"ok": true, "actions_remaining": repair_actions_remaining, "message": "Repaired %s to %s." % [ROOMS[room_id].name, rooms[room_id].state]}
+	return {"ok": true, "actions_remaining": repair_actions_remaining, "message": "Repaired %s to %s." % [ROOMS[room_id].name, rooms[room_id].state], "state_changes": [{"op": "repair_room", "room": room_id, "condition": room_condition(room_id), "state": room_state(room_id)}]}
 
 func recovery_advice() -> Dictionary:
 	if not repair_interval_active:

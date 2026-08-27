@@ -135,3 +135,11 @@
 **Reason:** Parsing battle text is fragile and makes UI, save/load, and tests depend on presentation wording. Stable IDs and direct counters provide efficient updates and deterministic inspection.
 
 **Trade-off:** The save schema is wider and requires migration discipline. In return, the game can answer what attacked, how much damage was dealt, who was disabled, which enemy was stopped, and how much recovery was spent.
+
+## ADR-018: Recovery cards render authoritative action previews
+
+**Decision:** Expose read-only recovery-action previews from `PackKeepState` and render them as explicit UI cards for room repair, piece repair, assignment, and assignment clearing. The existing commands remain the only mutation path.
+
+**Reason:** Recovery is the next major player decision, but generic buttons hide costs, benefits, trade-offs, and rejection reasons. A shared authoritative preview keeps the interface explanatory without creating a second copy of legality rules in `main.gd`.
+
+**Trade-off:** The simulation API gains presentation-neutral preview metadata and must keep it synchronized with command behavior. Tests therefore verify that previews do not mutate state and that commands reject whenever their matching preview is blocked.

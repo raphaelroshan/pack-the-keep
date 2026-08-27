@@ -47,6 +47,7 @@ var preview_valid: bool = false
 var selected_instance_id: String = ""
 var inspected_text: String = "Click a room or placed piece on the keep to inspect its authoritative state."
 var gameplay_columns: Control
+var command_scroll: ScrollContainer
 var title_card: PanelContainer
 var screen_label: Label
 var screen_hint: Label
@@ -68,6 +69,21 @@ var last_log_size: int = 0
 var focused_enemy_index: int = -1
 var response_preview_label: Label
 var recovery_priority_label: Label
+var recovery_actions_panel: VBoxContainer
+var recovery_stage_label: Label
+var recovery_room_card_title: Label
+var recovery_room_card_detail: Label
+var recovery_room_button: Button
+var recovery_piece_card_title: Label
+var recovery_piece_card_detail: Label
+var recovery_piece_button: Button
+var recovery_assign_card_title: Label
+var recovery_assign_card_detail: Label
+var recovery_assign_button: Button
+var recovery_clear_card_title: Label
+var recovery_clear_card_detail: Label
+var recovery_clear_button: Button
+var finish_interval_button: Button
 var guidance_label: Label
 var result_explain_label: Label
 var scorecard_label: Label
@@ -347,14 +363,14 @@ func _build_ui() -> void:
 	right.custom_minimum_size = Vector2(292, 0)
 	right.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	columns.add_child(right)
-	var control_scroll: ScrollContainer = ScrollContainer.new()
-	control_scroll.custom_minimum_size = Vector2(286, 520)
-	control_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right.add_child(control_scroll)
+	command_scroll = ScrollContainer.new()
+	command_scroll.custom_minimum_size = Vector2(286, 520)
+	command_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right.add_child(command_scroll)
 	var controls: VBoxContainer = VBoxContainer.new()
 	controls.add_theme_constant_override("separation", 8)
 	controls.custom_minimum_size = Vector2(278, 0)
-	control_scroll.add_child(controls)
+	command_scroll.add_child(controls)
 
 	var panel_title: Label = Label.new()
 	panel_title.text = "COMMAND TABLE"
@@ -446,7 +462,7 @@ func _build_ui() -> void:
 	controls.add_child(asset_strip)
 
 	piece_option = OptionButton.new()
-	piece_option.item_selected.connect(func(_index: int) -> void: _arm_selected_piece())
+	piece_option.item_selected.connect(func(_index: int) -> void: _on_piece_option_changed())
 	for piece_id in PackKeepState.PIECES.keys():
 		piece_option.add_item(String(PackKeepState.PIECES[piece_id].get("name", piece_id)))
 		piece_option.set_item_metadata(piece_option.item_count - 1, piece_id)
@@ -461,6 +477,7 @@ func _build_ui() -> void:
 	floor_option.set_item_metadata(1, "upper")
 	controls.add_child(_labeled_control("Floor", floor_option))
 	room_option = OptionButton.new()
+	room_option.item_selected.connect(func(_index: int) -> void: _refresh_recovery_action_cards())
 	for room_id in PackKeepState.ROOMS.keys():
 		room_option.add_item(String(PackKeepState.ROOMS[room_id].get("name", room_id)))
 		room_option.set_item_metadata(room_option.item_count - 1, room_id)
@@ -494,28 +511,49 @@ func _build_ui() -> void:
 		doctrine_option.add_item(doctrine_id.replace("_", " ").capitalize())
 		doctrine_option.set_item_metadata(doctrine_option.item_count - 1, doctrine_id)
 	controls.add_child(_labeled_control("Invasion doctrine", doctrine_option))
-	var assign_button: Button = Button.new()
-	assign_button.text = "Assign selected piece to room"
-	assign_button.tooltip_text = "Consumes one repair-interval action and activates the unit’s room behavior."
-	assign_button.pressed.connect(_on_assign_piece)
-	controls.add_child(assign_button)
+	recovery_actions_panel = VBoxContainer.new()
+	recovery_actions_panel.add_theme_constant_override("separation", 6)
+	controls.add_child(recovery_actions_panel)
+	var recovery_heading: Label = Label.new()
+	recovery_heading.text = "RECOVERY ACTIONS"
+	recovery_heading.add_theme_font_size_override("font_size", 16)
+	recovery_heading.add_theme_color_override("font_color", Color("#e2bd84"))
+	recovery_actions_panel.add_child(recovery_heading)
+	recovery_stage_label = Label.new()
+	recovery_stage_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	recovery_stage_label.add_theme_color_override("font_color", Color("#bfe8cf"))
+	recovery_actions_panel.add_child(recovery_stage_label)
 
-	var clear_assignment_button: Button = Button.new()
-	clear_assignment_button.text = "Clear selected assignment"
-	clear_assignment_button.pressed.connect(_on_clear_assignment)
-	controls.add_child(clear_assignment_button)
+	var room_card: Dictionary = _build_recovery_action_card("REPAIR ROOM", "Repair selected room", _on_repair_room)
+	recovery_room_card_title = room_card.title
+	recovery_room_card_detail = room_card.detail
+	recovery_room_button = room_card.button
+	recovery_actions_panel.add_child(room_card.panel)
 
-	var repair_room_button: Button = Button.new()
-	repair_room_button.text = "Repair selected room"
-	repair_room_button.tooltip_text = "Consumes one repair-interval action and 8 materials."
-	repair_room_button.pressed.connect(_on_repair_room)
-	controls.add_child(repair_room_button)
+	var piece_card: Dictionary = _build_recovery_action_card("REPAIR PIECE", "Repair selected piece", _on_repair_piece)
+	recovery_piece_card_title = piece_card.title
+	recovery_piece_card_detail = piece_card.detail
+	recovery_piece_button = piece_card.button
+	recovery_actions_panel.add_child(piece_card.panel)
 
-	var finish_interval_button: Button = Button.new()
-	finish_interval_button.text = "Finish repair interval"
-	finish_interval_button.tooltip_text = "Close recovery and unlock the next invasion."
+	var assign_card: Dictionary = _build_recovery_action_card("ASSIGN SPECIALIST", "Assign selected piece", _on_assign_piece)
+	recovery_assign_card_title = assign_card.title
+	recovery_assign_card_detail = assign_card.detail
+	recovery_assign_button = assign_card.button
+	recovery_actions_panel.add_child(assign_card.panel)
+
+	var clear_card: Dictionary = _build_recovery_action_card("CLEAR ASSIGNMENT", "Clear selected assignment", _on_clear_assignment)
+	recovery_clear_card_title = clear_card.title
+	recovery_clear_card_detail = clear_card.detail
+	recovery_clear_button = clear_card.button
+	recovery_actions_panel.add_child(clear_card.panel)
+
+	finish_interval_button = Button.new()
+	finish_interval_button.text = "Finish recovery"
+	finish_interval_button.tooltip_text = "Close recovery explicitly; unused actions are recorded and never spent automatically."
 	finish_interval_button.pressed.connect(_on_finish_interval)
-	controls.add_child(finish_interval_button)
+	recovery_actions_panel.add_child(finish_interval_button)
+	controls.move_child(recovery_actions_panel, 2)
 
 	var start_button: Button = Button.new()
 	start_button.text = "Start invasion"
@@ -668,6 +706,12 @@ func _set_screen(next_screen: String) -> void:
 		else:
 			screen_hint.text = "A compact two-floor defense about pressure and recovery."
 	_refresh_ui()
+	if screen == "results" and keep and keep.repair_interval_active:
+		call_deferred("_focus_recovery_controls")
+
+func _focus_recovery_controls() -> void:
+	if command_scroll and recovery_actions_panel and recovery_actions_panel.visible:
+		command_scroll.scroll_vertical = 0
 
 func _labeled_control(label_text: String, control: Control) -> VBoxContainer:
 	var group: VBoxContainer = VBoxContainer.new()
@@ -678,10 +722,45 @@ func _labeled_control(label_text: String, control: Control) -> VBoxContainer:
 	group.add_child(control)
 	return group
 
+func _build_recovery_action_card(title_text: String, button_text: String, callback: Callable) -> Dictionary:
+	var panel: PanelContainer = PanelContainer.new()
+	var body: VBoxContainer = VBoxContainer.new()
+	body.add_theme_constant_override("separation", 3)
+	panel.add_child(body)
+	var title: Label = Label.new()
+	title.text = title_text
+	title.add_theme_color_override("font_color", Color("#e2bd84"))
+	body.add_child(title)
+	var detail: Label = Label.new()
+	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	detail.custom_minimum_size = Vector2(270, 72)
+	detail.add_theme_font_size_override("font_size", 11)
+	detail.add_theme_color_override("font_color", Color("#c9bfd0"))
+	body.add_child(detail)
+	var button: Button = Button.new()
+	button.text = button_text
+	button.pressed.connect(callback)
+	body.add_child(button)
+	return {"panel": panel, "title": title, "detail": detail, "button": button}
+
 func _selected_id(option: OptionButton) -> String:
 	if option.selected < 0:
 		return ""
 	return String(option.get_item_metadata(option.selected))
+
+func _select_option_metadata(option: OptionButton, target: String) -> void:
+	for index in range(option.item_count):
+		if String(option.get_item_metadata(index)) == target:
+			option.select(index)
+			return
+
+func _on_piece_option_changed() -> void:
+	selected_instance_id = ""
+	if keep.repair_interval_active:
+		_clear_placement_mode()
+		_refresh_ui()
+		return
+	_arm_selected_piece()
 
 func _next_slot(piece_id: String, floor: String) -> Vector2i:
 	var index: int = 0
@@ -745,6 +824,11 @@ func _on_reserve_pack() -> void:
 func _arm_selected_piece() -> void:
 	if keep.wave_active:
 		_set_event("Placement is preparation-only. Resolve or finish the invasion before rebuilding.")
+		return
+	if keep.repair_interval_active:
+		_clear_placement_mode()
+		_set_event("Recovery uses the selected piece and room in the action cards; placement resumes after recovery closes.")
+		_refresh_ui()
 		return
 	var piece_id: String = _selected_id(piece_option)
 	placement_mode = not piece_id.is_empty()
@@ -827,13 +911,16 @@ func _on_map_clicked(floor: String, cell: Vector2i) -> void:
 	if not instance_id.is_empty():
 		selected_instance_id = instance_id
 		var piece_inspection: Dictionary = keep.inspect_piece(instance_id)
+		_select_option_metadata(piece_option, String(piece_inspection.get("piece_id", "")))
 		inspected_text = _format_inspection(piece_inspection)
 		_set_event("Inspector focused on %s." % String(piece_inspection.get("name", instance_id)))
 		_refresh_ui()
 		return
 	var room_id: String = keep.room_at_cell(floor, cell)
 	if not room_id.is_empty():
-		selected_instance_id = ""
+		if not keep.repair_interval_active:
+			selected_instance_id = ""
+		_select_option_metadata(room_option, room_id)
 		inspected_text = _format_inspection(keep.inspect_room(room_id))
 		_set_event("Inspector focused on %s." % String(keep.inspect_room(room_id).get("name", room_id)))
 		_refresh_ui()
@@ -969,6 +1056,41 @@ func _refresh_recovery_priorities() -> void:
 	else:
 		recovery_priority_label.text = "RECOVERY PRIORITIES — %s\n%s" % ["advisory order", " | ".join(rows)]
 
+func _apply_recovery_action_card(title: Label, detail: Label, button: Button, action_name: String, preview: Dictionary) -> void:
+	var target_name: String = String(preview.get("target_name", "Select a target"))
+	var material_cost: int = int(preview.get("material_cost", 0))
+	var cost_text: String = "%d material%s + 1 action" % [material_cost, "" if material_cost == 1 else "s"] if material_cost > 0 else "1 recovery action"
+	var ready: bool = bool(preview.get("ok", false))
+	var status_text: String = "READY" if ready else "BLOCKED — %s" % String(preview.get("reason", "unavailable"))
+	title.text = "%s — %s" % [action_name, target_name]
+	detail.text = "COST — %s\nBENEFIT — %s\nTRADE-OFF — %s\n%s" % [cost_text, String(preview.get("benefit", "")), String(preview.get("tradeoff", "")), status_text]
+	detail.add_theme_color_override("font_color", Color("#bfe8cf") if ready else Color("#c99a9a"))
+	button.disabled = not ready
+	button.tooltip_text = String(preview.get("benefit", "")) if ready else String(preview.get("reason", "unavailable"))
+
+func _refresh_recovery_action_cards() -> void:
+	if recovery_actions_panel == null:
+		return
+	recovery_actions_panel.visible = keep.repair_interval_active
+	if not keep.repair_interval_active:
+		return
+	var action_number: int = 3 - keep.repair_actions_remaining
+	if keep.repair_actions_remaining > 0:
+		recovery_stage_label.text = "ACTION %d OF 2 — choose one priority. %d material(s) available." % [action_number, keep.materials]
+	else:
+		recovery_stage_label.text = "ACTIONS COMPLETE — continue explicitly when the keep is ready."
+	var instance_id: String = _selected_piece_instance()
+	var room_id: String = _selected_id(room_option)
+	_apply_recovery_action_card(recovery_room_card_title, recovery_room_card_detail, recovery_room_button, "REPAIR ROOM", keep.recovery_action_preview("repair_room", "", room_id))
+	_apply_recovery_action_card(recovery_piece_card_title, recovery_piece_card_detail, recovery_piece_button, "REPAIR PIECE", keep.recovery_action_preview("repair_piece", instance_id))
+	_apply_recovery_action_card(recovery_assign_card_title, recovery_assign_card_detail, recovery_assign_button, "ASSIGN SPECIALIST", keep.recovery_action_preview("assign_piece", instance_id, room_id))
+	_apply_recovery_action_card(recovery_clear_card_title, recovery_clear_card_detail, recovery_clear_button, "CLEAR ASSIGNMENT", keep.recovery_action_preview("clear_assignment", instance_id))
+	finish_interval_button.disabled = false
+	if keep.has_next_wave():
+		finish_interval_button.text = "CONTINUE — START WAVE %d/%d" % [keep.wave_index + 1, keep.authored_wave_count()]
+	else:
+		finish_interval_button.text = "FINISH RECOVERY"
+
 func _on_remove_piece() -> void:
 	if keep.wave_active or keep.repair_interval_active:
 		_set_event("Piece removal is preparation-only; finish the active wave or recovery interval first.")
@@ -1017,6 +1139,9 @@ func _on_clear_assignment() -> void:
 
 func _on_repair_room() -> void:
 	_run_result(keep.repair_room(_selected_id(room_option)), "Repair")
+
+func _on_repair_piece() -> void:
+	_run_result(keep.repair_piece(_selected_piece_instance()), "Repair")
 
 func _on_finish_interval() -> void:
 	var result: Dictionary = keep.finish_repair_interval()
@@ -1312,6 +1437,7 @@ func _refresh_ui() -> void:
 	_refresh_response_preview()
 	_refresh_layout_lens()
 	_refresh_recovery_priorities()
+	_refresh_recovery_action_cards()
 	_refresh_result_explanation()
 	keep_canvas.keep = keep
 	keep_canvas.call("set_focus", focused_enemy_index)

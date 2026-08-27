@@ -9,6 +9,11 @@
     "layout_comparison": "commander_layout_lens_counts_floors_and_zones; preparation_only_piece_removal_has_no_refund",
     "replay_identity": "scenario_commander_seed_replay_key"
   },
+  "p5_greywatch_mastery": {
+    "status": "in_progress",
+    "recovery_action_cards": "implemented_with_authoritative_preview_cost_benefit_tradeoff_and_blocking_reason",
+    "next_slice": "causal_final_report"
+  },
   "campaign": {
     "title": "The Bell at Dusk",
     "premise": "A small keep is granted one season to become a refuge before a coalition of raiders, sappers, climbers, and siege beasts tests every defensive doctrine at once.",
