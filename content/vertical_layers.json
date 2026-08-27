@@ -1,0 +1,335 @@
+{
+  "schema_version": 1,
+  "game_id": "pack-the-keep",
+  "framework_version": "0.3.0",
+  "design_promise": "The upper keep buys time and information; the ground keep converts that time into interception, recovery, or refuge.",
+  "layout": {
+    "grid": [12, 8],
+    "layers": ["upper", "ground"],
+    "shared_footprint": true,
+    "shared_room_graph": true,
+    "principle": "The two layers are one keep, not two separate boards. Every upper placement has a ground dependency and every ground response has an information or access relationship to the upper layer.",
+    "vertical_connections": [
+      {
+        "id": "east_stair",
+        "type": "stair",
+        "connects": ["north_tower", "inner_yard"],
+        "purpose": "Lets defenders and repair runners move between the tower and ground response space.",
+        "failure_effect": "Ground response time increases and the tower becomes isolated."
+      },
+      {
+        "id": "gate_stair",
+        "type": "stair",
+        "connects": ["outer_wall", "gate"],
+        "purpose": "Connects wall defense to the primary ground entry.",
+        "failure_effect": "Wall defenders cannot reinforce the gate quickly."
+      },
+      {
+        "id": "signal_relay",
+        "type": "signal",
+        "connects": ["north_tower", "barracks", "workshop"],
+        "purpose": "Carries warnings and commander orders across floors.",
+        "failure_effect": "Forecasts remain visible but response timing and morale recovery are reduced."
+      }
+    ]
+  },
+  "floor_roles": [
+    {
+      "id": "upper",
+      "name": "Walls and Towers",
+      "purpose": "Warning, ranged pressure, route control, and early intervention.",
+      "benefits": ["visibility", "delay", "directional_pressure", "signal_reach"],
+      "vulnerabilities": ["climbers", "siege_beasts", "smoke", "isolated_access"],
+      "dependency_types": ["stair_access", "ground_supply", "repair_support", "signal_continuity"],
+      "readability_rule": "The player must see which ground room supplies each upper piece and which approach each piece can observe or cover."
+    },
+    {
+      "id": "ground",
+      "name": "Ground Floor and Yard",
+      "purpose": "Interception, movement, repair, reserves, supplies, morale, and refuge.",
+      "benefits": ["flexible_response", "frontline_hold", "recovery", "evacuation"],
+      "vulnerabilities": ["raiders", "sappers", "blocked_lanes", "morale_collapse"],
+      "dependency_types": ["upper_warning", "open_lanes", "room_adjacency", "materials"],
+      "readability_rule": "The player must see where a reserve can move, where a repair station can reach, and which upper alerts can be answered."
+    }
+  ],
+  "upper_units": [
+    {
+      "id": "scout_post",
+      "role": "recon",
+      "purpose": "Reveals enemy doctrine and likely landing or approach points.",
+      "floor": "upper",
+      "needs": ["view_of_approach"],
+      "supports": ["ground_reserve", "signal_beacon", "warden_rally"],
+      "fails_when": ["isolated", "smoke_obscures_view", "tower_breached"]
+    },
+    {
+      "id": "signal_beacon",
+      "role": "coordination",
+      "purpose": "Carries alerts from a tower to connected ground rooms.",
+      "floor": "upper",
+      "needs": ["signal_relay", "ground_connection"],
+      "supports": ["response_time", "morale", "commander_ability"],
+      "fails_when": ["signal_relay_cut", "tower_isolated", "ash_slinger_pressure"]
+    },
+    {
+      "id": "wall_archer_post",
+      "role": "ranged_pressure",
+      "status": "future",
+      "purpose": "Applies steady pressure to enemies outside the walls.",
+      "floor": "upper",
+      "needs": ["clear_sightline", "ground_ammunition"],
+      "supports": ["delay", "raider_pressure", "climber_pressure"],
+      "fails_when": ["smoke", "blocked_sightline", "enemies_inside"]
+    },
+    {
+      "id": "wall_ballista",
+      "role": "heavy_ranged_pressure",
+      "status": "future",
+      "purpose": "Delivers a powerful, slow attack along a declared approach lane.",
+      "floor": "upper",
+      "needs": ["large_wall_slot", "ground_reload_team", "clear_lane"],
+      "supports": ["siege_beast", "shieldbreaker", "slow_targets"],
+      "fails_when": ["bypass", "wrong_direction", "reload_team_lost"]
+    },
+    {
+      "id": "watchfire",
+      "role": "visibility",
+      "status": "future",
+      "purpose": "Reveals climbers and burrowers while making the outer approach legible.",
+      "floor": "upper",
+      "needs": ["fuel", "open_tower_or_wall_slot"],
+      "supports": ["climber_detection", "night_visibility", "signal_redundancy"],
+      "fails_when": ["ash_wind", "smoke", "fuel_shortage"]
+    },
+    {
+      "id": "wall_brace",
+      "role": "structural_support",
+      "status": "vertical_slice",
+      "purpose": "Reduces breach damage to an adjacent wall or tower attachment.",
+      "floor": "upper",
+      "needs": ["wall_segment", "repair_materials"],
+      "supports": ["breach_prevention", "tower_survival"],
+      "fails_when": ["siege_beast_area_damage", "support_room_lost"]
+    }
+  ],
+  "ground_units": [
+    {
+      "id": "pike_squad",
+      "role": "frontline",
+      "purpose": "Holds a narrow gate, corridor, or stair landing.",
+      "floor": "ground",
+      "needs": ["lane", "assignment", "morale"],
+      "supports": ["gate_hold", "stair_hold", "controlled_retreat"],
+      "fails_when": ["open_yard", "flank", "morale_collapse"]
+    },
+    {
+      "id": "shield_wardens",
+      "role": "anchor",
+      "status": "future",
+      "purpose": "Protects adjacent ground units and stabilizes a selected boundary.",
+      "floor": "ground",
+      "needs": ["adjacent_units", "clear_retreat"],
+      "supports": ["gate_hold", "room_adjacency", "shutter_retreat"],
+      "fails_when": ["sapper", "area_pressure", "slow_rotation"]
+    },
+    {
+      "id": "repair_station",
+      "role": "support",
+      "purpose": "Restores damaged rooms, stairs, wall supports, or equipment during recovery.",
+      "floor": "ground",
+      "needs": ["materials", "repair_radius", "room_access"],
+      "supports": ["upper_repair", "ground_recovery", "controlled_sacrifice"],
+      "fails_when": ["sapper_targeted", "supply_room_breached", "no_access"]
+    },
+    {
+      "id": "fire_team",
+      "role": "control",
+      "purpose": "Controls open yard space and punishes enemies that land inside the walls.",
+      "floor": "ground",
+      "needs": ["sightline", "safe_firing_space"],
+      "supports": ["climber_response", "open_yard", "retreat_lane"],
+      "fails_when": ["friendly_lane_blocked", "heavy_target", "smoke"]
+    },
+    {
+      "id": "runner_pair",
+      "role": "mobile_response",
+      "status": "future",
+      "purpose": "Carries repair kits, orders, or evacuation supplies between rooms and floors.",
+      "floor": "ground",
+      "needs": ["open_lane", "signal_or_destination", "morale"],
+      "supports": ["cross_floor_response", "evacuation", "repair_delivery"],
+      "fails_when": ["blocked_lane", "multiple_alerts", "area_pressure"]
+    },
+    {
+      "id": "bellkeepers",
+      "role": "morale_and_signal",
+      "status": "future",
+      "purpose": "Coordinates the response when alerts cross between upper and ground layers.",
+      "floor": "ground",
+      "needs": ["bell_or_signal_relay", "morale", "room_access"],
+      "supports": ["pause_warning", "response_sync", "evacuation"],
+      "fails_when": ["signal_cut", "bell_damaged", "isolated_room"]
+    },
+    {
+      "id": "counter_siege_team",
+      "role": "specialist",
+      "status": "future",
+      "purpose": "Supports an upper heavy weapon by protecting its reload window and ground approach.",
+      "floor": "ground",
+      "needs": ["wall_ballista", "supply_cache", "clear_approach"],
+      "supports": ["siege_beast", "prepared_firing_window", "upper_weapon_survival"],
+      "fails_when": ["raiders", "climbers", "reload_support_lost"]
+    },
+    {
+      "id": "refuge_ward",
+      "role": "refuge",
+      "status": "future",
+      "purpose": "Protects civilians and essential supplies during a scarred defense or evacuation.",
+      "floor": "ground",
+      "needs": ["chapel_or_safe_room", "evacuation_route", "morale"],
+      "supports": ["civilian_safety", "controlled_withdrawal", "partial_victory"],
+      "fails_when": ["room_breached", "route_blocked", "panic"]
+    }
+  ],
+  "pack_layer_identity": [
+    {
+      "pack": "pike_line",
+      "upper_pieces": ["narrow_gate", "wall_brace"],
+      "ground_pieces": ["pike_squad"],
+      "cross_floor_benefit": "A narrow upper approach feeds a ground-floor holding lane.",
+      "cross_floor_risk": "If the stair or gate connection fails, the pike line becomes isolated."
+    },
+    {
+      "pack": "field_engineers",
+      "upper_pieces": ["brace"],
+      "ground_pieces": ["repair_station"],
+      "cross_floor_benefit": "Ground repair keeps wall and tower pieces from becoming permanent losses.",
+      "cross_floor_risk": "The repair room becomes a high-value sapper target."
+    },
+    {
+      "pack": "firekeepers",
+      "upper_pieces": ["fire_brazier"],
+      "ground_pieces": ["fire_team"],
+      "cross_floor_benefit": "Upper visibility and ground denial shape the same approach space.",
+      "cross_floor_risk": "Fire can protect the yard while making a friendly route unsafe."
+    },
+    {
+      "pack": "scouts",
+      "upper_pieces": ["scout_post", "signal_beacon"],
+      "ground_pieces": ["runner_pair", "bellkeepers"],
+      "cross_floor_benefit": "Information becomes a ground response rather than a passive bonus.",
+      "cross_floor_risk": "If the signal chain is cut, the player has knowledge without coordination."
+    },
+    {
+      "pack": "shieldwall",
+      "upper_pieces": ["wall_brace", "emergency_shutters"],
+      "ground_pieces": ["shield_wardens"],
+      "cross_floor_benefit": "The upper boundary protects a controlled ground retreat.",
+      "cross_floor_risk": "Sealing the wall can trap or disconnect the ground reserve."
+    },
+    {
+      "pack": "runner_network",
+      "upper_pieces": ["signal_beacon"],
+      "ground_pieces": ["runner_pair", "supply_cache"],
+      "cross_floor_benefit": "Signals direct movement and supplies across the keep.",
+      "cross_floor_risk": "A blocked lane turns the mobility doctrine into stranded pieces."
+    },
+    {
+      "pack": "bell_guard",
+      "upper_pieces": ["signal_beacon"],
+      "ground_pieces": ["bellkeepers"],
+      "cross_floor_benefit": "Alerts and morale survive one damaged room when the relay is redundant.",
+      "cross_floor_risk": "The pack is indirect and weak if the player has no actual response units."
+    },
+    {
+      "pack": "counter_siege",
+      "upper_pieces": ["wall_ballista"],
+      "ground_pieces": ["counter_siege_team", "supply_cache"],
+      "cross_floor_benefit": "The upper weapon creates a firing window while the ground team reloads and protects the approach.",
+      "cross_floor_risk": "Large footprint and reload dependency make it poor against bypasses."
+    }
+  ],
+  "enemy_floor_tests": [
+    {
+      "enemy": "raider",
+      "primary_floor": "ground",
+      "pressure": "Gate and yard entry.",
+      "upper_response": "Buy time and reveal the approach.",
+      "ground_response": "Hold the lane or deploy a reserve."
+    },
+    {
+      "enemy": "sapper",
+      "primary_floor": "cross_floor_dependency",
+      "pressure": "Repair rooms, stairs, signal relays, and supply dependencies.",
+      "upper_response": "Expose the sapper route and protect the relay.",
+      "ground_response": "Intercept or repair after the hit."
+    },
+    {
+      "enemy": "climber",
+      "primary_floor": "upper_then_ground",
+      "pressure": "Wall landing and bypass of the gate.",
+      "upper_response": "Detection, watchfire, and denial before landing.",
+      "ground_response": "Respond in the yard or stair landing."
+    },
+    {
+      "enemy": "siege_beast",
+      "primary_floor": "both",
+      "pressure": "Area damage across a wall, tower, and nearby ground room.",
+      "upper_response": "Ballista or delay buys a firing window.",
+      "ground_response": "Repair, evacuate, or preserve a smaller keep."
+    },
+    {
+      "enemy": "ash_slinger",
+      "primary_floor": "upper",
+      "pressure": "Smoke obscures towers and cuts signal clarity.",
+      "upper_response": "Redundant watch and alternate signal paths.",
+      "ground_response": "Operate with partial information and preserve morale."
+    },
+    {
+      "enemy": "burrower",
+      "primary_floor": "ground",
+      "pressure": "Interior emergence away from the wall.",
+      "upper_response": "Warning and map markers if detected.",
+      "ground_response": "Open-yard reserve and flexible interception."
+    }
+  ],
+  "progression": {
+    "new_tracks": [
+      {
+        "id": "vertical_readiness",
+        "name": "Vertical Readiness",
+        "purpose": "Unlocks better information and movement between floors.",
+        "nodes": [
+          {"id": "stair_assignments", "effect": "show_cross_floor_response_time", "choice_created": "assign defenders to a stair before the wave"},
+          {"id": "signal_relay", "effect": "share_upper_alerts_to_ground_rooms", "choice_created": "protect a signal chain instead of adding another weapon"},
+          {"id": "cross_floor_reserve", "effect": "runner_can_cross_between_layers", "choice_created": "keep a ground reserve ready for an upper breach"}
+        ]
+      },
+      {
+        "id": "layered_recovery",
+        "name": "Layered Recovery",
+        "purpose": "Makes a damaged floor survivable without erasing the cost of a breach.",
+        "nodes": [
+          {"id": "wall_repair_access", "effect": "ground_repair_can_reach_upper", "choice_created": "repair a wall before rebuilding a room"},
+          {"id": "fallback_stairs", "effect": "one_damaged_connection_remains_usable", "choice_created": "maintain a smaller but connected keep"},
+          {"id": "refuge_transfer", "effect": "civilian_safety_survives_upper_loss", "choice_created": "turn a tower loss into a controlled evacuation"}
+        ]
+      }
+    ],
+    "guardrails": [
+      "The upper floor must not be a universally safer version of the ground floor.",
+      "Every upper piece has at least one ground dependency.",
+      "Every ground response has a visible access or information requirement.",
+      "A lost tower, wall segment, or stair can reduce options without automatically ending the run.",
+      "The first vertical slice uses visibility, access, and support as the only cross-floor rules."
+    ]
+  },
+  "vertical_slice_scope": {
+    "upper": ["scout_post", "signal_beacon", "wall_brace"],
+    "ground": ["pike_squad", "repair_station", "fire_team"],
+    "connections": ["east_stair", "gate_stair", "signal_relay"],
+    "enemies": ["raider", "sapper", "climber"],
+    "excluded_until_after_slice": ["wall_archer_post", "wall_ballista", "watchfire", "runner_pair", "bellkeepers", "refuge_ward", "siege_beast"]
+  }
+}
