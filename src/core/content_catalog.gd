@@ -6,7 +6,8 @@ const PACK_PATHS: Array[String] = [
 	"res://data/packs/firekeepers.json",
 	"res://data/packs/scouts.json",
 	"res://data/packs/runner_network.json",
-	"res://data/packs/fallback_convoy.json"
+	"res://data/packs/fallback_convoy.json",
+	"res://data/packs/crossbow_watch.json"
 ]
 
 const COMMANDER_PATHS: Array[String] = [
@@ -26,14 +27,17 @@ const PIECE_PATHS: Array[String] = [
 	"res://data/pieces/runner_pair.json",
 	"res://data/pieces/supply_cache.json",
 	"res://data/pieces/rear_guard.json",
-	"res://data/pieces/breakaway_barricade.json"
+	"res://data/pieces/breakaway_barricade.json",
+	"res://data/pieces/crossbow_patrol.json",
+	"res://data/pieces/watch_banner.json"
 ]
 
 const ENEMY_PATHS: Array[String] = [
 	"res://data/enemies/raider.json",
 	"res://data/enemies/sapper.json",
 	"res://data/enemies/climber.json",
-	"res://data/enemies/siege_beast.json"
+	"res://data/enemies/siege_beast.json",
+	"res://data/enemies/shield_guard.json"
 ]
 
 const DOCTRINE_PATHS: Array[String] = [
@@ -41,14 +45,16 @@ const DOCTRINE_PATHS: Array[String] = [
 	"res://data/doctrines/distributed_sabotage.json",
 	"res://data/doctrines/feint_and_flank.json",
 	"res://data/doctrines/area_pressure.json",
-	"res://data/doctrines/rolling_breach.json"
+	"res://data/doctrines/rolling_breach.json",
+	"res://data/doctrines/shielded_advance.json"
 ]
 
 const SCENARIO_PATHS: Array[String] = [
 	"res://data/scenarios/gatehouse_lock.json",
 	"res://data/scenarios/wrong_wall.json",
 	"res://data/scenarios/open_yard_net.json",
-	"res://data/scenarios/relief_road.json"
+	"res://data/scenarios/relief_road.json",
+	"res://data/scenarios/red_banner_road.json"
 ]
 
 const EVENT_PATHS: Array[String] = [
@@ -403,6 +409,10 @@ func validate_enemy_definition(enemy: Dictionary, expected_id: String, known_roo
 	_validate_integer_minimum(enemy, "health", enemy_id, "enemy", 1, validation_errors)
 	_validate_integer_minimum(enemy, "damage", enemy_id, "enemy", 0, validation_errors)
 	_validate_integer_minimum(enemy, "arrival_step", enemy_id, "enemy", 1, validation_errors)
+	if enemy.has("armor"):
+		_validate_integer_minimum(enemy, "armor", enemy_id, "enemy", 0, validation_errors)
+		if int(enemy.get("armor", 0)) > 0 and (not enemy.get("armor_counter_tag") is String or String(enemy.get("armor_counter_tag", "")).strip_edges().is_empty()):
+			validation_errors.append("enemy %s with armor must name a non-empty armor_counter_tag" % enemy_id)
 	for field in ["name", "short_role", "question", "route", "doctrine", "counter", "telegraph", "failure_mode", "report_phrase"]:
 		if not enemy.get(field) is String or String(enemy.get(field, "")).strip_edges().is_empty():
 			validation_errors.append("enemy %s must have non-empty text for %s" % [enemy_id, field])

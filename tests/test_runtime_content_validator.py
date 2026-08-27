@@ -49,6 +49,19 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         for expected in ("health", "unknown target room", "doctrine", "unknown piece", "at least three"):
             self.assertIn(expected, joined)
 
+    def test_armored_enemy_requires_valid_armor_and_counter_tag(self) -> None:
+        enemy = copy.deepcopy(load("data/enemies/shield_guard.json"))
+        enemy["armor"] = -1
+        errors: list[str] = []
+        validator.validate_enemy(Path("shield_guard.json"), enemy, {"gate", "barracks", "inner_yard"}, {"crossbow_patrol"}, {"shielded_advance"}, {}, set(), errors)
+        self.assertIn("armor must be a non-negative integer", "\n".join(errors))
+
+        enemy["armor"] = 2
+        enemy["armor_counter_tag"] = ""
+        errors = []
+        validator.validate_enemy(Path("shield_guard.json"), enemy, {"gate", "barracks", "inner_yard"}, {"crossbow_patrol"}, {"shielded_advance"}, {}, set(), errors)
+        self.assertIn("armor_counter_tag", "\n".join(errors))
+
     def test_doctrine_allows_repeated_actors_but_rejects_unknown_ones(self) -> None:
         doctrine = copy.deepcopy(load("data/doctrines/gate_assault.json"))
         errors: list[str] = []
