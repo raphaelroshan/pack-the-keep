@@ -102,6 +102,12 @@
     "effects_rule": "bounded_gain_presets_are_independent_from_mute_and_change_presentation_only",
     "persistence": "settings_schema_3_migrates_schema_1_and_2_with_safe_defaults"
   },
+  "p10_event_feed_and_game_feel": {
+    "status": "implemented",
+    "feed_rule": "filter_only_the_visible_newest_entries_while_preserving_the_complete_authoritative_report",
+    "auto_pause_rule": "pause_presentation_after_an_atomic_step_reveals_the_first_wave_threat_or_a_new_breach",
+    "determinism_rule": "auto_pause_never_rolls_back_skips_or_partially_resolves_a_simulation_step"
+  },
   "v090_multi_wave": {
     "status": "implemented",
     "authored_sequence": "scenario_wave_plans_and_doctrines_define_three_escalating_waves",
