@@ -686,7 +686,7 @@ func inspect_enemy(index: int) -> Dictionary:
 	if not _enemy_definitions.has(enemy_id):
 		return {"ok": false, "reason": "enemy definition is unavailable"}
 	var definition: Dictionary = _enemy_definitions[enemy_id]
-	return {"ok": true, "kind": "enemy", "id": enemy_id, "index": index, "name": String(definition.name), "doctrine": String(definition.doctrine), "route": String(definition.route), "counter": String(definition.counter), "health": int(enemy.get("hp", 0)), "max_health": int(enemy.get("max_health", definition.health)), "damage": int(definition.damage), "armor": int(definition.get("armor", 0)), "armor_counter_tag": String(definition.get("armor_counter_tag", "")), "arrival_step": int(definition.arrival_step), "target": String(enemy.get("target", "")), "defeated": bool(enemy.get("defeated", false))}
+	return {"ok": true, "kind": "enemy", "id": enemy_id, "index": index, "name": String(definition.name), "doctrine": String(definition.doctrine), "route": String(definition.route), "counter": String(definition.counter), "health": int(enemy.get("hp", 0)), "max_health": int(enemy.get("max_health", definition.health)), "damage": int(definition.damage), "armor": int(definition.get("armor", 0)), "armor_counter_tag": String(definition.get("armor_counter_tag", "")), "arrival_step": int(enemy.get("arrival_step", definition.arrival_step)), "base_arrival_step": int(definition.arrival_step), "has_signal_disruption": definition.get("disruption_profile") is Dictionary, "signal_disrupted": bool(enemy.get("signal_disrupted", false)), "target": String(enemy.get("target", "")), "defeated": bool(enemy.get("defeated", false))}
 
 func remove_piece(instance_id: String) -> Dictionary:
 	if wave_active or repair_interval_active:
@@ -998,6 +998,44 @@ func _has_nearby_ranged_support(instance: Dictionary) -> bool:
 			return true
 	return false
 
+func _has_linked_support(counter_modifier: String, relay_modifier: String) -> bool:
+	for counter_instance in pieces.values():
+		if bool(counter_instance.get("disabled", false)) or float(counter_instance.get("condition", 0.0)) <= 0.0:
+			continue
+		var counter_piece_id: String = String(counter_instance.get("piece_id", ""))
+		var counter_piece: Dictionary = _piece_definitions.get(counter_piece_id, {})
+		var counter_profile: Variant = counter_piece.get("support_profile")
+		if not counter_profile is Dictionary or String(counter_profile.get("response_modifier", "")) != counter_modifier:
+			continue
+		var counter_floor: String = String(counter_instance.get("floor", "ground"))
+		var counter_origin: Vector2i = counter_instance.get("origin", Vector2i.ZERO)
+		var counter_range: int = int(counter_piece.get("range", 0))
+		for relay_instance in pieces.values():
+			if bool(relay_instance.get("disabled", false)) or float(relay_instance.get("condition", 0.0)) <= 0.0 or String(relay_instance.get("floor", "ground")) != counter_floor:
+				continue
+			var relay_piece: Dictionary = _piece_definitions.get(String(relay_instance.get("piece_id", "")), {})
+			var relay_profile: Variant = relay_piece.get("support_profile")
+			if not relay_profile is Dictionary or String(relay_profile.get("response_modifier", "")) != relay_modifier:
+				continue
+			var relay_origin: Vector2i = relay_instance.get("origin", Vector2i.ZERO)
+			if absi(relay_origin.x - counter_origin.x) + absi(relay_origin.y - counter_origin.y) <= counter_range:
+				return true
+	return false
+
+func _enemy_disruption_countered(enemy_id: String) -> bool:
+	var disruption: Variant = _enemy_definitions.get(enemy_id, {}).get("disruption_profile")
+	if not disruption is Dictionary:
+		return true
+	return _has_linked_support(String(disruption.get("counter_modifier", "")), String(disruption.get("relay_modifier", "")))
+
+func _enemy_arrival_state(enemy_id: String) -> Dictionary:
+	var definition: Dictionary = _enemy_definitions.get(enemy_id, {})
+	var base_arrival: int = int(definition.get("arrival_step", 1))
+	var disruption: Variant = definition.get("disruption_profile")
+	var disrupted: bool = disruption is Dictionary and not _enemy_disruption_countered(enemy_id)
+	var delta: int = int(disruption.get("arrival_step_delta", 0)) if disrupted else 0
+	return {"arrival_step": maxi(1, base_arrival + delta), "base_arrival_step": base_arrival, "signal_disrupted": disrupted}
+
 func _has_assignment(piece_id: String, room_id: String) -> bool:
 	if not assigned_rooms.has(room_id):
 		return false
@@ -1243,7 +1281,7 @@ func _battle_step() -> Dictionary:
 				pieces[attacker_id].targets_stopped = int(pieces[attacker_id].get("targets_stopped", 0)) + 1
 			_battle_log("%s was stopped before its doctrine could complete." % _enemy_definitions[enemy_id].name)
 			continue
-		if battle_step >= int(_enemy_definitions[enemy_id].arrival_step):
+		if battle_step >= int(enemy.get("arrival_step", _enemy_definitions[enemy_id].arrival_step)):
 			if String(enemy.get("target", "")).is_empty():
 				enemy.target = _choose_target(enemy_id)
 				var target_name: String = "none"
@@ -1418,9 +1456,20 @@ func start_wave(doctrine: String) -> Dictionary:
 	for index in range(composition.size()):
 		var enemy_id: String = String(composition[index])
 		var enemy_health: int = int(_enemy_definitions[enemy_id].get("health", 1))
-		enemies.append({"enemy_id": enemy_id, "max_health": enemy_health, "hp": enemy_health, "damage": int(_enemy_definitions[enemy_id].get("damage", 0)), "target": "", "defeated": false, "slot": index, "attacks_received": 0, "damage_taken": 0})
+		var arrival_state: Dictionary = _enemy_arrival_state(enemy_id)
+		enemies.append({"enemy_id": enemy_id, "max_health": enemy_health, "hp": enemy_health, "damage": int(_enemy_definitions[enemy_id].get("damage", 0)), "arrival_step": int(arrival_state.arrival_step), "signal_disrupted": bool(arrival_state.signal_disrupted), "target": "", "defeated": false, "slot": index, "attacks_received": 0, "damage_taken": 0})
 	_battle_log("Forecast: %s. Question: %s" % [doctrine.replace("_", " "), _doctrine_definitions[doctrine].question])
 	_battle_log("Likely pressure: %s. Scout Post can reveal the exact target before contact." % String(_enemy_definitions[String(composition[0])].route).replace("_", " "))
+	var logged_disruptions: Array[String] = []
+	for enemy in enemies:
+		var enemy_id: String = String(enemy.get("enemy_id", ""))
+		if logged_disruptions.has(enemy_id) or not _enemy_definitions[enemy_id].get("disruption_profile") is Dictionary:
+			continue
+		logged_disruptions.append(enemy_id)
+		if bool(enemy.get("signal_disrupted", false)):
+			_battle_log("%s smoke broke the warning chain; contact advances from step %d to step %d." % [_enemy_definitions[enemy_id].name, int(_enemy_definitions[enemy_id].arrival_step), int(enemy.get("arrival_step", 1))])
+		else:
+			_battle_log("Bell Guard relayed through %s smoke; forecast detail and contact timing hold." % _enemy_definitions[enemy_id].name)
 	return {"ok": true, "message": "Wave %d begins. Pause between steps and read the target before using Lockdown." % wave_index, "forecast": forecast(), "composition": composition.duplicate()}
 
 func advance_wave(delta: float) -> Dictionary:
@@ -1615,21 +1664,55 @@ func forecast() -> Dictionary:
 	var likely_target: String = String(doctrine.get("likely_target", "gate"))
 	var uncertainty: String = String(doctrine.get("uncertainty", "secondary timing"))
 	var scout_bonus: bool = _has_unit("scout_post", "upper") or _warden_signal_bonus()
-	if _has_assignment("scout_post", "north_tower"):
+	var forecast_enemy_ids: Array[String] = []
+	if wave_active:
+		for enemy in enemies:
+			forecast_enemy_ids.append(String(enemy.get("enemy_id", "")))
+	elif scenario_active and _scenario_definitions.has(scenario_id):
+		var scenario_plans: Array = _scenario_definitions[scenario_id].get("wave_plans", [])
+		if wave_index < scenario_plans.size():
+			for enemy_id in scenario_plans[wave_index]:
+				forecast_enemy_ids.append(String(enemy_id))
+	else:
+		for enemy_id in doctrine.get("composition", []):
+			forecast_enemy_ids.append(String(enemy_id))
+	var signal_disrupted: bool = false
+	var signal_network_active: bool = false
+	if wave_active:
+		for enemy in enemies:
+			var enemy_id: String = String(enemy.get("enemy_id", ""))
+			var disruption: Variant = _enemy_definitions.get(enemy_id, {}).get("disruption_profile")
+			if not disruption is Dictionary:
+				continue
+			if bool(enemy.get("signal_disrupted", false)):
+				signal_disrupted = true
+				likely_target = String(disruption.get("forecast_target", "obscured"))
+				uncertainty = "signal smoke hides the target and advances contact by one step"
+				break
+			signal_network_active = true
+	else:
+		for enemy_id in forecast_enemy_ids:
+			var disruption: Variant = _enemy_definitions.get(enemy_id, {}).get("disruption_profile")
+			if not disruption is Dictionary:
+				continue
+			if _enemy_disruption_countered(enemy_id):
+				signal_network_active = true
+			else:
+				signal_disrupted = true
+				likely_target = String(disruption.get("forecast_target", "obscured"))
+				uncertainty = "signal smoke hides the target and advances contact by one step"
+				break
+	if signal_disrupted:
+		scout_bonus = false
+	elif _has_assignment("scout_post", "north_tower"):
 		uncertainty = "none: North Tower assignment reveals the landing room"
 	var composition_revealed: bool = not equipped_modifier_id.is_empty() and String(_modifier_definitions.get(equipped_modifier_id, {}).get("effect", "")) == "reveal_wave_composition"
 	var composition: Array[String] = []
 	if composition_revealed:
-		if wave_active:
-			for enemy in enemies:
-				composition.append(String(enemy.get("enemy_id", "")))
-		elif scenario_active and _scenario_definitions.has(scenario_id):
-			var plans: Array = _scenario_definitions[scenario_id].get("wave_plans", [])
-			if wave_index < plans.size():
-				for enemy_id in plans[wave_index]:
-					composition.append(String(enemy_id))
-		uncertainty = "composition revealed by Roadside Intelligence; targets still respond to keep condition"
-	return {"doctrine": enemy_doctrine, "question": doctrine.get("question", ""), "likely_target": likely_target, "uncertainty": uncertainty, "scout_bonus": scout_bonus, "exact_target_revealed": _has_assignment("scout_post", "north_tower"), "composition_revealed": composition_revealed, "composition": composition}
+		composition = forecast_enemy_ids.duplicate()
+		if not signal_disrupted:
+			uncertainty = "composition revealed by Roadside Intelligence; targets still respond to keep condition"
+	return {"doctrine": enemy_doctrine, "question": doctrine.get("question", ""), "likely_target": likely_target, "uncertainty": uncertainty, "scout_bonus": scout_bonus, "exact_target_revealed": not signal_disrupted and _has_assignment("scout_post", "north_tower"), "signal_disrupted": signal_disrupted, "signal_network_active": signal_network_active, "composition_revealed": composition_revealed, "composition": composition}
 
 func summary() -> Dictionary:
 	return {

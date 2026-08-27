@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.11.0-greywatch-crossbow-watch",
+  "framework_version": "0.11.1-greywatch-bell-guard",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -122,6 +122,14 @@
     "presentation": ["violet_watch_glyphs", "shield_guard_armor_ring", "numeric_armor_inspection"],
     "determinism_rule": "armor_and_support_resolution_depend_only_on_catalog_data_and_stable_piece_positions"
   },
+  "p11_bell_guard": {
+    "status": "implemented",
+    "teaching_pair": ["bell_guard", "smoke_and_signal"],
+    "combat_rules": ["same_floor_signal_link", "forecast_obscuration", "bounded_arrival_step_delta"],
+    "scenario": "ash_at_the_bell",
+    "presentation": ["gold_bell_glyph", "gray_smoke_marker", "explicit_disrupted_or_relayed_text"],
+    "determinism_rule": "signal_state_is_resolved_from_catalog_modifiers_and_stable_piece_positions_when_each_wave_starts"
+  },
   "v090_multi_wave": {
     "status": "implemented",
     "authored_sequence": "scenario_wave_plans_and_doctrines_define_three_escalating_waves",
@@ -183,7 +191,8 @@
       "scouts",
       "runner_network",
       "fallback_convoy",
-      "crossbow_watch"
+      "crossbow_watch",
+      "bell_guard"
     ],
     "units": [
       "pike_squad",
@@ -192,7 +201,8 @@
       "scout_post",
       "runner_pair",
       "rear_guard",
-      "crossbow_patrol"
+      "crossbow_patrol",
+      "bellkeepers"
     ],
     "equipment": [
       "narrow_gate",
@@ -208,7 +218,8 @@
       "sapper",
       "climber",
       "siege_beast",
-      "shield_guard"
+      "shield_guard",
+      "ash_slinger"
     ],
     "waves": 3,
     "keep_grid": [
@@ -497,7 +508,7 @@
     {
       "id": "bellkeepers",
       "name": "Bellkeepers",
-      "status": "future",
+      "status": "active",
       "category": "morale",
       "footprint": [
         1,
@@ -762,7 +773,7 @@
       "id": "bell_guard",
       "name": "Bell Guard",
       "purpose": "Turn signals and morale into coordinated response.",
-      "status": "future",
+      "status": "active",
       "family": "morale",
       "contents": [
         "bellkeepers",
@@ -874,7 +885,7 @@
     },
     {
       "id": "smoke_and_signal",
-      "status": "future",
+      "status": "active",
       "question": "Can the player maintain useful information when sightlines are deliberately degraded?",
       "telegraph": "Smoke corridors and signal interference markers appear before the wave.",
       "pressure_pattern": "Ash slingers reduce visibility and interrupt coordination.",
@@ -962,7 +973,7 @@
     },
     {
       "id": "ash_slinger",
-      "status": "future",
+      "status": "active",
       "role": "visibility disruption",
       "doctrine": "smoke_and_signal",
       "readable_behavior": "Creates a temporary obscured zone that weakens forecasts and signal links.",

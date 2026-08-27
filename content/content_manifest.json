@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.11.0",
+  "content_version": "0.11.1",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -91,7 +91,18 @@
     "scenario": "red_banner_road",
     "combat_rule": "enemy_armor_reduces_each_non_piercing_contributor_while_one_nearby_watch_banner_adds_one_ranged_damage",
     "validation": "catalog_contract_damage_math_save_load_six_seeded_replays_and_battle_ui_inspection",
-    "next_slice": "p11_second_teaching_pair"
+    "next_slice": "p11_bell_guard"
+  },
+  "p11_bell_guard": {
+    "status": "implemented",
+    "pack": "bell_guard",
+    "pieces": ["bellkeepers", "signal_beacon"],
+    "enemy": "ash_slinger",
+    "doctrine": "smoke_and_signal",
+    "scenario": "ash_at_the_bell",
+    "signal_rule": "a_same_floor_in_range_bellkeeper_to_beacon_link_preserves_forecast_detail_and_authored_arrival_timing",
+    "validation": "profile_validation_link_distance_lone_piece_failures_save_load_seeded_replays_and_battle_ui",
+    "next_slice": "p11_third_teaching_pair"
   },
   "campaign": {
     "title": "The Bell at Dusk",
@@ -273,6 +284,15 @@
       "doctrine": "layered_crossfire",
       "limitation": "Upper-wall placement and finite ammunition make the firing line powerful but inflexible.",
       "choice_text": "Spend wall space on a precise answer to armored advances."
+    },
+    {
+      "id": "bell_guard",
+      "name": "Bell Guard",
+      "purpose": "Preserve warning and response timing through disrupted sightlines.",
+      "pieces": ["bellkeepers", "signal_beacon"],
+      "doctrine": "coordinated_response",
+      "limitation": "Both pieces are non-attacking and the link fails across floors or beyond range.",
+      "choice_text": "Spend support positions on a warning chain that keeps the forecast trustworthy."
     }
   ],
   "pieces": [
@@ -382,6 +402,12 @@
       "id": "watch_banner",
       "name": "Watch Banner",
       "role": "coordinates one nearby ranged firing line",
+      "size": [1, 1]
+    },
+    {
+      "id": "bellkeepers",
+      "name": "Bellkeepers",
+      "role": "preserves a linked warning network",
       "size": [1, 1]
     }
   ],
@@ -545,6 +571,18 @@
         "crossbow_patrol",
         "watch_banner",
         "armor_piercing"
+      ]
+    },
+    {
+      "id": "ash_slinger",
+      "name": "Ash Slinger",
+      "role": "signal disruption and early contact",
+      "teaching_question": "Can the player preserve reliable warning when sightlines fail?",
+      "counter_options": [
+        "bell_guard",
+        "bellkeepers",
+        "signal_beacon",
+        "signal_redundancy"
       ]
     }
   ],
@@ -915,21 +953,24 @@
       "scout_post",
       "runner_pair",
       "rear_guard",
-      "crossbow_patrol"
+      "crossbow_patrol",
+      "bellkeepers"
     ],
     "enemy_ids": [
       "raider",
       "sapper",
       "climber",
       "siege_beast",
-      "shield_guard"
+      "shield_guard",
+      "ash_slinger"
     ],
     "scenario_ids": [
       "gatehouse_lock",
       "wrong_wall",
       "open_yard_net",
       "relief_road",
-      "red_banner_road"
+      "red_banner_road",
+      "ash_at_the_bell"
     ],
     "variation_contract": "seed-derived bounded target or resource variation; scenario objective and counter meaning remain fixed",
     "waves": [
@@ -1021,10 +1062,12 @@
       "climber_actor",
       "siege_beast_actor",
       "shield_guard_actor",
+      "ash_slinger_actor",
       "declared_target_lines",
       "health_and_condition_bars",
       "siege_beast_area_radius",
-      "shield_guard_armor_ring"
+      "shield_guard_armor_ring",
+      "ash_slinger_smoke_ring"
     ],
     "focus_response_contract": {
       "status": "implemented",

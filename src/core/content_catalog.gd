@@ -7,7 +7,8 @@ const PACK_PATHS: Array[String] = [
 	"res://data/packs/scouts.json",
 	"res://data/packs/runner_network.json",
 	"res://data/packs/fallback_convoy.json",
-	"res://data/packs/crossbow_watch.json"
+	"res://data/packs/crossbow_watch.json",
+	"res://data/packs/bell_guard.json"
 ]
 
 const COMMANDER_PATHS: Array[String] = [
@@ -29,7 +30,8 @@ const PIECE_PATHS: Array[String] = [
 	"res://data/pieces/rear_guard.json",
 	"res://data/pieces/breakaway_barricade.json",
 	"res://data/pieces/crossbow_patrol.json",
-	"res://data/pieces/watch_banner.json"
+	"res://data/pieces/watch_banner.json",
+	"res://data/pieces/bellkeepers.json"
 ]
 
 const ENEMY_PATHS: Array[String] = [
@@ -37,7 +39,8 @@ const ENEMY_PATHS: Array[String] = [
 	"res://data/enemies/sapper.json",
 	"res://data/enemies/climber.json",
 	"res://data/enemies/siege_beast.json",
-	"res://data/enemies/shield_guard.json"
+	"res://data/enemies/shield_guard.json",
+	"res://data/enemies/ash_slinger.json"
 ]
 
 const DOCTRINE_PATHS: Array[String] = [
@@ -46,7 +49,8 @@ const DOCTRINE_PATHS: Array[String] = [
 	"res://data/doctrines/feint_and_flank.json",
 	"res://data/doctrines/area_pressure.json",
 	"res://data/doctrines/rolling_breach.json",
-	"res://data/doctrines/shielded_advance.json"
+	"res://data/doctrines/shielded_advance.json",
+	"res://data/doctrines/smoke_and_signal.json"
 ]
 
 const SCENARIO_PATHS: Array[String] = [
@@ -54,7 +58,8 @@ const SCENARIO_PATHS: Array[String] = [
 	"res://data/scenarios/wrong_wall.json",
 	"res://data/scenarios/open_yard_net.json",
 	"res://data/scenarios/relief_road.json",
-	"res://data/scenarios/red_banner_road.json"
+	"res://data/scenarios/red_banner_road.json",
+	"res://data/scenarios/ash_at_the_bell.json"
 ]
 
 const EVENT_PATHS: Array[String] = [
@@ -413,6 +418,24 @@ func validate_enemy_definition(enemy: Dictionary, expected_id: String, known_roo
 		_validate_integer_minimum(enemy, "armor", enemy_id, "enemy", 0, validation_errors)
 		if int(enemy.get("armor", 0)) > 0 and (not enemy.get("armor_counter_tag") is String or String(enemy.get("armor_counter_tag", "")).strip_edges().is_empty()):
 			validation_errors.append("enemy %s with armor must name a non-empty armor_counter_tag" % enemy_id)
+	if enemy.has("disruption_profile"):
+		var disruption: Variant = enemy.get("disruption_profile")
+		if not disruption is Dictionary:
+			validation_errors.append("enemy %s disruption_profile must be an object" % enemy_id)
+		else:
+			for field in ["kind", "counter_modifier", "relay_modifier", "forecast_target"]:
+				if not disruption.get(field) is String or String(disruption.get(field, "")).strip_edges().is_empty():
+					validation_errors.append("enemy %s disruption_profile %s must be non-empty text" % [enemy_id, field])
+			var arrival_delta: Variant = disruption.get("arrival_step_delta")
+			if not _is_integer_number(arrival_delta) or int(arrival_delta) < -2 or int(arrival_delta) > 0:
+				validation_errors.append("enemy %s disruption_profile arrival_step_delta must be an integer from -2 to 0" % enemy_id)
+			if String(disruption.get("kind", "")) != "signal_smoke":
+				validation_errors.append("enemy %s has an unsupported disruption kind" % enemy_id)
+			var support_modifiers: Array[String] = _known_support_modifiers()
+			for modifier_field in ["counter_modifier", "relay_modifier"]:
+				var modifier: String = String(disruption.get(modifier_field, ""))
+				if not modifier.is_empty() and not support_modifiers.has(modifier):
+					validation_errors.append("enemy %s references unknown support modifier: %s" % [enemy_id, modifier])
 	for field in ["name", "short_role", "question", "route", "doctrine", "counter", "telegraph", "failure_mode", "report_phrase"]:
 		if not enemy.get(field) is String or String(enemy.get(field, "")).strip_edges().is_empty():
 			validation_errors.append("enemy %s must have non-empty text for %s" % [enemy_id, field])
@@ -998,6 +1021,16 @@ func _known_piece_targets() -> Array:
 		var enemy_id: String = path.get_file().get_basename()
 		if not result.has(enemy_id):
 			result.append(enemy_id)
+	return result
+
+func _known_support_modifiers() -> Array[String]:
+	var result: Array[String] = []
+	for piece in _pieces.values():
+		var support_profile: Variant = piece.get("support_profile")
+		if support_profile is Dictionary:
+			var modifier: String = String(support_profile.get("response_modifier", ""))
+			if not modifier.is_empty() and not result.has(modifier):
+				result.append(modifier)
 	return result
 
 func _known_enemy_ids() -> Array[String]:

@@ -17,7 +17,7 @@
   "skill": "Brace the Gate: melee contact control gains +2 against Gate Road Raiders when assigned to Gate.",
   "strength_tags": ["gate_assault", "corridor_control"],
   "weakness_tags": ["open_yard", "flanking"],
-  "attack_profile": {"style": "melee", "range": 1, "cooldown_steps": 1, "damage": 4, "defense": 2, "ammo_capacity": 0, "targets": ["raider", "shield_guard"]},
+  "attack_profile": {"style": "melee", "range": 1, "cooldown_steps": 1, "damage": 4, "defense": 2, "ammo_capacity": 0, "targets": ["raider", "shield_guard", "ash_slinger"]},
   "support_profile": null,
   "assignment_rule": {"room": "gate", "effect": "Gate Road hold bonus +2"},
   "availability": "starter",

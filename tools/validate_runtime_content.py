@@ -65,7 +65,7 @@ MODIFIER_FIELDS = {
 SUPPORTED_FLOORS = {"ground", "upper"}
 SUPPORTED_ZONES = {"wall", "courtyard", "keep"}
 SUPPORTED_ATTACK_STYLES = {"melee", "ranged", "support", "fortification"}
-SUPPORTED_DOCTRINES = {"gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach", "shielded_advance"}
+SUPPORTED_DOCTRINES = {"gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach", "shielded_advance", "smoke_and_signal"}
 SUPPORTED_NON_ENEMY_TARGETS = {"all"} | SUPPORTED_DOCTRINES
 SUPPORTED_EVENT_TYPES = {"forecast", "recovery", "scenario_conclusion"}
 SUPPORTED_EVENT_PHASES = {"preparation", "recovery", "results"}
@@ -235,6 +235,7 @@ def validate_enemy(
     room_ids: set[str],
     piece_ids: set[str],
     doctrine_ids: set[str],
+    support_modifiers: set[str],
     manifest_enemies: dict[str, dict[str, Any]],
     seen: set[str],
     errors: list[str],
@@ -266,6 +267,23 @@ def validate_enemy(
             errors.append(f"{path}: armor must be a non-negative integer")
         elif armor > 0 and (not isinstance(enemy.get("armor_counter_tag"), str) or not enemy["armor_counter_tag"].strip()):
             errors.append(f"{path}: armored enemies must name a non-empty armor_counter_tag")
+    if "disruption_profile" in enemy:
+        disruption = enemy.get("disruption_profile")
+        if not isinstance(disruption, dict):
+            errors.append(f"{path}: disruption_profile must be an object")
+        else:
+            for field in ("kind", "counter_modifier", "relay_modifier", "forecast_target"):
+                if not isinstance(disruption.get(field), str) or not disruption[field].strip():
+                    errors.append(f"{path}: disruption_profile {field} must be non-empty text")
+            arrival_delta = disruption.get("arrival_step_delta")
+            if not is_integer(arrival_delta) or not -2 <= arrival_delta <= 0:
+                errors.append(f"{path}: disruption_profile arrival_step_delta must be an integer from -2 to 0")
+            if disruption.get("kind") != "signal_smoke":
+                errors.append(f"{path}: disruption_profile kind is unsupported")
+            for field in ("counter_modifier", "relay_modifier"):
+                modifier = disruption.get(field)
+                if isinstance(modifier, str) and modifier and modifier not in support_modifiers:
+                    errors.append(f"{path}: disruption_profile references unknown support modifier: {modifier}")
     for field in sorted(ENEMY_TEXT_FIELDS):
         value = enemy.get(field)
         if not isinstance(value, str) or not value.strip():
@@ -755,6 +773,7 @@ def main() -> int:
 
     seen_pieces: set[str] = set()
     runtime_piece_availability: dict[str, str] = {}
+    support_modifiers: set[str] = set()
     for path in json_files(Path(args.pieces), "piece", errors):
         piece = load_json(path, errors)
         if not isinstance(piece, dict):
@@ -773,6 +792,9 @@ def main() -> int:
         )
         if piece_id is not None and isinstance(piece.get("availability"), str):
             runtime_piece_availability[piece_id] = piece["availability"]
+        support_profile = piece.get("support_profile")
+        if isinstance(support_profile, dict) and isinstance(support_profile.get("response_modifier"), str):
+            support_modifiers.add(support_profile["response_modifier"])
     for piece_id in sorted(set(manifest_pieces) - seen_pieces):
         errors.append(f"runtime piece file missing for manifest piece: {piece_id}")
 
@@ -782,7 +804,7 @@ def main() -> int:
         if not isinstance(enemy, dict):
             errors.append(f"{path}: root must be an object")
             continue
-        validate_enemy(path, enemy, room_ids, seen_pieces, seen_doctrines, manifest_enemies, seen_enemies, errors)
+        validate_enemy(path, enemy, room_ids, seen_pieces, seen_doctrines, support_modifiers, manifest_enemies, seen_enemies, errors)
     for enemy_id in sorted(set(manifest_enemies) - seen_enemies):
         errors.append(f"runtime enemy file missing for manifest enemy: {enemy_id}")
 
