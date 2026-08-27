@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.12.0-alpha-packaged-smoke` — completed P11 breadth plus packaged Windows smoke validation
+**Current build identity:** `0.12.1-alpha-save-recovery` — packaged Windows smoke plus non-mutating backup recovery
 
 ## Purpose
 
@@ -33,6 +33,10 @@ The Campaign Ledger now selects one authored modifier or none. The existing Road
 ## v0.12.0 Packaged smoke additions
 
 Pull-request and tagged-release Windows exports now launch under an isolated profile with unreachable network proxies. The artifact runs the real main scene, loads the runtime catalog, reaches deterministic battle step one, writes and validates run/settings files beneath that profile, frees the scene, and emits a structured smoke report before returning success.
+
+## v0.12.1 Save recovery additions
+
+Loading validates the primary save in a fresh keep-state candidate and falls back to the backup for missing, malformed, future, or otherwise invalid primary data. If neither candidate is valid, the active run remains unchanged. Legacy migration and backup recovery are named explicitly in the UI event feed.
 
 ## v0.8.2 testability additions
 
