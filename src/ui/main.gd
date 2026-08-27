@@ -27,6 +27,11 @@ var placement_label: Label
 var event_label: Label
 var log_label: Label
 var commander_option: OptionButton
+var commander_portrait: TextureRect
+var commander_profile_label: Label
+var commander_ability_button: Button
+var scenario_option: OptionButton
+var scenario_preview_label: Label
 var pack_option: OptionButton
 var piece_option: OptionButton
 var floor_option: OptionButton
@@ -101,12 +106,14 @@ func _build_ui() -> void:
 	shell.add_child(title_card)
 
 	var columns: HBoxContainer = HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 22)
+	columns.add_theme_constant_override("separation", 14)
+	columns.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	gameplay_columns = columns
 	shell.add_child(columns)
 
 	var left: VBoxContainer = VBoxContainer.new()
-	left.custom_minimum_size = Vector2(820, 0)
+	left.custom_minimum_size = Vector2(810, 0)
+	left.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	left.add_theme_constant_override("separation", 8)
 	columns.add_child(left)
 
@@ -122,6 +129,9 @@ func _build_ui() -> void:
 	left.add_child(subtitle)
 
 	status_label = Label.new()
+	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	status_label.custom_minimum_size = Vector2(800, 36)
+	status_label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	status_label.add_theme_font_size_override("font_size", 16)
 	status_label.add_theme_color_override("font_color", Color("#f2e5d1"))
 	left.add_child(status_label)
@@ -169,15 +179,16 @@ func _build_ui() -> void:
 	left.add_child(log_label)
 
 	var right: PanelContainer = PanelContainer.new()
-	right.custom_minimum_size = Vector2(320, 0)
+	right.custom_minimum_size = Vector2(292, 0)
+	right.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	columns.add_child(right)
 	var control_scroll: ScrollContainer = ScrollContainer.new()
-	control_scroll.custom_minimum_size = Vector2(310, 520)
+	control_scroll.custom_minimum_size = Vector2(286, 520)
 	control_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right.add_child(control_scroll)
 	var controls: VBoxContainer = VBoxContainer.new()
 	controls.add_theme_constant_override("separation", 8)
-	controls.custom_minimum_size = Vector2(292, 0)
+	controls.custom_minimum_size = Vector2(278, 0)
 	control_scroll.add_child(controls)
 
 	var panel_title: Label = Label.new()
@@ -185,13 +196,18 @@ func _build_ui() -> void:
 	panel_title.add_theme_font_size_override("font_size", 19)
 	panel_title.add_theme_color_override("font_color", Color("#e2bd84"))
 	controls.add_child(panel_title)
-	var commander_portrait: TextureRect = TextureRect.new()
+	commander_portrait = TextureRect.new()
 	commander_portrait.texture = CASTELLAN_PORTRAIT
 	commander_portrait.custom_minimum_size = Vector2(0, 92)
 	commander_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	commander_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	commander_portrait.tooltip_text = "The Castellan — Layered Masonry and Lockdown"
+	commander_portrait.tooltip_text = "Commander portrait; Warden portrait art is pending the next asset-generation window."
 	controls.add_child(commander_portrait)
+	commander_profile_label = Label.new()
+	commander_profile_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	commander_profile_label.custom_minimum_size = Vector2(292, 78)
+	commander_profile_label.add_theme_color_override("font_color", Color("#c9bfd0"))
+	controls.add_child(commander_profile_label)
 
 	commander_option = OptionButton.new()
 	for commander_id in PackKeepState.COMMANDERS.keys():
@@ -202,6 +218,18 @@ func _build_ui() -> void:
 	commander_button.text = "Take command"
 	commander_button.pressed.connect(_on_select_commander)
 	controls.add_child(commander_button)
+
+	scenario_option = OptionButton.new()
+	scenario_option.item_selected.connect(func(_index: int) -> void: _on_select_scenario())
+	for scenario_id in PackKeepState.SCENARIOS.keys():
+		scenario_option.add_item(String(PackKeepState.SCENARIOS[scenario_id].get("name", scenario_id)))
+		scenario_option.set_item_metadata(scenario_option.item_count - 1, scenario_id)
+	controls.add_child(_labeled_control("Greywatch scenario", scenario_option))
+	scenario_preview_label = Label.new()
+	scenario_preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	scenario_preview_label.custom_minimum_size = Vector2(292, 82)
+	scenario_preview_label.add_theme_color_override("font_color", Color("#d8c389"))
+	controls.add_child(scenario_preview_label)
 
 	pack_option = OptionButton.new()
 	pack_option.item_selected.connect(func(_index: int) -> void: _refresh_pack_preview())
@@ -276,7 +304,7 @@ func _build_ui() -> void:
 	controls.add_child(place_button)
 
 	doctrine_option = OptionButton.new()
-	for doctrine_id in ["gate_assault", "distributed_sabotage", "feint_and_flank"]:
+	for doctrine_id in ["gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure"]:
 		doctrine_option.add_item(doctrine_id.replace("_", " ").capitalize())
 		doctrine_option.set_item_metadata(doctrine_option.item_count - 1, doctrine_id)
 	controls.add_child(_labeled_control("Invasion doctrine", doctrine_option))
@@ -314,11 +342,11 @@ func _build_ui() -> void:
 	advance_button.pressed.connect(_on_advance_wave)
 	controls.add_child(advance_button)
 
-	var ability_button: Button = Button.new()
-	ability_button.text = "Lockdown (Castellan)"
-	ability_button.tooltip_text = "Halve the next room hit and restore 5% piece condition; once per wave."
-	ability_button.pressed.connect(_on_use_ability)
-	controls.add_child(ability_button)
+	commander_ability_button = Button.new()
+	commander_ability_button.text = "Lockdown (Castellan)"
+	commander_ability_button.tooltip_text = "Use the active commander ability once per wave."
+	commander_ability_button.pressed.connect(_on_use_ability)
+	controls.add_child(commander_ability_button)
 
 	var repair_gate_button: Button = Button.new()
 	repair_gate_button.text = "Repair Gate"
@@ -427,6 +455,28 @@ func _next_slot(piece_id: String, floor: String) -> Vector2i:
 
 func _on_select_commander() -> void:
 	_run_result(keep.select_commander(_selected_id(commander_option)), "Commander")
+	_refresh_scenario_preview()
+
+func _on_select_scenario() -> void:
+	var result: Dictionary = keep.select_scenario(_selected_id(scenario_option))
+	_run_result(result, "Scenario")
+	_refresh_scenario_preview()
+	if bool(result.get("ok", false)):
+		var preview: Dictionary = keep.scenario_preview()
+		var doctrine_id: String = String(preview.get("starting_doctrine", "gate_assault"))
+		for index in range(doctrine_option.item_count):
+			if String(doctrine_option.get_item_metadata(index)) == doctrine_id:
+				doctrine_option.select(index)
+				break
+
+func _refresh_scenario_preview() -> void:
+	if scenario_preview_label == null:
+		return
+	var preview: Dictionary = keep.scenario_preview(_selected_id(scenario_option))
+	if not bool(preview.get("ok", false)):
+		scenario_preview_label.text = "SCENARIO — %s" % String(preview.get("reason", "unavailable"))
+		return
+	scenario_preview_label.text = "SCENARIO — %s\nObjective: %s\nLesson: %s\nWaves: %d | Seed variation: %s" % [String(preview.get("name", "")), String(preview.get("objective", "")), String(preview.get("lesson", "")), int(preview.get("wave_count", 0)), String(preview.get("variation_id", "standard"))]
 
 func _refresh_pack_preview() -> void:
 	if pack_preview_label == null:
@@ -642,10 +692,16 @@ func _set_event(text: String) -> void:
 
 func _refresh_ui() -> void:
 	_refresh_pack_preview()
+	_refresh_scenario_preview()
 	var interval_text: String = "closed"
 	if keep.repair_interval_active:
 		interval_text = "%d action(s): %s" % [keep.repair_actions_remaining, keep.repair_interval_reason]
-	status_label.text = "Castellan | Materials %d | Command %d | Morale %d | Pieces %d | Wave %d | Step %d | Breach %d | Outcome %s | Repair %s" % [keep.materials, keep.command_points, keep.morale, keep.pieces.size(), keep.wave_index, keep.battle_step, keep.breach_level, keep.last_outcome if not keep.last_outcome.is_empty() else "active", interval_text]
+	status_label.text = "%s | %s | Materials %d | Command %d | Morale %d | Pieces %d | Wave %d | Step %d | Breach %d | Outcome %s | Repair %s" % [keep.summary().get("commander", "Commander"), String(keep.scenario_preview().get("name", "Free drill")), keep.materials, keep.command_points, keep.morale, keep.pieces.size(), keep.wave_index, keep.battle_step, keep.breach_level, keep.last_outcome if not keep.last_outcome.is_empty() else "active", interval_text]
+	commander_profile_label.text = "%s\nPassive: %s\nAbility: %s — %s\nLimitation: %s" % [String(PackKeepState.COMMANDERS[keep.commander_id].get("name", keep.commander_id)), String(PackKeepState.COMMANDERS[keep.commander_id].get("passive", "")), String(PackKeepState.COMMANDERS[keep.commander_id].get("ability_name", "")), String(PackKeepState.COMMANDERS[keep.commander_id].get("ability_text", "")), String(PackKeepState.COMMANDERS[keep.commander_id].get("limitation", ""))]
+	commander_portrait.modulate = Color("#9fb9c3") if keep.commander_id == "warden" else Color.WHITE
+	commander_portrait.tooltip_text = "The Warden — Open Lanes and Rally" if keep.commander_id == "warden" else "The Castellan — Layered Masonry and Lockdown"
+	commander_ability_button.text = "%s (%s)" % [String(PackKeepState.COMMANDERS[keep.commander_id].get("ability_name", "Ability")), String(PackKeepState.COMMANDERS[keep.commander_id].get("name", keep.commander_id)).replace("The ", "")]
+	commander_ability_button.tooltip_text = String(PackKeepState.COMMANDERS[keep.commander_id].get("ability_text", "Use once per wave."))
 	var forecast: Dictionary = keep.forecast()
 	forecast_label.text = "FORECAST — %s | Likely target: %s | Uncertainty: %s | Scout: %s" % [String(forecast.get("doctrine", "")).replace("_", " "), String(forecast.get("likely_target", "")), String(forecast.get("uncertainty", "")), "revealed" if bool(forecast.get("scout_bonus", false)) else "not revealed"]
 	var enemy_lines: Array[String] = []
@@ -800,10 +856,15 @@ class KeepCanvas extends Control:
 			var enemy_origin: Vector2 = MAP_ORIGIN + Vector2(20 + keep.wave_progress * 220.0, MAP_SIZE.y + 54 + index * 18)
 			if enemy_id == "climber":
 				enemy_origin = UPPER_ORIGIN + Vector2(20 + keep.wave_progress * 220.0, -10 + index * 18)
-			var enemy_color: Color = Color("#d26155") if enemy_id == "raider" else Color("#d7a35b") if enemy_id == "sapper" else Color("#a77bd1")
-			draw_circle(enemy_origin, 8.0, enemy_color)
-			draw_circle(enemy_origin, 8.0, Color("#f1dfb8"), false, 1.5)
-			draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(12, 4), "%s %dhp" % [String(enemy_def.get("name", enemy_id)), int(enemy.get("hp", 0))], HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#f2e5d1"))
+			elif enemy_id == "siege_beast":
+				enemy_origin = MAP_ORIGIN + Vector2(100 + keep.wave_progress * 170.0, MAP_SIZE.y + 46)
+			var enemy_color: Color = Color("#d26155") if enemy_id == "raider" else Color("#d7a35b") if enemy_id == "sapper" else Color("#a77bd1") if enemy_id == "climber" else Color("#b36c45")
+			var marker_radius: float = 12.0 if enemy_id == "siege_beast" else 8.0
+			draw_circle(enemy_origin, marker_radius, enemy_color)
+			draw_circle(enemy_origin, marker_radius, Color("#f1dfb8"), false, 1.5)
+			if enemy_id == "siege_beast":
+				draw_circle(enemy_origin, marker_radius + 5.0, Color(0.7, 0.3, 0.15, 0.35), false, 2.0)
+			draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(16, 4), "%s %dhp" % [String(enemy_def.get("name", enemy_id)), int(enemy.get("hp", 0))], HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#f2e5d1"))
 
 	func _draw() -> void:
 		if keep == null:

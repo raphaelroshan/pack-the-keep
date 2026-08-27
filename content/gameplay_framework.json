@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.2.0",
+  "framework_version": "0.3.0-p1",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -11,9 +11,19 @@
     "save_recovery": ["schema_version", "game_id", "atomic_replace", "future_version_rejection", "new_run_reset"],
     "controls": "scrollable_command_panel_with_direct_map_fallback_and_keyboard_focusable_buttons"
   },
+  "p1_content_and_replayability": {
+    "status": "implemented",
+    "commanders": ["castellan", "warden"],
+    "enemies": ["raider", "sapper", "climber", "siege_beast"],
+    "doctrines": ["gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure"],
+    "scenarios": ["gatehouse_lock", "wrong_wall", "open_yard_net"],
+    "variation": "cross-process deterministic seed-derived bounded variation",
+    "guardrail": "scenario objectives and counter meanings remain stable while target priority or resource pressure may vary"
+  },
   "vertical_slice": {
     "commanders": [
-      "castellan"
+      "castellan",
+      "warden"
     ],
     "packs": [
       "pike_line",
@@ -36,7 +46,8 @@
     "enemies": [
       "raider",
       "sapper",
-      "climber"
+      "climber",
+      "siege_beast"
     ],
     "waves": 3,
     "keep_grid": [

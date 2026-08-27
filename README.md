@@ -4,7 +4,7 @@ Pack the Keep is an agent-first Godot 4.x prototype for a premium single-player 
 
 ## Current state
 
-The repository contains a playable vertical-slice shell and deterministic keep-state foundation. The main scene demonstrates commander selection, pack opening, top-down piece placement, invasion doctrines, wave progress, commander abilities, and saving prototype state. The P0 alpha foundation adds direct map placement with authoritative footprint previews, room/piece/enemy inspection, pack cost and doctrine previews, a one-pack reserve slot, scrollable command controls, and safe load/reset behavior. The drawn keep remains intentional prototype presentation; final 2D art can replace it without changing the simulation contract.
+The repository contains a playable vertical-slice shell and deterministic keep-state foundation. The main scene demonstrates commander selection, scenario selection, pack opening, top-down piece placement, invasion doctrines, wave progress, commander abilities, and saving prototype state. The P0 foundation adds direct map placement with authoritative footprint previews, room/piece/enemy inspection, pack cost and doctrine previews, a one-pack reserve slot, scrollable command controls, and safe load/reset behavior. The P1 slice adds The Warden, Siege Beast area pressure, three authored Greywatch scenarios, escalating doctrine sequences, and bounded cross-process deterministic variation. The drawn keep remains intentional prototype presentation; final 2D art can replace it without changing the simulation contract.
 
 ## Run the prototype
 
@@ -22,7 +22,7 @@ Press **F5** to run the project or **F6** to run the current scene.
 godot --headless --path . --script res://tests/test_keep_state.gd
 ```
 
-A successful run prints `PASS: Pack the Keep battle-state tests` and exits with code 0. Agents must run this command after changes to commanders, packs, grid rules, pieces, wave logic, abilities, or save state. The current internal P0 release also runs content/framework validators, policy checks, Godot editor parsing, and a headless scene smoke test.
+A successful run prints `PASS: Pack the Keep battle-state tests` and exits with code 0. Agents must run this command after changes to commanders, packs, grid rules, pieces, wave logic, abilities, scenarios, variation, or save state. The repository verification wrapper also runs `tests/test_p1_balance.gd`, which replays both commanders across all three P1 scenarios, compact/recovery/open-yard layouts, and two deterministic seeds. The current internal P1 release also runs content/framework validators, policy checks, Godot editor parsing, a headless scene smoke test, and a headless P1 UI smoke.
 
 ## Repository map
 
@@ -52,7 +52,7 @@ A full Windows build should eventually include controller support, display scali
 
 ## Implemented first battle slice
 
-The current battle slice is **Greywatch Keep**, a two-floor 12×8 keep defended by **The Castellan**. It implements four basic defenders—Pike Squad, Repair Station, Fire Team, and Scout Post—and three enemy doctrines: Raider gate assault, Sapper distributed sabotage, and Climber wall bypass.
+The current battle slice is **Greywatch Keep**, a two-floor 12×8 keep defended by **The Castellan** or **The Warden**. It implements four basic defenders—Pike Squad, Repair Station, Fire Team, and Scout Post—and four enemy doctrines: Raider gate assault, Sapper distributed sabotage, Climber wall bypass, and Siege Beast area pressure.
 
 Battles now resolve through explicit phases: **forecast, approach, contact, intervention, and outcome**. The player advances one deterministic battle step at a time, reads the doctrine and likely target, and may use Castellan **Lockdown** once per wave. The report explains counter damage, enemy arrival, target selection, room damage, repair, breach, and recovery. A wave ends as a hold, partial breach, or collapse; partial breach remains recoverable.
 
@@ -66,7 +66,7 @@ The implemented assignment rules are Pike Squad → Gate, Repair Station → Wor
 
 ## Enemy actors and menu flow
 
-Raiders, Sappers, and Climbers are now concrete active actors in the prototype. Their route, health, doctrine role, and current target are shown in the enemy readout, while colored markers appear on the Greywatch map: red for Gate pressure, amber for support sabotage, and violet for upper-floor bypass.
+Raiders, Sappers, Climbers, and Siege Beasts are concrete active actors in the prototype. Their route, health, doctrine role, and current target are shown in the enemy readout, while colored markers appear on the Greywatch map: red for Gate pressure, amber for support sabotage, violet for upper-floor bypass, and an enlarged ember marker for Siege Beast area pressure.
 
 The prototype now exposes four menu states: **Title**, **Preparation**, **Battle**, and **Results**. Title begins the run, Preparation handles packs, placement, repair, and assignment, Battle advances the forecasted invasion one step at a time, and Results exposes the outcome and recovery path. Navigation is a UI layer over `PackKeepState`; it does not create a second game-state authority. See [`design/enemy_presentation_and_menu_flow.md`](design/enemy_presentation_and_menu_flow.md) for the presentation contract.
 
@@ -88,6 +88,12 @@ Greywatch now supports direct map interaction in Preparation. Arm an available p
 
 The detailed P0 contract is in [`design/p0_alpha_foundation.md`](design/p0_alpha_foundation.md), and the expanded deterministic coverage is in [`tests/test_keep_state.gd`](tests/test_keep_state.gd).
 
+## P1 content and replayability
+
+The P1 slice adds two differentiated rule lenses. The Castellan retains compact adjacency and Lockdown; The Warden starts with fewer materials, benefits from open response lanes and signal coverage, and uses Rally once per wave to coordinate the next response. The three authored scenarios are Gatehouse Lock, The Wrong Wall, and Open Yard Net. Each has a different objective, doctrine sequence, wave composition, and seed-derived bounded variation. A Siege Beast now arrives under Area Pressure and damages up to three prioritized nearby rooms on impact, making refuge and recovery matter without introducing irreversible loss.
+
+See [`design/p1_content_and_replayability.md`](design/p1_content_and_replayability.md) for the P1 contract, [`tests/test_keep_state.gd`](tests/test_keep_state.gd) for commander/area-pressure/scenario coverage, and [`tests/test_p1_balance.gd`](tests/test_p1_balance.gd) for the bounded replay matrix.
+
 ## Internal base-game test release
 
-The repository includes a small internal test-release presentation for Greywatch. It uses a generated first-pass visual kit—Greywatch background, Castellan portrait, defender and enemy icons—while leaving the deterministic simulation and battle rules as the source of truth. The test checklist, asset manifest, and deliberate production boundaries are documented in [`docs/internal_test_release.md`](docs/internal_test_release.md).
+The repository includes a small internal test-release presentation for Greywatch. It uses a generated first-pass visual kit—Greywatch background, Castellan portrait, defender and enemy icons—while leaving the deterministic simulation and battle rules as the source of truth. The Warden currently uses a clearly labeled tinted shared portrait treatment and Siege Beast uses an enlarged procedural threat marker until the next image-generation window. The test checklist, asset manifest, and deliberate production boundaries are documented in [`docs/internal_test_release.md`](docs/internal_test_release.md).

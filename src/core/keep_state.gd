@@ -29,8 +29,19 @@ const COMMANDERS: Dictionary = {
 		"ability": "lockdown",
 		"ability_name": "Lockdown",
 		"ability_text": "For the next battle step, halve room damage and restore a little condition to every placed piece.",
+		"limitation": "Dense layouts are efficient but slow to reposition.",
 		"starting_materials": 60,
 		"starting_morale": 6
+	},
+	"warden": {
+		"name": "The Warden",
+		"passive": "Open Lanes: pieces with an empty adjacent cell gain +1 response damage; signals reach farther.",
+		"ability": "rally",
+		"ability_name": "Rally",
+		"ability_text": "Restore 1 morale and coordinate the next battle step: non-specialist defenders gain +1 response and the first room hit is reduced.",
+		"limitation": "Spread Thin: starts with fewer materials and loses value when every lane is packed.",
+		"starting_materials": 52,
+		"starting_morale": 7
 	}
 }
 
@@ -51,7 +62,7 @@ const PACK_EXPLANATIONS: Dictionary = {
 const PIECES: Dictionary = {
 	"pike_squad": {"name": "Pike Squad", "size": Vector2i(2, 1), "cost": 8, "role": "holds Gate Road", "attack": 4, "defense": 2, "max_health": 14, "attack_interval": 1, "range": 1, "availability": "starter", "targets": ["raider"]},
 	"repair_station": {"name": "Repair Station", "size": Vector2i(2, 1), "cost": 10, "role": "restores nearby structures", "attack": 0, "defense": 1, "max_health": 10, "attack_interval": 1, "range": 1, "availability": "field_engineers", "targets": ["sapper", "area_pressure"]},
-	"fire_team": {"name": "Fire Team", "size": Vector2i(2, 1), "cost": 9, "role": "controls an approach zone", "attack": 3, "defense": 1, "max_health": 12, "attack_interval": 1, "range": 2, "availability": "firekeepers", "targets": ["climber", "raider"]},
+	"fire_team": {"name": "Fire Team", "size": Vector2i(2, 1), "cost": 9, "role": "controls an approach zone", "attack": 3, "defense": 1, "max_health": 12, "attack_interval": 1, "range": 2, "availability": "firekeepers", "targets": ["climber", "raider", "siege_beast"]},
 	"scout_post": {"name": "Scout Post", "size": Vector2i(1, 1), "cost": 6, "role": "reveals target and arrival", "attack": 0, "defense": 0, "max_health": 8, "attack_interval": 1, "range": 3, "availability": "scouts", "targets": ["all"]},
 	"narrow_gate": {"name": "Narrow Gate", "size": Vector2i(1, 2), "cost": 7, "role": "concentrates Gate pressure", "attack": 0, "defense": 3, "max_health": 18, "attack_interval": 1, "range": 1, "availability": "starter", "targets": ["raider"]},
 	"brace": {"name": "Wall Brace", "size": Vector2i(1, 1), "cost": 5, "role": "reduces adjacent room damage", "attack": 0, "defense": 2, "max_health": 16, "attack_interval": 1, "range": 1, "availability": "field_engineers", "targets": ["all"]},
@@ -62,19 +73,46 @@ const PIECES: Dictionary = {
 const ENEMIES: Dictionary = {
 	"raider": {"name": "Raider", "health": 8, "damage": 2, "arrival_step": 2, "route": "gate_road", "target_rooms": ["gate"], "doctrine": "gate_assault", "counter": "pike_squad"},
 	"sapper": {"name": "Sapper", "health": 5, "damage": 3, "arrival_step": 3, "route": "service_lane", "target_rooms": ["workshop", "supply_room", "armory"], "doctrine": "distributed_sabotage", "counter": "scout_post"},
-	"climber": {"name": "Climber", "health": 6, "damage": 2, "arrival_step": 2, "route": "north_tower_line", "target_rooms": ["north_tower", "old_chapel"], "doctrine": "feint_and_flank", "counter": "fire_team"}
+	"climber": {"name": "Climber", "health": 6, "damage": 2, "arrival_step": 2, "route": "north_tower_line", "target_rooms": ["north_tower", "old_chapel"], "doctrine": "feint_and_flank", "counter": "fire_team"},
+	"siege_beast": {"name": "Siege Beast", "health": 16, "damage": 3, "arrival_step": 3, "route": "outer_approach", "target_rooms": ["inner_yard", "outer_wall", "old_chapel", "workshop"], "doctrine": "area_pressure", "counter": "fire_team"}
 }
 
 const WAVE_COMPOSITIONS: Dictionary = {
 	"gate_assault": ["raider", "raider"],
 	"distributed_sabotage": ["raider", "sapper"],
-	"feint_and_flank": ["raider", "climber"]
+	"feint_and_flank": ["raider", "climber"],
+	"area_pressure": ["siege_beast"]
+}
+
+const SCENARIOS: Dictionary = {
+	"gatehouse_lock": {"name": "Gatehouse Lock", "objective": "Hold Gate without abandoning the response yard.", "lesson": "Concentrate strength, but preserve one interior route.", "starting_doctrine": "gate_assault", "doctrines": ["gate_assault", "distributed_sabotage", "feint_and_flank"], "wave_plans": [["raider", "raider"], ["raider", "sapper"], ["raider", "climber", "sapper"]]},
+	"wrong_wall": {"name": "The Wrong Wall", "objective": "Keep Workshop and North Tower functional through the mixed pressure.", "lesson": "Protect the dependency, not only the obvious wall.", "starting_doctrine": "distributed_sabotage", "doctrines": ["distributed_sabotage", "feint_and_flank", "distributed_sabotage"], "wave_plans": [["raider", "sapper"], ["raider", "climber", "sapper"], ["climber", "sapper", "raider", "sapper"]]},
+	"open_yard_net": {"name": "Open Yard Net", "objective": "Preserve Old Chapel and response space while area pressure lands.", "lesson": "A scarred perimeter can be a successful refuge if movement survives.", "starting_doctrine": "area_pressure", "doctrines": ["feint_and_flank", "distributed_sabotage", "area_pressure"], "wave_plans": [["raider", "climber"], ["raider", "climber", "sapper"], ["siege_beast", "raider", "climber"]]}
+}
+
+const SCENARIO_VARIATIONS: Dictionary = {
+	"gatehouse_lock": [
+		{"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
+		{"id": "thin_supply", "materials": -4, "morale": 1, "target_room": "supply_room"},
+		{"id": "late_warning", "materials": 3, "morale": -1, "target_room": "gate"}
+	],
+	"wrong_wall": [
+		{"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
+		{"id": "workshop_first", "materials": -3, "morale": 1, "target_room": "workshop"},
+		{"id": "tower_first", "materials": 2, "morale": -1, "target_room": "north_tower"}
+	],
+	"open_yard_net": [
+		{"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
+		{"id": "chapel_pressure", "materials": -4, "morale": 1, "target_room": "old_chapel"},
+		{"id": "outer_pressure", "materials": 2, "morale": -1, "target_room": "inner_yard"}
+	]
 }
 
 const DOCTRINE_QUESTIONS: Dictionary = {
 	"gate_assault": "Can the keep concentrate strength at the obvious entrance?",
 	"distributed_sabotage": "Can support rooms survive while the front is under pressure?",
-	"feint_and_flank": "Has the player left an upper response lane?"
+	"feint_and_flank": "Has the player left an upper response lane?",
+	"area_pressure": "Can the keep preserve recovery when one impact reaches several rooms?"
 }
 
 const ASSIGNMENT_RULES: Dictionary = {
@@ -89,6 +127,12 @@ var commander_id: String = ACTIVE_COMMANDER
 var materials: int = 60
 var command_points: int = 3
 var morale: int = 6
+var scenario_id: String = "gatehouse_lock"
+var scenario_active: bool = false
+var scenario_variation_id: String = "standard_bell"
+var variation_target_room: String = ""
+var variation_materials: int = 0
+var variation_morale: int = 0
 var wave_index: int = 0
 var wave_active: bool = false
 var wave_progress: float = 0.0
@@ -108,6 +152,8 @@ var log: Array[String] = []
 var battle_report: Array[String] = []
 var lockdown_pending: bool = false
 var lockdown_used: bool = false
+var rally_pending: bool = false
+var rally_used: bool = false
 var last_outcome: String = ""
 var repair_interval_active: bool = false
 var repair_actions_remaining: int = 0
@@ -131,6 +177,12 @@ func reset_run(new_seed: int = 3307) -> void:
 	materials = int(COMMANDERS[ACTIVE_COMMANDER].starting_materials)
 	command_points = 3
 	morale = int(COMMANDERS[ACTIVE_COMMANDER].starting_morale)
+	scenario_id = "gatehouse_lock"
+	scenario_active = false
+	scenario_variation_id = "standard_bell"
+	variation_target_room = ""
+	variation_materials = 0
+	variation_morale = 0
 	wave_index = 0
 	wave_active = false
 	wave_progress = 0.0
@@ -150,6 +202,8 @@ func reset_run(new_seed: int = 3307) -> void:
 	battle_report.clear()
 	lockdown_pending = false
 	lockdown_used = false
+	rally_pending = false
+	rally_used = false
 	last_outcome = ""
 	repair_interval_active = false
 	repair_actions_remaining = 0
@@ -194,13 +248,51 @@ func _battle_log(message: String) -> void:
 
 func select_commander(id: String) -> Dictionary:
 	if not COMMANDERS.has(id):
-		return {"ok": false, "reason": "the first slice only supports The Castellan"}
-	if wave_active:
-		return {"ok": false, "reason": "commander cannot change during an invasion"}
+		return {"ok": false, "reason": "unknown commander"}
+	if wave_active or repair_interval_active:
+		return {"ok": false, "reason": "commander cannot change during an invasion or repair interval"}
 	commander_id = id
 	materials = int(COMMANDERS[id].starting_materials)
 	morale = int(COMMANDERS[id].starting_morale)
-	return {"ok": true, "message": "%s takes command. %s" % [COMMANDERS[id].name, COMMANDERS[id].passive]}
+	command_points = 3
+	return {"ok": true, "message": "%s takes command. %s Limitation: %s" % [COMMANDERS[id].name, COMMANDERS[id].passive, COMMANDERS[id].limitation], "ability_name": COMMANDERS[id].ability_name, "ability_text": COMMANDERS[id].ability_text}
+
+func _variation_for_scenario(id: String) -> Dictionary:
+	var options: Array = SCENARIO_VARIATIONS.get(id, [])
+	if options.is_empty():
+		return {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""}
+	var stable_id_value: int = 0
+	for byte_value in id.to_utf8_buffer():
+		stable_id_value += int(byte_value)
+	var index: int = absi(seed + stable_id_value) % options.size()
+	return options[index].duplicate(true)
+
+func select_scenario(id: String) -> Dictionary:
+	if not SCENARIOS.has(id):
+		return {"ok": false, "reason": "unknown Greywatch scenario"}
+	if wave_active or repair_interval_active:
+		return {"ok": false, "reason": "scenario cannot change during an invasion or repair interval"}
+	if not pieces.is_empty() or wave_index > 0:
+		return {"ok": false, "reason": "start a new run before changing scenarios"}
+	scenario_id = id
+	scenario_active = true
+	enemy_doctrine = String(SCENARIOS[id].get("starting_doctrine", "gate_assault"))
+	var variation: Dictionary = _variation_for_scenario(id)
+	scenario_variation_id = String(variation.get("id", "standard_bell"))
+	variation_target_room = String(variation.get("target_room", ""))
+	variation_materials = int(variation.get("materials", 0))
+	variation_morale = int(variation.get("morale", 0))
+	materials = int(COMMANDERS[commander_id].starting_materials) + variation_materials
+	morale = clampi(int(COMMANDERS[commander_id].starting_morale) + variation_morale, 0, 10)
+	_log("Scenario selected: %s / variation %s. %s" % [SCENARIOS[id].name, scenario_variation_id, SCENARIOS[id].lesson])
+	return {"ok": true, "message": "%s selected: %s Variation: %s." % [SCENARIOS[id].name, SCENARIOS[id].objective, scenario_variation_id], "scenario": scenario_preview(id)}
+
+func scenario_preview(id: String = "") -> Dictionary:
+	var selected_id: String = scenario_id if id.is_empty() else id
+	if not SCENARIOS.has(selected_id):
+		return {"ok": false, "reason": "unknown Greywatch scenario"}
+	var scenario: Dictionary = SCENARIOS[selected_id]
+	return {"ok": true, "scenario_id": selected_id, "name": String(scenario.name), "objective": String(scenario.objective), "lesson": String(scenario.lesson), "starting_doctrine": String(scenario.starting_doctrine), "wave_count": scenario.wave_plans.size(), "variation_id": scenario_variation_id if selected_id == scenario_id else String(_variation_for_scenario(selected_id).get("id", "standard_bell"))}
 
 func pack_preview(pack_id: String) -> Dictionary:
 	if not PACKS.has(pack_id):
@@ -445,6 +537,24 @@ func _castellan_adjacent(instance: Dictionary, room_id: String) -> bool:
 				return true
 	return false
 
+func _warden_open_lane(instance: Dictionary) -> bool:
+	if commander_id != "warden":
+		return false
+	var floor_name: String = String(instance.get("floor", "ground"))
+	var origin: Vector2i = instance.get("origin", Vector2i.ZERO)
+	var piece_id: String = String(instance.get("piece_id", ""))
+	if not PIECES.has(piece_id):
+		return false
+	var size: Vector2i = PIECES[piece_id].size
+	var checks: Array[Vector2i] = [origin + Vector2i(-1, 0), origin + Vector2i(size.x, 0), origin + Vector2i(0, -1), origin + Vector2i(0, size.y)]
+	for cell in checks:
+		if cell.x >= 0 and cell.y >= 0 and cell.x < GRID_SIZE.x and cell.y < GRID_SIZE.y and piece_at_cell(floor_name, cell).is_empty():
+			return true
+	return false
+
+func _warden_signal_bonus() -> bool:
+	return commander_id == "warden" and (_has_unit("scout_post") or _has_unit("signal_beacon"))
+
 func _living_piece_count(piece_id: String, floor: String = "") -> int:
 	var count: int = 0
 	for instance in pieces.values():
@@ -490,6 +600,10 @@ func _defender_damage(enemy_id: String) -> int:
 			contribution += 1
 		if _castellan_adjacent(instance, String(enemy.target_rooms[0])):
 			contribution += 1
+		if _warden_open_lane(instance):
+			contribution += 1
+		if rally_pending and commander_id == "warden" and piece.attack > 0:
+			contribution += 1
 		if contribution > 0:
 			_last_attackers.append(String(instance_id))
 			_last_attack_damage[String(instance_id)] = contribution
@@ -499,9 +613,13 @@ func _defender_damage(enemy_id: String) -> int:
 func _choose_target(enemy_id: String) -> String:
 	var enemy: Dictionary = ENEMIES[enemy_id]
 	var candidates: Array[String] = []
-	for room_id in enemy.target_rooms:
+	var target_rooms: Array = enemy.target_rooms.duplicate()
+	if enemy_id == "siege_beast" and not variation_target_room.is_empty() and target_rooms.has(variation_target_room):
+		target_rooms.erase(variation_target_room)
+		target_rooms.push_front(variation_target_room)
+	for room_id in target_rooms:
 		if rooms.has(room_id) and room_condition(room_id) > 0:
-			candidates.append(room_id)
+			candidates.append(String(room_id))
 	for instance_id in pieces.keys():
 		var instance: Dictionary = pieces[instance_id]
 		var piece_id: String = String(instance.get("piece_id", ""))
@@ -533,32 +651,50 @@ func _apply_enemy_damage(enemy_id: String, target_id: String) -> void:
 		return
 	var damage: int = int(ENEMIES[enemy_id].damage)
 	combat_metrics["enemy_attacks"] = int(combat_metrics.get("enemy_attacks", 0)) + 1
-	var reduced: bool = lockdown_pending
+	var reduced: bool = lockdown_pending or rally_pending
 	if reduced:
 		damage = maxi(1, int(ceil(float(damage) * 0.5)))
+	if enemy_id == "siege_beast":
+		var area_targets: Array[String] = []
+		for room_id in ENEMIES[enemy_id].target_rooms:
+			if rooms.has(room_id) and room_condition(room_id) > 0:
+				area_targets.append(String(room_id))
+		if not area_targets.has(target_id):
+			area_targets.push_front(target_id)
+		for area_index in range(mini(3, area_targets.size())):
+			var area_room: String = area_targets[area_index]
+			var area_damage: int = maxi(1, damage - (1 if area_index > 0 else 0))
+			_apply_room_damage(enemy_id, area_room, area_damage, reduced, true)
+		_battle_log("Siege Beast impact spread across %d rooms; preserve the refuge or accept a scarred perimeter." % mini(3, area_targets.size()))
+		return
 	if rooms.has(target_id):
-		var brace_bonus: int = 0
-		for instance in pieces.values():
-			if String(instance.get("piece_id", "")) == "brace" and _piece_is_adjacent_to_room(instance, target_id) and float(instance.get("condition", 0.0)) > 0.0:
-				brace_bonus += 1
-		damage = maxi(0, damage - brace_bonus)
-		var was_breached: bool = rooms[target_id].state == "breached"
-		combat_metrics["room_damage"] = int(combat_metrics.get("room_damage", 0)) + damage * 15
-		rooms[target_id].condition = maxi(0, int(rooms[target_id].condition) - damage * 15)
-		_update_room_state(target_id)
-		_battle_log("%s reached %s and dealt %d room damage%s; room is %s." % [ENEMIES[enemy_id].name, ROOMS[target_id].name, damage, " under Lockdown" if reduced else "", rooms[target_id].state])
-		if rooms[target_id].state == "breached" and not was_breached:
-			breach_level += 1
-			morale = maxi(0, morale - 1)
-			_battle_log("%s breached. Morale falls because its named function is offline." % ROOMS[target_id].name)
-		elif pieces.has(target_id):
-			combat_metrics["piece_damage"] = int(combat_metrics.get("piece_damage", 0)) + damage
-			var instance: Dictionary = pieces[target_id]
-			var piece_id: String = String(instance.get("piece_id", ""))
-			var max_health: int = int(instance.get("max_health", PIECES[piece_id].get("max_health", 10)))
-			var health_loss: int = maxi(1, int(ceil(float(max_health) * float(damage) * 0.25)))
-			_set_piece_health(target_id, int(instance.get("health", max_health)) - health_loss)
-			_battle_log("%s damaged %s by %d; health is %d/%d." % [ENEMIES[enemy_id].name, PIECES[piece_id].name, damage, int(instance.get("health", 0)), max_health])
+		_apply_room_damage(enemy_id, target_id, damage, reduced, false)
+	elif pieces.has(target_id):
+		combat_metrics["piece_damage"] = int(combat_metrics.get("piece_damage", 0)) + damage
+		var instance: Dictionary = pieces[target_id]
+		var piece_id: String = String(instance.get("piece_id", ""))
+		var max_health: int = int(instance.get("max_health", PIECES[piece_id].get("max_health", 10)))
+		var health_loss: int = maxi(1, int(ceil(float(max_health) * float(damage) * 0.25)))
+		_set_piece_health(target_id, int(instance.get("health", max_health)) - health_loss)
+		_battle_log("%s damaged %s by %d; health is %d/%d." % [ENEMIES[enemy_id].name, PIECES[piece_id].name, damage, int(instance.get("health", 0)), max_health])
+
+func _apply_room_damage(enemy_id: String, room_id: String, damage: int, reduced: bool, area_impact: bool) -> void:
+	if not rooms.has(room_id):
+		return
+	var brace_bonus: int = 0
+	for instance in pieces.values():
+		if String(instance.get("piece_id", "")) == "brace" and _piece_is_adjacent_to_room(instance, room_id) and float(instance.get("condition", 0.0)) > 0.0:
+			brace_bonus += 1
+	damage = maxi(0, damage - brace_bonus)
+	var was_breached: bool = rooms[room_id].state == "breached"
+	combat_metrics["room_damage"] = int(combat_metrics.get("room_damage", 0)) + damage * 15
+	rooms[room_id].condition = maxi(0, int(rooms[room_id].condition) - damage * 15)
+	_update_room_state(room_id)
+	_battle_log("%s %s %s and dealt %d room damage%s; room is %s." % [ENEMIES[enemy_id].name, "impacted" if area_impact else "reached", ROOMS[room_id].name, damage, " under response mitigation" if reduced else "", rooms[room_id].state])
+	if rooms[room_id].state == "breached" and not was_breached:
+		breach_level += 1
+		morale = maxi(0, morale - 1)
+		_battle_log("%s breached. Morale falls because its named function is offline." % ROOMS[room_id].name)
 
 func _repair_after_defenders() -> void:
 	for instance_id in pieces.keys():
@@ -588,6 +724,7 @@ func _battle_step() -> Dictionary:
 	battle_step += 1
 	combat_metrics["battle_steps"] = int(combat_metrics.get("battle_steps", 0)) + 1
 	var lockdown_contact: bool = false
+	var rally_contact: bool = rally_pending
 	_battle_log("Step %d: forecast says %s; the keep executes its prepared routine." % [battle_step, enemy_doctrine.replace("_", " ")])
 	for enemy in enemies:
 		if bool(enemy.get("defeated", false)):
@@ -623,6 +760,8 @@ func _battle_step() -> Dictionary:
 				_battle_log("%s arrived by %s; target forecast resolves to %s." % [ENEMIES[enemy_id].name, ENEMIES[enemy_id].route, target_name])
 			if lockdown_pending:
 				lockdown_contact = true
+			if rally_pending:
+				rally_contact = true
 			if not String(enemy.get("target", "")).is_empty():
 				enemy.attacks_received = int(enemy.get("attacks_received", 0)) + 1
 			_apply_enemy_damage(enemy_id, String(enemy.get("target", "")))
@@ -634,6 +773,9 @@ func _battle_step() -> Dictionary:
 			_set_piece_health(String(instance_id), int(instance.get("health", max_health)) + maxi(1, int(round(float(max_health) * 0.05))))
 		_battle_log("Lockdown restored 5% condition across placed pieces, then released.")
 		lockdown_pending = false
+	if rally_contact:
+		_battle_log("Rally coordinated the response across floors, then released.")
+		rally_pending = false
 	wave_progress = clamp(float(battle_step) / 6.0, 0.0, 1.0)
 	if battle_step >= 6 or _all_enemies_defeated():
 		return _finish_wave()
@@ -706,19 +848,29 @@ func start_wave(doctrine: String) -> Dictionary:
 		return {"ok": false, "reason": "an invasion is already active"}
 	if pieces.is_empty():
 		return {"ok": false, "reason": "place at least one defensive piece first"}
-	enemy_doctrine = doctrine
-	wave_active = true
+	if scenario_active and SCENARIOS.has(scenario_id) and wave_index >= SCENARIOS[scenario_id].get("wave_plans", []).size():
+		return {"ok": false, "reason": "this authored scenario has no further waves; start a new run to replay it"}
 	wave_index += 1
+	if scenario_active and SCENARIOS.has(scenario_id):
+		var scenario_doctrines: Array = SCENARIOS[scenario_id].get("doctrines", [doctrine])
+		doctrine = String(scenario_doctrines[mini(wave_index - 1, scenario_doctrines.size() - 1)])
+		enemy_doctrine = doctrine
+	wave_active = true
 	battle_step = 0
 	battle_clock = 0.0
 	wave_progress = 0.0
 	breach_level = 0
 	lockdown_used = false
 	lockdown_pending = false
+	rally_used = false
+	rally_pending = false
 	last_outcome = ""
 	enemies.clear()
 	battle_report.clear()
 	var composition: Array = WAVE_COMPOSITIONS[doctrine]
+	if scenario_active and SCENARIOS.has(scenario_id):
+		var wave_plan: Array = SCENARIOS[scenario_id].wave_plans[mini(wave_index - 1, SCENARIOS[scenario_id].wave_plans.size() - 1)]
+		composition = wave_plan.duplicate()
 	_reset_combat_metrics()
 	for index in range(composition.size()):
 		var enemy_id: String = String(composition[index])
@@ -739,19 +891,28 @@ func advance_wave(delta: float) -> Dictionary:
 	return latest
 
 func use_commander_ability() -> Dictionary:
-	if commander_id != "castellan":
-		return {"ok": false, "reason": "unknown active commander"}
 	if not wave_active:
-		return {"ok": false, "reason": "Lockdown is only meaningful during an active invasion"}
-	if lockdown_used:
-		return {"ok": false, "reason": "Lockdown has already been used this wave"}
+		return {"ok": false, "reason": "commander abilities are only meaningful during an active invasion"}
 	if command_points <= 0:
 		return {"ok": false, "reason": "not enough command points"}
-	command_points -= 1
-	lockdown_used = true
-	lockdown_pending = true
-	_battle_log("The Castellan ordered Lockdown. The next contact will be contained, but the keep cannot reposition during it.")
-	return {"ok": true, "message": "Lockdown is armed for the next battle step.", "command_points": command_points}
+	if commander_id == "castellan":
+		if lockdown_used:
+			return {"ok": false, "reason": "Lockdown has already been used this wave"}
+		command_points -= 1
+		lockdown_used = true
+		lockdown_pending = true
+		_battle_log("The Castellan ordered Lockdown. The next contact will be contained, but the keep cannot reposition during it.")
+		return {"ok": true, "message": "Lockdown is armed for the next battle step.", "command_points": command_points}
+	if commander_id == "warden":
+		if rally_used:
+			return {"ok": false, "reason": "Rally has already been used this wave"}
+		command_points -= 1
+		rally_used = true
+		rally_pending = true
+		morale = mini(10, morale + 1)
+		_battle_log("The Warden called Rally. Open lanes answer the bell; the next response will be coordinated.")
+		return {"ok": true, "message": "Rally is armed for the next battle step and restored 1 morale.", "command_points": command_points}
+	return {"ok": false, "reason": "unknown active commander"}
 
 func repair_piece(instance_id: String) -> Dictionary:
 	if not repair_interval_active:
@@ -798,7 +959,10 @@ func forecast() -> Dictionary:
 	elif enemy_doctrine == "feint_and_flank":
 		likely_target = "north_tower or old_chapel"
 		uncertainty = "whether the climber lands high or deep"
-	var scout_bonus: bool = _has_unit("scout_post", "upper")
+	elif enemy_doctrine == "area_pressure":
+		likely_target = "inner_yard or outer_wall"
+		uncertainty = "which adjacent room shares the impact"
+	var scout_bonus: bool = _has_unit("scout_post", "upper") or _warden_signal_bonus()
 	if _has_assignment("scout_post", "north_tower"):
 		uncertainty = "none: North Tower assignment reveals the landing room"
 	return {"doctrine": enemy_doctrine, "question": DOCTRINE_QUESTIONS.get(enemy_doctrine, ""), "likely_target": likely_target, "uncertainty": uncertainty, "scout_bonus": scout_bonus, "exact_target_revealed": _has_assignment("scout_post", "north_tower")}
@@ -806,6 +970,18 @@ func forecast() -> Dictionary:
 func summary() -> Dictionary:
 	return {
 		"commander": COMMANDERS[commander_id].name,
+		"commander_id": commander_id,
+		"commander_passive": String(COMMANDERS[commander_id].passive),
+		"commander_ability_name": String(COMMANDERS[commander_id].ability_name),
+		"commander_ability_text": String(COMMANDERS[commander_id].ability_text),
+		"commander_limitation": String(COMMANDERS[commander_id].limitation),
+		"scenario_id": scenario_id,
+		"scenario_active": scenario_active,
+		"scenario": scenario_preview(),
+		"scenario_variation_id": scenario_variation_id,
+		"variation_target_room": variation_target_room,
+		"variation_materials": variation_materials,
+		"variation_morale": variation_morale,
 		"materials": materials,
 		"command_points": command_points,
 		"morale": morale,
@@ -852,6 +1028,14 @@ func serialize() -> Dictionary:
 		"battle_report": battle_report.duplicate(),
 		"lockdown_pending": lockdown_pending,
 		"lockdown_used": lockdown_used,
+		"rally_pending": rally_pending,
+		"rally_used": rally_used,
+		"scenario_id": scenario_id,
+		"scenario_active": scenario_active,
+		"scenario_variation_id": scenario_variation_id,
+		"variation_target_room": variation_target_room,
+		"variation_materials": variation_materials,
+		"variation_morale": variation_morale,
 		"last_outcome": last_outcome,
 		"repair_interval_active": repair_interval_active,
 		"repair_actions_remaining": repair_actions_remaining,
@@ -894,6 +1078,16 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		return {"ok": false, "reason": "save enemies collection is malformed"}
 	seed = int(data.get("seed", seed))
 	commander_id = String(data.get("commander_id", ACTIVE_COMMANDER))
+	if not COMMANDERS.has(commander_id):
+		return {"ok": false, "reason": "save contains an unknown commander"}
+	scenario_id = String(data.get("scenario_id", scenario_id))
+	if not SCENARIOS.has(scenario_id):
+		return {"ok": false, "reason": "save contains an unknown scenario"}
+	scenario_active = bool(data.get("scenario_active", scenario_active))
+	scenario_variation_id = String(data.get("scenario_variation_id", scenario_variation_id))
+	variation_target_room = String(data.get("variation_target_room", variation_target_room))
+	variation_materials = int(data.get("variation_materials", variation_materials))
+	variation_morale = int(data.get("variation_morale", variation_morale))
 	materials = int(data.get("materials", materials))
 	command_points = int(data.get("command_points", command_points))
 	morale = int(data.get("morale", morale))
@@ -937,6 +1131,8 @@ func load_serialized(data: Dictionary) -> Dictionary:
 			battle_report.append(String(report_entry))
 	lockdown_pending = bool(data.get("lockdown_pending", lockdown_pending))
 	lockdown_used = bool(data.get("lockdown_used", lockdown_used))
+	rally_pending = bool(data.get("rally_pending", rally_pending))
+	rally_used = bool(data.get("rally_used", rally_used))
 	last_outcome = String(data.get("last_outcome", last_outcome))
 	combat_metrics = data.get("combat_metrics", combat_metrics).duplicate()
 	if combat_metrics.is_empty():

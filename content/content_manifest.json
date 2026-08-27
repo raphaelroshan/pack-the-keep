@@ -739,7 +739,8 @@
   "active_slice": {
     "keep_id": "greywatch_keep",
     "commander_ids": [
-      "castellan"
+      "castellan",
+      "warden"
     ],
     "unit_ids": [
       "pike_squad",
@@ -750,8 +751,15 @@
     "enemy_ids": [
       "raider",
       "sapper",
-      "climber"
+      "climber",
+      "siege_beast"
     ],
+    "scenario_ids": [
+      "gatehouse_lock",
+      "wrong_wall",
+      "open_yard_net"
+    ],
+    "variation_contract": "seed-derived bounded target or resource variation; scenario objective and counter meaning remain fixed",
     "waves": [
       {
         "id": "first_bell",
@@ -833,7 +841,8 @@
     "enemy_presentation": [
       "raider_actor",
       "sapper_actor",
-      "climber_actor"
+      "climber_actor",
+      "siege_beast_actor"
     ],
     "unit_availability": {
       "starter_pieces": [
