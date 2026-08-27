@@ -41,7 +41,7 @@ class P12AlphaValidatorTests(unittest.TestCase):
             }
             reinstall = {
                 **shared, "phase": "reinstall", "executable_path": r"C:\\reinstalled-app\\pack-the-keep.exe",
-                "profile_files_present": True, "restored_run_ready": True,
+                "profile_files_present": True, "profile_files_complete": True, "restored_run_ready": True,
                 "restored_scale_ready": True, "restored_remap_ready": True,
             }
             path.write_text(json.dumps({"schema_version": 1, "initial": initial, "reinstall": reinstall}), encoding="utf-8")
@@ -63,6 +63,7 @@ class P12AlphaValidatorTests(unittest.TestCase):
                 },
                 "reinstall": {
                     "phase": "reinstall", "ok": True, "build_version": "v", "main_scene_freed": True,
+                    "profile_files_present": True, "profile_files_complete": False,
                     "executable_path": r"C:\\same\\pack-the-keep.exe", "user_data_dir": r"C:\\second",
                     "save_path": r"C:\\second\\run.save", "settings_path": r"C:\\second\\settings.json",
                 },

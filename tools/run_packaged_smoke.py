@@ -85,8 +85,8 @@ def validate_report(report_path: Path, profile_root: Path, expected_version: str
             if report.get(field) is not True:
                 errors.append(f"packaged pause assertion failed: {field}")
     elif expected_phase == "reinstall":
-        if report.get("profile_files_present") is not True:
-            errors.append("reinstalled build did not observe existing profile files")
+        if report.get("profile_files_present") is not True or report.get("profile_files_complete") is not True:
+            errors.append("reinstalled build did not observe both existing profile files")
         for field in ("restored_run_ready", "restored_scale_ready", "restored_remap_ready"):
             if report.get(field) is not True:
                 errors.append(f"packaged reinstall assertion failed: {field}")

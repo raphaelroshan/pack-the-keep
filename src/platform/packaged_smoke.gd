@@ -52,7 +52,12 @@ func run(ui: Control) -> void:
 	ui.settings_path = SETTINGS_PATH
 	ui.settings_temp_path = SETTINGS_TEMP_PATH
 	ui.settings_backup_path = SETTINGS_BACKUP_PATH
-	var profile_files_present: bool = FileAccess.file_exists(SAVE_PATH) and FileAccess.file_exists(SETTINGS_PATH)
+	var save_file_present: bool = FileAccess.file_exists(SAVE_PATH)
+	var settings_file_present: bool = FileAccess.file_exists(SETTINGS_PATH)
+	var profile_files_present: bool = save_file_present or settings_file_present \
+		or FileAccess.file_exists(SAVE_TEMP_PATH) or FileAccess.file_exists(SAVE_BACKUP_PATH) \
+		or FileAccess.file_exists(SETTINGS_TEMP_PATH) or FileAccess.file_exists(SETTINGS_BACKUP_PATH)
+	var profile_files_complete: bool = save_file_present and settings_file_present
 	var controller_navigation_ready: bool = _has_joypad_binding("ui_accept") and _has_joypad_binding("ui_down")
 	_record_error(errors, controller_navigation_ready, "packaged UI navigation lost its controller path")
 	var controller_defaults_ready: bool = true
@@ -77,7 +82,7 @@ func run(ui: Control) -> void:
 	var restored_scale_ready: bool = false
 	var restored_remap_ready: bool = false
 	if reinstall_phase:
-		_record_error(errors, profile_files_present, "reinstalled build could not see the existing profile files")
+		_record_error(errors, profile_files_complete, "reinstalled build could not see both existing profile files")
 		ui._load_preferences()
 		ui._on_load()
 		restored_run_ready = ui.keep.wave_active and ui.keep.battle_step == 1
@@ -159,6 +164,7 @@ func run(ui: Control) -> void:
 		"remapped_pause_ready": remapped_pause_ready,
 		"manual_step_ready": manual_step_ready,
 		"profile_files_present": profile_files_present,
+		"profile_files_complete": profile_files_complete,
 		"restored_run_ready": restored_run_ready,
 		"restored_scale_ready": restored_scale_ready,
 		"restored_remap_ready": restored_remap_ready,

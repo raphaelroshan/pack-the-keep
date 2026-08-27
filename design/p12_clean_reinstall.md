@@ -6,9 +6,9 @@ Prove that the single-file Windows build can move to a fresh install directory w
 
 ## Acceptance criteria
 
-- Initial packaged smoke creates its run and settings beneath the CI profile, not beside the executable.
+- Initial packaged smoke rejects any pre-existing primary, temporary, or backup run/settings file, then creates its run and settings beneath the CI profile rather than beside the executable.
 - CI copies the exported executable to a new install directory and launches that copy.
-- The relocated executable restores saved battle step one, 125% scale, and the remapped pause binding from the same profile.
+- The relocated executable requires both primary profile files and restores saved battle step one, 125% scale, and the remapped pause binding from the same profile.
 - Both initial and reinstall reports retain the same build identity and user-data root.
 - The combined smoke artifact records both phases.
 
