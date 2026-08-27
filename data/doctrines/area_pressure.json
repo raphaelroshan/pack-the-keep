@@ -1,0 +1,15 @@
+{
+  "id": "area_pressure",
+  "content_version": 1,
+  "status": "active",
+  "name": "Area Pressure",
+  "short_role": "Threaten several adjacent structures with one slow impact.",
+  "question": "Can the keep preserve recovery when one impact reaches several rooms?",
+  "composition": ["siege_beast"],
+  "route_pattern": "outer_approach_to_shared_impact",
+  "target_priority": "variation_target_then_lowest_condition_cluster",
+  "principal_pressure": "Inner Yard and adjacent support rooms",
+  "likely_target": "inner_yard or outer_wall",
+  "uncertainty": "which adjacent room shares the impact",
+  "counter_families": ["control", "support", "commander_intervention"]
+}

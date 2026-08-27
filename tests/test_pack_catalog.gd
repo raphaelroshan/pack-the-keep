@@ -11,9 +11,30 @@ func _check(condition: bool, message: String) -> void:
 
 func _initialize() -> void:
 	var catalog: RefCounted = ContentCatalog.new()
-	var known_doctrines: Array = PackKeepState.DOCTRINE_QUESTIONS.keys()
-	var loaded: Dictionary = catalog.load_default(PackKeepState.ROOMS.keys(), known_doctrines)
+	var loaded: Dictionary = catalog.load_default(PackKeepState.ROOMS.keys())
 	_check(bool(loaded.get("ok", false)), "active runtime catalog did not load cleanly: %s" % "; ".join(loaded.get("errors", [])))
+	var known_doctrines: Array = catalog.doctrine_ids()
+	_check(known_doctrines == ["gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure"], "doctrine catalog order or active IDs changed")
+	var expected_doctrines: Dictionary = {
+		"gate_assault": {"composition": ["raider", "raider"], "target": "gate", "pressure": "Gate concentration"},
+		"distributed_sabotage": {"composition": ["raider", "sapper"], "target": "workshop or supply_room", "pressure": "Workshop and Supply Room support chain"},
+		"feint_and_flank": {"composition": ["raider", "climber"], "target": "north_tower or old_chapel", "pressure": "North Tower and upper response lane"},
+		"area_pressure": {"composition": ["siege_beast"], "target": "inner_yard or outer_wall", "pressure": "Inner Yard and adjacent support rooms"}
+	}
+	for doctrine_id in expected_doctrines.keys():
+		var doctrine: Dictionary = catalog.doctrine_definition(String(doctrine_id))
+		_check(doctrine.get("composition", []) == expected_doctrines[doctrine_id].composition, "%s composition changed during externalization" % doctrine_id)
+		_check(String(doctrine.get("likely_target", "")) == String(expected_doctrines[doctrine_id].target), "%s forecast target changed during externalization" % doctrine_id)
+		_check(String(doctrine.get("principal_pressure", "")) == String(expected_doctrines[doctrine_id].pressure), "%s pressure summary changed during externalization" % doctrine_id)
+	var copied_doctrine: Dictionary = catalog.doctrine_definition("gate_assault")
+	copied_doctrine.composition.append("sapper")
+	_check(catalog.doctrine_definition("gate_assault").get("composition", []).size() == 2, "callers can mutate the catalog's stored doctrine definition")
+	var malformed_doctrine: Dictionary = catalog.doctrine_definition("gate_assault")
+	malformed_doctrine.erase("question")
+	malformed_doctrine.composition = ["missing_enemy"]
+	malformed_doctrine.counter_families = ["only_one"]
+	var doctrine_errors: Array[String] = catalog.validate_doctrine_definition(malformed_doctrine, "wrong_filename", catalog.enemy_ids())
+	_check(doctrine_errors.size() >= 4, "catalog validator did not reject missing fields, ID mismatch, enemy references, and incomplete counters")
 	_check(catalog.enemy_ids() == ["raider", "sapper", "climber", "siege_beast"], "enemy catalog order or active IDs changed")
 	var expected_enemies: Dictionary = {
 		"raider": {"health": 8, "damage": 2, "arrival": 2, "route": "gate_road", "targets": ["gate"], "doctrine": "gate_assault", "counter": "pike_squad"},
@@ -119,9 +140,10 @@ func _initialize() -> void:
 
 	var first: PackKeepState = PackKeepState.new(3307)
 	var second: PackKeepState = PackKeepState.new(3307)
-	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("pack_count", 0)) == 4 and int(first.content_catalog_status().get("commander_count", 0)) == 2 and int(first.content_catalog_status().get("piece_count", 0)) == 8 and int(first.content_catalog_status().get("enemy_count", 0)) == 4, "KeepState did not expose a valid four-pack, two-commander, eight-piece, four-enemy catalog")
+	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("pack_count", 0)) == 4 and int(first.content_catalog_status().get("commander_count", 0)) == 2 and int(first.content_catalog_status().get("piece_count", 0)) == 8 and int(first.content_catalog_status().get("enemy_count", 0)) == 4 and int(first.content_catalog_status().get("doctrine_count", 0)) == 4, "KeepState did not expose a valid commander, piece, pack, enemy, and doctrine catalog")
 	_check(first.piece_ids() == catalog.piece_ids(), "KeepState did not preserve stable piece order")
 	_check(first.enemy_ids() == catalog.enemy_ids(), "KeepState did not preserve stable enemy order")
+	_check(first.doctrine_ids() == catalog.doctrine_ids(), "KeepState did not preserve stable doctrine order")
 	_check(first.commander_ids() == ["castellan", "warden"], "KeepState did not preserve stable commander order")
 	var selected_warden: Dictionary = first.select_commander("warden")
 	_check(bool(selected_warden.get("ok", false)) and first.materials == 52 and first.morale == 7, "externalized Warden did not preserve starting resources")

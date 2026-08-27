@@ -191,3 +191,11 @@
 **Reason:** Enemy health, contact damage, routes, targets, and telegraphs are authored content, but moving doctrines at the same time would widen the behavior-preservation risk. The split also allows one enemy definition to participate in several future doctrines.
 
 **Trade-off:** Enemy records temporarily reference doctrine IDs that are still declared in simulation code. Validators enforce that bridge until doctrine files replace it.
+
+## ADR-025: Separate doctrine intent from enemy actors
+
+**Decision:** Store doctrine composition and forecast meaning in individual JSON files while enemy files retain only the doctrine each actor currently serves.
+
+**Reason:** A doctrine is a teaching and targeting policy, not an enemy stat block. Separating it allows future scenarios to reuse actors in different compositions without duplicating health, timing, or route data.
+
+**Trade-off:** Scenario wave plans remain in simulation code for one more migration slice, so catalog validators must check their doctrine and enemy references at the boundary.

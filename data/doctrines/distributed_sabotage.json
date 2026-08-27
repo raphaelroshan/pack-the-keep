@@ -1,0 +1,15 @@
+{
+  "id": "distributed_sabotage",
+  "content_version": 1,
+  "status": "active",
+  "name": "Distributed Sabotage",
+  "short_role": "Split pressure across the support chain behind the front.",
+  "question": "Can support rooms survive while the front is under pressure?",
+  "composition": ["raider", "sapper"],
+  "route_pattern": "gate_and_service_lane",
+  "target_priority": "lowest_condition_support_dependency",
+  "principal_pressure": "Workshop and Supply Room support chain",
+  "likely_target": "workshop or supply_room",
+  "uncertainty": "which support room receives the first mark",
+  "counter_families": ["recon", "support", "mobile_response"]
+}

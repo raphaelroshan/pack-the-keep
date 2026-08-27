@@ -30,6 +30,13 @@ const ENEMY_PATHS: Array[String] = [
 	"res://data/enemies/siege_beast.json"
 ]
 
+const DOCTRINE_PATHS: Array[String] = [
+	"res://data/doctrines/gate_assault.json",
+	"res://data/doctrines/distributed_sabotage.json",
+	"res://data/doctrines/feint_and_flank.json",
+	"res://data/doctrines/area_pressure.json"
+]
+
 const REQUIRED_PACK_FIELDS: Array[String] = [
 	"id",
 	"content_version",
@@ -113,28 +120,49 @@ const REQUIRED_ENEMY_FIELDS: Array[String] = [
 	"presentation"
 ]
 
+const REQUIRED_DOCTRINE_FIELDS: Array[String] = [
+	"id",
+	"content_version",
+	"status",
+	"name",
+	"short_role",
+	"question",
+	"composition",
+	"route_pattern",
+	"target_priority",
+	"principal_pressure",
+	"likely_target",
+	"uncertainty",
+	"counter_families"
+]
+
 var _packs: Dictionary = {}
 var _commanders: Dictionary = {}
 var _pieces: Dictionary = {}
 var _enemies: Dictionary = {}
+var _doctrines: Dictionary = {}
 var errors: Array[String] = []
 
-func load_default(known_room_ids: Array = [], known_doctrine_ids: Array = []) -> Dictionary:
+func load_default(known_room_ids: Array = []) -> Dictionary:
 	_packs.clear()
 	_commanders.clear()
 	_pieces.clear()
 	_enemies.clear()
+	_doctrines.clear()
 	errors.clear()
+	for path in DOCTRINE_PATHS:
+		_load_doctrine(path)
 	for path in PIECE_PATHS:
-		_load_piece(path, known_room_ids, _known_piece_targets(known_doctrine_ids))
+		_load_piece(path, known_room_ids, _known_piece_targets())
 	for path in PACK_PATHS:
 		_load_pack(path, piece_ids())
 	for path in COMMANDER_PATHS:
 		_load_commander(path)
 	for path in ENEMY_PATHS:
-		_load_enemy(path, known_room_ids, known_doctrine_ids)
+		_load_enemy(path, known_room_ids, doctrine_ids())
 	_validate_piece_availability()
-	return {"ok": errors.is_empty(), "commanders": _commanders.duplicate(true), "pieces": _pieces.duplicate(true), "packs": _packs.duplicate(true), "enemies": _enemies.duplicate(true), "errors": errors.duplicate()}
+	_validate_doctrine_enemy_references()
+	return {"ok": errors.is_empty(), "commanders": _commanders.duplicate(true), "pieces": _pieces.duplicate(true), "packs": _packs.duplicate(true), "enemies": _enemies.duplicate(true), "doctrines": _doctrines.duplicate(true), "errors": errors.duplicate()}
 
 func commander_ids() -> Array[String]:
 	var result: Array[String] = []
@@ -168,6 +196,17 @@ func enemy_ids() -> Array[String]:
 
 func enemy_definition(enemy_id: String) -> Dictionary:
 	return _enemies.get(enemy_id, {}).duplicate(true)
+
+func doctrine_ids() -> Array[String]:
+	var result: Array[String] = []
+	for path in DOCTRINE_PATHS:
+		var expected_id: String = path.get_file().get_basename()
+		if _doctrines.has(expected_id):
+			result.append(expected_id)
+	return result
+
+func doctrine_definition(doctrine_id: String) -> Dictionary:
+	return _doctrines.get(doctrine_id, {}).duplicate(true)
 
 func pack_ids() -> Array[String]:
 	var result: Array[String] = []
@@ -317,6 +356,38 @@ func validate_enemy_definition(enemy: Dictionary, expected_id: String, known_roo
 			validation_errors.append("enemy %s radius scale must be positive" % enemy_id)
 	return validation_errors
 
+func validate_doctrine_definition(doctrine: Dictionary, expected_id: String, known_enemy_ids: Array) -> Array[String]:
+	var validation_errors: Array[String] = []
+	for field in REQUIRED_DOCTRINE_FIELDS:
+		if not doctrine.has(field):
+			validation_errors.append("%s is missing required field: %s" % [expected_id, field])
+	var doctrine_id: String = String(doctrine.get("id", ""))
+	if doctrine_id != expected_id:
+		validation_errors.append("doctrine id %s does not match filename %s" % [doctrine_id, expected_id])
+	if not _is_snake_case_id(doctrine_id):
+		validation_errors.append("doctrine id %s must be snake_case" % doctrine_id)
+	if String(doctrine.get("status", "")) != "active":
+		validation_errors.append("doctrine %s must have active status" % doctrine_id)
+	_validate_integer_minimum(doctrine, "content_version", doctrine_id, "doctrine", 1, validation_errors)
+	for field in ["name", "short_role", "question", "route_pattern", "target_priority", "principal_pressure", "likely_target", "uncertainty"]:
+		if not doctrine.get(field) is String or String(doctrine.get(field, "")).strip_edges().is_empty():
+			validation_errors.append("doctrine %s must have non-empty text for %s" % [doctrine_id, field])
+	var composition: Variant = doctrine.get("composition", [])
+	if not composition is Array or composition.is_empty():
+		validation_errors.append("doctrine %s composition must contain at least one enemy" % doctrine_id)
+	else:
+		for enemy_id in composition:
+			if not enemy_id is String or not known_enemy_ids.has(String(enemy_id)):
+				validation_errors.append("doctrine %s references unknown enemy: %s" % [doctrine_id, String(enemy_id)])
+	var counter_families: Variant = doctrine.get("counter_families", [])
+	if not counter_families is Array or counter_families.size() < 3:
+		validation_errors.append("doctrine %s must expose at least three counter families" % doctrine_id)
+	else:
+		for family in counter_families:
+			if not family is String or String(family).strip_edges().is_empty():
+				validation_errors.append("doctrine %s counter families must be non-empty strings" % doctrine_id)
+	return validation_errors
+
 func validate_commander_definition(commander: Dictionary, expected_id: String) -> Array[String]:
 	var validation_errors: Array[String] = []
 	for field in REQUIRED_COMMANDER_FIELDS:
@@ -435,6 +506,28 @@ func _load_enemy(path: String, known_room_ids: Array, known_doctrine_ids: Array)
 	if validation_errors.is_empty():
 		_enemies[enemy_id] = enemy.duplicate(true)
 
+func _load_doctrine(path: String) -> void:
+	if not FileAccess.file_exists(path):
+		errors.append("missing doctrine file: %s" % path)
+		return
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		errors.append("could not open doctrine file: %s" % path)
+		return
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		errors.append("doctrine file must contain one JSON object: %s" % path)
+		return
+	var doctrine: Dictionary = parsed
+	var doctrine_id: String = String(doctrine.get("id", ""))
+	var validation_errors: Array[String] = validate_doctrine_definition(doctrine, path.get_file().get_basename(), _known_enemy_ids())
+	if _doctrines.has(doctrine_id):
+		validation_errors.append("duplicate doctrine id: %s" % doctrine_id)
+	for validation_error in validation_errors:
+		errors.append("%s: %s" % [path, validation_error])
+	if validation_errors.is_empty():
+		_doctrines[doctrine_id] = doctrine.duplicate(true)
+
 func _load_pack(path: String, known_piece_ids: Array) -> void:
 	if not FileAccess.file_exists(path):
 		errors.append("missing pack file: %s" % path)
@@ -466,6 +559,12 @@ func _validate_piece_availability() -> void:
 			continue
 		if not _packs.has(availability) or not _packs[availability].get("contents", []).has(piece_id):
 			errors.append("piece %s availability pack %s does not contain that piece" % [piece_id, availability])
+
+func _validate_doctrine_enemy_references() -> void:
+	for doctrine_id in doctrine_ids():
+		for enemy_id in _doctrines[doctrine_id].get("composition", []):
+			if not _enemies.has(String(enemy_id)):
+				errors.append("doctrine %s composition references unavailable enemy: %s" % [doctrine_id, String(enemy_id)])
 
 func _validate_positive_integer(definition: Dictionary, field: String, definition_id: String, validation_errors: Array[String]) -> void:
 	var value: Variant = definition.get(field)
@@ -528,12 +627,18 @@ func _known_pack_families() -> Array[String]:
 			result.append(family)
 	return result
 
-func _known_piece_targets(known_doctrine_ids: Array) -> Array:
-	var result: Array = known_doctrine_ids.duplicate()
+func _known_piece_targets() -> Array:
+	var result: Array = doctrine_ids()
 	for path in ENEMY_PATHS:
 		var enemy_id: String = path.get_file().get_basename()
 		if not result.has(enemy_id):
 			result.append(enemy_id)
+	return result
+
+func _known_enemy_ids() -> Array[String]:
+	var result: Array[String] = []
+	for path in ENEMY_PATHS:
+		result.append(path.get_file().get_basename())
 	return result
 
 func _is_snake_case_id(value: String) -> bool:
