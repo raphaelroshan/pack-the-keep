@@ -38,6 +38,10 @@ class PackagedSmokeReportTests(unittest.TestCase):
                 "ui_scale_ready": True,
                 "settings_scale_ready": True,
                 "settings_remap_ready": True,
+                "initial_pause_ready": True,
+                "paused_state_frozen": True,
+                "remapped_pause_ready": True,
+                "manual_step_ready": True,
                 "content_status": {"ok": True, "commander_count": 2, "piece_count": 17, "pack_count": 9, "enemy_count": 7, "doctrine_count": 8, "scenario_count": 8, "event_count": 3, "modifier_count": 2},
                 "user_data_dir": str(report_path.parent),
                 "save_path": str(report_path.parent / "pack_the_keep_prototype.save"),
@@ -66,13 +70,17 @@ class PackagedSmokeReportTests(unittest.TestCase):
                 "ui_scale_ready": False,
                 "settings_scale_ready": False,
                 "settings_remap_ready": False,
+                "initial_pause_ready": False,
+                "paused_state_frozen": False,
+                "remapped_pause_ready": False,
+                "manual_step_ready": False,
                 "content_status": {"ok": False},
                 "user_data_dir": str(root.parent),
                 "save_path": str(root.parent / "save"),
                 "settings_path": str(root.parent / "settings"),
             }), encoding="utf-8")
             errors = "\n".join(runner.validate_report(report_path, root, "0.12.0-alpha-packaged-smoke"))
-            for expected in ("build version", "release template", "offline proxy", "environment guard", "did not free", "battle step", "schemas", "input/scaling", "catalog", "escaped"):
+            for expected in ("build version", "release template", "offline proxy", "environment guard", "did not free", "battle step", "schemas", "input/scaling", "pause assertion", "catalog", "escaped"):
                 self.assertIn(expected, errors)
 
 

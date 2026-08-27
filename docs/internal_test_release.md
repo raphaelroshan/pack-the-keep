@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.12.2-alpha-packaged-input-scale` — packaged Windows input, scaling, persistence, and recovery validation
+**Current build identity:** `0.12.3-alpha-packaged-pause-close` — packaged Windows pause, input, scaling, persistence, and recovery validation
 
 ## Purpose
 
@@ -41,6 +41,10 @@ Loading validates the primary save in a fresh keep-state candidate and falls bac
 ## v0.12.2 Packaged input and scaling additions
 
 The exported Windows smoke now verifies controller navigation defaults, all gameplay controller paths, conflict-resolving remap of battle pause, 125% stacked layout, and schema-4 persistence of both scale and bindings.
+
+## v0.12.3 Packaged pause and close additions
+
+The Windows artifact now proves battle begins paused, paused presentation cannot advance simulation, the persisted controller binding toggles pause/resume, a manual step advances exactly once, and the main scene tears down before a zero process exit.
 
 ## v0.8.2 testability additions
 

@@ -73,10 +73,21 @@ func run(ui: Control) -> void:
 	ui._set_screen("preparation")
 	var placed: Dictionary = ui.keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
 	_record_error(errors, bool(placed.get("ok", false)), "starter placement failed")
-	var started: Dictionary = ui.keep.start_wave("gate_assault")
-	_record_error(errors, bool(started.get("ok", false)), "packaged battle failed to start")
-	var advanced: Dictionary = ui.keep.advance_wave(1.0)
-	_record_error(errors, bool(advanced.get("ok", false)) and ui.keep.battle_step == 1, "packaged battle did not reach deterministic step one")
+	ui._on_start_wave()
+	var initial_pause_ready: bool = ui.keep.wave_active and ui.battle_paused and ui.screen == "battle"
+	_record_error(errors, initial_pause_ready, "packaged battle did not begin paused on the Battle screen")
+	var paused_step_before: int = ui.keep.battle_step
+	ui._process(2.0)
+	var paused_state_frozen: bool = ui.keep.battle_step == paused_step_before
+	_record_error(errors, paused_state_frozen, "paused packaged presentation advanced authoritative battle state")
+	ui._unhandled_input(replacement)
+	var remapped_resume_ready: bool = not ui.battle_paused
+	ui._unhandled_input(replacement)
+	var remapped_pause_ready: bool = ui.battle_paused
+	_record_error(errors, remapped_resume_ready and remapped_pause_ready, "remapped controller pause did not toggle packaged battle state")
+	ui._on_advance_wave()
+	var manual_step_ready: bool = ui.battle_paused and ui.keep.battle_step == paused_step_before + 1
+	_record_error(errors, manual_step_ready, "manual packaged step did not advance exactly once while paused")
 
 	ui._on_save()
 	_record_error(errors, FileAccess.file_exists(SAVE_PATH), "run save was not written to user data")
@@ -116,6 +127,10 @@ func run(ui: Control) -> void:
 		"ui_scale_ready": ui_scale_ready,
 		"settings_scale_ready": settings_scale_ready,
 		"settings_remap_ready": settings_remap_ready,
+		"initial_pause_ready": initial_pause_ready,
+		"paused_state_frozen": paused_state_frozen,
+		"remapped_pause_ready": remapped_resume_ready and remapped_pause_ready,
+		"manual_step_ready": manual_step_ready,
 		"main_scene_freed": main_scene_freed,
 		"smoke_guard": OS.get_environment("PACK_THE_KEEP_PACKAGED_SMOKE") == "1",
 		"offline_proxy_guard": OS.get_environment("HTTPS_PROXY").contains("127.0.0.1:9")
