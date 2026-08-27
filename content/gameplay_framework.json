@@ -3,6 +3,14 @@
   "game_id": "pack-the-keep",
   "framework_version": "0.2.0",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
+  "p0_alpha_foundation": {
+    "status": "implemented",
+    "placement": ["click_to_place", "green_valid_preview", "red_invalid_preview", "cost_and_role_preview"],
+    "inspection": ["rooms", "placed_pieces", "active_enemies"],
+    "pack_choice": ["preview_cost", "preview_pieces", "preview_doctrine", "reserve_one_offer"],
+    "save_recovery": ["schema_version", "game_id", "atomic_replace", "future_version_rejection", "new_run_reset"],
+    "controls": "scrollable_command_panel_with_direct_map_fallback_and_keyboard_focusable_buttons"
+  },
   "vertical_slice": {
     "commanders": [
       "castellan"
@@ -872,7 +880,7 @@
         "refuge_route",
         "winter_keep"
       ],
-      "guardrails": [
+  "guardrails": [
         "no_rarity_tiers",
         "no_duplicate_pack_grind",
         "no_permanent_power_that_invalidates_early_packs",

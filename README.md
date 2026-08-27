@@ -4,9 +4,7 @@ Pack the Keep is an agent-first Godot 4.x prototype for a premium single-player 
 
 ## Current state
 
-The repository contains a playable vertical-slice shell and deterministic keep-state foundation. The main scene demonstrates commander selection, pack opening, top-down piece placement, invasion doctrines, wave progress, commander abilities, and saving prototype state. The drawn keep is intentional prototype presentation; final 2D art can replace it without changing the simulation contract.
-
-Godot is not installed in the sandbox used to generate this package. The project has been scaffolded and statically reviewed but not launched here. Install Godot 4.x locally before feature development.
+The repository contains a playable vertical-slice shell and deterministic keep-state foundation. The main scene demonstrates commander selection, pack opening, top-down piece placement, invasion doctrines, wave progress, commander abilities, and saving prototype state. The P0 alpha foundation adds direct map placement with authoritative footprint previews, room/piece/enemy inspection, pack cost and doctrine previews, a one-pack reserve slot, scrollable command controls, and safe load/reset behavior. The drawn keep remains intentional prototype presentation; final 2D art can replace it without changing the simulation contract.
 
 ## Run the prototype
 
@@ -24,7 +22,7 @@ Press **F5** to run the project or **F6** to run the current scene.
 godot --headless --path . --script res://tests/test_keep_state.gd
 ```
 
-A successful run prints `PASS: Pack the Keep state tests` and exits with code 0. Agents must run this command after changes to commanders, packs, grid rules, pieces, wave logic, abilities, or save state.
+A successful run prints `PASS: Pack the Keep battle-state tests` and exits with code 0. Agents must run this command after changes to commanders, packs, grid rules, pieces, wave logic, abilities, or save state. The current internal P0 release also runs content/framework validators, policy checks, Godot editor parsing, and a headless scene smoke test.
 
 ## Repository map
 
@@ -84,6 +82,12 @@ Greywatch begins with **Pike Squad** and **Narrow Gate** as starter pieces. Open
 
 Unit instances now track `max_health`, `health`, `condition`, `disabled`, attack count, damage dealt, stopped targets, last target, and assignment. Enemy instances track maximum health, current HP, damage taken, received attacks, target, and defeat state. The compact combat record reports battle steps, unit attacks, damage dealt, enemy attacks, room damage, piece damage, repairs, disabled units, and defeated enemies. See [`design/unit_availability_and_combat_metrics.md`](design/unit_availability_and_combat_metrics.md) for the complete contract.
 
+## P0 alpha foundation
+
+Greywatch now supports direct map interaction in Preparation. Arm an available piece, hover either floor, and read the green valid or red invalid footprint before clicking to place it. Clicking a room or placed piece opens an authoritative inspector; active enemies can be inspected from the command table. Pack offers show contained pieces, material cost, doctrine, the problem they solve, and their spatial demand. One offer can be reserved without unlocking its pieces. The command table is scrollable at the 1280×720 target, and the save controls support atomic replacement, schema/game validation, future-version rejection, Load, and New run / reset.
+
+The detailed P0 contract is in [`design/p0_alpha_foundation.md`](design/p0_alpha_foundation.md), and the expanded deterministic coverage is in [`tests/test_keep_state.gd`](tests/test_keep_state.gd).
+
 ## Internal base-game test release
 
-The repository now includes a small internal test-release presentation for Greywatch. It uses a generated first-pass visual kit—Greywatch background, Castellan portrait, defender and enemy icons—while leaving the deterministic simulation and battle rules as the source of truth. The test checklist, asset manifest, and deliberate production boundaries are documented in [`docs/internal_test_release.md`](docs/internal_test_release.md).
+The repository includes a small internal test-release presentation for Greywatch. It uses a generated first-pass visual kit—Greywatch background, Castellan portrait, defender and enemy icons—while leaving the deterministic simulation and battle rules as the source of truth. The test checklist, asset manifest, and deliberate production boundaries are documented in [`docs/internal_test_release.md`](docs/internal_test_release.md).

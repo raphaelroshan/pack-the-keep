@@ -7,6 +7,8 @@ const GRID_SIZE := Vector2i(12, 8)
 const FLOORS := ["ground", "upper"]
 const ACTIVE_COMMANDER := "castellan"
 const STARTER_PIECES := ["pike_squad", "narrow_gate"]
+const SAVE_SCHEMA_VERSION := 2
+const GAME_ID := "pack-the-keep"
 
 const ROOMS: Dictionary = {
 	"gate": {"name": "Gate", "floor": "ground", "origin": Vector2i(1, 3), "size": Vector2i(2, 2), "critical": true, "role": "shortest entrance"},
@@ -37,6 +39,13 @@ const PACKS: Dictionary = {
 	"field_engineers": {"name": "Field Engineers", "pieces": ["repair_station", "brace"], "doctrine": "redundancy", "cost": 4},
 	"firekeepers": {"name": "Firekeepers", "pieces": ["fire_team", "fire_brazier"], "doctrine": "denial_zones", "cost": 5},
 	"scouts": {"name": "Scouts", "pieces": ["scout_post", "signal_beacon"], "doctrine": "early_warning", "cost": 3}
+}
+
+const PACK_EXPLANATIONS: Dictionary = {
+	"pike_line": {"solves": "Gate pressure and raider contact", "asks": "A committed ground-floor corridor", "preview": "Reliable front-line control; strongest when Pike Squad reaches Gate Road."},
+	"field_engineers": {"solves": "Room damage and partial-breach recovery", "asks": "Materials and a safe Workshop footprint", "preview": "Turns surviving the first hit into a repair decision instead of a restart."},
+	"firekeepers": {"solves": "Climber approaches and denial zones", "asks": "Power and a response-space position", "preview": "Punishes upper-floor feints; less efficient against support-room sabotage."},
+	"scouts": {"solves": "Forecast uncertainty and upper-floor targets", "asks": "A visible North Tower post", "preview": "Improves agency before contact, but contributes little direct damage."}
 }
 
 const PIECES: Dictionary = {
@@ -92,6 +101,7 @@ var owned_packs: Array[String] = []
 var offered_packs: Array[String] = ["pike_line", "field_engineers", "firekeepers"]
 var available_pieces: Array[String] = ["pike_squad", "narrow_gate"]
 var pack_openings_this_preparation: int = 0
+var reserved_pack_id: String = ""
 var enemies: Array[Dictionary] = []
 var rooms: Dictionary = {}
 var log: Array[String] = []
@@ -108,15 +118,45 @@ var _last_attackers: Array[String] = []
 var _last_attack_damage: Dictionary = {}
 
 func _init(keep_seed: int = 3307) -> void:
-	seed = keep_seed
-	_reset_rooms()
-	_reset_combat_metrics()
-	_log("Greywatch Keep is quiet. The Castellan waits for a first doctrine.")
+	reset_run(keep_seed)
 
 func _reset_rooms() -> void:
 	rooms.clear()
 	for room_id in ROOMS.keys():
 		rooms[room_id] = {"condition": 100, "state": "stable"}
+
+func reset_run(new_seed: int = 3307) -> void:
+	seed = new_seed
+	commander_id = ACTIVE_COMMANDER
+	materials = int(COMMANDERS[ACTIVE_COMMANDER].starting_materials)
+	command_points = 3
+	morale = int(COMMANDERS[ACTIVE_COMMANDER].starting_morale)
+	wave_index = 0
+	wave_active = false
+	wave_progress = 0.0
+	battle_step = 0
+	battle_clock = 0.0
+	breach_level = 0
+	enemy_doctrine = "gate_assault"
+	pieces.clear()
+	owned_packs.clear()
+	available_pieces.clear()
+	for piece_id in STARTER_PIECES:
+		available_pieces.append(String(piece_id))
+	reserved_pack_id = ""
+	enemies.clear()
+	_reset_rooms()
+	log.clear()
+	battle_report.clear()
+	lockdown_pending = false
+	lockdown_used = false
+	last_outcome = ""
+	repair_interval_active = false
+	repair_actions_remaining = 0
+	repair_interval_reason = ""
+	assigned_rooms.clear()
+	_reset_combat_metrics()
+	_log("Greywatch Keep is quiet. The Castellan waits for a first doctrine.")
 
 func _reset_combat_metrics() -> void:
 	combat_metrics = {
@@ -162,6 +202,30 @@ func select_commander(id: String) -> Dictionary:
 	morale = int(COMMANDERS[id].starting_morale)
 	return {"ok": true, "message": "%s takes command. %s" % [COMMANDERS[id].name, COMMANDERS[id].passive]}
 
+func pack_preview(pack_id: String) -> Dictionary:
+	if not PACKS.has(pack_id):
+		return {"ok": false, "reason": "unknown pack"}
+	var pack: Dictionary = PACKS[pack_id]
+	var explanation: Dictionary = PACK_EXPLANATIONS.get(pack_id, {})
+	var piece_previews: Array[Dictionary] = []
+	for piece_id in pack.pieces:
+		var piece: Dictionary = PIECES[String(piece_id)]
+		piece_previews.append({"id": String(piece_id), "name": String(piece.name), "cost": int(piece.cost), "size": piece.size, "role": String(piece.role), "availability": String(piece.availability)})
+	return {"ok": true, "pack_id": pack_id, "name": String(pack.name), "doctrine": String(pack.doctrine), "cost": int(pack.cost), "pieces": piece_previews, "solves": String(explanation.get("solves", "")), "asks": String(explanation.get("asks", "")), "preview": String(explanation.get("preview", "")), "owned": owned_packs.has(pack_id), "reserved": reserved_pack_id == pack_id, "openings_remaining": _preparation_pack_limit() - pack_openings_this_preparation, "materials": materials}
+
+func reserve_pack(pack_id: String) -> Dictionary:
+	if not PACKS.has(pack_id):
+		return {"ok": false, "reason": "unknown pack"}
+	if wave_active or repair_interval_active:
+		return {"ok": false, "reason": "packs can only be reserved during Preparation"}
+	if owned_packs.has(pack_id):
+		return {"ok": false, "reason": "an owned pack cannot occupy the reserve slot"}
+	if reserved_pack_id == pack_id:
+		reserved_pack_id = ""
+		return {"ok": true, "message": "Reserve cleared."}
+	reserved_pack_id = pack_id
+	return {"ok": true, "message": "Reserved %s for the next Preparation." % PACKS[pack_id].name, "reserved_pack_id": reserved_pack_id}
+
 func open_pack(pack_id: String) -> Dictionary:
 	if not PACKS.has(pack_id):
 		return {"ok": false, "reason": "unknown pack"}
@@ -171,12 +235,18 @@ func open_pack(pack_id: String) -> Dictionary:
 		return {"ok": false, "reason": "pack already opened"}
 	if pack_openings_this_preparation >= _preparation_pack_limit():
 		return {"ok": false, "reason": "this Preparation has no pack openings remaining"}
+	var pack_cost: int = int(PACKS[pack_id].get("cost", 0))
+	if materials < pack_cost:
+		return {"ok": false, "reason": "not enough materials to open this pack"}
+	materials -= pack_cost
 	owned_packs.append(pack_id)
 	pack_openings_this_preparation += 1
+	if reserved_pack_id == pack_id:
+		reserved_pack_id = ""
 	for piece_id in PACKS[pack_id].pieces:
 		if not available_pieces.has(piece_id):
 			available_pieces.append(piece_id)
-	return {"ok": true, "message": "Opened %s: %s. Available units updated." % [PACKS[pack_id].name, PACKS[pack_id].doctrine.replace("_", " ")], "available_pieces": available_pieces.duplicate(), "openings_remaining": _preparation_pack_limit() - pack_openings_this_preparation}
+	return {"ok": true, "message": "Opened %s for %d materials: %s. Available units updated." % [PACKS[pack_id].name, pack_cost, PACKS[pack_id].doctrine.replace("_", " ")], "available_pieces": available_pieces.duplicate(), "openings_remaining": _preparation_pack_limit() - pack_openings_this_preparation, "materials": materials}
 
 func piece_fits(piece_id: String, origin: Vector2i, floor: String = "ground") -> bool:
 	if not PIECES.has(piece_id) or not FLOORS.has(floor):
@@ -193,16 +263,28 @@ func piece_fits(piece_id: String, origin: Vector2i, floor: String = "ground") ->
 			return false
 	return true
 
-func place_piece(piece_id: String, origin: Vector2i, floor: String = "ground") -> Dictionary:
+func piece_preview(piece_id: String, origin: Vector2i, floor: String = "ground") -> Dictionary:
 	if not PIECES.has(piece_id):
-		return {"ok": false, "reason": "unknown defensive piece"}
-	if not available_pieces.has(piece_id):
-		return {"ok": false, "reason": "%s is not available; open its pack during Preparation" % PIECES[piece_id].name}
-	if not piece_fits(piece_id, origin, floor):
-		return {"ok": false, "reason": "piece does not fit on this floor of the keep"}
+		return {"ok": false, "valid": false, "reason": "unknown defensive piece"}
+	var piece: Dictionary = PIECES[piece_id]
+	var reason: String = ""
+	if wave_active or repair_interval_active:
+		reason = "placement is only available during Preparation"
+	elif not FLOORS.has(floor):
+		reason = "unknown keep floor"
+	elif not available_pieces.has(piece_id):
+		reason = "%s is not available; open its pack during Preparation" % piece.name
+	elif not piece_fits(piece_id, origin, floor):
+		reason = "piece does not fit on this floor of the keep"
+	elif materials < int(piece.cost):
+		reason = "not enough materials"
+	return {"ok": reason.is_empty(), "valid": reason.is_empty(), "reason": reason, "piece_id": piece_id, "name": String(piece.name), "origin": origin, "floor": floor, "size": piece.size, "cost": int(piece.cost), "role": String(piece.role), "remaining_materials": materials - int(piece.cost)}
+
+func place_piece(piece_id: String, origin: Vector2i, floor: String = "ground") -> Dictionary:
+	var preview: Dictionary = piece_preview(piece_id, origin, floor)
+	if not bool(preview.get("valid", false)):
+		return {"ok": false, "reason": String(preview.get("reason", "invalid placement"))}
 	var cost: int = int(PIECES[piece_id].cost)
-	if materials < cost:
-		return {"ok": false, "reason": "not enough materials"}
 	materials -= cost
 	var instance_id: String = "%s_%d" % [piece_id, pieces.size()]
 	var max_health: int = int(PIECES[piece_id].get("max_health", 10))
@@ -220,6 +302,51 @@ func _set_piece_health(instance_id: String, value: int) -> void:
 	instance.disabled = int(instance.health) <= 0
 	if instance.disabled and not was_disabled:
 		combat_metrics["disabled_units"] = int(combat_metrics.get("disabled_units", 0)) + 1
+
+func room_at_cell(floor: String, cell: Vector2i) -> String:
+	for room_id in ROOMS.keys():
+		var room: Dictionary = ROOMS[room_id]
+		if String(room.get("floor", "ground")) == floor and Rect2i(room.origin, room.size).has_point(cell):
+			return String(room_id)
+	return ""
+
+func piece_at_cell(floor: String, cell: Vector2i) -> String:
+	for instance_id in pieces.keys():
+		var instance: Dictionary = pieces[instance_id]
+		if String(instance.get("floor", "ground")) != floor:
+			continue
+		var piece_id: String = String(instance.get("piece_id", ""))
+		if piece_id.is_empty() or not PIECES.has(piece_id):
+			continue
+		if Rect2i(instance.get("origin", Vector2i.ZERO), PIECES[piece_id].size).has_point(cell):
+			return String(instance_id)
+	return ""
+
+func inspect_room(room_id: String) -> Dictionary:
+	if not ROOMS.has(room_id):
+		return {"ok": false, "reason": "unknown keep room"}
+	var room: Dictionary = ROOMS[room_id]
+	return {"ok": true, "kind": "room", "id": room_id, "name": String(room.name), "floor": String(room.floor), "role": String(room.role), "critical": bool(room.critical), "condition": room_condition(room_id), "state": room_state(room_id)}
+
+func inspect_piece(instance_id: String) -> Dictionary:
+	if not pieces.has(instance_id):
+		return {"ok": false, "reason": "unknown defensive piece"}
+	var instance: Dictionary = pieces[instance_id]
+	var piece_id: String = String(instance.get("piece_id", ""))
+	if not PIECES.has(piece_id):
+		return {"ok": false, "reason": "piece definition is unavailable"}
+	var piece: Dictionary = PIECES[piece_id]
+	return {"ok": true, "kind": "piece", "id": instance_id, "piece_id": piece_id, "name": String(piece.name), "floor": String(instance.get("floor", "ground")), "origin": instance.get("origin", Vector2i.ZERO), "role": String(piece.role), "health": int(instance.get("health", 0)), "max_health": int(instance.get("max_health", piece.max_health)), "condition": float(instance.get("condition", 0.0)), "assignment": String(instance.get("assignment", "")), "disabled": bool(instance.get("disabled", false)), "attack": int(piece.attack), "defense": int(piece.defense), "range": int(piece.range), "availability": String(piece.availability)}
+
+func inspect_enemy(index: int) -> Dictionary:
+	if index < 0 or index >= enemies.size():
+		return {"ok": false, "reason": "unknown enemy"}
+	var enemy: Dictionary = enemies[index]
+	var enemy_id: String = String(enemy.get("enemy_id", ""))
+	if not ENEMIES.has(enemy_id):
+		return {"ok": false, "reason": "enemy definition is unavailable"}
+	var definition: Dictionary = ENEMIES[enemy_id]
+	return {"ok": true, "kind": "enemy", "id": enemy_id, "index": index, "name": String(definition.name), "doctrine": String(definition.doctrine), "route": String(definition.route), "counter": String(definition.counter), "health": int(enemy.get("hp", 0)), "max_health": int(enemy.get("max_health", definition.health)), "damage": int(definition.damage), "arrival_step": int(definition.arrival_step), "target": String(enemy.get("target", "")), "defeated": bool(enemy.get("defeated", false))}
 
 func remove_piece(instance_id: String) -> Dictionary:
 	if not pieces.has(instance_id):
@@ -732,10 +859,39 @@ func serialize() -> Dictionary:
 		"assigned_rooms": assigned_rooms.duplicate(),
 		"available_pieces": available_pieces.duplicate(),
 		"pack_openings_this_preparation": pack_openings_this_preparation,
-		"combat_metrics": combat_metrics.duplicate()
+		"reserved_pack_id": reserved_pack_id,
+		"combat_metrics": combat_metrics.duplicate(),
+		"schema_version": SAVE_SCHEMA_VERSION,
+		"game_id": GAME_ID
 	}
 
-func load_serialized(data: Dictionary) -> void:
+func _decode_origin(value: Variant) -> Vector2i:
+	if value is Vector2i:
+		return value
+	if value is Array and value.size() >= 2:
+		return Vector2i(int(value[0]), int(value[1]))
+	if value is String:
+		var cleaned: String = String(value).replace("Vector2i(", "").replace(")", "")
+		var parts: PackedStringArray = cleaned.split(",")
+		if parts.size() >= 2:
+			return Vector2i(int(parts[0].strip_edges()), int(parts[1].strip_edges()))
+	return Vector2i.ZERO
+
+func load_serialized(data: Dictionary) -> Dictionary:
+	if data.is_empty():
+		return {"ok": false, "reason": "save payload is empty"}
+	var schema_version: int = int(data.get("schema_version", 1))
+	if schema_version > SAVE_SCHEMA_VERSION:
+		return {"ok": false, "reason": "save was created by a newer schema (%d)" % schema_version}
+	var game_id: String = String(data.get("game_id", GAME_ID))
+	if game_id != GAME_ID:
+		return {"ok": false, "reason": "save belongs to another game"}
+	if data.has("pieces") and not (data.get("pieces") is Dictionary):
+		return {"ok": false, "reason": "save pieces collection is malformed"}
+	if data.has("rooms") and not (data.get("rooms") is Dictionary):
+		return {"ok": false, "reason": "save rooms collection is malformed"}
+	if data.has("enemies") and not (data.get("enemies") is Array):
+		return {"ok": false, "reason": "save enemies collection is malformed"}
 	seed = int(data.get("seed", seed))
 	commander_id = String(data.get("commander_id", ACTIVE_COMMANDER))
 	materials = int(data.get("materials", materials))
@@ -749,6 +905,8 @@ func load_serialized(data: Dictionary) -> void:
 	breach_level = int(data.get("breach_level", breach_level))
 	enemy_doctrine = String(data.get("enemy_doctrine", enemy_doctrine))
 	pieces = data.get("pieces", {}).duplicate(true)
+	for instance_id in pieces.keys():
+		pieces[instance_id].origin = _decode_origin(pieces[instance_id].get("origin", Vector2i.ZERO))
 	owned_packs.clear()
 	for pack_id in data.get("owned_packs", []):
 		owned_packs.append(String(pack_id))
@@ -761,10 +919,22 @@ func load_serialized(data: Dictionary) -> void:
 	if not data.has("available_pieces"):
 		_rebuild_available_pieces()
 	pack_openings_this_preparation = int(data.get("pack_openings_this_preparation", pack_openings_this_preparation))
-	enemies = data.get("enemies", []).duplicate(true)
+	reserved_pack_id = String(data.get("reserved_pack_id", reserved_pack_id))
+	if not reserved_pack_id.is_empty() and not PACKS.has(reserved_pack_id):
+		reserved_pack_id = ""
+	enemies.clear()
+	for enemy_data in data.get("enemies", []):
+		if enemy_data is Dictionary:
+			enemies.append(enemy_data.duplicate(true))
 	rooms = data.get("rooms", rooms).duplicate(true)
-	log = data.get("log", []).duplicate()
-	battle_report = data.get("battle_report", []).duplicate()
+	log.clear()
+	for log_entry in data.get("log", []):
+		if log_entry is String:
+			log.append(String(log_entry))
+	battle_report.clear()
+	for report_entry in data.get("battle_report", []):
+		if report_entry is String:
+			battle_report.append(String(report_entry))
 	lockdown_pending = bool(data.get("lockdown_pending", lockdown_pending))
 	lockdown_used = bool(data.get("lockdown_used", lockdown_used))
 	last_outcome = String(data.get("last_outcome", last_outcome))
@@ -789,3 +959,4 @@ func load_serialized(data: Dictionary) -> void:
 			var assignment: String = String(pieces[instance_id].get("assignment", ""))
 			if not assignment.is_empty():
 				assigned_rooms[assignment] = instance_id
+	return {"ok": true, "message": "Save loaded.", "schema_version": schema_version, "legacy": not data.has("schema_version")}
