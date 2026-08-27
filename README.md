@@ -51,3 +51,11 @@ Give the agent the persistent context prompt in `docs/agent_feeding_guide.md`, t
 First stabilize the current grid and headless tests. Then move commander, pack, piece, and enemy definitions into data-driven files without changing behavior. Add command/result boundaries, piece selection, defender assignment, wave composition, damage and repair, authored teaching scenarios, visual feedback, and final 2D art. Add Steam and Epic adapters only after offline save behavior and deterministic defense simulation are stable.
 
 A full Windows build should eventually include controller support, display scaling, remapping, pause and speed controls, safe save migration, platform adapters, achievements, cloud-safe saves, crash reporting, and a polished demo. These services should remain outside the core keep simulation.
+
+## Implemented first battle slice
+
+The current battle slice is **Greywatch Keep**, a two-floor 12×8 keep defended by **The Castellan**. It implements four basic defenders—Pike Squad, Repair Station, Fire Team, and Scout Post—and three enemy doctrines: Raider gate assault, Sapper distributed sabotage, and Climber wall bypass.
+
+Battles now resolve through explicit phases: **forecast, approach, contact, intervention, and outcome**. The player advances one deterministic battle step at a time, reads the doctrine and likely target, and may use Castellan **Lockdown** once per wave. The report explains counter damage, enemy arrival, target selection, room damage, repair, breach, and recovery. A wave ends as a hold, partial breach, or collapse; partial breach remains recoverable.
+
+See [`design/first_keep_battle_slice.md`](design/first_keep_battle_slice.md) for the complete battle contract, enemy mechanics, keep layout, timing, targeting, resources, and deliberate exclusions. The authoritative test suite is now `tests/test_keep_state.gd`, and the machine-readable active-slice declaration is stored in `content/content_manifest.json` and `content/gameplay_framework.json`.

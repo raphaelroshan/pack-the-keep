@@ -55,3 +55,35 @@
 **Reason:** The target is a premium single-player game, and direct-control defense games often become unfair when solo players inherit layouts or pacing designed for co-op.
 
 **Trade-off:** Some late-game scenarios may be less spectacular than co-op-first designs, but the core experience will be coherent and easier to polish.
+
+## ADR-008: Greywatch is the first battle, not a generic tower-defense map
+
+**Decision:** Implement one authored two-floor keep named Greywatch Keep before adding procedural keep generation.
+
+**Reason:** A fixed room graph makes Gate, Outer Wall, Inner Yard, Workshop, Supply Room, North Tower, and Old Chapel legible. It lets the first enemy doctrines teach different spatial questions without hiding the lesson in map noise.
+
+**Trade-off:** Replay variety is lower in the first slice. The gain is that balance, screenshots, battle reports, and recovery paths can be tested against a stable layout.
+
+## ADR-009: Enemy doctrines target functions, not nearest buildings
+
+**Decision:** Raiders pressure the Gate, Sappers seek support rooms, and Climbers bypass the Gate toward upper-floor targets.
+
+**Reason:** Each enemy asks a different layout question. Targeting a declared function makes the forecast readable and allows counters through unit choice, empty response space, floor coverage, and commander timing.
+
+**Trade-off:** Enemy behavior is more authored than a nearest-target heuristic. The target-priority rule is deterministic: doctrine target, lowest condition, then stable ID order.
+
+## ADR-010: Battle advances in inspectable steps
+
+**Decision:** The first battle exposes forecast, approach, contact, intervention, and outcome phases and advances one step at a time in the prototype.
+
+**Reason:** Pause and inspection are part of the strategic identity. The player must be able to read why a support room was hit and decide whether to spend Castellan Lockdown.
+
+**Trade-off:** The first prototype is slower than a fully real-time defense. Speed controls and animation can be added later without changing the simulation commands.
+
+## ADR-011: Partial breach is a playable result
+
+**Decision:** One or two breached critical functions produce a recoverable partial breach; collapse requires three critical breaches or zero morale.
+
+**Reason:** Players should learn from a damaged layout rather than losing after a long preparation phase. Materials, repairs, and the battle report make recovery a strategic continuation.
+
+**Trade-off:** The first slice must make damaged states visually distinct and prevent repeated breach damage from falsely escalating the collapse counter.

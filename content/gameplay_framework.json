@@ -4,14 +4,45 @@
   "framework_version": "0.2.0",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "vertical_slice": {
-    "commanders": ["castellan", "warden"],
-    "packs": ["pike_line", "field_engineers", "firekeepers", "scouts"],
-    "units": ["pike_squad", "repair_station", "fire_team", "scout_post"],
-    "equipment": ["narrow_gate", "brace", "fire_brazier", "signal_beacon"],
-    "enemies": ["raider", "sapper", "climber", "siege_beast"],
+    "commanders": [
+      "castellan"
+    ],
+    "packs": [
+      "pike_line",
+      "field_engineers",
+      "firekeepers",
+      "scouts"
+    ],
+    "units": [
+      "pike_squad",
+      "repair_station",
+      "fire_team",
+      "scout_post"
+    ],
+    "equipment": [
+      "narrow_gate",
+      "brace",
+      "fire_brazier",
+      "signal_beacon"
+    ],
+    "enemies": [
+      "raider",
+      "sapper",
+      "climber"
+    ],
     "waves": 3,
-    "keep_grid": [12, 8],
-    "design_goal": "Prove that pack choice and spatial composition are more interesting than a large roster or a mandatory opening build."
+    "keep_grid": [
+      12,
+      8
+    ],
+    "design_goal": "Prove that pack choice and spatial composition are more interesting than a large roster or a mandatory opening build.",
+    "keep_id": "greywatch_keep",
+    "battle_model": "deterministic six-step auto-battle with forecast, approach, contact, intervention, adaptation, and outcome phases",
+    "recovery_outcomes": [
+      "held",
+      "partial_breach",
+      "collapse"
+    ]
   },
   "unit_roles": [
     {
@@ -63,104 +94,245 @@
       "name": "Pike Squad",
       "status": "vertical_slice",
       "category": "frontline",
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "purpose": "Holds a narrow corridor and becomes stronger when the player commits to one approach.",
-      "strengths": ["corridor_control", "front_pressure", "clear_hold_state"],
-      "weaknesses": ["open_yard", "climbers", "flanking"],
+      "strengths": [
+        "corridor_control",
+        "front_pressure",
+        "clear_hold_state"
+      ],
+      "weaknesses": [
+        "open_yard",
+        "climbers",
+        "flanking"
+      ],
       "player_readability": "A visible line of pikes faces one direction; the squad is clearly strong in a lane and weak outside it.",
-      "counter_families": ["gate_assault"],
-      "cost_profile": {"materials": 8, "command_points": 0, "space": "medium"}
+      "counter_families": [
+        "gate_assault"
+      ],
+      "cost_profile": {
+        "materials": 8,
+        "command_points": 0,
+        "space": "medium"
+      }
     },
     {
       "id": "shield_wardens",
       "name": "Shield Wardens",
       "status": "future",
       "category": "frontline",
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "purpose": "Creates a flexible anchor that protects adjacent defenders rather than maximizing damage.",
-      "strengths": ["adjacency", "gate_hold", "damage_sharing"],
-      "weaknesses": ["sappers", "slow_rotation", "area_pressure"],
+      "strengths": [
+        "adjacency",
+        "gate_hold",
+        "damage_sharing"
+      ],
+      "weaknesses": [
+        "sappers",
+        "slow_rotation",
+        "area_pressure"
+      ],
       "player_readability": "A broad shield arc visibly covers the neighboring tile or room.",
-      "counter_families": ["gate_assault", "distributed_sabotage"],
-      "cost_profile": {"materials": 10, "command_points": 0, "space": "medium"}
+      "counter_families": [
+        "gate_assault",
+        "distributed_sabotage"
+      ],
+      "cost_profile": {
+        "materials": 10,
+        "command_points": 0,
+        "space": "medium"
+      }
     },
     {
       "id": "repair_station",
       "name": "Repair Station",
       "status": "vertical_slice",
       "category": "support",
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "purpose": "Restores nearby structures during or after pressure.",
-      "strengths": ["recovery", "condition_restore", "breach_prevention"],
-      "weaknesses": ["sapper_target", "low_direct_defense", "range"],
+      "strengths": [
+        "recovery",
+        "condition_restore",
+        "breach_prevention"
+      ],
+      "weaknesses": [
+        "sapper_target",
+        "low_direct_defense",
+        "range"
+      ],
       "player_readability": "Workers, tools, and a short repair radius show exactly what the station can save.",
-      "counter_families": ["distributed_sabotage", "area_pressure"],
-      "cost_profile": {"materials": 10, "command_points": 0, "space": "medium"}
+      "counter_families": [
+        "distributed_sabotage",
+        "area_pressure"
+      ],
+      "cost_profile": {
+        "materials": 10,
+        "command_points": 0,
+        "space": "medium"
+      }
     },
     {
       "id": "fire_team",
       "name": "Fire Team",
       "status": "vertical_slice",
       "category": "control",
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "purpose": "Controls open space by creating a temporary denial zone.",
-      "strengths": ["open_ground", "climber_pressure", "area_denial"],
-      "weaknesses": ["blocked_sightline", "friendly_movement", "heavy_targets"],
+      "strengths": [
+        "open_ground",
+        "climber_pressure",
+        "area_denial"
+      ],
+      "weaknesses": [
+        "blocked_sightline",
+        "friendly_movement",
+        "heavy_targets"
+      ],
       "player_readability": "The denial zone is painted on the ground before placement and remains visible during the wave.",
-      "counter_families": ["feint_and_flank", "area_pressure"],
-      "cost_profile": {"materials": 9, "command_points": 0, "space": "medium"}
+      "counter_families": [
+        "feint_and_flank",
+        "area_pressure"
+      ],
+      "cost_profile": {
+        "materials": 9,
+        "command_points": 0,
+        "space": "medium"
+      }
     },
     {
       "id": "scout_post",
       "name": "Scout Post",
       "status": "vertical_slice",
       "category": "recon",
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "purpose": "Reveals approaching doctrine and improves the time available to respond.",
-      "strengths": ["forecast", "climber_detection", "threat_range"],
-      "weaknesses": ["no_direct_stop", "isolated_position", "sapper_target"],
+      "strengths": [
+        "forecast",
+        "climber_detection",
+        "threat_range"
+      ],
+      "weaknesses": [
+        "no_direct_stop",
+        "isolated_position",
+        "sapper_target"
+      ],
       "player_readability": "A cone of revealed approach and a countdown show the information gained.",
-      "counter_families": ["all_doctrines"],
-      "cost_profile": {"materials": 6, "command_points": 0, "space": "small"}
+      "counter_families": [
+        "all_doctrines"
+      ],
+      "cost_profile": {
+        "materials": 6,
+        "command_points": 0,
+        "space": "small"
+      }
     },
     {
       "id": "runner_pair",
       "name": "Runner Pair",
       "status": "future",
       "category": "mobile_response",
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "purpose": "Moves between rooms to carry repair kits, signals, or emergency orders.",
-      "strengths": ["repositioning", "repair_delivery", "evacuation"],
-      "weaknesses": ["blocked_lanes", "morale_loss", "area_pressure"],
+      "strengths": [
+        "repositioning",
+        "repair_delivery",
+        "evacuation"
+      ],
+      "weaknesses": [
+        "blocked_lanes",
+        "morale_loss",
+        "area_pressure"
+      ],
       "player_readability": "A visible route and destination marker show where the runners can reach before the next pressure tick.",
-      "counter_families": ["feint_and_flank", "distributed_sabotage"],
-      "cost_profile": {"materials": 7, "command_points": 1, "space": "small"}
+      "counter_families": [
+        "feint_and_flank",
+        "distributed_sabotage"
+      ],
+      "cost_profile": {
+        "materials": 7,
+        "command_points": 1,
+        "space": "small"
+      }
     },
     {
       "id": "bellkeepers",
       "name": "Bellkeepers",
       "status": "future",
       "category": "morale",
-      "footprint": [1, 1],
+      "footprint": [
+        1,
+        1
+      ],
       "purpose": "Turns the keep’s signal network into more reliable coordinated response.",
-      "strengths": ["pause_warning", "morale", "response_sync"],
-      "weaknesses": ["isolated", "direct_attack", "signal_blocked"],
+      "strengths": [
+        "pause_warning",
+        "morale",
+        "response_sync"
+      ],
+      "weaknesses": [
+        "isolated",
+        "direct_attack",
+        "signal_blocked"
+      ],
       "player_readability": "Signal lines connect the bell to supported rooms and break visibly when a relay is damaged.",
-      "counter_families": ["feint_and_flank", "area_pressure"],
-      "cost_profile": {"materials": 6, "command_points": 0, "space": "small"}
+      "counter_families": [
+        "feint_and_flank",
+        "area_pressure"
+      ],
+      "cost_profile": {
+        "materials": 6,
+        "command_points": 0,
+        "space": "small"
+      }
     },
     {
       "id": "counter_siege_team",
       "name": "Counter-Siege Team",
       "status": "future",
       "category": "mobile_response",
-      "footprint": [2, 1],
+      "footprint": [
+        2,
+        1
+      ],
       "purpose": "Creates a deliberate response to large targets without becoming a universal damage solution.",
-      "strengths": ["siege_beast", "slow_targets", "prepared_windows"],
-      "weaknesses": ["raiders", "climbers", "setup_time"],
+      "strengths": [
+        "siege_beast",
+        "slow_targets",
+        "prepared_windows"
+      ],
+      "weaknesses": [
+        "raiders",
+        "climbers",
+        "setup_time"
+      ],
       "player_readability": "The firing lane and reload interval are visible before the beast reaches the wall.",
-      "counter_families": ["area_pressure"],
-      "cost_profile": {"materials": 12, "command_points": 0, "space": "large"}
+      "counter_families": [
+        "area_pressure"
+      ],
+      "cost_profile": {
+        "materials": 12,
+        "command_points": 0,
+        "space": "large"
+      }
     }
   ],
   "equipment": [
@@ -214,12 +386,17 @@
       "purpose": "Build a strong, readable corridor defense.",
       "status": "vertical_slice",
       "family": "frontline",
-      "contents": ["pike_squad", "narrow_gate"],
+      "contents": [
+        "pike_squad",
+        "narrow_gate"
+      ],
       "doctrine": "compact_corridors",
       "player_question": "Which approach is worth making narrow and strong?",
       "strength": "Reliable concentrated defense against a declared gate assault.",
       "weakness": "Loses value when threats spread, bypass walls, or attack support rooms.",
-      "commander_affinity": ["castellan"],
+      "commander_affinity": [
+        "castellan"
+      ],
       "does_not_guarantee": "It must not be the mandatory first pick for every scenario."
     },
     {
@@ -228,12 +405,18 @@
       "purpose": "Make the keep recoverable after structural damage.",
       "status": "vertical_slice",
       "family": "support",
-      "contents": ["repair_station", "brace"],
+      "contents": [
+        "repair_station",
+        "brace"
+      ],
       "doctrine": "redundancy",
       "player_question": "What can I afford to lose because I prepared a second chance?",
       "strength": "Makes partial breach survivable and rewards connected support rooms.",
       "weakness": "Consumes materials and attracts sabotage.",
-      "commander_affinity": ["castellan", "warden"],
+      "commander_affinity": [
+        "castellan",
+        "warden"
+      ],
       "does_not_guarantee": "It cannot repair every room during an active wave."
     },
     {
@@ -242,12 +425,17 @@
       "purpose": "Shape open space into a temporary denial zone.",
       "status": "vertical_slice",
       "family": "control",
-      "contents": ["fire_team", "fire_brazier"],
+      "contents": [
+        "fire_team",
+        "fire_brazier"
+      ],
       "doctrine": "denial_zones",
       "player_question": "Which empty space should become expensive to cross?",
       "strength": "Punishes open approaches and gives mobile defenses time.",
       "weakness": "Needs clear sightlines and can deny friendly movement.",
-      "commander_affinity": ["warden"],
+      "commander_affinity": [
+        "warden"
+      ],
       "does_not_guarantee": "It is not a universal answer to siege beasts or sealed rooms."
     },
     {
@@ -256,12 +444,17 @@
       "purpose": "Reveal the threat early enough for the keep to respond.",
       "status": "vertical_slice",
       "family": "recon",
-      "contents": ["scout_post", "signal_beacon"],
+      "contents": [
+        "scout_post",
+        "signal_beacon"
+      ],
       "doctrine": "early_warning",
       "player_question": "Where will earlier knowledge create an actual response?",
       "strength": "Improves forecasts and creates time for deliberate intervention.",
       "weakness": "Does not help a keep with no reserve, space, or command points.",
-      "commander_affinity": ["warden"],
+      "commander_affinity": [
+        "warden"
+      ],
       "does_not_guarantee": "Information cannot replace a defense plan."
     },
     {
@@ -270,12 +463,17 @@
       "purpose": "Create a resilient anchor and a controlled retreat.",
       "status": "future",
       "family": "frontline",
-      "contents": ["shield_wardens", "emergency_shutters"],
+      "contents": [
+        "shield_wardens",
+        "emergency_shutters"
+      ],
       "doctrine": "anchored_gates",
       "player_question": "Which boundary can protect the rooms behind it?",
       "strength": "Creates resilient anchors and controlled retreats.",
       "weakness": "Slow to rotate and vulnerable to distributed sabotage.",
-      "commander_affinity": ["castellan"],
+      "commander_affinity": [
+        "castellan"
+      ],
       "does_not_guarantee": "A strong anchor cannot protect disconnected rooms."
     },
     {
@@ -284,12 +482,17 @@
       "purpose": "Make open layouts and rapid redeployment viable.",
       "status": "future",
       "family": "mobile_response",
-      "contents": ["runner_pair", "supply_cache"],
+      "contents": [
+        "runner_pair",
+        "supply_cache"
+      ],
       "doctrine": "rapid_redeployment",
       "player_question": "Where should a reserve be able to arrive before the next failure?",
       "strength": "Makes open layouts and adaptive defense viable.",
       "weakness": "Needs clear lanes and loses value when signals or morale collapse.",
-      "commander_affinity": ["warden"],
+      "commander_affinity": [
+        "warden"
+      ],
       "does_not_guarantee": "Movement is not free and cannot save every front simultaneously."
     },
     {
@@ -298,12 +501,18 @@
       "purpose": "Turn signals and morale into coordinated response.",
       "status": "future",
       "family": "morale",
-      "contents": ["bellkeepers", "signal_beacon"],
+      "contents": [
+        "bellkeepers",
+        "signal_beacon"
+      ],
       "doctrine": "coordinated_response",
       "player_question": "How will the keep know when to change its plan?",
       "strength": "Improves pause warnings, morale recovery, and multi-room coordination.",
       "weakness": "Indirect value and high vulnerability when the signal chain is broken.",
-      "commander_affinity": ["warden", "castellan"],
+      "commander_affinity": [
+        "warden",
+        "castellan"
+      ],
       "does_not_guarantee": "Coordination cannot compensate for an unusable layout."
     },
     {
@@ -312,12 +521,17 @@
       "purpose": "Prepare a deliberate answer to slow area-pressure threats.",
       "status": "future",
       "family": "specialist",
-      "contents": ["counter_siege_team", "supply_cache"],
+      "contents": [
+        "counter_siege_team",
+        "supply_cache"
+      ],
       "doctrine": "prepared_windows",
       "player_question": "Which large threat is worth reserving space and materials to answer?",
       "strength": "Provides a deliberate answer to slow area-pressure threats.",
       "weakness": "Consumes space and is weak against fast or bypassing enemies.",
-      "commander_affinity": ["castellan"],
+      "commander_affinity": [
+        "castellan"
+      ],
       "does_not_guarantee": "It must not become a required late-game pack in every scenario."
     }
   ],
@@ -328,7 +542,12 @@
       "question": "Can the player concentrate enough strength at the obvious entrance?",
       "telegraph": "A clear gate marker and a short approach forecast.",
       "pressure_pattern": "Raiders arrive quickly at one pressure point.",
-      "response_families": ["frontline", "control", "mobile_response", "commander_ability"]
+      "response_families": [
+        "frontline",
+        "control",
+        "mobile_response",
+        "commander_ability"
+      ]
     },
     {
       "id": "distributed_sabotage",
@@ -336,7 +555,12 @@
       "question": "Can the player protect support pieces instead of only the front wall?",
       "telegraph": "Several support-room markers with one highlighted likely target.",
       "pressure_pattern": "Sappers split attention and damage a dependency.",
-      "response_families": ["support", "recon", "mobile_response", "controlled_sacrifice"]
+      "response_families": [
+        "support",
+        "recon",
+        "mobile_response",
+        "controlled_sacrifice"
+      ]
     },
     {
       "id": "feint_and_flank",
@@ -344,7 +568,12 @@
       "question": "Has the player left an interior response and clear movement space?",
       "telegraph": "A false approach marker paired with a wall-bypass warning.",
       "pressure_pattern": "Climbers bypass the strongest front-facing defense.",
-      "response_families": ["recon", "control", "mobile_response", "open_space"]
+      "response_families": [
+        "recon",
+        "control",
+        "mobile_response",
+        "open_space"
+      ]
     },
     {
       "id": "area_pressure",
@@ -352,7 +581,12 @@
       "question": "Can the player preserve recovery when several pieces are damaged together?",
       "telegraph": "A large impact radius and a slow approach from outside the normal lane.",
       "pressure_pattern": "A siege beast creates structural and movement pressure around one area.",
-      "response_families": ["control", "support", "specialist", "refuge_plan"]
+      "response_families": [
+        "control",
+        "support",
+        "specialist",
+        "refuge_plan"
+      ]
     },
     {
       "id": "smoke_and_signal",
@@ -360,7 +594,12 @@
       "question": "Can the player maintain useful information when sightlines are deliberately degraded?",
       "telegraph": "Smoke corridors and signal interference markers appear before the wave.",
       "pressure_pattern": "Ash slingers reduce visibility and interrupt coordination.",
-      "response_families": ["recon", "morale", "alternate_lanes", "pause"]
+      "response_families": [
+        "recon",
+        "morale",
+        "alternate_lanes",
+        "pause"
+      ]
     },
     {
       "id": "attrition_screen",
@@ -368,7 +607,12 @@
       "question": "Can the player protect defenders from being worn down while the main attack remains visible?",
       "telegraph": "A broad harassment band appears behind the main threat.",
       "pressure_pattern": "Skirmishers drain morale and condition without becoming the main target.",
-      "response_families": ["mobile_response", "morale", "control", "reserve"]
+      "response_families": [
+        "mobile_response",
+        "morale",
+        "control",
+        "reserve"
+      ]
     }
   ],
   "enemies": [
@@ -378,7 +622,12 @@
       "role": "fast gate pressure",
       "doctrine": "gate_assault",
       "readable_behavior": "Takes the shortest declared approach and pressures a gate or exposed entrance.",
-      "counterplay": ["concentrate_frontline", "narrow_lane", "rally", "controlled_gate"]
+      "counterplay": [
+        "concentrate_frontline",
+        "narrow_lane",
+        "rally",
+        "controlled_gate"
+      ]
     },
     {
       "id": "sapper",
@@ -386,7 +635,12 @@
       "role": "support-room damage",
       "doctrine": "distributed_sabotage",
       "readable_behavior": "Moves toward a marked support dependency and damages structures rather than chasing defenders.",
-      "counterplay": ["protect_support", "scout_target", "mobile_intercept", "repair_after_hit"]
+      "counterplay": [
+        "protect_support",
+        "scout_target",
+        "mobile_intercept",
+        "repair_after_hit"
+      ]
     },
     {
       "id": "climber",
@@ -394,15 +648,25 @@
       "role": "wall bypass",
       "doctrine": "feint_and_flank",
       "readable_behavior": "Uses a visible wall route to enter a less defended interior space.",
-      "counterplay": ["leave_response_space", "deny_landing_zone", "signal_early", "reposition"]
+      "counterplay": [
+        "leave_response_space",
+        "deny_landing_zone",
+        "signal_early",
+        "reposition"
+      ]
     },
     {
       "id": "siege_beast",
-      "status": "vertical_slice",
+      "status": "future",
       "role": "slow area pressure",
       "doctrine": "area_pressure",
       "readable_behavior": "Advances slowly and damages several nearby structures on impact.",
-      "counterplay": ["preserve_recovery", "deny_approach", "reserve_specialist", "evacuate_refuge"]
+      "counterplay": [
+        "preserve_recovery",
+        "deny_approach",
+        "reserve_specialist",
+        "evacuate_refuge"
+      ]
     },
     {
       "id": "ash_slinger",
@@ -410,7 +674,12 @@
       "role": "visibility disruption",
       "doctrine": "smoke_and_signal",
       "readable_behavior": "Creates a temporary obscured zone that weakens forecasts and signal links.",
-      "counterplay": ["scout_redundancy", "bell_guard", "alternate_lane", "pause_and_reveal"]
+      "counterplay": [
+        "scout_redundancy",
+        "bell_guard",
+        "alternate_lane",
+        "pause_and_reveal"
+      ]
     },
     {
       "id": "skirmisher",
@@ -418,7 +687,12 @@
       "role": "morale attrition",
       "doctrine": "attrition_screen",
       "readable_behavior": "Avoids the strongest front and harasses exposed defenders or signal pieces.",
-      "counterplay": ["mobile_response", "morale_support", "fire_zone", "reserve"]
+      "counterplay": [
+        "mobile_response",
+        "morale_support",
+        "fire_zone",
+        "reserve"
+      ]
     },
     {
       "id": "shieldbreaker",
@@ -426,7 +700,12 @@
       "role": "frontline disruption",
       "doctrine": "gate_assault",
       "readable_behavior": "Targets the strongest frontline piece and creates a short vulnerability window.",
-      "counterplay": ["secondary_line", "repair", "crossfire", "controlled_retreat"]
+      "counterplay": [
+        "secondary_line",
+        "repair",
+        "crossfire",
+        "controlled_retreat"
+      ]
     },
     {
       "id": "burrower",
@@ -435,7 +714,12 @@
       "role": "lane bypass",
       "doctrine": "feint_and_flank",
       "readable_behavior": "Surfaces at a forecasted interior marker rather than following the outer wall.",
-      "counterplay": ["open_yard", "scout_post", "denial_zone", "reserve"]
+      "counterplay": [
+        "open_yard",
+        "scout_post",
+        "denial_zone",
+        "reserve"
+      ]
     }
   ],
   "resources": [
@@ -466,40 +750,119 @@
   ],
   "progression": {
     "run_structure": [
-      {"stage": 0, "name": "Preparation", "player_actions": ["choose_commander", "open_pack", "inspect_rooms", "place_pieces"], "new_pressure": "none"},
-      {"stage": 1, "name": "Teaching Wave", "player_actions": ["start_wave", "pause", "focus", "repair"], "new_pressure": "one_enemy_doctrine"},
-      {"stage": 2, "name": "Adaptation Wave", "player_actions": ["choose_second_pack", "rebuild", "assign_reserve", "repair"], "new_pressure": "two_doctrines_or_one_doctrine_with_support_target"},
-      {"stage": 3, "name": "Final Bell", "player_actions": ["choose_final_intervention", "hold", "evacuate", "controlled_withdrawal"], "new_pressure": "area_pressure_or_combined_doctrine"}
+      {
+        "stage": 0,
+        "name": "Preparation",
+        "player_actions": [
+          "choose_commander",
+          "open_pack",
+          "inspect_rooms",
+          "place_pieces"
+        ],
+        "new_pressure": "none"
+      },
+      {
+        "stage": 1,
+        "name": "Teaching Wave",
+        "player_actions": [
+          "start_wave",
+          "pause",
+          "focus",
+          "repair"
+        ],
+        "new_pressure": "one_enemy_doctrine"
+      },
+      {
+        "stage": 2,
+        "name": "Adaptation Wave",
+        "player_actions": [
+          "choose_second_pack",
+          "rebuild",
+          "assign_reserve",
+          "repair"
+        ],
+        "new_pressure": "two_doctrines_or_one_doctrine_with_support_target"
+      },
+      {
+        "stage": 3,
+        "name": "Final Bell",
+        "player_actions": [
+          "choose_final_intervention",
+          "hold",
+          "evacuate",
+          "controlled_withdrawal"
+        ],
+        "new_pressure": "area_pressure_or_combined_doctrine"
+      }
     ],
     "within_run_tracks": [
       {
         "id": "doctrine_coherence",
         "name": "Doctrine Coherence",
         "advances_when": "Pieces from compatible packs support a readable layout rather than simply being collected.",
-        "unlocks": ["adjacency_bonus", "reserve_slot", "commander_ability_upgrade"],
+        "unlocks": [
+          "adjacency_bonus",
+          "reserve_slot",
+          "commander_ability_upgrade"
+        ],
         "guardrail": "Mixed packs remain viable when they solve different problems; no single family should dominate."
       },
       {
         "id": "keep_recovery",
         "name": "Keep Recovery",
         "advances_when": "The player repairs, preserves, or deliberately sacrifices a damaged room.",
-        "unlocks": ["repair_protocol", "reserve_materials", "refuge_plan"],
+        "unlocks": [
+          "repair_protocol",
+          "reserve_materials",
+          "refuge_plan"
+        ],
         "guardrail": "Recovery should reduce future options or cost resources; it must not erase consequences."
       },
       {
         "id": "invasion_knowledge",
         "name": "Invasion Knowledge",
         "advances_when": "The player correctly reads a forecast or survives a new doctrine.",
-        "unlocks": ["better_forecast", "doctrine_notes", "one_redraw_or_reserve_choice"],
+        "unlocks": [
+          "better_forecast",
+          "doctrine_notes",
+          "one_redraw_or_reserve_choice"
+        ],
         "guardrail": "Knowledge improves agency, not raw damage."
       }
     ],
     "campaign_progression": {
       "principle": "Unlock new commanders, packs, rooms, and scenario modifiers through completed objectives and lessons, not repeated grinding.",
-      "commander_unlocks": ["castellan", "warden", "quartermaster", "beacon_keeper", "artificer", "refuge_keeper"],
-      "pack_unlock_order": ["pike_line", "field_engineers", "scouts", "firekeepers", "shieldwall", "runner_network", "bell_guard", "counter_siege"],
-      "scenario_unlocks": ["old_keep", "river_keep", "split_keep", "refuge_route", "winter_keep"],
-      "guardrails": ["no_rarity_tiers", "no_duplicate_pack_grind", "no_permanent_power_that_invalidates_early_packs", "every_unlock_adds_a_decision"]
+      "commander_unlocks": [
+        "castellan",
+        "warden",
+        "quartermaster",
+        "beacon_keeper",
+        "artificer",
+        "refuge_keeper"
+      ],
+      "pack_unlock_order": [
+        "pike_line",
+        "field_engineers",
+        "scouts",
+        "firekeepers",
+        "shieldwall",
+        "runner_network",
+        "bell_guard",
+        "counter_siege"
+      ],
+      "scenario_unlocks": [
+        "old_keep",
+        "river_keep",
+        "split_keep",
+        "refuge_route",
+        "winter_keep"
+      ],
+      "guardrails": [
+        "no_rarity_tiers",
+        "no_duplicate_pack_grind",
+        "no_permanent_power_that_invalidates_early_packs",
+        "every_unlock_adds_a_decision"
+      ]
     }
   },
   "spatial_rules": [
@@ -551,7 +914,10 @@
       "id": "gatehouse_lock",
       "name": "Gatehouse Lock",
       "commander": "castellan",
-      "packs": ["pike_line", "field_engineers"],
+      "packs": [
+        "pike_line",
+        "field_engineers"
+      ],
       "spatial_idea": "Compact gate corridor backed by a repair spine.",
       "strength": "Reliable against concentrated gate pressure.",
       "weakness": "Vulnerable when support rooms or open-yard routes are ignored."
@@ -560,7 +926,10 @@
       "id": "open_yard_net",
       "name": "Open Yard Net",
       "commander": "warden",
-      "packs": ["scouts", "firekeepers"],
+      "packs": [
+        "scouts",
+        "firekeepers"
+      ],
       "spatial_idea": "Preserved movement lanes with early-warning and denial zones.",
       "strength": "Adapts to bypasses and distributed pressure.",
       "weakness": "Requires materials discipline and can collapse if morale or signals are cut."
@@ -569,10 +938,47 @@
       "id": "scarred_refuge",
       "name": "Scarred Refuge",
       "commander": "warden",
-      "packs": ["field_engineers", "scouts"],
+      "packs": [
+        "field_engineers",
+        "scouts"
+      ],
       "spatial_idea": "A smaller defended core with an evacuation route through the chapel.",
       "strength": "Turns partial breach into a successful refuge outcome.",
       "weakness": "Gives up direct defensive power and cannot protect every room."
     }
-  ]
+  ],
+  "battle_phases": [
+    {
+      "id": "forecast",
+      "player_action": "inspect doctrine, approach, likely target, and uncertainty",
+      "system_action": "show counter families before placement locks"
+    },
+    {
+      "id": "approach",
+      "player_action": "pause between steps and preserve command points",
+      "system_action": "advance enemies along declared routes"
+    },
+    {
+      "id": "contact",
+      "player_action": "read the causal report",
+      "system_action": "defenders act, then surviving enemies attack targets"
+    },
+    {
+      "id": "intervention",
+      "player_action": "use Lockdown once per wave",
+      "system_action": "reduce the next room hit and restore placed-piece condition"
+    },
+    {
+      "id": "outcome",
+      "player_action": "repair, rebuild, or accept a partial breach",
+      "system_action": "award recovery based on held, breached, or collapsed state"
+    }
+  ],
+  "enemy_mechanics": {
+    "target_priority": "declared doctrine target, then lowest condition, then stable ID order",
+    "health_rule": "small health pools; difficulty comes from route, timing, and target choice",
+    "telegraph_rule": "reveal doctrine, approach, likely target, approximate arrival, and one uncertainty",
+    "damage_rule": "room damage changes named room functions; piece damage changes condition and can disable a unit",
+    "recovery_rule": "a single breached critical room is recoverable; collapse requires three critical breaches or zero morale"
+  }
 }
