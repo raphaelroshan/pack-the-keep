@@ -402,8 +402,8 @@ func _build_ui() -> void:
 	controls.add_child(layout_lens_label)
 
 	commander_option = OptionButton.new()
-	for commander_id in PackKeepState.COMMANDERS.keys():
-		commander_option.add_item(String(PackKeepState.COMMANDERS[commander_id].get("name", commander_id)))
+	for commander_id in keep.commander_ids():
+		commander_option.add_item(String(keep.commander_definition(commander_id).get("name", commander_id)))
 		commander_option.set_item_metadata(commander_option.item_count - 1, commander_id)
 	controls.add_child(_labeled_control("Commander", commander_option))
 	var commander_button: Button = Button.new()
@@ -988,7 +988,7 @@ func _refresh_response_preview() -> void:
 		response_preview_label.text = "RESPONSE — Select an active enemy on the map or press Tab. The dropdown remains a fallback."
 		return
 	var inspection: Dictionary = keep.inspect_enemy(focused_enemy_index)
-	var ability_name: String = String(PackKeepState.COMMANDERS[keep.commander_id].get("ability_name", "Ability"))
+	var ability_name: String = String(keep.commander_definition(keep.commander_id).get("ability_name", "Ability"))
 	var ability_state: String = "available" if keep.command_points > 0 and not bool(keep.lockdown_used if keep.commander_id == "castellan" else keep.rally_used) else "spent or unavailable"
 	var timing_text: String = "PAUSED PREVIEW — commit when ready" if battle_paused else "RUNNING — pause to inspect before committing"
 	var target_text: String = String(inspection.get("target", ""))
@@ -1344,11 +1344,12 @@ func _refresh_ui() -> void:
 	if keep.repair_interval_active:
 		interval_text = "%d action(s): %s" % [keep.repair_actions_remaining, keep.repair_interval_reason]
 	status_label.text = "%s | %s | Materials %d | Command %d | Morale %d | Pieces %d | Wave %d | Step %d | Breach %d | %s | Repair %s" % [keep.summary().get("commander", "Commander"), String(keep.scenario_preview().get("name", "Free drill")), keep.materials, keep.command_points, keep.morale, keep.pieces.size(), keep.wave_index, keep.battle_step, keep.breach_level, "PAUSED" if battle_paused else "RUNNING %.1fx" % _battle_speed(), interval_text]
-	commander_profile_label.text = "%s\nPassive: %s\nAbility: %s — %s\nLimitation: %s" % [String(PackKeepState.COMMANDERS[keep.commander_id].get("name", keep.commander_id)), String(PackKeepState.COMMANDERS[keep.commander_id].get("passive", "")), String(PackKeepState.COMMANDERS[keep.commander_id].get("ability_name", "")), String(PackKeepState.COMMANDERS[keep.commander_id].get("ability_text", "")), String(PackKeepState.COMMANDERS[keep.commander_id].get("limitation", ""))]
+	var commander: Dictionary = keep.commander_definition(keep.commander_id)
+	commander_profile_label.text = "%s\nPassive: %s\nAbility: %s — %s\nLimitation: %s" % [String(commander.get("name", keep.commander_id)), String(commander.get("passive", "")), String(commander.get("ability_name", "")), String(commander.get("ability_text", "")), String(commander.get("limitation", ""))]
 	commander_portrait.modulate = Color("#9fb9c3") if keep.commander_id == "warden" else Color.WHITE
 	commander_portrait.tooltip_text = "The Warden — Open Lanes and Rally" if keep.commander_id == "warden" else "The Castellan — Layered Masonry and Lockdown"
-	commander_ability_button.text = "%s (%s)" % [String(PackKeepState.COMMANDERS[keep.commander_id].get("ability_name", "Ability")), String(PackKeepState.COMMANDERS[keep.commander_id].get("name", keep.commander_id)).replace("The ", "")]
-	commander_ability_button.tooltip_text = String(PackKeepState.COMMANDERS[keep.commander_id].get("ability_text", "Use once per wave."))
+	commander_ability_button.text = "%s (%s)" % [String(commander.get("ability_name", "Ability")), String(commander.get("name", keep.commander_id)).replace("The ", "")]
+	commander_ability_button.tooltip_text = String(commander.get("ability_text", "Use once per wave."))
 	var forecast: Dictionary = keep.forecast()
 	forecast_label.text = "FORECAST — %s | Likely target: %s | Uncertainty: %s | Scout: %s" % [String(forecast.get("doctrine", "")).replace("_", " "), String(forecast.get("likely_target", "")), String(forecast.get("uncertainty", "")), "revealed" if bool(forecast.get("scout_bonus", false)) else "not revealed"]
 	var enemy_lines: Array[String] = []

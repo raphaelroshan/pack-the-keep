@@ -1,0 +1,17 @@
+{
+  "id": "warden",
+  "content_version": 1,
+  "status": "active",
+  "name": "The Warden",
+  "short_role": "Preserve open lanes for mobile response and signals.",
+  "question": "Which spaces must remain open so the defense can adapt?",
+  "passive": "Open Lanes: pieces with an empty adjacent cell gain +1 response damage; signals reach farther.",
+  "ability": "rally",
+  "ability_name": "Rally",
+  "ability_text": "Restore 1 morale and coordinate the next battle step: non-specialist defenders gain +1 response and the first room hit is reduced.",
+  "limitation": "Spread Thin: starts with fewer materials and loses value when every lane is packed.",
+  "starting_materials": 52,
+  "starting_morale": 7,
+  "preferred_pattern": "open_response_lanes",
+  "favored_pack_families": ["recon", "control"]
+}
