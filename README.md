@@ -71,3 +71,15 @@ The implemented assignment rules are Pike Squad → Gate, Repair Station → Wor
 Raiders, Sappers, and Climbers are now concrete active actors in the prototype. Their route, health, doctrine role, and current target are shown in the enemy readout, while colored markers appear on the Greywatch map: red for Gate pressure, amber for support sabotage, and violet for upper-floor bypass.
 
 The prototype now exposes four menu states: **Title**, **Preparation**, **Battle**, and **Results**. Title begins the run, Preparation handles packs, placement, repair, and assignment, Battle advances the forecasted invasion one step at a time, and Results exposes the outcome and recovery path. Navigation is a UI layer over `PackKeepState`; it does not create a second game-state authority. See [`design/enemy_presentation_and_menu_flow.md`](design/enemy_presentation_and_menu_flow.md) for the presentation contract.
+
+## Unit availability and combat metrics
+
+Greywatch now begins with **Pike Squad** and **Narrow Gate** as starter pieces. Opening a pack during Preparation unlocks its pieces for placement: the first Preparation permits two pack openings, while later Preparations permit one. Packs cannot be opened during an invasion or repair interval, and unavailable pieces are disabled in the command table.
+
+Unit instances track `max_health`, `health`, `condition`, `disabled`, attack count, damage dealt, stopped targets, last target, and assignment. Enemies track maximum health, current HP, damage taken, received attacks, target, and defeat state. A compact aggregate metric record reports battle steps, unit attacks, damage dealt, enemy attacks, room damage, piece damage, repairs, disabled units, and defeated enemies. See [`design/unit_availability_and_combat_metrics.md`](design/unit_availability_and_combat_metrics.md) for the full contract.
+
+## Unit availability and combat metrics
+
+Greywatch begins with **Pike Squad** and **Narrow Gate** as starter pieces. Opening a pack during Preparation unlocks its pieces for placement; the first Preparation permits two pack openings and later Preparations permit one. Packs are unavailable during an invasion or repair interval, and unavailable pieces are disabled in the command table.
+
+Unit instances now track `max_health`, `health`, `condition`, `disabled`, attack count, damage dealt, stopped targets, last target, and assignment. Enemy instances track maximum health, current HP, damage taken, received attacks, target, and defeat state. The compact combat record reports battle steps, unit attacks, damage dealt, enemy attacks, room damage, piece damage, repairs, disabled units, and defeated enemies. See [`design/unit_availability_and_combat_metrics.md`](design/unit_availability_and_combat_metrics.md) for the complete contract.

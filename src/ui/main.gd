@@ -6,6 +6,8 @@ var keep: PackKeepState
 var status_label: Label
 var forecast_label: Label
 var enemy_label: Label
+var metrics_label: Label
+var availability_label: Label
 var event_label: Label
 var log_label: Label
 var commander_option: OptionButton
@@ -104,6 +106,12 @@ func _build_ui() -> void:
 	enemy_label.add_theme_color_override("font_color", Color("#e89270"))
 	left.add_child(enemy_label)
 
+	metrics_label = Label.new()
+	metrics_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	metrics_label.custom_minimum_size = Vector2(800, 28)
+	metrics_label.add_theme_color_override("font_color", Color("#aab1b2"))
+	left.add_child(metrics_label)
+
 	keep_canvas = KeepCanvas.new()
 	keep_canvas.custom_minimum_size = Vector2(810, 390)
 	keep_canvas.keep = keep
@@ -153,12 +161,17 @@ func _build_ui() -> void:
 	pack_button.text = "Open pack"
 	pack_button.pressed.connect(_on_open_pack)
 	controls.add_child(pack_button)
+	availability_label = Label.new()
+	availability_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	availability_label.add_theme_color_override("font_color", Color("#aab1b2"))
+	controls.add_child(availability_label)
 
 	piece_option = OptionButton.new()
 	for piece_id in PackKeepState.PIECES.keys():
 		piece_option.add_item(String(PackKeepState.PIECES[piece_id].get("name", piece_id)))
 		piece_option.set_item_metadata(piece_option.item_count - 1, piece_id)
-	controls.add_child(_labeled_control("Piece", piece_option))
+		piece_option.set_item_disabled(piece_option.item_count - 1, not keep.available_pieces.has(String(piece_id)))
+	controls.add_child(_labeled_control("Available piece", piece_option))
 
 	floor_option = OptionButton.new()
 	floor_option.add_item("Ground floor")
@@ -382,12 +395,21 @@ func _refresh_ui() -> void:
 	var enemy_lines: Array[String] = []
 	for enemy in keep.enemies:
 		var enemy_id: String = String(enemy.get("enemy_id", ""))
-		var enemy_state: String = "defeated" if bool(enemy.get("defeated", false)) else "%d hp" % int(enemy.get("hp", 0))
+		var enemy_state: String = "defeated" if bool(enemy.get("defeated", false)) else "%d/%d hp" % [int(enemy.get("hp", 0)), int(enemy.get("max_health", PackKeepState.ENEMIES[enemy_id].get("health", 0)))]
 		var target: String = String(enemy.get("target", ""))
 		if target.is_empty():
 			target = "approach"
 		enemy_lines.append("%s [%s] — %s — route %s — target %s" % [String(PackKeepState.ENEMIES[enemy_id].get("name", enemy_id)), enemy_id, enemy_state, String(PackKeepState.ENEMIES[enemy_id].get("route", "")), target])
 	enemy_label.text = "ENEMIES — " + (" | ".join(enemy_lines) if not enemy_lines.is_empty() else "No active enemies. Start an invasion to see doctrine-driven actors.")
+	var metrics: Dictionary = keep.combat_metrics
+	metrics_label.text = "METRICS — steps %d | unit attacks %d | damage dealt %d | enemy attacks %d | room damage %d | piece damage %d | repairs %d | disabled %d | defeated %d" % [int(metrics.get("battle_steps", 0)), int(metrics.get("unit_attacks", 0)), int(metrics.get("damage_dealt", 0)), int(metrics.get("enemy_attacks", 0)), int(metrics.get("room_damage", 0)), int(metrics.get("piece_damage", 0)), int(metrics.get("repairs", 0)), int(metrics.get("disabled_units", 0)), int(metrics.get("defeated_enemies", 0))]
+	var available_names: Array[String] = []
+	for available_id in keep.available_pieces:
+		available_names.append(String(PackKeepState.PIECES[available_id].get("name", available_id)))
+	availability_label.text = "AVAILABLE — %s\nPack openings this Preparation: %d/%d" % [", ".join(available_names), keep.pack_openings_this_preparation, 2 if keep.wave_index == 0 else 1]
+	for piece_index in range(piece_option.item_count):
+		var piece_id: String = String(piece_option.get_item_metadata(piece_index))
+		piece_option.set_item_disabled(piece_index, not keep.available_pieces.has(piece_id))
 	if event_label.text.is_empty():
 		event_label.text = "Open Pike Line or Field Engineers, place a defense on either floor, start First Bell, and advance one step at a time."
 	var recent: Array[String] = []
@@ -448,7 +470,9 @@ class KeepCanvas extends Control:
 			draw_rect(piece_rect.grow(-2), color, true)
 			draw_rect(piece_rect.grow(-2), Color("#f1dfb8"), false, 1.5)
 			draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(2, 11), String(piece.name), HORIZONTAL_ALIGNMENT_LEFT, piece_rect.size.x - 4, 8, Color("#201a25"))
-			var piece_status: String = "%d%%" % int(float(instance.get("condition", 0.0)) * 100.0)
+			var piece_status: String = "%d/%d hp" % [int(instance.get("health", 0)), int(instance.get("max_health", piece.get("max_health", 0)))]
+			if bool(instance.get("disabled", false)):
+				piece_status += " DISABLED"
 			var assignment: String = String(instance.get("assignment", ""))
 			if not assignment.is_empty():
 				piece_status += " " + assignment

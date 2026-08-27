@@ -55,7 +55,9 @@
       "preparation",
       "battle",
       "results"
-    ]
+    ],
+    "availability_contract": "unit_availability",
+    "combat_metrics_contract": "combat_metrics"
   },
   "unit_roles": [
     {
@@ -1100,5 +1102,57 @@
       "purpose": "read outcome and return to recovery or preparation",
       "primary_action": "finish repair interval"
     }
-  ]
+  ],
+  "unit_availability": {
+    "status": "vertical_slice",
+    "starter_pieces": [
+      "pike_squad",
+      "narrow_gate"
+    ],
+    "pack_openings": {
+      "first_preparation": 2,
+      "later_preparation": 1
+    },
+    "gating": "only starter pieces and pieces from opened packs may be placed",
+    "blocked_during": [
+      "wave_active",
+      "repair_interval_active"
+    ],
+    "no_rarity_or_duplicates": true
+  },
+  "combat_metrics": {
+    "status": "vertical_slice",
+    "unit_instance_fields": [
+      "max_health",
+      "health",
+      "condition",
+      "attack_cooldown",
+      "attacks",
+      "damage_dealt",
+      "targets_stopped",
+      "last_target",
+      "disabled"
+    ],
+    "enemy_instance_fields": [
+      "max_health",
+      "hp",
+      "damage",
+      "attacks_received",
+      "damage_taken",
+      "target",
+      "defeated"
+    ],
+    "aggregate_fields": [
+      "battle_steps",
+      "unit_attacks",
+      "damage_dealt",
+      "enemy_attacks",
+      "room_damage",
+      "piece_damage",
+      "repairs",
+      "disabled_units",
+      "defeated_enemies"
+    ],
+    "resolution": "one eligible deterministic attack per unit per battle step"
+  }
 }

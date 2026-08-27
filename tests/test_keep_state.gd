@@ -6,6 +6,7 @@ var failures: Array[String] = []
 
 func _init() -> void:
 	_test_castellan_and_basic_roster()
+	_test_unit_availability_and_metrics()
 	_test_two_floor_placement_and_overlap()
 	_test_hold_against_gate_assault()
 	_test_sapper_targeting_and_repair()
@@ -41,12 +42,35 @@ func _test_castellan_and_basic_roster() -> void:
 	_expect(keep.open_pack("pike_line").get("ok", false), "Pike Line pack should open")
 	_expect(not bool(keep.open_pack("pike_line").get("ok", false)), "the same pack should not open twice")
 
+func _test_unit_availability_and_metrics() -> void:
+	var keep: PackKeepState = PackKeepState.new(3307)
+	var unavailable: Dictionary = keep.place_piece("repair_station", Vector2i(4, 6), "ground")
+	_expect(not bool(unavailable.get("ok", false)), "non-starter units should require an opened pack")
+	_expect(keep.available_pieces.has("pike_squad"), "Pike Squad should be available as a starter unit")
+	_expect(keep.open_pack("field_engineers").get("ok", false), "Field Engineers should unlock its units")
+	_expect(keep.open_pack("scouts").get("ok", false), "Scouts should unlock its units")
+	_expect(not bool(keep.open_pack("firekeepers").get("ok", false)), "the first Preparation should cap pack openings at two")
+	keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
+	var station: Dictionary = keep.place_piece("repair_station", Vector2i(4, 6), "ground")
+	_expect(bool(station.get("ok", false)), "an unlocked unit should be placeable")
+	var started: Dictionary = keep.start_wave("gate_assault")
+	_expect(bool(started.get("ok", false)), "availability should still allow the first battle")
+	var result: Dictionary = keep.advance_wave(6.0)
+	_expect(bool(result.get("resolved", false)), "metric test wave should resolve")
+	_expect(int(keep.combat_metrics.get("battle_steps", 0)) > 0, "combat metrics should count battle steps")
+	_expect(int(keep.combat_metrics.get("unit_attacks", 0)) > 0, "combat metrics should count unit attacks")
+	_expect(int(keep.combat_metrics.get("damage_dealt", 0)) > 0, "combat metrics should count damage dealt")
+	_expect(int(keep.combat_metrics.get("defeated_enemies", 0)) == 2, "combat metrics should count both defeated Raiders")
+	_expect(int(keep.pieces["pike_squad_0"].get("max_health", 0)) == 14, "unit instances should store max health")
+	_expect(int(keep.pieces["pike_squad_0"].get("health", 0)) == 14, "healthy units should retain full health")
+
 func _test_two_floor_placement_and_overlap() -> void:
 	var keep: PackKeepState = PackKeepState.new(3307)
 	var ground_piece: Dictionary = keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
 	_expect(bool(ground_piece.get("ok", false)), "Pike Squad should fit on the ground floor")
 	var ground_overlap: Dictionary = keep.place_piece("fire_team", Vector2i(1, 3), "ground")
 	_expect(not bool(ground_overlap.get("ok", false)), "overlap on one floor should be rejected")
+	keep.open_pack("scouts")
 	var upper_same_space: Dictionary = keep.place_piece("scout_post", Vector2i(0, 3), "upper")
 	_expect(bool(upper_same_space.get("ok", false)), "the upper floor may use the same footprint")
 	_expect(not keep.piece_fits("fire_team", Vector2i(11, 7), "ground"), "a piece beyond the keep grid should not fit")
@@ -54,6 +78,7 @@ func _test_two_floor_placement_and_overlap() -> void:
 func _test_hold_against_gate_assault() -> void:
 	var keep: PackKeepState = PackKeepState.new(3307)
 	keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
+	keep.open_pack("firekeepers")
 	keep.place_piece("fire_team", Vector2i(4, 3), "ground")
 	var started: Dictionary = keep.start_wave("gate_assault")
 	_expect(bool(started.get("ok", false)), "gate assault should start with a placed defense")
@@ -67,6 +92,8 @@ func _test_hold_against_gate_assault() -> void:
 func _test_sapper_targeting_and_repair() -> void:
 	var keep: PackKeepState = PackKeepState.new(3307)
 	keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
+	keep.open_pack("field_engineers")
+	keep.open_pack("scouts")
 	keep.place_piece("repair_station", Vector2i(4, 6), "ground")
 	keep.place_piece("scout_post", Vector2i(8, 1), "upper")
 	var started: Dictionary = keep.start_wave("distributed_sabotage")
@@ -80,6 +107,7 @@ func _test_sapper_targeting_and_repair() -> void:
 
 func _test_climber_targets_upper_floor() -> void:
 	var keep: PackKeepState = PackKeepState.new(3307)
+	keep.open_pack("scouts")
 	keep.place_piece("scout_post", Vector2i(8, 1), "upper")
 	var started: Dictionary = keep.start_wave("feint_and_flank")
 	_expect(bool(started.get("ok", false)), "feint and flank should start")
@@ -90,6 +118,8 @@ func _test_climber_targets_upper_floor() -> void:
 func _test_lockdown_changes_room_damage() -> void:
 	var normal: PackKeepState = PackKeepState.new(3307)
 	var locked: PackKeepState = PackKeepState.new(3307)
+	normal.open_pack("scouts")
+	locked.open_pack("scouts")
 	normal.place_piece("scout_post", Vector2i(0, 0), "upper")
 	locked.place_piece("scout_post", Vector2i(0, 0), "upper")
 	normal.start_wave("gate_assault")
@@ -103,6 +133,7 @@ func _test_lockdown_changes_room_damage() -> void:
 
 func _test_partial_breach_is_recoverable() -> void:
 	var keep: PackKeepState = PackKeepState.new(3307)
+	keep.open_pack("scouts")
 	keep.place_piece("scout_post", Vector2i(0, 0), "upper")
 	keep.start_wave("gate_assault")
 	var result: Dictionary = keep.advance_wave(6.0)
@@ -114,6 +145,7 @@ func _test_partial_breach_is_recoverable() -> void:
 
 func _test_repair_interval_and_assignments() -> void:
 	var keep: PackKeepState = PackKeepState.new(3307)
+	keep.open_pack("scouts")
 	keep.place_piece("scout_post", Vector2i(8, 1), "upper")
 	keep.start_wave("gate_assault")
 	var result: Dictionary = keep.advance_wave(6.0)
@@ -137,6 +169,7 @@ func _test_repair_interval_and_assignments() -> void:
 func _test_assignment_rules_and_action_budget() -> void:
 	var keep: PackKeepState = PackKeepState.new(3307)
 	keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
+	keep.open_pack("field_engineers")
 	keep.place_piece("repair_station", Vector2i(4, 6), "ground")
 	keep.start_wave("gate_assault")
 	keep.advance_wave(6.0)
@@ -155,6 +188,8 @@ func _test_deterministic_battle_report() -> void:
 	var second: PackKeepState = PackKeepState.new(17)
 	for keep in [first, second]:
 		keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
+		keep.open_pack("field_engineers")
+		keep.open_pack("scouts")
 		keep.place_piece("repair_station", Vector2i(4, 6), "ground")
 		keep.place_piece("scout_post", Vector2i(8, 1), "upper")
 		keep.start_wave("distributed_sabotage")
@@ -167,6 +202,7 @@ func _test_deterministic_battle_report() -> void:
 func _test_save_round_trip() -> void:
 	var keep: PackKeepState = PackKeepState.new(17)
 	keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
+	keep.open_pack("scouts")
 	keep.place_piece("scout_post", Vector2i(8, 1), "upper")
 	keep.start_wave("feint_and_flank")
 	keep.advance_wave(1.0)
@@ -175,6 +211,9 @@ func _test_save_round_trip() -> void:
 	_expect(restored.seed == 17, "save should preserve seed")
 	_expect(restored.commander_id == "castellan", "save should preserve commander")
 	_expect(restored.pieces.size() == 2, "save should preserve pieces")
+	_expect(restored.available_pieces == keep.available_pieces, "save should preserve unlocked unit availability")
+	_expect(restored.pieces["pike_squad_0"].health == keep.pieces["pike_squad_0"].health, "save should preserve unit health")
+	_expect(restored.combat_metrics == keep.combat_metrics, "save should preserve combat metrics")
 	_expect(restored.rooms == keep.rooms, "save should preserve room condition")
 	_expect(restored.enemies == keep.enemies, "save should preserve active enemies")
 	_expect(restored.wave_active == keep.wave_active, "save should preserve wave state")

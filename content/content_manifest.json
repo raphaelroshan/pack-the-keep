@@ -834,6 +834,31 @@
       "raider_actor",
       "sapper_actor",
       "climber_actor"
+    ],
+    "unit_availability": {
+      "starter_pieces": [
+        "pike_squad",
+        "narrow_gate"
+      ],
+      "pack_openings": {
+        "first_preparation": 2,
+        "later_preparation": 1
+      },
+      "blocked_during": [
+        "wave_active",
+        "repair_interval_active"
+      ]
+    },
+    "combat_metrics": [
+      "battle_steps",
+      "unit_attacks",
+      "damage_dealt",
+      "enemy_attacks",
+      "room_damage",
+      "piece_damage",
+      "repairs",
+      "disabled_units",
+      "defeated_enemies"
     ]
   }
 }

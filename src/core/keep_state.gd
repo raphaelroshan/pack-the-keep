@@ -6,6 +6,7 @@ extends RefCounted
 const GRID_SIZE := Vector2i(12, 8)
 const FLOORS := ["ground", "upper"]
 const ACTIVE_COMMANDER := "castellan"
+const STARTER_PIECES := ["pike_squad", "narrow_gate"]
 
 const ROOMS: Dictionary = {
 	"gate": {"name": "Gate", "floor": "ground", "origin": Vector2i(1, 3), "size": Vector2i(2, 2), "critical": true, "role": "shortest entrance"},
@@ -39,14 +40,14 @@ const PACKS: Dictionary = {
 }
 
 const PIECES: Dictionary = {
-	"pike_squad": {"name": "Pike Squad", "size": Vector2i(2, 1), "cost": 8, "role": "holds Gate Road", "attack": 4, "defense": 2, "targets": ["raider"]},
-	"repair_station": {"name": "Repair Station", "size": Vector2i(2, 1), "cost": 10, "role": "restores nearby structures", "attack": 0, "defense": 1, "targets": ["sapper", "area_pressure"]},
-	"fire_team": {"name": "Fire Team", "size": Vector2i(2, 1), "cost": 9, "role": "controls an approach zone", "attack": 3, "defense": 1, "targets": ["climber", "raider"]},
-	"scout_post": {"name": "Scout Post", "size": Vector2i(1, 1), "cost": 6, "role": "reveals target and arrival", "attack": 0, "defense": 0, "targets": ["all"]},
-	"narrow_gate": {"name": "Narrow Gate", "size": Vector2i(1, 2), "cost": 7, "role": "concentrates Gate pressure", "attack": 0, "defense": 3, "targets": ["raider"]},
-	"brace": {"name": "Wall Brace", "size": Vector2i(1, 1), "cost": 5, "role": "reduces adjacent room damage", "attack": 0, "defense": 2, "targets": ["all"]},
-	"fire_brazier": {"name": "Fire Brazier", "size": Vector2i(1, 1), "cost": 6, "role": "extends Fire Team denial", "attack": 1, "defense": 0, "targets": ["climber"]},
-	"signal_beacon": {"name": "Signal Beacon", "size": Vector2i(1, 1), "cost": 5, "role": "improves warning time", "attack": 0, "defense": 0, "targets": ["all"]}
+	"pike_squad": {"name": "Pike Squad", "size": Vector2i(2, 1), "cost": 8, "role": "holds Gate Road", "attack": 4, "defense": 2, "max_health": 14, "attack_interval": 1, "range": 1, "availability": "starter", "targets": ["raider"]},
+	"repair_station": {"name": "Repair Station", "size": Vector2i(2, 1), "cost": 10, "role": "restores nearby structures", "attack": 0, "defense": 1, "max_health": 10, "attack_interval": 1, "range": 1, "availability": "field_engineers", "targets": ["sapper", "area_pressure"]},
+	"fire_team": {"name": "Fire Team", "size": Vector2i(2, 1), "cost": 9, "role": "controls an approach zone", "attack": 3, "defense": 1, "max_health": 12, "attack_interval": 1, "range": 2, "availability": "firekeepers", "targets": ["climber", "raider"]},
+	"scout_post": {"name": "Scout Post", "size": Vector2i(1, 1), "cost": 6, "role": "reveals target and arrival", "attack": 0, "defense": 0, "max_health": 8, "attack_interval": 1, "range": 3, "availability": "scouts", "targets": ["all"]},
+	"narrow_gate": {"name": "Narrow Gate", "size": Vector2i(1, 2), "cost": 7, "role": "concentrates Gate pressure", "attack": 0, "defense": 3, "max_health": 18, "attack_interval": 1, "range": 1, "availability": "starter", "targets": ["raider"]},
+	"brace": {"name": "Wall Brace", "size": Vector2i(1, 1), "cost": 5, "role": "reduces adjacent room damage", "attack": 0, "defense": 2, "max_health": 16, "attack_interval": 1, "range": 1, "availability": "field_engineers", "targets": ["all"]},
+	"fire_brazier": {"name": "Fire Brazier", "size": Vector2i(1, 1), "cost": 6, "role": "extends Fire Team denial", "attack": 1, "defense": 0, "max_health": 12, "attack_interval": 1, "range": 2, "availability": "firekeepers", "targets": ["climber"]},
+	"signal_beacon": {"name": "Signal Beacon", "size": Vector2i(1, 1), "cost": 5, "role": "improves warning time", "attack": 0, "defense": 0, "max_health": 8, "attack_interval": 1, "range": 3, "availability": "scouts", "targets": ["all"]}
 }
 
 const ENEMIES: Dictionary = {
@@ -89,6 +90,8 @@ var enemy_doctrine: String = "gate_assault"
 var pieces: Dictionary = {}
 var owned_packs: Array[String] = []
 var offered_packs: Array[String] = ["pike_line", "field_engineers", "firekeepers"]
+var available_pieces: Array[String] = ["pike_squad", "narrow_gate"]
+var pack_openings_this_preparation: int = 0
 var enemies: Array[Dictionary] = []
 var rooms: Dictionary = {}
 var log: Array[String] = []
@@ -100,16 +103,47 @@ var repair_interval_active: bool = false
 var repair_actions_remaining: int = 0
 var repair_interval_reason: String = ""
 var assigned_rooms: Dictionary = {}
+var combat_metrics: Dictionary = {}
+var _last_attackers: Array[String] = []
+var _last_attack_damage: Dictionary = {}
 
 func _init(keep_seed: int = 3307) -> void:
 	seed = keep_seed
 	_reset_rooms()
+	_reset_combat_metrics()
 	_log("Greywatch Keep is quiet. The Castellan waits for a first doctrine.")
 
 func _reset_rooms() -> void:
 	rooms.clear()
 	for room_id in ROOMS.keys():
 		rooms[room_id] = {"condition": 100, "state": "stable"}
+
+func _reset_combat_metrics() -> void:
+	combat_metrics = {
+		"battle_steps": 0,
+		"unit_attacks": 0,
+		"damage_dealt": 0,
+		"enemy_attacks": 0,
+		"room_damage": 0,
+		"piece_damage": 0,
+		"repairs": 0,
+		"disabled_units": 0,
+		"defeated_enemies": 0
+	}
+
+func _preparation_pack_limit() -> int:
+	return 2 if wave_index == 0 else 1
+
+func _rebuild_available_pieces() -> void:
+	available_pieces.clear()
+	for piece_id in STARTER_PIECES:
+		available_pieces.append(String(piece_id))
+	for pack_id in owned_packs:
+		if not PACKS.has(pack_id):
+			continue
+		for piece_id in PACKS[pack_id].pieces:
+			if not available_pieces.has(String(piece_id)):
+				available_pieces.append(String(piece_id))
 
 func _log(message: String) -> void:
 	log.append(message)
@@ -131,10 +165,18 @@ func select_commander(id: String) -> Dictionary:
 func open_pack(pack_id: String) -> Dictionary:
 	if not PACKS.has(pack_id):
 		return {"ok": false, "reason": "unknown pack"}
+	if wave_active or repair_interval_active:
+		return {"ok": false, "reason": "packs can only be opened during Preparation"}
 	if owned_packs.has(pack_id):
 		return {"ok": false, "reason": "pack already opened"}
+	if pack_openings_this_preparation >= _preparation_pack_limit():
+		return {"ok": false, "reason": "this Preparation has no pack openings remaining"}
 	owned_packs.append(pack_id)
-	return {"ok": true, "message": "Opened %s: %s." % [PACKS[pack_id].name, PACKS[pack_id].doctrine.replace("_", " ")]}
+	pack_openings_this_preparation += 1
+	for piece_id in PACKS[pack_id].pieces:
+		if not available_pieces.has(piece_id):
+			available_pieces.append(piece_id)
+	return {"ok": true, "message": "Opened %s: %s. Available units updated." % [PACKS[pack_id].name, PACKS[pack_id].doctrine.replace("_", " ")], "available_pieces": available_pieces.duplicate(), "openings_remaining": _preparation_pack_limit() - pack_openings_this_preparation}
 
 func piece_fits(piece_id: String, origin: Vector2i, floor: String = "ground") -> bool:
 	if not PIECES.has(piece_id) or not FLOORS.has(floor):
@@ -154,6 +196,8 @@ func piece_fits(piece_id: String, origin: Vector2i, floor: String = "ground") ->
 func place_piece(piece_id: String, origin: Vector2i, floor: String = "ground") -> Dictionary:
 	if not PIECES.has(piece_id):
 		return {"ok": false, "reason": "unknown defensive piece"}
+	if not available_pieces.has(piece_id):
+		return {"ok": false, "reason": "%s is not available; open its pack during Preparation" % PIECES[piece_id].name}
 	if not piece_fits(piece_id, origin, floor):
 		return {"ok": false, "reason": "piece does not fit on this floor of the keep"}
 	var cost: int = int(PIECES[piece_id].cost)
@@ -161,8 +205,21 @@ func place_piece(piece_id: String, origin: Vector2i, floor: String = "ground") -
 		return {"ok": false, "reason": "not enough materials"}
 	materials -= cost
 	var instance_id: String = "%s_%d" % [piece_id, pieces.size()]
-	pieces[instance_id] = {"piece_id": piece_id, "origin": origin, "floor": floor, "condition": 1.0, "assignment": ""}
+	var max_health: int = int(PIECES[piece_id].get("max_health", 10))
+	pieces[instance_id] = {"piece_id": piece_id, "origin": origin, "floor": floor, "max_health": max_health, "health": max_health, "condition": 1.0, "assignment": "", "attack_cooldown": 0, "attacks": 0, "damage_dealt": 0, "targets_stopped": 0, "disabled": false, "last_target": ""}
 	return {"ok": true, "piece_instance": instance_id, "message": "Placed %s on the %s floor: %s." % [PIECES[piece_id].name, floor, PIECES[piece_id].role]}
+
+func _set_piece_health(instance_id: String, value: int) -> void:
+	if not pieces.has(instance_id):
+		return
+	var instance: Dictionary = pieces[instance_id]
+	var max_health: int = int(instance.get("max_health", PIECES[String(instance.get("piece_id", ""))].get("max_health", 10)))
+	var was_disabled: bool = bool(instance.get("disabled", false))
+	instance.health = clampi(value, 0, max_health)
+	instance.condition = float(instance.health) / float(max_health)
+	instance.disabled = int(instance.health) <= 0
+	if instance.disabled and not was_disabled:
+		combat_metrics["disabled_units"] = int(combat_metrics.get("disabled_units", 0)) + 1
 
 func remove_piece(instance_id: String) -> Dictionary:
 	if not pieces.has(instance_id):
@@ -280,13 +337,20 @@ func _has_assignment(piece_id: String, room_id: String) -> bool:
 func _defender_damage(enemy_id: String) -> int:
 	var enemy: Dictionary = ENEMIES[enemy_id]
 	var damage: int = 0
-	for instance in pieces.values():
-		if float(instance.get("condition", 0.0)) <= 0.0:
+	_last_attackers.clear()
+	_last_attack_damage.clear()
+	for instance_id in pieces.keys():
+		var instance: Dictionary = pieces[instance_id]
+		if float(instance.get("condition", 0.0)) <= 0.0 or bool(instance.get("disabled", false)):
 			continue
 		var piece_id: String = String(instance.get("piece_id", ""))
 		var piece: Dictionary = PIECES[piece_id]
 		var valid: bool = piece.targets.has("all") or piece.targets.has(enemy_id)
 		if not valid:
+			continue
+		var cooldown: int = int(instance.get("attack_cooldown", 0))
+		if cooldown > 0:
+			instance.attack_cooldown = cooldown - 1
 			continue
 		var contribution: int = int(piece.attack)
 		if piece_id == "pike_squad" and String(enemy.route) != "gate_road":
@@ -299,7 +363,10 @@ func _defender_damage(enemy_id: String) -> int:
 			contribution += 1
 		if _castellan_adjacent(instance, String(enemy.target_rooms[0])):
 			contribution += 1
-		damage += contribution
+		if contribution > 0:
+			_last_attackers.append(String(instance_id))
+			_last_attack_damage[String(instance_id)] = contribution
+			damage += contribution
 	return damage
 
 func _choose_target(enemy_id: String) -> String:
@@ -338,6 +405,7 @@ func _apply_enemy_damage(enemy_id: String, target_id: String) -> void:
 		_battle_log("%s found no valid target; the keep’s empty response space mattered." % ENEMIES[enemy_id].name)
 		return
 	var damage: int = int(ENEMIES[enemy_id].damage)
+	combat_metrics["enemy_attacks"] = int(combat_metrics.get("enemy_attacks", 0)) + 1
 	var reduced: bool = lockdown_pending
 	if reduced:
 		damage = maxi(1, int(ceil(float(damage) * 0.5)))
@@ -348,6 +416,7 @@ func _apply_enemy_damage(enemy_id: String, target_id: String) -> void:
 				brace_bonus += 1
 		damage = maxi(0, damage - brace_bonus)
 		var was_breached: bool = rooms[target_id].state == "breached"
+		combat_metrics["room_damage"] = int(combat_metrics.get("room_damage", 0)) + damage * 15
 		rooms[target_id].condition = maxi(0, int(rooms[target_id].condition) - damage * 15)
 		_update_room_state(target_id)
 		_battle_log("%s reached %s and dealt %d room damage%s; room is %s." % [ENEMIES[enemy_id].name, ROOMS[target_id].name, damage, " under Lockdown" if reduced else "", rooms[target_id].state])
@@ -355,10 +424,14 @@ func _apply_enemy_damage(enemy_id: String, target_id: String) -> void:
 			breach_level += 1
 			morale = maxi(0, morale - 1)
 			_battle_log("%s breached. Morale falls because its named function is offline." % ROOMS[target_id].name)
-	elif pieces.has(target_id):
-		var instance: Dictionary = pieces[target_id]
-		instance.condition = maxf(0.0, float(instance.condition) - float(damage) * 0.25)
-		_battle_log("%s damaged %s by %d; condition is %.0f%%." % [ENEMIES[enemy_id].name, PIECES[String(instance.piece_id)].name, damage, float(instance.condition) * 100.0])
+		elif pieces.has(target_id):
+			combat_metrics["piece_damage"] = int(combat_metrics.get("piece_damage", 0)) + damage
+			var instance: Dictionary = pieces[target_id]
+			var piece_id: String = String(instance.get("piece_id", ""))
+			var max_health: int = int(instance.get("max_health", PIECES[piece_id].get("max_health", 10)))
+			var health_loss: int = maxi(1, int(ceil(float(max_health) * float(damage) * 0.25)))
+			_set_piece_health(target_id, int(instance.get("health", max_health)) - health_loss)
+			_battle_log("%s damaged %s by %d; health is %d/%d." % [ENEMIES[enemy_id].name, PIECES[piece_id].name, damage, int(instance.get("health", 0)), max_health])
 
 func _repair_after_defenders() -> void:
 	for instance_id in pieces.keys():
@@ -380,11 +453,13 @@ func _repair_after_defenders() -> void:
 		if not best_room.is_empty() and room_condition(best_room) < 100:
 			rooms[best_room].condition = mini(100, room_condition(best_room) + repair_amount)
 			_update_room_state(best_room)
+			combat_metrics["repairs"] = int(combat_metrics.get("repairs", 0)) + repair_amount
 			_battle_log("Repair Station restored %s by %d; it is now %s." % [ROOMS[best_room].name, repair_amount, rooms[best_room].state])
 			break
 
 func _battle_step() -> Dictionary:
 	battle_step += 1
+	combat_metrics["battle_steps"] = int(combat_metrics.get("battle_steps", 0)) + 1
 	var lockdown_contact: bool = false
 	_battle_log("Step %d: forecast says %s; the keep executes its prepared routine." % [battle_step, enemy_doctrine.replace("_", " ")])
 	for enemy in enemies:
@@ -393,23 +468,43 @@ func _battle_step() -> Dictionary:
 		var enemy_id: String = String(enemy.get("enemy_id", ""))
 		var damage: int = _defender_damage(enemy_id)
 		if damage > 0:
-			enemy.hp = maxi(0, int(enemy.hp) - damage)
+			enemy.hp = maxi(0, int(enemy.get("hp", 0)) - damage)
+			combat_metrics["unit_attacks"] = int(combat_metrics.get("unit_attacks", 0)) + _last_attackers.size()
+			combat_metrics["damage_dealt"] = int(combat_metrics.get("damage_dealt", 0)) + damage
+			enemy.damage_taken = int(enemy.get("damage_taken", 0)) + damage
+			for attacker_id in _last_attackers:
+				var attacker_damage: int = int(_last_attack_damage.get(attacker_id, 0))
+				pieces[attacker_id].attacks = int(pieces[attacker_id].get("attacks", 0)) + 1
+				pieces[attacker_id].damage_dealt = int(pieces[attacker_id].get("damage_dealt", 0)) + attacker_damage
+				pieces[attacker_id].last_target = enemy_id
 			_battle_log("Defenders dealt %d to %s using %s counterplay." % [damage, ENEMIES[enemy_id].name, ENEMIES[enemy_id].counter])
-		if int(enemy.hp) <= 0:
+		if int(enemy.get("hp", 0)) <= 0:
 			enemy.defeated = true
+			combat_metrics["defeated_enemies"] = int(combat_metrics.get("defeated_enemies", 0)) + 1
+			for attacker_id in _last_attackers:
+				pieces[attacker_id].targets_stopped = int(pieces[attacker_id].get("targets_stopped", 0)) + 1
 			_battle_log("%s was stopped before its doctrine could complete." % ENEMIES[enemy_id].name)
 			continue
 		if battle_step >= int(ENEMIES[enemy_id].arrival_step):
-			if String(enemy.target).is_empty():
+			if String(enemy.get("target", "")).is_empty():
 				enemy.target = _choose_target(enemy_id)
-				_battle_log("%s arrived by %s; target forecast resolves to %s." % [ENEMIES[enemy_id].name, ENEMIES[enemy_id].route, ROOMS[enemy.target].name if ROOMS.has(enemy.target) else PIECES[String(pieces[enemy.target].piece_id)].name if pieces.has(enemy.target) else "none"])
+				var target_name: String = "none"
+				if ROOMS.has(enemy.target):
+					target_name = String(ROOMS[enemy.target].name)
+				elif pieces.has(enemy.target):
+					target_name = String(PIECES[String(pieces[enemy.target].piece_id)].name)
+				_battle_log("%s arrived by %s; target forecast resolves to %s." % [ENEMIES[enemy_id].name, ENEMIES[enemy_id].route, target_name])
 			if lockdown_pending:
 				lockdown_contact = true
-			_apply_enemy_damage(enemy_id, String(enemy.target))
+			if not String(enemy.get("target", "")).is_empty():
+				enemy.attacks_received = int(enemy.get("attacks_received", 0)) + 1
+			_apply_enemy_damage(enemy_id, String(enemy.get("target", "")))
 	_repair_after_defenders()
 	if lockdown_contact:
-		for instance in pieces.values():
-			instance.condition = minf(1.0, float(instance.get("condition", 0.0)) + 0.05)
+		for instance_id in pieces.keys():
+			var instance: Dictionary = pieces[instance_id]
+			var max_health: int = int(instance.get("max_health", PIECES[String(instance.get("piece_id", ""))].get("max_health", 10)))
+			_set_piece_health(String(instance_id), int(instance.get("health", max_health)) + maxi(1, int(round(float(max_health) * 0.05))))
 		_battle_log("Lockdown restored 5% condition across placed pieces, then released.")
 		lockdown_pending = false
 	wave_progress = clamp(float(battle_step) / 6.0, 0.0, 1.0)
@@ -435,6 +530,7 @@ func _critical_breach_count() -> int:
 func _open_repair_interval(outcome: String) -> void:
 	repair_interval_active = true
 	repair_actions_remaining = 2
+	pack_openings_this_preparation = 0
 	if outcome == "partial_breach":
 		repair_interval_reason = "The breach is quiet for now. Stabilize one function, then choose who takes the next post."
 	else:
@@ -496,9 +592,11 @@ func start_wave(doctrine: String) -> Dictionary:
 	enemies.clear()
 	battle_report.clear()
 	var composition: Array = WAVE_COMPOSITIONS[doctrine]
+	_reset_combat_metrics()
 	for index in range(composition.size()):
 		var enemy_id: String = String(composition[index])
-		enemies.append({"enemy_id": enemy_id, "hp": int(ENEMIES[enemy_id].health), "target": "", "defeated": false, "slot": index})
+		var enemy_health: int = int(ENEMIES[enemy_id].get("health", 1))
+		enemies.append({"enemy_id": enemy_id, "max_health": enemy_health, "hp": enemy_health, "damage": int(ENEMIES[enemy_id].get("damage", 0)), "target": "", "defeated": false, "slot": index, "attacks_received": 0, "damage_taken": 0})
 	_battle_log("Forecast: %s. Question: %s" % [doctrine.replace("_", " "), DOCTRINE_QUESTIONS[doctrine]])
 	_battle_log("Likely pressure: %s. Scout Post can reveal the exact target before contact." % String(ENEMIES[String(composition[0])].route).replace("_", " "))
 	return {"ok": true, "message": "Wave %d begins. Pause between steps and read the target before using Lockdown." % wave_index, "forecast": forecast(), "composition": composition.duplicate()}
@@ -540,9 +638,11 @@ func repair_piece(instance_id: String) -> Dictionary:
 	if materials < 6:
 		return {"ok": false, "reason": "not enough materials"}
 	materials -= 6
-	pieces[instance_id].condition = minf(1.0, float(pieces[instance_id].condition) + 0.30)
+	var max_health: int = int(pieces[instance_id].get("max_health", PIECES[String(pieces[instance_id].get("piece_id", ""))].get("max_health", 10)))
+	_set_piece_health(instance_id, int(pieces[instance_id].get("health", max_health)) + maxi(1, int(round(float(max_health) * 0.30))))
+	combat_metrics["repairs"] = int(combat_metrics.get("repairs", 0)) + 30
 	repair_actions_remaining -= 1
-	return {"ok": true, "condition": pieces[instance_id].condition, "actions_remaining": repair_actions_remaining, "message": "Repair restored the named piece without erasing its battle history."}
+	return {"ok": true, "health": pieces[instance_id].health, "max_health": max_health, "condition": pieces[instance_id].condition, "actions_remaining": repair_actions_remaining, "message": "Repair restored the named piece without erasing its battle history."}
 
 func repair_room(room_id: String) -> Dictionary:
 	if not repair_interval_active:
@@ -558,6 +658,7 @@ func repair_room(room_id: String) -> Dictionary:
 	materials -= 8
 	rooms[room_id].condition = mini(100, room_condition(room_id) + 30)
 	_update_room_state(room_id)
+	combat_metrics["repairs"] = int(combat_metrics.get("repairs", 0)) + 30
 	repair_actions_remaining -= 1
 	return {"ok": true, "actions_remaining": repair_actions_remaining, "message": "Repaired %s to %s." % [ROOMS[room_id].name, rooms[room_id].state]}
 
@@ -592,6 +693,9 @@ func summary() -> Dictionary:
 		"repair_actions_remaining": repair_actions_remaining,
 		"repair_interval_reason": repair_interval_reason,
 		"assigned_rooms": assigned_rooms.duplicate(),
+		"available_pieces": available_pieces.duplicate(),
+		"pack_openings_this_preparation": pack_openings_this_preparation,
+		"combat_metrics": combat_metrics.duplicate(),
 		"forecast": forecast(),
 		"rooms": rooms.duplicate(true),
 		"pieces": pieces.duplicate(true),
@@ -625,7 +729,10 @@ func serialize() -> Dictionary:
 		"repair_interval_active": repair_interval_active,
 		"repair_actions_remaining": repair_actions_remaining,
 		"repair_interval_reason": repair_interval_reason,
-		"assigned_rooms": assigned_rooms.duplicate()
+		"assigned_rooms": assigned_rooms.duplicate(),
+		"available_pieces": available_pieces.duplicate(),
+		"pack_openings_this_preparation": pack_openings_this_preparation,
+		"combat_metrics": combat_metrics.duplicate()
 	}
 
 func load_serialized(data: Dictionary) -> void:
@@ -642,8 +749,18 @@ func load_serialized(data: Dictionary) -> void:
 	breach_level = int(data.get("breach_level", breach_level))
 	enemy_doctrine = String(data.get("enemy_doctrine", enemy_doctrine))
 	pieces = data.get("pieces", {}).duplicate(true)
-	owned_packs = data.get("owned_packs", []).duplicate()
-	offered_packs = data.get("offered_packs", offered_packs).duplicate()
+	owned_packs.clear()
+	for pack_id in data.get("owned_packs", []):
+		owned_packs.append(String(pack_id))
+	offered_packs.clear()
+	for pack_id in data.get("offered_packs", offered_packs):
+		offered_packs.append(String(pack_id))
+	available_pieces.clear()
+	for piece_id in data.get("available_pieces", STARTER_PIECES):
+		available_pieces.append(String(piece_id))
+	if not data.has("available_pieces"):
+		_rebuild_available_pieces()
+	pack_openings_this_preparation = int(data.get("pack_openings_this_preparation", pack_openings_this_preparation))
 	enemies = data.get("enemies", []).duplicate(true)
 	rooms = data.get("rooms", rooms).duplicate(true)
 	log = data.get("log", []).duplicate()
@@ -651,10 +768,22 @@ func load_serialized(data: Dictionary) -> void:
 	lockdown_pending = bool(data.get("lockdown_pending", lockdown_pending))
 	lockdown_used = bool(data.get("lockdown_used", lockdown_used))
 	last_outcome = String(data.get("last_outcome", last_outcome))
+	combat_metrics = data.get("combat_metrics", combat_metrics).duplicate()
+	if combat_metrics.is_empty():
+		_reset_combat_metrics()
 	repair_interval_active = bool(data.get("repair_interval_active", repair_interval_active))
 	repair_actions_remaining = int(data.get("repair_actions_remaining", repair_actions_remaining))
 	repair_interval_reason = String(data.get("repair_interval_reason", repair_interval_reason))
 	assigned_rooms = data.get("assigned_rooms", {}).duplicate()
+	for instance_id in pieces.keys():
+		var piece_id: String = String(pieces[instance_id].get("piece_id", ""))
+		if not PIECES.has(piece_id):
+			continue
+		var max_health: int = int(PIECES[piece_id].get("max_health", 10))
+		pieces[instance_id].max_health = int(pieces[instance_id].get("max_health", max_health))
+		pieces[instance_id].health = int(pieces[instance_id].get("health", roundf(float(pieces[instance_id].get("condition", 1.0)) * float(pieces[instance_id].max_health))))
+		pieces[instance_id].condition = float(pieces[instance_id].health) / float(pieces[instance_id].max_health)
+		pieces[instance_id].disabled = bool(pieces[instance_id].get("disabled", pieces[instance_id].health <= 0))
 	if assigned_rooms.is_empty():
 		for instance_id in pieces.keys():
 			var assignment: String = String(pieces[instance_id].get("assignment", ""))

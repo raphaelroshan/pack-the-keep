@@ -103,3 +103,35 @@
 **Reason:** Room assignment gives the two-floor keep a human staffing layer without adding individual worker simulation. It makes the authored rooms mechanically legible and changes the next battle’s causal report.
 
 **Trade-off:** An assigned unit cannot be reassigned in the middle of combat. The player must forecast which function deserves a specialist and accept the opportunity cost of committing it there.
+
+## ADR-014: Availability follows preparation choices
+
+**Decision:** Pike Squad and Narrow Gate are starter pieces. Opening a coherent pack unlocks its pieces, with two openings in the first Preparation and one opening in later Preparations. Packs are unavailable during combat and repair intervals.
+
+**Reason:** The player should decide which defensive functions become available before seeing the next doctrine. This preserves pack identity and creates a bounded preparation choice without rarity, duplicates, or an oversized collection layer.
+
+**Trade-off:** A player cannot access every unit in a single early defense. The restriction makes missing a Fire Team or Scout Post a consequence that can be answered in the next Preparation rather than an arbitrary deck-building failure.
+
+## ADR-015: Track state, not log text
+
+**Decision:** Store unit and enemy health as runtime fields and update compact aggregate combat metrics at the moment each attack, repair, disable, breach, or defeat resolves. Keep logs for explanation, not accounting.
+
+**Reason:** Reconstructing combat from strings is fragile and expensive. Stable instance IDs plus small counters let the UI, save system, and tests answer what attacked, how much damage was dealt, who was disabled, and which enemy was stopped without parsing presentation output.
+
+**Trade-off:** The state schema is slightly wider and save migrations must preserve new fields. The gain is deterministic reporting, efficient updates, and a clean boundary between simulation and presentation.
+
+## ADR-016: Unit availability follows preparation choices
+
+**Decision:** Pike Squad and Narrow Gate are starter pieces. Opening a coherent pack during Preparation unlocks its pieces, with two openings in the first Preparation and one in later Preparations. Packs cannot be opened during combat or the repair interval.
+
+**Reason:** The player should choose which defensive functions become available before committing to the next doctrine. This preserves pack identity and creates a bounded preparation decision without rarity, duplicate collection, or a separate deckbuilding game.
+
+**Trade-off:** A player cannot use every unit in the first defense. The missing function is a legible consequence that can be addressed in a later Preparation rather than an invisible random failure.
+
+## ADR-017: Track combat state directly, not from logs
+
+**Decision:** Store health and attribution fields on each unit and enemy instance, and update a compact aggregate metrics dictionary when attacks, repairs, damage, disables, breaches, or defeats resolve. Logs remain explanatory output, not accounting state.
+
+**Reason:** Parsing battle text is fragile and makes UI, save/load, and tests depend on presentation wording. Stable IDs and direct counters provide efficient updates and deterministic inspection.
+
+**Trade-off:** The save schema is wider and requires migration discipline. In return, the game can answer what attacked, how much damage was dealt, who was disabled, which enemy was stopped, and how much recovery was spent.
