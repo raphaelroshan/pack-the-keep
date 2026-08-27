@@ -133,6 +133,10 @@ A returning player should be able to use the Castellan with Pike Line and Field 
 
 **A Lesson in Empty Space** is the collapse ending. The keep fails as a defensive position, but the report identifies the missing recovery option or spatial assumption and unlocks a shorter retry. The game should never imply that the failure was inevitable or that the player needed a single secret build order.
 
+## Expanded event and occurrence library
+
+The detailed event, occurrence, meeting, recovery, character-development, regional-development, and scenario-chain library is maintained in [`events_occurrences_bible.md`](events_occurrences_bible.md). That document is the implementation handoff for future content slices; this content bible remains the canonical tone, premise, room, commander, pack, doctrine, progression, and ending reference.
+
 ## Agent implementation guidance
 
 Use the stable IDs in `content/content_manifest.json`. Display pack content as name, purpose, footprint, limitation, and choice text. Display each room as purpose, condition, threat, and available actions. Convert event effects into explicit simulation commands; never parse narrative prose to mutate state.
