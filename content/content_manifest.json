@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.3.0",
+  "content_version": "0.4.0",
   "campaign": {
     "title": "The Bell at Dusk",
     "premise": "A small keep is granted one season to become a refuge before a coalition of raiders, sappers, climbers, and siege beasts tests every defensive doctrine at once.",
@@ -842,8 +842,18 @@
       "raider_actor",
       "sapper_actor",
       "climber_actor",
-      "siege_beast_actor"
+      "siege_beast_actor",
+      "declared_target_lines",
+      "health_and_condition_bars",
+      "siege_beast_area_radius"
     ],
+    "presentation_input_contract": {
+      "status": "implemented",
+      "keyboard_actions": ["battle_pause", "battle_advance", "battle_speed_half", "battle_speed_normal", "battle_speed_double", "battle_manual_step", "placement_arm", "placement_cancel", "report_focus", "feedback_mute", "contrast_toggle"],
+      "battle_clock": "presentation_only_accumulator_over_authoritative_one_second_steps",
+      "accessibility": ["high_contrast_cues", "scrollable_command_panel", "focusable_buttons", "mute_feedback_tones"],
+      "deferred": ["controller_remapping", "authored_soundscape", "dedicated_warden_and_siege_beast_art"]
+    },
     "unit_availability": {
       "starter_pieces": [
         "pike_squad",

@@ -50,12 +50,130 @@ var title_card: PanelContainer
 var screen_label: Label
 var screen_hint: Label
 var art_banner: TextureRect
+var pause_button: Button
+var speed_button: Button
+var mute_button: Button
+var contrast_button: Button
+var input_help_label: Label
 var screen: String = "title"
+var battle_paused: bool = true
+var battle_speed_index: int = 1
+var audio_muted: bool = false
+var high_contrast: bool = false
+var audio_player: AudioStreamPlayer
+var audio_stream: AudioStreamGenerator
+var last_log_size: int = 0
 
 func _ready() -> void:
 	keep = PackKeepState.new(3307)
+	_setup_audio()
 	_build_ui()
 	_refresh_ui()
+
+func _process(delta: float) -> void:
+	if battle_paused or not keep.wave_active:
+		return
+	var result: Dictionary = keep.advance_wave(delta * _battle_speed())
+	if bool(result.get("resolved", false)):
+		battle_paused = true
+		_set_feedback(Color("#bfe8cf"))
+		_set_event("Wave resolved: %s. Read the report before rebuilding." % String(result.get("outcome", "unknown")).replace("_", " "))
+		_set_screen("results")
+	else:
+		if keep.battle_report.size() > last_log_size:
+			_set_feedback(Color("#d26155"))
+			last_log_size = keep.battle_report.size()
+		_refresh_ui()
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not event is InputEventKey or not event.pressed or event.echo:
+		return
+	if event.is_action_pressed("battle_pause"):
+		_toggle_battle_pause()
+	elif event.is_action_pressed("battle_advance"):
+		_on_advance_wave()
+	elif event.is_action_pressed("battle_speed_half"):
+		_set_battle_speed(0)
+	elif event.is_action_pressed("battle_speed_normal"):
+		_set_battle_speed(1)
+	elif event.is_action_pressed("battle_speed_double"):
+		_set_battle_speed(2)
+	elif event.is_action_pressed("battle_manual_step"):
+		_on_advance_wave()
+	elif event.is_action_pressed("placement_arm"):
+		_arm_selected_piece()
+	elif event.is_action_pressed("placement_cancel"):
+		_on_cancel_placement()
+	elif event.is_action_pressed("report_focus"):
+		_focus_report()
+	elif event.is_action_pressed("feedback_mute"):
+		_toggle_mute()
+	elif event.is_action_pressed("contrast_toggle"):
+		_toggle_contrast()
+
+func _setup_audio() -> void:
+	audio_player = AudioStreamPlayer.new()
+	audio_stream = AudioStreamGenerator.new()
+	audio_stream.mix_rate = 44100.0
+	audio_stream.buffer_length = 0.35
+	audio_player.stream = audio_stream
+	add_child(audio_player)
+	audio_player.play()
+
+func _battle_speed() -> float:
+	return [0.5, 1.0, 2.0][battle_speed_index]
+
+func _set_feedback(color: Color) -> void:
+	if keep_canvas != null:
+		keep_canvas.call("set_feedback", color)
+	if not audio_muted:
+		_play_tone(440.0 if color.g > color.r else 150.0)
+
+func _play_tone(frequency: float) -> void:
+	if audio_player == null or audio_muted:
+		return
+	var playback: AudioStreamGeneratorPlayback = audio_player.get_stream_playback()
+	if playback == null:
+		return
+	var frame_count: int = int(audio_stream.mix_rate * 0.09)
+	for frame in range(frame_count):
+		var envelope: float = 1.0 - float(frame) / float(frame_count)
+		var sample: float = sin(TAU * frequency * float(frame) / audio_stream.mix_rate) * 0.08 * envelope
+		playback.push_frame(Vector2(sample, sample))
+
+func _toggle_battle_pause() -> void:
+	if not keep.wave_active:
+		_set_event("Pause is available during an active invasion.")
+		return
+	battle_paused = not battle_paused
+	_set_event("Battle paused. Read the forecast and report." if battle_paused else "Battle resumed at %.1fx speed." % _battle_speed())
+	_play_tone(330.0 if battle_paused else 520.0)
+	_refresh_ui()
+
+func _set_battle_speed(index: int) -> void:
+	battle_speed_index = clampi(index, 0, 2)
+	_set_event("Battle speed set to %.1fx. Space pauses; N advances one manual step." % _battle_speed())
+	_refresh_ui()
+
+func _cycle_battle_speed() -> void:
+	_set_battle_speed((battle_speed_index + 1) % 3)
+
+func _toggle_mute() -> void:
+	audio_muted = not audio_muted
+	_set_event("Feedback tones muted." if audio_muted else "Feedback tones enabled.")
+	_refresh_ui()
+
+func _toggle_contrast() -> void:
+	high_contrast = not high_contrast
+	if keep_canvas != null:
+		keep_canvas.call("set_accessibility", high_contrast)
+	_set_event("High-contrast cues enabled." if high_contrast else "Standard color cues restored.")
+	_refresh_ui()
+
+func _focus_report() -> void:
+	if log_label != null:
+		log_label.grab_focus()
+	_set_event("Causal report focused. Use the command table to intervene.")
 
 func _build_ui() -> void:
 	var background: ColorRect = ColorRect.new()
@@ -196,6 +314,12 @@ func _build_ui() -> void:
 	panel_title.add_theme_font_size_override("font_size", 19)
 	panel_title.add_theme_color_override("font_color", Color("#e2bd84"))
 	controls.add_child(panel_title)
+	input_help_label = Label.new()
+	input_help_label.text = "P2 INPUT — Space pause | 1/2/3 speed | N step | R place | Esc cancel | M mute | C contrast"
+	input_help_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	input_help_label.add_theme_font_size_override("font_size", 10)
+	input_help_label.add_theme_color_override("font_color", Color("#aab1b2"))
+	controls.add_child(input_help_label)
 	commander_portrait = TextureRect.new()
 	commander_portrait.texture = CASTELLAN_PORTRAIT
 	commander_portrait.custom_minimum_size = Vector2(0, 92)
@@ -340,7 +464,18 @@ func _build_ui() -> void:
 	advance_button.text = "Advance one battle step"
 	advance_button.tooltip_text = "Resolve one readable step; pause here to inspect the report."
 	advance_button.pressed.connect(_on_advance_wave)
+	advance_button.focus_mode = Control.FOCUS_ALL
 	controls.add_child(advance_button)
+	pause_button = Button.new()
+	pause_button.text = "Pause battle (Space)"
+	pause_button.tooltip_text = "Pause or resume automatic battle timing. Manual N steps remain deterministic."
+	pause_button.pressed.connect(_toggle_battle_pause)
+	controls.add_child(pause_button)
+	speed_button = Button.new()
+	speed_button.text = "Speed: 1.0x (1/2/3)"
+	speed_button.tooltip_text = "Cycle battle speed; speed changes timing only, never outcomes."
+	speed_button.pressed.connect(_cycle_battle_speed)
+	controls.add_child(speed_button)
 
 	commander_ability_button = Button.new()
 	commander_ability_button.text = "Lockdown (Castellan)"
@@ -377,6 +512,15 @@ func _build_ui() -> void:
 	reset_button.text = "New run / reset"
 	reset_button.pressed.connect(_on_reset_run)
 	controls.add_child(reset_button)
+	mute_button = Button.new()
+	mute_button.text = "Feedback tones: ON"
+	mute_button.pressed.connect(_toggle_mute)
+	controls.add_child(mute_button)
+	contrast_button = Button.new()
+	contrast_button.text = "High-contrast cues: OFF"
+	contrast_button.pressed.connect(_toggle_contrast)
+	contrast_button.tooltip_text = "Adds shape/text cues so doctrine and damage are not color-dependent."
+	controls.add_child(contrast_button)
 
 func _build_title_card() -> PanelContainer:
 	var card: PanelContainer = PanelContainer.new()
@@ -499,6 +643,9 @@ func _on_reserve_pack() -> void:
 	_refresh_pack_preview()
 
 func _arm_selected_piece() -> void:
+	if keep.wave_active:
+		_set_event("Placement is preparation-only. Resolve or finish the invasion before rebuilding.")
+		return
 	var piece_id: String = _selected_id(piece_option)
 	placement_mode = not piece_id.is_empty()
 	preview_floor = _selected_id(floor_option)
@@ -582,7 +729,11 @@ func _on_start_wave() -> void:
 	var result: Dictionary = keep.start_wave(_selected_id(doctrine_option))
 	_run_result(result, "Invasion")
 	if bool(result.get("ok", false)):
+		battle_paused = true
+		last_log_size = keep.battle_report.size()
 		_set_screen("battle")
+		_set_event("Invasion staged. Battle is paused for inspection; press Space to run or N to step.")
+		_refresh_ui()
 
 func _selected_piece_instance() -> String:
 	if not selected_instance_id.is_empty() and keep.pieces.has(selected_instance_id):
@@ -613,10 +764,12 @@ func _on_advance_wave() -> void:
 	if not bool(result.get("ok", false)):
 		_set_event("Battle blocked: %s." % String(result.get("reason", "unknown")))
 	elif bool(result.get("resolved", false)):
-			_set_event("Wave resolved: %s. Read the report before rebuilding." % String(result.get("outcome", "unknown")).replace("_", " "))
-			_set_screen("results")
+		_set_feedback(Color("#bfe8cf"))
+		_set_event("Wave resolved: %s. Read the report before rebuilding." % String(result.get("outcome", "unknown")).replace("_", " "))
+		_set_screen("results")
 	else:
-		_set_event("Battle step %d resolved. Pause and inspect the named target before committing Lockdown." % int(result.get("step", 0)))
+		_set_feedback(Color("#d7a35b"))
+		_set_event("Battle step %d resolved. Pause and inspect the named target before committing the commander ability." % int(result.get("step", 0)))
 	_refresh_ui()
 
 func _on_use_ability() -> void:
@@ -625,8 +778,10 @@ func _on_use_ability() -> void:
 func _run_result(result: Dictionary, label: String) -> void:
 	if bool(result.get("ok", false)):
 		_set_event("%s: %s" % [label, String(result.get("message", "command accepted"))])
+		_set_feedback(Color("#9bd4c3") if label in ["Repair", "Assignment", "Placement"] else Color("#91b7da"))
 	else:
 		_set_event("%s blocked: %s." % [label, String(result.get("reason", "unknown"))])
+		_set_feedback(Color("#d26155"))
 	_refresh_ui()
 
 func _on_save() -> void:
@@ -680,6 +835,9 @@ func _on_load() -> void:
 
 func _on_reset_run() -> void:
 	keep.reset_run(3307)
+	battle_paused = true
+	battle_speed_index = 1
+	last_log_size = 0
 	_clear_placement_mode()
 	selected_instance_id = ""
 	inspected_text = "New Greywatch run started. Click a room or piece to inspect it."
@@ -696,7 +854,7 @@ func _refresh_ui() -> void:
 	var interval_text: String = "closed"
 	if keep.repair_interval_active:
 		interval_text = "%d action(s): %s" % [keep.repair_actions_remaining, keep.repair_interval_reason]
-	status_label.text = "%s | %s | Materials %d | Command %d | Morale %d | Pieces %d | Wave %d | Step %d | Breach %d | Outcome %s | Repair %s" % [keep.summary().get("commander", "Commander"), String(keep.scenario_preview().get("name", "Free drill")), keep.materials, keep.command_points, keep.morale, keep.pieces.size(), keep.wave_index, keep.battle_step, keep.breach_level, keep.last_outcome if not keep.last_outcome.is_empty() else "active", interval_text]
+	status_label.text = "%s | %s | Materials %d | Command %d | Morale %d | Pieces %d | Wave %d | Step %d | Breach %d | %s | Repair %s" % [keep.summary().get("commander", "Commander"), String(keep.scenario_preview().get("name", "Free drill")), keep.materials, keep.command_points, keep.morale, keep.pieces.size(), keep.wave_index, keep.battle_step, keep.breach_level, "PAUSED" if battle_paused else "RUNNING %.1fx" % _battle_speed(), interval_text]
 	commander_profile_label.text = "%s\nPassive: %s\nAbility: %s — %s\nLimitation: %s" % [String(PackKeepState.COMMANDERS[keep.commander_id].get("name", keep.commander_id)), String(PackKeepState.COMMANDERS[keep.commander_id].get("passive", "")), String(PackKeepState.COMMANDERS[keep.commander_id].get("ability_name", "")), String(PackKeepState.COMMANDERS[keep.commander_id].get("ability_text", "")), String(PackKeepState.COMMANDERS[keep.commander_id].get("limitation", ""))]
 	commander_portrait.modulate = Color("#9fb9c3") if keep.commander_id == "warden" else Color.WHITE
 	commander_portrait.tooltip_text = "The Warden — Open Lanes and Rally" if keep.commander_id == "warden" else "The Castellan — Layered Masonry and Lockdown"
@@ -743,6 +901,10 @@ func _refresh_ui() -> void:
 	for index in range(start, keep.battle_report.size()):
 		recent.append(keep.battle_report[index])
 	log_label.text = "Recent causal report: " + (" | ".join(recent) if not recent.is_empty() else "No wave has started. The report will name the forecast, counter, target, damage, and recovery.")
+	pause_button.text = "Resume battle (Space)" if battle_paused else "Pause battle (Space)"
+	speed_button.text = "Speed: %.1fx (1/2/3)" % _battle_speed()
+	mute_button.text = "Feedback tones: OFF" if audio_muted else "Feedback tones: ON"
+	contrast_button.text = "High-contrast cues: ON" if high_contrast else "High-contrast cues: OFF"
 	keep_canvas.keep = keep
 	keep_canvas.queue_redraw()
 
@@ -759,6 +921,9 @@ class KeepCanvas extends Control:
 	var preview_origin: Vector2i = Vector2i.ZERO
 	var preview_piece_id: String = ""
 	var preview_valid: bool = false
+	var feedback_color: Color = Color.TRANSPARENT
+	var feedback_ttl: float = 0.0
+	var high_contrast_mode: bool = false
 
 	func set_preview(active: bool, floor: String, origin: Vector2i, piece_id: String, valid: bool) -> void:
 		preview_active = active
@@ -767,6 +932,20 @@ class KeepCanvas extends Control:
 		preview_piece_id = piece_id
 		preview_valid = valid
 		queue_redraw()
+
+	func set_feedback(color: Color) -> void:
+		feedback_color = color
+		feedback_ttl = 0.38 if not high_contrast_mode else 0.18
+		queue_redraw()
+
+	func set_accessibility(enabled: bool) -> void:
+		high_contrast_mode = enabled
+		queue_redraw()
+
+	func _process(delta: float) -> void:
+		if feedback_ttl > 0.0:
+			feedback_ttl = maxf(0.0, feedback_ttl - delta)
+			queue_redraw()
 
 	func _map_hit(position: Vector2) -> Dictionary:
 		var hit_floor: String = ""
@@ -799,6 +978,14 @@ class KeepCanvas extends Control:
 		if keep == null:
 			return Color("#3b3344")
 		var room_state: String = keep.room_state(room_id)
+		if high_contrast_mode:
+			if room_state == "breached":
+				return Color("#9d3441")
+			if room_state == "damaged":
+				return Color("#a66b27")
+			if room_state == "strained":
+				return Color("#81741b")
+			return Color("#24526b")
 		if room_state == "breached":
 			return Color("#733b45")
 		if room_state == "damaged":
@@ -823,7 +1010,10 @@ class KeepCanvas extends Control:
 			draw_rect(rect, _room_color(String(room_id)), true)
 			draw_rect(rect, Color("#c8b6a0"), false, 1.0)
 			draw_string(ThemeDB.fallback_font, rect.position + Vector2(2, 12), String(room.name), HORIZONTAL_ALIGNMENT_LEFT, rect.size.x - 4, 9, Color("#eadfce"))
-			draw_string(ThemeDB.fallback_font, rect.position + Vector2(2, rect.size.y - 3), "%d%%" % keep.room_condition(String(room_id)), HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#f2e5d1"))
+			var condition: int = keep.room_condition(String(room_id))
+			var state_text: String = keep.room_state(String(room_id)).to_upper()
+			draw_rect(Rect2(rect.position + Vector2(2, rect.size.y - 12), Vector2(maxf(4.0, (rect.size.x - 4.0) * float(condition) / 100.0), 4)), Color("#bfe8cf") if condition >= 70 else Color("#d7a35b") if condition >= 35 else Color("#d26155"), true)
+			draw_string(ThemeDB.fallback_font, rect.position + Vector2(2, rect.size.y - 3), "%s %d%%" % [state_text, condition], HORIZONTAL_ALIGNMENT_LEFT, rect.size.x - 4, 8, Color("#fff4df"))
 		for instance in keep.pieces.values():
 			if String(instance.get("floor", "ground")) != floor_name:
 				continue
@@ -841,8 +1031,12 @@ class KeepCanvas extends Control:
 			var assignment: String = String(instance.get("assignment", ""))
 			if not assignment.is_empty():
 				piece_status += " " + assignment
-			if float(instance.get("condition", 0.0)) < 1.0 or not assignment.is_empty():
-				draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(2, piece_rect.size.y - 3), piece_status, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#201a25"))
+			var piece_health: int = int(instance.get("health", 0))
+			var piece_max_health: int = int(instance.get("max_health", piece.get("max_health", 0)))
+			var health_ratio: float = float(piece_health) / float(maxi(1, piece_max_health))
+			draw_rect(Rect2(piece_rect.position + Vector2(2, 14), Vector2(maxf(3.0, (piece_rect.size.x - 4.0) * health_ratio), 3)), Color("#bfe8cf") if health_ratio >= 0.7 else Color("#d7a35b") if health_ratio >= 0.35 else Color("#d26155"), true)
+			if float(instance.get("condition", 0.0)) < 1.0 or not assignment.is_empty() or high_contrast_mode:
+				draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(2, piece_rect.size.y - 3), piece_status, HORIZONTAL_ALIGNMENT_LEFT, piece_rect.size.x - 4, 8, Color("#201a25"))
 
 	func _draw_enemies() -> void:
 		if keep == null or not keep.wave_active:
@@ -864,7 +1058,16 @@ class KeepCanvas extends Control:
 			draw_circle(enemy_origin, marker_radius, Color("#f1dfb8"), false, 1.5)
 			if enemy_id == "siege_beast":
 				draw_circle(enemy_origin, marker_radius + 5.0, Color(0.7, 0.3, 0.15, 0.35), false, 2.0)
-			draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(16, 4), "%s %dhp" % [String(enemy_def.get("name", enemy_id)), int(enemy.get("hp", 0))], HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#f2e5d1"))
+				draw_circle(enemy_origin, marker_radius + 18.0, Color(0.86, 0.35, 0.18, 0.22), false, 2.0)
+				draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(-16, -18), "AREA", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#ffd19d"))
+			var target_id: String = String(enemy.get("target", ""))
+			if not target_id.is_empty() and PackKeepState.ROOMS.has(target_id):
+				var target_room: Dictionary = PackKeepState.ROOMS[target_id]
+				var target_origin: Vector2 = UPPER_ORIGIN if String(target_room.get("floor", "ground")) == "upper" else MAP_ORIGIN
+				var target_rect: Rect2 = _room_rect(target_id, target_origin)
+				draw_line(enemy_origin, target_rect.get_center(), Color(0.95, 0.38, 0.28, 0.7), 1.5)
+				draw_circle(target_rect.get_center(), 8.0, Color("#ffb0a6"), false, 2.0)
+			draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(16, 4), "%s %dhp | %s" % [String(enemy_def.get("name", enemy_id)), int(enemy.get("hp", 0)), String(enemy_def.get("doctrine", enemy_id)).to_upper()], HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#f2e5d1"))
 
 	func _draw() -> void:
 		if keep == null:
@@ -884,4 +1087,8 @@ class KeepCanvas extends Control:
 			var progress_width: float = 2.0 * MAP_SIZE.x * keep.wave_progress
 			draw_rect(Rect2(MAP_ORIGIN + Vector2(0, MAP_SIZE.y + 12), Vector2(2.0 * MAP_SIZE.x, 8)), Color("#402630"), true)
 			draw_rect(Rect2(MAP_ORIGIN + Vector2(0, MAP_SIZE.y + 12), Vector2(progress_width, 8)), Color("#d26155"), true)
-			draw_string(ThemeDB.fallback_font, MAP_ORIGIN + Vector2(0, MAP_SIZE.y + 34), "RED = active invasion progress | Room colors: stable / strained / damaged / breached", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#bfaeaa"))
+			draw_string(ThemeDB.fallback_font, MAP_ORIGIN + Vector2(0, MAP_SIZE.y + 34), "RED = active invasion | Lines = declared target | AREA = Siege Beast pressure | State text is authoritative", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#bfaeaa"))
+		if feedback_ttl > 0.0:
+			var feedback_alpha: float = minf(0.32, feedback_ttl * 0.9)
+			draw_rect(Rect2(Vector2.ZERO, size), Color(feedback_color, feedback_alpha), false, 5.0)
+			draw_string(ThemeDB.fallback_font, Vector2(14, size.y - 12), "IMPACT / RECOVERY CUE", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(feedback_color, minf(0.95, feedback_alpha + 0.45)))
