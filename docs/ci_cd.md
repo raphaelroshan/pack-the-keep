@@ -45,6 +45,8 @@ Pushes to `main` produce a release-candidate artifact containing a source snapsh
 
 The packaged smoke uses a CI-owned profile root and unreachable proxy endpoints. It launches the actual exported main scene, executes a guarded smoke path through normal gameplay and persistence APIs, verifies controller navigation/remapping and 125% stacked scaling, confirms save/settings files remain inside the isolated profile, then requires clean teardown and process exit within 30 seconds.
 
+Godot 4.4.1 can intermittently return exit 139 on Windows after a headless UI test has already printed PASS. CI retries the complete deterministic suite once only for that Windows-specific exit code. Any ordinary assertion failure, non-Windows failure, or repeated shutdown fault still blocks the build.
+
 Publishing to Steam or Epic Games Store remains a deliberate human-controlled step. Add store upload credentials only after the build has passed a release review, and use protected environments with required reviewers for actual deployment.
 
 ## Local execution
