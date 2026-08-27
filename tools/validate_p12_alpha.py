@@ -12,6 +12,10 @@ REQUIRED_CHECKS = {
     "windows_launch", "offline_play", "save_location", "malformed_save", "save_migration",
     "controller", "scaling", "input_remapping", "pause", "crash_safe_close", "clean_reinstall",
 }
+REQUIRED_HUMAN_GATES = {
+    "windows_gpu_presentation", "physical_controller_matrix", "procedural_audio_review",
+    "forced_close_recovery", "signed_installer", "storefront_launch", "human_playtest",
+}
 
 
 def load_object(path: Path, errors: list[str]) -> dict[str, Any]:
@@ -61,6 +65,26 @@ def validate_checklist(path: Path, root: Path, build_version: str, errors: list[
                 errors.append(f"P12 check {check_id} has missing evidence: {relative!r}")
     for missing in sorted(REQUIRED_CHECKS - seen):
         errors.append(f"P12 checklist is missing: {missing}")
+    human_records = checklist.get("human_gates")
+    if not isinstance(human_records, list):
+        errors.append("P12 checklist human_gates must be an array")
+        return
+    human_seen: set[str] = set()
+    for record in human_records:
+        if not isinstance(record, dict) or record.get("id") not in REQUIRED_HUMAN_GATES:
+            errors.append(f"unknown P12 human gate: {record!r}")
+            continue
+        gate_id = str(record["id"])
+        if gate_id in human_seen:
+            errors.append(f"duplicate P12 human gate: {gate_id}")
+        human_seen.add(gate_id)
+        if record.get("status") != "pending":
+            errors.append(f"P12 human gate {gate_id} must remain pending until human approval")
+        evidence = record.get("evidence")
+        if not isinstance(evidence, str) or not (root / evidence).is_file():
+            errors.append(f"P12 human gate {gate_id} has missing evidence guidance")
+    for missing in sorted(REQUIRED_HUMAN_GATES - human_seen):
+        errors.append(f"P12 checklist is missing human gate: {missing}")
 
 
 def validate_report(path: Path, build_version: str, errors: list[str]) -> None:
@@ -112,7 +136,7 @@ def main() -> int:
             print(f"ERROR: {error}")
         return 1
     suffix = " plus packaged report" if args.report is not None else ""
-    print(f"P12 alpha checklist: PASS ({len(REQUIRED_CHECKS)} checks{suffix})")
+    print(f"P12 alpha checklist: PASS ({len(REQUIRED_CHECKS)} automated checks, {len(REQUIRED_HUMAN_GATES)} pending human gates{suffix})")
     return 0
 
 

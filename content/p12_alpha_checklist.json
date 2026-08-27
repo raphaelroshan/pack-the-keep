@@ -14,5 +14,14 @@
     {"id": "pause", "status": "implemented", "evidence": ["tests/test_p2_ui.gd", "src/platform/packaged_smoke.gd"]},
     {"id": "crash_safe_close", "status": "implemented", "evidence": ["tests/test_p12_save_path_isolation.gd", "src/platform/packaged_smoke.gd"]},
     {"id": "clean_reinstall", "status": "implemented", "evidence": ["tools/run_packaged_smoke.py", "design/p12_clean_reinstall.md"]}
+  ],
+  "human_gates": [
+    {"id": "windows_gpu_presentation", "status": "pending", "evidence": "docs/p12_human_alpha_checklist.md"},
+    {"id": "physical_controller_matrix", "status": "pending", "evidence": "docs/p12_human_alpha_checklist.md"},
+    {"id": "procedural_audio_review", "status": "pending", "evidence": "docs/p12_human_alpha_checklist.md"},
+    {"id": "forced_close_recovery", "status": "pending", "evidence": "docs/p12_human_alpha_checklist.md"},
+    {"id": "signed_installer", "status": "pending", "evidence": "docs/p12_human_alpha_checklist.md"},
+    {"id": "storefront_launch", "status": "pending", "evidence": "docs/p12_human_alpha_checklist.md"},
+    {"id": "human_playtest", "status": "pending", "evidence": "docs/p12_human_alpha_checklist.md"}
   ]
 }

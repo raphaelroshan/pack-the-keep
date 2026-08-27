@@ -11,5 +11,6 @@ Turn the P12 checklist into a machine-readable release boundary. Every required 
 - Build identity must match the project, framework, CI manifest, and checklist.
 - Source jobs validate checklist structure; package/release jobs additionally validate dynamic Windows evidence.
 - Status remains `candidate`; commercial or human alpha approval is never inferred from CI.
+- Required human gates remain explicitly `pending` with one manual evidence guide.
 
 **Trade-off:** The audit proves automated evidence coverage, not subjective playtest quality or storefront approval.
