@@ -29,7 +29,7 @@ jobs:
           use-dotnet: false
           include-templates: true
       - name: Run deterministic tests
-        run: bash scripts/verify.sh
+        run: bash scripts/verify_ci.sh
       - name: Require export presets for release builds
         run: test -f export_presets.cfg
       - name: Export Windows Desktop

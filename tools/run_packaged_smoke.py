@@ -66,6 +66,9 @@ def validate_report(report_path: Path, profile_root: Path, expected_version: str
         errors.append("packaged gameplay did not save deterministic battle step one")
     if report.get("save_schema_version") != 4 or report.get("settings_schema_version") != 4:
         errors.append("packaged persistence schemas do not match the current runtime")
+    for field in ("controller_navigation_ready", "controller_defaults_ready", "controller_remap_ready", "ui_scale_ready", "settings_scale_ready", "settings_remap_ready"):
+        if report.get(field) is not True:
+            errors.append(f"packaged input/scaling assertion failed: {field}")
     content_status = report.get("content_status")
     if not isinstance(content_status, dict) or content_status.get("ok") is not True:
         errors.append("packaged runtime content catalog did not load")

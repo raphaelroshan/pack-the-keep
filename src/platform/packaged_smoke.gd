@@ -18,6 +18,24 @@ func _read_json(path: String) -> Dictionary:
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	return parsed if parsed is Dictionary else {}
 
+func _has_joypad_binding(action: String, button_index: int = -1) -> bool:
+	for event in InputMap.action_get_events(action):
+		if event is InputEventJoypadButton and (button_index < 0 or event.button_index == button_index):
+			return true
+	return false
+
+func _settings_has_joypad_binding(settings_payload: Dictionary, action: String, button_index: int) -> bool:
+	var bindings: Variant = settings_payload.get("input_bindings", {})
+	if not bindings is Dictionary:
+		return false
+	var records: Variant = bindings.get(action, [])
+	if not records is Array:
+		return false
+	for record in records:
+		if record is Dictionary and String(record.get("type", "")) == "joypad_button" and int(record.get("button_index", -1)) == button_index:
+			return true
+	return false
+
 func run(ui: Control) -> void:
 	var errors: Array[String] = []
 	await get_tree().process_frame
@@ -30,6 +48,22 @@ func run(ui: Control) -> void:
 	ui.settings_path = SETTINGS_PATH
 	ui.settings_temp_path = SETTINGS_TEMP_PATH
 	ui.settings_backup_path = SETTINGS_BACKUP_PATH
+	var controller_navigation_ready: bool = _has_joypad_binding("ui_accept") and _has_joypad_binding("ui_down")
+	_record_error(errors, controller_navigation_ready, "packaged UI navigation lost its controller path")
+	var controller_defaults_ready: bool = true
+	for action in ui.REMAPPABLE_ACTIONS:
+		controller_defaults_ready = controller_defaults_ready and _has_joypad_binding(String(action))
+	_record_error(errors, controller_defaults_ready, "packaged gameplay actions lost a default controller binding")
+	ui._set_ui_scale(2)
+	var ui_scale_ready: bool = ui.ui_scale_index == 2 and is_equal_approx(get_tree().root.content_scale_factor, 1.25) and ui.gameplay_columns.vertical
+	_record_error(errors, ui_scale_ready, "125 percent packaged UI scale did not apply the stacked layout")
+	ui._begin_rebind("battle_pause")
+	var replacement: InputEventJoypadButton = InputEventJoypadButton.new()
+	replacement.button_index = 10
+	replacement.pressed = true
+	ui._unhandled_input(replacement)
+	var controller_remap_ready: bool = _has_joypad_binding("battle_pause", 10) and not _has_joypad_binding("placement_arm", 10)
+	_record_error(errors, controller_remap_ready, "packaged controller remap did not resolve the button conflict")
 
 	var catalog_status: Dictionary = ui.keep.content_catalog_status()
 	_record_error(errors, bool(catalog_status.get("ok", false)), "runtime content catalog failed after export")
@@ -53,6 +87,10 @@ func run(ui: Control) -> void:
 	_record_error(errors, String(save_payload.get("game_id", "")) == "pack-the-keep", "run save has the wrong game ID")
 	_record_error(errors, int(save_payload.get("schema_version", 0)) == 4, "run save has the wrong schema version")
 	_record_error(errors, int(settings_payload.get("schema_version", 0)) == 4, "settings have the wrong schema version")
+	var settings_scale_ready: bool = int(settings_payload.get("ui_scale_index", -1)) == 2
+	var settings_remap_ready: bool = _settings_has_joypad_binding(settings_payload, "battle_pause", 10)
+	_record_error(errors, settings_scale_ready, "packaged settings did not persist 125 percent scale")
+	_record_error(errors, settings_remap_ready, "packaged settings did not persist the controller remap")
 
 	ui.queue_free()
 	await get_tree().process_frame
@@ -72,6 +110,12 @@ func run(ui: Control) -> void:
 		"settings_schema_version": int(settings_payload.get("schema_version", 0)),
 		"battle_step": int(save_payload.get("battle_step", 0)),
 		"content_status": catalog_status,
+		"controller_navigation_ready": controller_navigation_ready,
+		"controller_defaults_ready": controller_defaults_ready,
+		"controller_remap_ready": controller_remap_ready,
+		"ui_scale_ready": ui_scale_ready,
+		"settings_scale_ready": settings_scale_ready,
+		"settings_remap_ready": settings_remap_ready,
 		"main_scene_freed": main_scene_freed,
 		"smoke_guard": OS.get_environment("PACK_THE_KEEP_PACKAGED_SMOKE") == "1",
 		"offline_proxy_guard": OS.get_environment("HTTPS_PROXY").contains("127.0.0.1:9")
