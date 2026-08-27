@@ -53,6 +53,20 @@ func _initialize() -> void:
 	ui._on_load()
 	_check(ui.keep.seed == 4402, "missing primary should recover a crash-stranded backup")
 
+	_remove_test_files()
+	_write(TEST_SAVE, JSON.stringify(_saved_state(4404)))
+	_write(TEST_TEMP, JSON.stringify(_saved_state(9999)))
+	ui.keep.reset_run(99)
+	ui._on_load()
+	_check(ui.keep.seed == 4404, "a stranded temporary file should not replace a valid primary")
+
+	_remove_test_files()
+	_write(TEST_TEMP, JSON.stringify(_saved_state(4405)))
+	var before_temp_only_rejection: String = JSON.stringify(ui.keep.serialize())
+	ui._on_load()
+	_check(JSON.stringify(ui.keep.serialize()) == before_temp_only_rejection, "a temporary file alone should not mutate the live run")
+	_check(String(ui.event_label.text).contains("current run is unchanged"), "temporary-only rejection should explain state preservation")
+
 	var before_rejection: String = JSON.stringify(ui.keep.serialize())
 	_write(TEST_SAVE, "[]")
 	_write(TEST_BACKUP, "{bad")
