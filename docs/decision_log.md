@@ -135,3 +135,27 @@
 **Reason:** Parsing battle text is fragile and makes UI, save/load, and tests depend on presentation wording. Stable IDs and direct counters provide efficient updates and deterministic inspection.
 
 **Trade-off:** The save schema is wider and requires migration discipline. In return, the game can answer what attacked, how much damage was dealt, who was disabled, which enemy was stopped, and how much recovery was spent.
+
+## ADR-018: Recovery cards render authoritative action previews
+
+**Decision:** Expose read-only recovery-action previews from `PackKeepState` and render them as explicit UI cards for room repair, piece repair, assignment, and assignment clearing. The existing commands remain the only mutation path.
+
+**Reason:** Recovery is the next major player decision, but generic buttons hide costs, benefits, trade-offs, and rejection reasons. A shared authoritative preview keeps the interface explanatory without creating a second copy of legality rules in `main.gd`.
+
+**Trade-off:** The simulation API gains presentation-neutral preview metadata and must keep it synchronized with command behavior. Tests therefore verify that previews do not mutate state and that commands reject whenever their matching preview is blocked.
+
+## ADR-019: Results are derived from authoritative state
+
+**Decision:** Build the P5 causal report from wave-history fields and current keep state. Store each wave's principal pressure as structured history and derive successes, failures, final condition, and one replay experiment without parsing event-log prose.
+
+**Reason:** The final screen should teach why a defense worked or failed while remaining deterministic, testable, and independent from wording in the event feed.
+
+**Trade-off:** The first report uses compact rule-based observations rather than authored narrative variants. Richer prose can be added later as data, but it must continue to resolve from stable state and identifiers.
+
+## ADR-020: Compare commander lenses over one immutable layout
+
+**Decision:** Derive a shared layout summary and show Castellan and Warden interpretations over the same placed pieces. Comparison is read-only and does not switch the active commander or simulate alternate outcomes.
+
+**Reason:** Commander differentiation is easier to understand when the player can see how one fort creates different opportunities and risks under each doctrine.
+
+**Trade-off:** The comparison reports spatial evidence rather than a numeric power score. It deliberately avoids promising a winner before the authored wave actually tests the layout.

@@ -115,6 +115,13 @@ const DOCTRINE_QUESTIONS: Dictionary = {
 	"area_pressure": "Can the keep preserve recovery when one impact reaches several rooms?"
 }
 
+const DOCTRINE_PRESSURES: Dictionary = {
+	"gate_assault": "Gate concentration",
+	"distributed_sabotage": "Workshop and Supply Room support chain",
+	"feint_and_flank": "North Tower and upper response lane",
+	"area_pressure": "Inner Yard and adjacent support rooms"
+}
+
 const ASSIGNMENT_RULES: Dictionary = {
 	"pike_squad": {"room": "gate", "effect": "Gate Road hold bonus +2"},
 	"repair_station": {"room": "workshop", "effect": "repair amount +4 and Workshop priority"},
@@ -476,50 +483,134 @@ func remove_piece(instance_id: String) -> Dictionary:
 	pieces.erase(instance_id)
 	return {"ok": true, "message": "Removed defensive piece; materials are not refunded during an active run."}
 
-func assign_piece_to_room(instance_id: String, room_id: String) -> Dictionary:
+func recovery_action_preview(action_id: String, instance_id: String = "", room_id: String = "") -> Dictionary:
+	var preview: Dictionary = {
+		"action_id": action_id,
+		"ok": false,
+		"reason": "unknown recovery action",
+		"target_id": "",
+		"target_name": "Select a target",
+		"material_cost": 0,
+		"action_cost": 1,
+		"benefit": "",
+		"tradeoff": "Consumes one of the two recovery actions."
+	}
+	if action_id == "repair_room":
+		preview.material_cost = 8
+		preview.target_id = room_id
+		preview.target_name = String(ROOMS.get(room_id, {}).get("name", "Select a room"))
+		preview.benefit = "Restore up to 30 condition to the selected keep function."
+		preview.tradeoff = "Spend 8 materials and one recovery action instead of changing an assignment."
+	elif action_id == "repair_piece":
+		preview.material_cost = 6
+		preview.target_id = instance_id
+		var repair_piece_id: String = String(pieces.get(instance_id, {}).get("piece_id", ""))
+		preview.target_name = String(PIECES.get(repair_piece_id, {}).get("name", "Select a placed piece"))
+		preview.benefit = "Restore 30% of the selected defender's maximum health."
+		preview.tradeoff = "Spend 6 materials and one recovery action instead of restoring a room."
+	elif action_id == "assign_piece":
+		preview.target_id = instance_id
+		var assign_piece_id: String = String(pieces.get(instance_id, {}).get("piece_id", ""))
+		var assign_piece_name: String = String(PIECES.get(assign_piece_id, {}).get("name", "Select a placed piece"))
+		var assign_room_name: String = String(ROOMS.get(room_id, {}).get("name", "Select a room"))
+		preview.target_name = "%s -> %s" % [assign_piece_name, assign_room_name]
+		preview.benefit = String(ASSIGNMENT_RULES.get(assign_piece_id, {}).get("effect", "Activate the piece's specialist room behavior."))
+		preview.tradeoff = "Spend one recovery action and commit this piece to one room."
+	elif action_id == "clear_assignment":
+		preview.target_id = instance_id
+		var clear_piece_id: String = String(pieces.get(instance_id, {}).get("piece_id", ""))
+		preview.target_name = String(PIECES.get(clear_piece_id, {}).get("name", "Select an assigned piece"))
+		preview.benefit = "Free the selected piece for a different specialist assignment later."
+		preview.tradeoff = "Spend one recovery action and lose the current room benefit."
+	else:
+		return preview
 	if not repair_interval_active:
-		return {"ok": false, "reason": "room assignments are made during the repair interval"}
+		preview.reason = "no recovery interval is open"
+		return preview
 	if repair_actions_remaining <= 0:
-		return {"ok": false, "reason": "no repair actions remain"}
-	if not pieces.has(instance_id):
-		return {"ok": false, "reason": "unknown defensive piece"}
-	if not rooms.has(room_id):
-		return {"ok": false, "reason": "unknown keep room"}
+		preview.reason = "no recovery actions remain"
+		return preview
+	match action_id:
+		"repair_room":
+			if not rooms.has(room_id):
+				preview.reason = "select a keep room"
+			elif materials < 8:
+				preview.reason = "not enough materials"
+			elif room_condition(room_id) >= 100:
+				preview.reason = "room is already stable"
+			else:
+				preview.ok = true
+				preview.reason = ""
+		"repair_piece":
+			if not pieces.has(instance_id):
+				preview.reason = "select a placed defensive piece"
+			elif float(pieces[instance_id].get("condition", 0.0)) >= 1.0:
+				preview.reason = "piece is already stable"
+			elif materials < 6:
+				preview.reason = "not enough materials"
+			else:
+				preview.ok = true
+				preview.reason = ""
+		"assign_piece":
+			if not pieces.has(instance_id):
+				preview.reason = "select a placed defensive piece"
+			elif not rooms.has(room_id):
+				preview.reason = "select a keep room"
+			else:
+				var piece_id: String = String(pieces[instance_id].get("piece_id", ""))
+				if not ASSIGNMENT_RULES.has(piece_id):
+					preview.reason = "%s has no room assignment behavior" % PIECES[piece_id].name
+				else:
+					var rule: Dictionary = ASSIGNMENT_RULES[piece_id]
+					if String(rule.get("room", "")) != room_id:
+						preview.reason = "%s can only be assigned to %s" % [PIECES[piece_id].name, ROOMS[String(rule.get("room", ""))].name]
+					elif String(pieces[instance_id].get("floor", "ground")) != String(ROOMS[room_id].get("floor", "ground")):
+						preview.reason = "piece and assigned room must share a floor"
+					elif not _piece_is_adjacent_to_room(pieces[instance_id], room_id):
+						preview.reason = "piece must be inside or adjacent to its assigned room"
+					elif assigned_rooms.has(room_id) and String(assigned_rooms[room_id]) != instance_id:
+						preview.reason = "%s already has an assigned piece" % ROOMS[room_id].name
+					else:
+						var existing_assignment: String = String(pieces[instance_id].get("assignment", ""))
+						if not existing_assignment.is_empty():
+							preview.reason = "piece is already assigned to %s; clear it during the interval first" % ROOMS[existing_assignment].name
+						else:
+							preview.ok = true
+							preview.reason = ""
+		"clear_assignment":
+			if not pieces.has(instance_id):
+				preview.reason = "select a placed defensive piece"
+			else:
+				var assignment: String = String(pieces[instance_id].get("assignment", ""))
+				if assignment.is_empty():
+					preview.reason = "piece has no room assignment"
+				else:
+					preview.target_name = "%s <- %s" % [String(PIECES[String(pieces[instance_id].get("piece_id", ""))].name), String(ROOMS[assignment].name)]
+					preview.ok = true
+					preview.reason = ""
+	return preview
+
+func assign_piece_to_room(instance_id: String, room_id: String) -> Dictionary:
+	var preview: Dictionary = recovery_action_preview("assign_piece", instance_id, room_id)
+	if not bool(preview.get("ok", false)):
+		return {"ok": false, "reason": String(preview.get("reason", "assignment is unavailable")), "state_changes": []}
 	var piece_id: String = String(pieces[instance_id].get("piece_id", ""))
-	if not ASSIGNMENT_RULES.has(piece_id):
-		return {"ok": false, "reason": "%s has no room assignment behavior" % PIECES[piece_id].name}
 	var rule: Dictionary = ASSIGNMENT_RULES[piece_id]
-	if String(rule.get("room", "")) != room_id:
-		return {"ok": false, "reason": "%s can only be assigned to %s" % [PIECES[piece_id].name, ROOMS[String(rule.get("room", ""))].name]}
-	if String(pieces[instance_id].get("floor", "ground")) != String(ROOMS[room_id].get("floor", "ground")):
-		return {"ok": false, "reason": "piece and assigned room must share a floor"}
-	if not _piece_is_adjacent_to_room(pieces[instance_id], room_id):
-		return {"ok": false, "reason": "piece must be inside or adjacent to its assigned room"}
-	if assigned_rooms.has(room_id) and String(assigned_rooms[room_id]) != instance_id:
-		return {"ok": false, "reason": "%s already has an assigned piece" % ROOMS[room_id].name}
-	var existing_assignment: String = String(pieces[instance_id].get("assignment", ""))
-	if not existing_assignment.is_empty():
-		return {"ok": false, "reason": "piece is already assigned to %s; clear it during the interval first" % ROOMS[existing_assignment].name}
 	assigned_rooms[room_id] = instance_id
 	pieces[instance_id].assignment = room_id
 	repair_actions_remaining -= 1
 	_log("Assigned %s to %s: %s." % [PIECES[piece_id].name, ROOMS[room_id].name, rule.effect])
-	return {"ok": true, "message": "Assigned %s to %s: %s." % [PIECES[piece_id].name, ROOMS[room_id].name, rule.effect], "actions_remaining": repair_actions_remaining}
+	return {"ok": true, "message": "Assigned %s to %s: %s." % [PIECES[piece_id].name, ROOMS[room_id].name, rule.effect], "actions_remaining": repair_actions_remaining, "state_changes": [{"op": "assign_piece", "piece": instance_id, "room": room_id}]}
 
 func clear_piece_assignment(instance_id: String) -> Dictionary:
-	if not repair_interval_active:
-		return {"ok": false, "reason": "assignment changes are made during the repair interval"}
-	if repair_actions_remaining <= 0:
-		return {"ok": false, "reason": "no repair actions remain"}
-	if not pieces.has(instance_id):
-		return {"ok": false, "reason": "unknown defensive piece"}
+	var preview: Dictionary = recovery_action_preview("clear_assignment", instance_id)
+	if not bool(preview.get("ok", false)):
+		return {"ok": false, "reason": String(preview.get("reason", "assignment clearing is unavailable")), "state_changes": []}
 	var assignment: String = String(pieces[instance_id].get("assignment", ""))
-	if assignment.is_empty():
-		return {"ok": false, "reason": "piece has no room assignment"}
 	assigned_rooms.erase(assignment)
 	pieces[instance_id].assignment = ""
 	repair_actions_remaining -= 1
-	return {"ok": true, "message": "Cleared %s from %s." % [PIECES[String(pieces[instance_id].get("piece_id", ""))].name, ROOMS[assignment].name], "actions_remaining": repair_actions_remaining}
+	return {"ok": true, "message": "Cleared %s from %s." % [PIECES[String(pieces[instance_id].get("piece_id", ""))].name, ROOMS[assignment].name], "actions_remaining": repair_actions_remaining, "state_changes": [{"op": "clear_assignment", "piece": instance_id, "room": assignment}]}
 
 func room_condition(room_id: String) -> int:
 	if not rooms.has(room_id):
@@ -564,9 +655,7 @@ func _castellan_adjacent(instance: Dictionary, room_id: String) -> bool:
 				return true
 	return false
 
-func _warden_open_lane(instance: Dictionary) -> bool:
-	if commander_id != "warden":
-		return false
+func _piece_has_open_lane(instance: Dictionary) -> bool:
 	var floor_name: String = String(instance.get("floor", "ground"))
 	var origin: Vector2i = instance.get("origin", Vector2i.ZERO)
 	var piece_id: String = String(instance.get("piece_id", ""))
@@ -578,6 +667,80 @@ func _warden_open_lane(instance: Dictionary) -> bool:
 		if cell.x >= 0 and cell.y >= 0 and cell.x < GRID_SIZE.x and cell.y < GRID_SIZE.y and piece_at_cell(floor_name, cell).is_empty():
 			return true
 	return false
+
+func _warden_open_lane(instance: Dictionary) -> bool:
+	return commander_id == "warden" and _piece_has_open_lane(instance)
+
+func layout_summary() -> Dictionary:
+	var counts: Dictionary = {"ground": 0, "upper": 0, "wall": 0, "courtyard": 0, "keep": 0}
+	var role_counts: Dictionary = {}
+	var open_lane_count: int = 0
+	var room_edge_count: int = 0
+	var support_piece_count: int = 0
+	var signal_piece_count: int = 0
+	var assigned_specialist_count: int = 0
+	for instance in pieces.values():
+		var piece_id: String = String(instance.get("piece_id", ""))
+		if not PIECES.has(piece_id):
+			continue
+		var floor_name: String = String(instance.get("floor", "ground"))
+		counts[floor_name] = int(counts.get(floor_name, 0)) + 1
+		var zone: String = String(instance.get("placement_zone", placement_zone(instance.get("origin", Vector2i.ZERO), floor_name, PIECES[piece_id].size)))
+		counts[zone] = int(counts.get(zone, 0)) + 1
+		var role: String = String(PIECES[piece_id].get("combat_style", "support"))
+		role_counts[role] = int(role_counts.get(role, 0)) + 1
+		if role == "support":
+			support_piece_count += 1
+		if piece_id == "scout_post" or piece_id == "signal_beacon":
+			signal_piece_count += 1
+		if not String(instance.get("assignment", "")).is_empty():
+			assigned_specialist_count += 1
+		if _piece_has_open_lane(instance):
+			open_lane_count += 1
+		for room_id in ROOMS.keys():
+			if _piece_is_adjacent_to_room(instance, String(room_id)):
+				room_edge_count += 1
+				break
+	var warnings: Array[String] = []
+	if int(counts.ground) == 0:
+		warnings.append("No ground-floor defender covers the Gate or courtyard.")
+	if int(counts.upper) == 0:
+		warnings.append("No upper-floor piece covers climber or signal pressure.")
+	if support_piece_count == 0:
+		warnings.append("No support piece protects recovery or information.")
+	if not pieces.is_empty() and open_lane_count == 0:
+		warnings.append("No placed piece has an open adjacent response cell.")
+	var role_ids: Array = role_counts.keys()
+	role_ids.sort()
+	for role_id in role_ids:
+		var role_count: int = int(role_counts[role_id])
+		if role_count > 1:
+			warnings.append("%d %s pieces overlap in role; confirm they answer different routes." % [role_count, String(role_id)])
+	if warnings.is_empty():
+		warnings.append("No immediate coverage warning; the forecast still determines whether the layout fits.")
+	var total: int = pieces.size()
+	var castellan_summary: String = "%d/%d pieces reinforce a room edge; %d specialist assignment(s) are active." % [room_edge_count, total, assigned_specialist_count]
+	var castellan_risk: String = "Disconnected pieces receive less value from compact defense."
+	if total > 0 and room_edge_count == total:
+		castellan_risk = "The layout is compact; verify that concentration does not abandon an upper route."
+	var warden_summary: String = "%d/%d pieces retain an open response cell; %d signal piece(s) cover %d floor(s)." % [open_lane_count, total, signal_piece_count, (1 if int(counts.ground) > 0 else 0) + (1 if int(counts.upper) > 0 else 0)]
+	var warden_risk: String = "Blocked lanes or single-floor coverage reduce mobile response."
+	if total > 0 and open_lane_count == total and int(counts.ground) > 0 and int(counts.upper) > 0:
+		warden_risk = "Movement is preserved; verify that the lighter formation can absorb direct pressure."
+	return {
+		"counts": counts,
+		"open_lane_count": open_lane_count,
+		"room_edge_count": room_edge_count,
+		"support_piece_count": support_piece_count,
+		"signal_piece_count": signal_piece_count,
+		"assigned_specialist_count": assigned_specialist_count,
+		"duplicate_role_warnings": warnings,
+		"active_commander": commander_id,
+		"commander_comparison": {
+			"castellan": {"name": String(COMMANDERS.castellan.name), "summary": castellan_summary, "risk": castellan_risk},
+			"warden": {"name": String(COMMANDERS.warden.name), "summary": warden_summary, "risk": warden_risk}
+		}
+	}
 
 func _warden_signal_bonus() -> bool:
 	return commander_id == "warden" and (_has_unit("scout_post") or _has_unit("signal_beacon"))
@@ -857,6 +1020,7 @@ func _append_wave_history() -> void:
 	wave_history.append({
 		"wave": wave_index,
 		"doctrine": enemy_doctrine,
+		"principal_pressure": String(DOCTRINE_PRESSURES.get(enemy_doctrine, "Unknown pressure")),
 		"outcome": last_outcome,
 		"breach_level": breach_level,
 		"morale_after": morale,
@@ -1000,40 +1164,26 @@ func use_commander_ability() -> Dictionary:
 	return {"ok": false, "reason": "unknown active commander"}
 
 func repair_piece(instance_id: String) -> Dictionary:
-	if not repair_interval_active:
-		return {"ok": false, "reason": "piece repairs are made during the Greywatch repair interval"}
-	if repair_actions_remaining <= 0:
-		return {"ok": false, "reason": "no repair actions remain"}
-	if not pieces.has(instance_id):
-		return {"ok": false, "reason": "unknown defensive piece"}
-	if float(pieces[instance_id].get("condition", 0.0)) >= 1.0:
-		return {"ok": false, "reason": "piece is already stable"}
-	if materials < 6:
-		return {"ok": false, "reason": "not enough materials"}
+	var preview: Dictionary = recovery_action_preview("repair_piece", instance_id)
+	if not bool(preview.get("ok", false)):
+		return {"ok": false, "reason": String(preview.get("reason", "piece repair is unavailable")), "state_changes": []}
 	materials -= 6
 	var max_health: int = int(pieces[instance_id].get("max_health", PIECES[String(pieces[instance_id].get("piece_id", ""))].get("max_health", 10)))
 	_set_piece_health(instance_id, int(pieces[instance_id].get("health", max_health)) + maxi(1, int(round(float(max_health) * 0.30))))
 	combat_metrics["repairs"] = int(combat_metrics.get("repairs", 0)) + 30
 	repair_actions_remaining -= 1
-	return {"ok": true, "health": pieces[instance_id].health, "max_health": max_health, "condition": pieces[instance_id].condition, "actions_remaining": repair_actions_remaining, "message": "Repair restored the named piece without erasing its battle history."}
+	return {"ok": true, "health": pieces[instance_id].health, "max_health": max_health, "condition": pieces[instance_id].condition, "actions_remaining": repair_actions_remaining, "message": "Repair restored the named piece without erasing its battle history.", "state_changes": [{"op": "repair_piece", "piece": instance_id, "health": pieces[instance_id].health}]}
 
 func repair_room(room_id: String) -> Dictionary:
-	if not repair_interval_active:
-		return {"ok": false, "reason": "room repairs are made during the Greywatch repair interval"}
-	if repair_actions_remaining <= 0:
-		return {"ok": false, "reason": "no repair actions remain"}
-	if not rooms.has(room_id):
-		return {"ok": false, "reason": "unknown keep room"}
-	if materials < 8:
-		return {"ok": false, "reason": "not enough materials"}
-	if room_condition(room_id) >= 100:
-		return {"ok": false, "reason": "room is already stable"}
+	var preview: Dictionary = recovery_action_preview("repair_room", "", room_id)
+	if not bool(preview.get("ok", false)):
+		return {"ok": false, "reason": String(preview.get("reason", "room repair is unavailable")), "state_changes": []}
 	materials -= 8
 	rooms[room_id].condition = mini(100, room_condition(room_id) + 30)
 	_update_room_state(room_id)
 	combat_metrics["repairs"] = int(combat_metrics.get("repairs", 0)) + 30
 	repair_actions_remaining -= 1
-	return {"ok": true, "actions_remaining": repair_actions_remaining, "message": "Repaired %s to %s." % [ROOMS[room_id].name, rooms[room_id].state]}
+	return {"ok": true, "actions_remaining": repair_actions_remaining, "message": "Repaired %s to %s." % [ROOMS[room_id].name, rooms[room_id].state], "state_changes": [{"op": "repair_room", "room": room_id, "condition": room_condition(room_id), "state": room_state(room_id)}]}
 
 func recovery_advice() -> Dictionary:
 	if not repair_interval_active:
@@ -1068,6 +1218,99 @@ func scenario_scorecard() -> Dictionary:
 		total_piece_damage += int(row.get("piece_damage", 0))
 		total_recovery_actions += int(row.get("recovery_actions_used", 0))
 	return {"scenario_id": scenario_id, "scenario_name": String(SCENARIOS.get(scenario_id, {}).get("name", scenario_id)), "completed_waves": wave_history.size(), "wave_count": authored_wave_count(), "outcomes": outcomes, "total_defeated": total_defeated, "total_room_damage": total_room_damage, "total_piece_damage": total_piece_damage, "recovery_actions_used": total_recovery_actions, "final_outcome": last_outcome, "replay_key": "%s/%s/%d" % [scenario_id, commander_id, seed]}
+
+func scenario_report() -> Dictionary:
+	var scorecard: Dictionary = scenario_scorecard()
+	var wave_rows: Array[Dictionary] = []
+	var held_waves: int = 0
+	var breached_waves: int = 0
+	for history_row in wave_history:
+		var doctrine: String = String(history_row.get("doctrine", ""))
+		var outcome: String = String(history_row.get("outcome", ""))
+		if outcome == "held":
+			held_waves += 1
+		elif outcome == "partial_breach" or outcome == "collapse":
+			breached_waves += 1
+		wave_rows.append({
+			"wave": int(history_row.get("wave", wave_rows.size() + 1)),
+			"doctrine": doctrine,
+			"principal_pressure": String(history_row.get("principal_pressure", DOCTRINE_PRESSURES.get(doctrine, "Unknown pressure"))),
+			"outcome": outcome,
+			"defeated_enemies": int(history_row.get("defeated_enemies", 0)),
+			"room_damage": int(history_row.get("room_damage", 0)),
+			"piece_damage": int(history_row.get("piece_damage", 0)),
+			"recovery_actions_used": int(history_row.get("recovery_actions_used", 0))
+		})
+	var surviving_pieces: int = 0
+	var disabled_pieces: int = 0
+	for piece in pieces.values():
+		if bool(piece.get("disabled", false)) or int(piece.get("health", 0)) <= 0:
+			disabled_pieces += 1
+		else:
+			surviving_pieces += 1
+	var damaged_rooms: Array[Dictionary] = []
+	for room_id in rooms.keys():
+		var condition: int = room_condition(String(room_id))
+		if condition < 100:
+			damaged_rooms.append({"id": String(room_id), "condition": condition})
+	for outer in range(damaged_rooms.size()):
+		for inner in range(outer + 1, damaged_rooms.size()):
+			var left: Dictionary = damaged_rooms[outer]
+			var right: Dictionary = damaged_rooms[inner]
+			if int(right.condition) < int(left.condition) or (int(right.condition) == int(left.condition) and String(right.id) < String(left.id)):
+				damaged_rooms[outer] = right
+				damaged_rooms[inner] = left
+	var what_worked: Array[String] = []
+	if held_waves > 0:
+		what_worked.append("%d wave%s held without a room breach." % [held_waves, "" if held_waves == 1 else "s"])
+	if int(scorecard.get("total_defeated", 0)) > 0:
+		what_worked.append("Defenders stopped %d attacker%s." % [int(scorecard.total_defeated), "" if int(scorecard.total_defeated) == 1 else "s"])
+	if int(scorecard.get("recovery_actions_used", 0)) > 0:
+		what_worked.append("Recovery committed %d action%s to the next defense." % [int(scorecard.recovery_actions_used), "" if int(scorecard.recovery_actions_used) == 1 else "s"])
+	if what_worked.is_empty():
+		what_worked.append("The run produced a deterministic record that can be replayed with the same command sequence.")
+	var what_failed: Array[String] = []
+	if last_outcome == "collapse":
+		what_failed.append("The final state collapsed because critical functions or morale reached the failure threshold.")
+	elif breached_waves > 0:
+		what_failed.append("%d wave%s breached at least one keep function." % [breached_waves, "" if breached_waves == 1 else "s"])
+	if not damaged_rooms.is_empty():
+		var weakest: Dictionary = damaged_rooms[0]
+		what_failed.append("%s finished at %d%% condition." % [String(ROOMS[String(weakest.id)].name), int(weakest.condition)])
+	if disabled_pieces > 0:
+		what_failed.append("%d defensive piece%s finished disabled." % [disabled_pieces, "" if disabled_pieces == 1 else "s"])
+	if what_failed.is_empty():
+		what_failed.append("No structural failure was recorded in the resolved waves.")
+	var suggested_experiment: String = "Replay with The Warden and preserve an open response lane."
+	if last_outcome == "collapse":
+		suggested_experiment = "Replay the same seed and preserve one recovery action for the weakest critical function."
+	elif room_condition("gate") < 100:
+		suggested_experiment = "Assign Pike Squad to Gate and compare the Gate Assault result."
+	elif room_condition("workshop") < 100 or room_condition("supply_room") < 100:
+		suggested_experiment = "Protect the support chain with Field Engineers or an assigned Repair Station."
+	elif room_condition("north_tower") < 100 or room_condition("old_chapel") < 100:
+		suggested_experiment = "Preserve an upper response lane and test Scout Post coverage."
+	elif commander_id == "warden":
+		suggested_experiment = "Replay with The Castellan and compare a compact adjacent layout."
+	return {
+		"scenario_id": scenario_id,
+		"scenario_name": String(scorecard.get("scenario_name", scenario_id)),
+		"commander_id": commander_id,
+		"commander_name": String(COMMANDERS[commander_id].name),
+		"status": "complete" if not has_next_wave() and not wave_active else "in_progress",
+		"wave_rows": wave_rows,
+		"final_state": {
+			"morale": morale,
+			"breach_level": breach_level,
+			"materials": materials,
+			"surviving_pieces": surviving_pieces,
+			"disabled_pieces": disabled_pieces
+		},
+		"what_worked": what_worked,
+		"what_failed": what_failed,
+		"suggested_experiment": suggested_experiment,
+		"replay_key": String(scorecard.get("replay_key", ""))
+	}
 
 func forecast() -> Dictionary:
 	var likely_target: String = "gate"
