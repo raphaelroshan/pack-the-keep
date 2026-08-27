@@ -356,7 +356,7 @@ func _test_p1_warden_and_rally() -> void:
 	var selected: Dictionary = keep.select_commander("warden")
 	_expect(bool(selected.get("ok", false)), "Warden should be selectable")
 	_expect(keep.materials == 52 and keep.morale == 7, "Warden should start with lower materials and higher morale")
-	_expect(String(PackKeepState.COMMANDERS.warden.ability) == "rally", "Warden should expose Rally as its active ability")
+	_expect(String(keep.commander_definition("warden").get("ability", "")) == "rally", "Warden should expose Rally as its active ability")
 	keep.open_pack("firekeepers")
 	keep.place_piece("fire_team", Vector2i(4, 3), "ground")
 	keep.start_wave("area_pressure")

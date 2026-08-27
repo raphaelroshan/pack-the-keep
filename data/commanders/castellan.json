@@ -1,0 +1,17 @@
+{
+  "id": "castellan",
+  "content_version": 1,
+  "status": "active",
+  "name": "The Castellan",
+  "short_role": "Build a compact defense whose rooms reinforce one another.",
+  "question": "Which functions should become one connected defensive core?",
+  "passive": "Layered Masonry: adjacent pieces gain +1 defense and repair reach.",
+  "ability": "lockdown",
+  "ability_name": "Lockdown",
+  "ability_text": "For the next battle step, halve room damage and restore a little condition to every placed piece.",
+  "limitation": "Dense layouts are efficient but slow to reposition.",
+  "starting_materials": 60,
+  "starting_morale": 6,
+  "preferred_pattern": "compact_adjacency",
+  "favored_pack_families": ["frontline", "support"]
+}

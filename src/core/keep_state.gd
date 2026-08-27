@@ -24,29 +24,6 @@ const ROOMS: Dictionary = {
 	"old_chapel": {"name": "Old Chapel", "floor": "upper", "origin": Vector2i(8, 5), "size": Vector2i(3, 2), "critical": false, "role": "refuge and evacuation"}
 }
 
-const COMMANDERS: Dictionary = {
-	"castellan": {
-		"name": "The Castellan",
-		"passive": "Layered Masonry: adjacent pieces gain +1 defense and repair reach.",
-		"ability": "lockdown",
-		"ability_name": "Lockdown",
-		"ability_text": "For the next battle step, halve room damage and restore a little condition to every placed piece.",
-		"limitation": "Dense layouts are efficient but slow to reposition.",
-		"starting_materials": 60,
-		"starting_morale": 6
-	},
-	"warden": {
-		"name": "The Warden",
-		"passive": "Open Lanes: pieces with an empty adjacent cell gain +1 response damage; signals reach farther.",
-		"ability": "rally",
-		"ability_name": "Rally",
-		"ability_text": "Restore 1 morale and coordinate the next battle step: non-specialist defenders gain +1 response and the first room hit is reduced.",
-		"limitation": "Spread Thin: starts with fewer materials and loses value when every lane is packed.",
-		"starting_materials": 52,
-		"starting_morale": 7
-	}
-}
-
 const PIECES: Dictionary = {
 	"pike_squad": {"name": "Pike Squad", "size": Vector2i(2, 1), "cost": 8, "role": "holds Gate Road", "skill": "Brace the Gate: melee contact control gains +2 against Gate Road Raiders when assigned to Gate.", "combat_style": "melee", "attack": 4, "defense": 2, "max_health": 14, "max_ammo": 0, "attack_interval": 1, "range": 1, "availability": "starter", "targets": ["raider"]},
 	"repair_station": {"name": "Repair Station", "size": Vector2i(2, 1), "cost": 10, "role": "restores nearby structures", "skill": "Field Repair: restores the lowest-condition room after defender attacks.", "combat_style": "support", "attack": 0, "defense": 1, "max_health": 10, "max_ammo": 0, "attack_interval": 1, "range": 1, "availability": "field_engineers", "targets": ["sapper", "area_pressure"]},
@@ -159,12 +136,14 @@ var wave_history: Array[Dictionary] = []
 var _last_attackers: Array[String] = []
 var _last_attack_damage: Dictionary = {}
 var content_catalog: RefCounted
+var _commander_definitions: Dictionary = {}
 var _pack_definitions: Dictionary = {}
 var content_catalog_errors: Array[String] = []
 
 func _init(keep_seed: int = 3307) -> void:
 	content_catalog = ContentCatalog.new()
 	var catalog_result: Dictionary = content_catalog.load_default(PIECES.keys())
+	_commander_definitions = catalog_result.get("commanders", {}).duplicate(true)
 	_pack_definitions = catalog_result.get("packs", {}).duplicate(true)
 	for error in catalog_result.get("errors", []):
 		content_catalog_errors.append(String(error))
@@ -180,9 +159,9 @@ func _reset_rooms() -> void:
 func reset_run(new_seed: int = 3307) -> void:
 	seed = new_seed
 	commander_id = ACTIVE_COMMANDER
-	materials = int(COMMANDERS[ACTIVE_COMMANDER].starting_materials)
+	materials = int(_commander_definitions[ACTIVE_COMMANDER].starting_materials)
 	command_points = 3
-	morale = int(COMMANDERS[ACTIVE_COMMANDER].starting_morale)
+	morale = int(_commander_definitions[ACTIVE_COMMANDER].starting_morale)
 	scenario_id = "gatehouse_lock"
 	scenario_active = false
 	scenario_variation_id = "standard_bell"
@@ -255,15 +234,15 @@ func _battle_log(message: String) -> void:
 	_log(message)
 
 func select_commander(id: String) -> Dictionary:
-	if not COMMANDERS.has(id):
+	if not _commander_definitions.has(id):
 		return {"ok": false, "reason": "unknown commander"}
 	if wave_active or repair_interval_active:
 		return {"ok": false, "reason": "commander cannot change during an invasion or repair interval"}
 	commander_id = id
-	materials = int(COMMANDERS[id].starting_materials)
-	morale = int(COMMANDERS[id].starting_morale)
+	materials = int(_commander_definitions[id].starting_materials)
+	morale = int(_commander_definitions[id].starting_morale)
 	command_points = 3
-	return {"ok": true, "message": "%s takes command. %s Limitation: %s" % [COMMANDERS[id].name, COMMANDERS[id].passive, COMMANDERS[id].limitation], "ability_name": COMMANDERS[id].ability_name, "ability_text": COMMANDERS[id].ability_text}
+	return {"ok": true, "message": "%s takes command. %s Limitation: %s" % [_commander_definitions[id].name, _commander_definitions[id].passive, _commander_definitions[id].limitation], "ability_name": _commander_definitions[id].ability_name, "ability_text": _commander_definitions[id].ability_text}
 
 func _variation_for_scenario(id: String) -> Dictionary:
 	var options: Array = SCENARIO_VARIATIONS.get(id, [])
@@ -290,8 +269,8 @@ func select_scenario(id: String) -> Dictionary:
 	variation_target_room = String(variation.get("target_room", ""))
 	variation_materials = int(variation.get("materials", 0))
 	variation_morale = int(variation.get("morale", 0))
-	materials = int(COMMANDERS[commander_id].starting_materials) + variation_materials
-	morale = clampi(int(COMMANDERS[commander_id].starting_morale) + variation_morale, 0, 10)
+	materials = int(_commander_definitions[commander_id].starting_materials) + variation_materials
+	morale = clampi(int(_commander_definitions[commander_id].starting_morale) + variation_morale, 0, 10)
 	_log("Scenario selected: %s / variation %s. %s" % [SCENARIOS[id].name, scenario_variation_id, SCENARIOS[id].lesson])
 	return {"ok": true, "message": "%s selected: %s Variation: %s." % [SCENARIOS[id].name, SCENARIOS[id].objective, scenario_variation_id], "scenario": scenario_preview(id)}
 
@@ -315,13 +294,21 @@ func has_next_wave() -> bool:
 func pack_ids() -> Array[String]:
 	return content_catalog.pack_ids()
 
+func commander_ids() -> Array[String]:
+	return content_catalog.commander_ids()
+
+func commander_definition(id: String) -> Dictionary:
+	if not _commander_definitions.has(id):
+		return {}
+	return _commander_definitions[id].duplicate(true)
+
 func pack_definition(pack_id: String) -> Dictionary:
 	if not _pack_definitions.has(pack_id):
 		return {}
 	return _pack_definitions[pack_id].duplicate(true)
 
 func content_catalog_status() -> Dictionary:
-	return {"ok": content_catalog_errors.is_empty(), "pack_count": _pack_definitions.size(), "errors": content_catalog_errors.duplicate()}
+	return {"ok": content_catalog_errors.is_empty(), "commander_count": _commander_definitions.size(), "pack_count": _pack_definitions.size(), "errors": content_catalog_errors.duplicate()}
 
 func pack_preview(pack_id: String) -> Dictionary:
 	if not _pack_definitions.has(pack_id):
@@ -745,8 +732,8 @@ func layout_summary() -> Dictionary:
 		"duplicate_role_warnings": warnings,
 		"active_commander": commander_id,
 		"commander_comparison": {
-			"castellan": {"name": String(COMMANDERS.castellan.name), "summary": castellan_summary, "risk": castellan_risk},
-			"warden": {"name": String(COMMANDERS.warden.name), "summary": warden_summary, "risk": warden_risk}
+			"castellan": {"name": String(_commander_definitions.castellan.name), "summary": castellan_summary, "risk": castellan_risk},
+			"warden": {"name": String(_commander_definitions.warden.name), "summary": warden_summary, "risk": warden_risk}
 		}
 	}
 
@@ -1304,7 +1291,7 @@ func scenario_report() -> Dictionary:
 		"scenario_id": scenario_id,
 		"scenario_name": String(scorecard.get("scenario_name", scenario_id)),
 		"commander_id": commander_id,
-		"commander_name": String(COMMANDERS[commander_id].name),
+		"commander_name": String(_commander_definitions[commander_id].name),
 		"status": "complete" if not has_next_wave() and not wave_active else "in_progress",
 		"wave_rows": wave_rows,
 		"final_state": {
@@ -1339,12 +1326,12 @@ func forecast() -> Dictionary:
 
 func summary() -> Dictionary:
 	return {
-		"commander": COMMANDERS[commander_id].name,
+		"commander": _commander_definitions[commander_id].name,
 		"commander_id": commander_id,
-		"commander_passive": String(COMMANDERS[commander_id].passive),
-		"commander_ability_name": String(COMMANDERS[commander_id].ability_name),
-		"commander_ability_text": String(COMMANDERS[commander_id].ability_text),
-		"commander_limitation": String(COMMANDERS[commander_id].limitation),
+		"commander_passive": String(_commander_definitions[commander_id].passive),
+		"commander_ability_name": String(_commander_definitions[commander_id].ability_name),
+		"commander_ability_text": String(_commander_definitions[commander_id].ability_text),
+		"commander_limitation": String(_commander_definitions[commander_id].limitation),
 		"scenario_id": scenario_id,
 		"scenario_active": scenario_active,
 		"scenario": scenario_preview(),
@@ -1454,7 +1441,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		return {"ok": false, "reason": "save enemies collection is malformed"}
 	seed = int(data.get("seed", seed))
 	commander_id = String(data.get("commander_id", ACTIVE_COMMANDER))
-	if not COMMANDERS.has(commander_id):
+	if not _commander_definitions.has(commander_id):
 		return {"ok": false, "reason": "save contains an unknown commander"}
 	scenario_id = String(data.get("scenario_id", scenario_id))
 	if not SCENARIOS.has(scenario_id):

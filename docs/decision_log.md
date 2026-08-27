@@ -167,3 +167,11 @@
 **Reason:** Pack content is the first bounded proof of the P6 data architecture. Separate files provide stable review boundaries and allow future content to be added without expanding the core simulation script.
 
 **Trade-off:** Startup now includes deterministic local file parsing and validation. Missing or malformed pack data is treated as a development error and leaves the catalog unavailable rather than silently substituting different gameplay.
+
+## ADR-022: Load commander definitions through the content catalog
+
+**Decision:** Store Castellan and Warden definitions in separate JSON files and expose them through the same state-owned catalog used for packs.
+
+**Reason:** Commander identity, starting resources, and ability descriptions are authored content. Externalizing them removes another hard-coded content family while preserving the simulation's command boundary.
+
+**Trade-off:** The core now depends on valid local commander data during initialization. Catalog and parity tests must block malformed definitions before release.
