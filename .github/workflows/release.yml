@@ -7,7 +7,7 @@ on:
       - 'v*'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   release-candidate:
@@ -52,3 +52,16 @@ jobs:
             artifacts/
           if-no-files-found: error
           retention-days: 90
+      - name: Publish private GitHub prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
+          gh release create "$GITHUB_REF_NAME" \
+            "build/${slug}.exe" \
+            "artifacts/release_manifest.json" \
+            "artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Pack the Keep ${GITHUB_REF_NAME} Internal" \
+            --prerelease \
+            --notes "Private internal pre-alpha Windows build. See docs/internal_test_release.md for the test checklist and deliberate production boundaries."

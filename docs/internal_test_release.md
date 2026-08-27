@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.6.0-initial-combat` — initial real-time auto-battle slice
+**Current build identity:** `0.6.1-initial-combat` — initial real-time auto-battle slice
 
 ## Purpose
 
