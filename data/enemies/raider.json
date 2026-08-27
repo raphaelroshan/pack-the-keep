@@ -1,0 +1,20 @@
+{
+  "id": "raider",
+  "content_version": 1,
+  "status": "active",
+  "name": "Raider",
+  "short_role": "Apply fast, readable pressure to the obvious entrance.",
+  "question": "Can the keep concentrate enough strength at the Gate?",
+  "health": 8,
+  "damage": 2,
+  "arrival_step": 2,
+  "route": "gate_road",
+  "target_rooms": ["gate"],
+  "doctrine": "gate_assault",
+  "counter": "pike_squad",
+  "telegraph": "Advances directly along Gate Road toward the declared entrance target.",
+  "counter_families": ["frontline", "fortification", "commander_intervention"],
+  "failure_mode": "The Gate takes repeated contact damage when the front line cannot concentrate.",
+  "report_phrase": "Gate pressure reached the shortest entrance.",
+  "presentation": {"icon": "res://assets/raider_icon.png", "marker_color_role": "gate_pressure", "radius_scale": 1.0}
+}

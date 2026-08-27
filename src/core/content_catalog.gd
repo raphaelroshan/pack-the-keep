@@ -23,6 +23,13 @@ const PIECE_PATHS: Array[String] = [
 	"res://data/pieces/signal_beacon.json"
 ]
 
+const ENEMY_PATHS: Array[String] = [
+	"res://data/enemies/raider.json",
+	"res://data/enemies/sapper.json",
+	"res://data/enemies/climber.json",
+	"res://data/enemies/siege_beast.json"
+]
+
 const REQUIRED_PACK_FIELDS: Array[String] = [
 	"id",
 	"content_version",
@@ -85,24 +92,49 @@ const REQUIRED_PIECE_FIELDS: Array[String] = [
 	"presentation"
 ]
 
+const REQUIRED_ENEMY_FIELDS: Array[String] = [
+	"id",
+	"content_version",
+	"status",
+	"name",
+	"short_role",
+	"question",
+	"health",
+	"damage",
+	"arrival_step",
+	"route",
+	"target_rooms",
+	"doctrine",
+	"counter",
+	"telegraph",
+	"counter_families",
+	"failure_mode",
+	"report_phrase",
+	"presentation"
+]
+
 var _packs: Dictionary = {}
 var _commanders: Dictionary = {}
 var _pieces: Dictionary = {}
+var _enemies: Dictionary = {}
 var errors: Array[String] = []
 
-func load_default(known_room_ids: Array = [], known_enemy_ids: Array = []) -> Dictionary:
+func load_default(known_room_ids: Array = [], known_doctrine_ids: Array = []) -> Dictionary:
 	_packs.clear()
 	_commanders.clear()
 	_pieces.clear()
+	_enemies.clear()
 	errors.clear()
 	for path in PIECE_PATHS:
-		_load_piece(path, known_room_ids, known_enemy_ids)
+		_load_piece(path, known_room_ids, _known_piece_targets(known_doctrine_ids))
 	for path in PACK_PATHS:
 		_load_pack(path, piece_ids())
 	for path in COMMANDER_PATHS:
 		_load_commander(path)
+	for path in ENEMY_PATHS:
+		_load_enemy(path, known_room_ids, known_doctrine_ids)
 	_validate_piece_availability()
-	return {"ok": errors.is_empty(), "commanders": _commanders.duplicate(true), "pieces": _pieces.duplicate(true), "packs": _packs.duplicate(true), "errors": errors.duplicate()}
+	return {"ok": errors.is_empty(), "commanders": _commanders.duplicate(true), "pieces": _pieces.duplicate(true), "packs": _packs.duplicate(true), "enemies": _enemies.duplicate(true), "errors": errors.duplicate()}
 
 func commander_ids() -> Array[String]:
 	var result: Array[String] = []
@@ -125,6 +157,17 @@ func piece_ids() -> Array[String]:
 
 func piece_definition(piece_id: String) -> Dictionary:
 	return _pieces.get(piece_id, {}).duplicate(true)
+
+func enemy_ids() -> Array[String]:
+	var result: Array[String] = []
+	for path in ENEMY_PATHS:
+		var expected_id: String = path.get_file().get_basename()
+		if _enemies.has(expected_id):
+			result.append(expected_id)
+	return result
+
+func enemy_definition(enemy_id: String) -> Dictionary:
+	return _enemies.get(enemy_id, {}).duplicate(true)
 
 func pack_ids() -> Array[String]:
 	var result: Array[String] = []
@@ -224,6 +267,56 @@ func validate_piece_definition(piece: Dictionary, expected_id: String, known_roo
 			validation_errors.append("piece %s presentation marker color role must be non-empty text" % piece_id)
 	return validation_errors
 
+func validate_enemy_definition(enemy: Dictionary, expected_id: String, known_room_ids: Array, known_doctrine_ids: Array) -> Array[String]:
+	var validation_errors: Array[String] = []
+	for field in REQUIRED_ENEMY_FIELDS:
+		if not enemy.has(field):
+			validation_errors.append("%s is missing required field: %s" % [expected_id, field])
+	var enemy_id: String = String(enemy.get("id", ""))
+	if enemy_id != expected_id:
+		validation_errors.append("enemy id %s does not match filename %s" % [enemy_id, expected_id])
+	if not _is_snake_case_id(enemy_id):
+		validation_errors.append("enemy id %s must be snake_case" % enemy_id)
+	if String(enemy.get("status", "")) != "active":
+		validation_errors.append("enemy %s must have active status" % enemy_id)
+	_validate_integer_minimum(enemy, "content_version", enemy_id, "enemy", 1, validation_errors)
+	_validate_integer_minimum(enemy, "health", enemy_id, "enemy", 1, validation_errors)
+	_validate_integer_minimum(enemy, "damage", enemy_id, "enemy", 0, validation_errors)
+	_validate_integer_minimum(enemy, "arrival_step", enemy_id, "enemy", 1, validation_errors)
+	for field in ["name", "short_role", "question", "route", "doctrine", "counter", "telegraph", "failure_mode", "report_phrase"]:
+		if not enemy.get(field) is String or String(enemy.get(field, "")).strip_edges().is_empty():
+			validation_errors.append("enemy %s must have non-empty text for %s" % [enemy_id, field])
+	var target_rooms: Variant = enemy.get("target_rooms", [])
+	if not target_rooms is Array or target_rooms.is_empty():
+		validation_errors.append("enemy %s target_rooms must be a non-empty array" % enemy_id)
+	else:
+		for room_id in target_rooms:
+			if not room_id is String or not known_room_ids.has(String(room_id)):
+				validation_errors.append("enemy %s references unknown target room: %s" % [enemy_id, String(room_id)])
+	if not known_doctrine_ids.has(String(enemy.get("doctrine", ""))):
+		validation_errors.append("enemy %s references unknown doctrine: %s" % [enemy_id, String(enemy.get("doctrine", ""))])
+	if not piece_ids().has(String(enemy.get("counter", ""))):
+		validation_errors.append("enemy %s references unknown counter piece: %s" % [enemy_id, String(enemy.get("counter", ""))])
+	var counter_families: Variant = enemy.get("counter_families", [])
+	if not counter_families is Array or counter_families.size() < 3:
+		validation_errors.append("enemy %s must expose at least three counter families" % enemy_id)
+	else:
+		for family in counter_families:
+			if not family is String or String(family).strip_edges().is_empty():
+				validation_errors.append("enemy %s counter families must be non-empty strings" % enemy_id)
+	var presentation: Variant = enemy.get("presentation")
+	if not presentation is Dictionary:
+		validation_errors.append("enemy %s presentation must be an object" % enemy_id)
+	else:
+		if not presentation.get("icon") is String:
+			validation_errors.append("enemy %s presentation icon must be text" % enemy_id)
+		if String(presentation.get("marker_color_role", "")).strip_edges().is_empty():
+			validation_errors.append("enemy %s marker color role must be non-empty text" % enemy_id)
+		var radius_scale: Variant = presentation.get("radius_scale")
+		if (typeof(radius_scale) != TYPE_INT and typeof(radius_scale) != TYPE_FLOAT) or float(radius_scale) <= 0.0:
+			validation_errors.append("enemy %s radius scale must be positive" % enemy_id)
+	return validation_errors
+
 func validate_commander_definition(commander: Dictionary, expected_id: String) -> Array[String]:
 	var validation_errors: Array[String] = []
 	for field in REQUIRED_COMMANDER_FIELDS:
@@ -320,6 +413,28 @@ func _load_piece(path: String, known_room_ids: Array, known_enemy_ids: Array) ->
 	if validation_errors.is_empty():
 		_pieces[piece_id] = _normalize_piece(authored)
 
+func _load_enemy(path: String, known_room_ids: Array, known_doctrine_ids: Array) -> void:
+	if not FileAccess.file_exists(path):
+		errors.append("missing enemy file: %s" % path)
+		return
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		errors.append("could not open enemy file: %s" % path)
+		return
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		errors.append("enemy file must contain one JSON object: %s" % path)
+		return
+	var enemy: Dictionary = parsed
+	var enemy_id: String = String(enemy.get("id", ""))
+	var validation_errors: Array[String] = validate_enemy_definition(enemy, path.get_file().get_basename(), known_room_ids, known_doctrine_ids)
+	if _enemies.has(enemy_id):
+		validation_errors.append("duplicate enemy id: %s" % enemy_id)
+	for validation_error in validation_errors:
+		errors.append("%s: %s" % [path, validation_error])
+	if validation_errors.is_empty():
+		_enemies[enemy_id] = enemy.duplicate(true)
+
 func _load_pack(path: String, known_piece_ids: Array) -> void:
 	if not FileAccess.file_exists(path):
 		errors.append("missing pack file: %s" % path)
@@ -411,6 +526,14 @@ func _known_pack_families() -> Array[String]:
 		var family: String = String(_packs[pack_id].get("family", ""))
 		if not family.is_empty() and not result.has(family):
 			result.append(family)
+	return result
+
+func _known_piece_targets(known_doctrine_ids: Array) -> Array:
+	var result: Array = known_doctrine_ids.duplicate()
+	for path in ENEMY_PATHS:
+		var enemy_id: String = path.get_file().get_basename()
+		if not result.has(enemy_id):
+			result.append(enemy_id)
 	return result
 
 func _is_snake_case_id(value: String) -> bool:

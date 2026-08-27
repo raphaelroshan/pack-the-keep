@@ -32,10 +32,20 @@ PIECE_FIELDS = {
 PIECE_TEXT_FIELDS = {
     "name", "short_role", "role", "question", "category", "placement_question", "skill", "availability",
 }
+ENEMY_FIELDS = {
+    "id", "content_version", "status", "name", "short_role", "question", "health",
+    "damage", "arrival_step", "route", "target_rooms", "doctrine", "counter", "telegraph",
+    "counter_families", "failure_mode", "report_phrase", "presentation",
+}
+ENEMY_TEXT_FIELDS = {
+    "name", "short_role", "question", "route", "doctrine", "counter", "telegraph",
+    "failure_mode", "report_phrase",
+}
 SUPPORTED_FLOORS = {"ground", "upper"}
 SUPPORTED_ZONES = {"wall", "courtyard", "keep"}
 SUPPORTED_ATTACK_STYLES = {"melee", "ranged", "support", "fortification"}
-SUPPORTED_NON_ENEMY_TARGETS = {"all", "area_pressure"}
+SUPPORTED_DOCTRINES = {"gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure"}
+SUPPORTED_NON_ENEMY_TARGETS = {"all"} | SUPPORTED_DOCTRINES
 SNAKE_CASE = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
 
 
@@ -189,6 +199,70 @@ def validate_piece(
     return piece_id
 
 
+def validate_enemy(
+    path: Path,
+    enemy: dict[str, Any],
+    room_ids: set[str],
+    piece_ids: set[str],
+    manifest_enemies: dict[str, dict[str, Any]],
+    seen: set[str],
+    errors: list[str],
+) -> str | None:
+    for field in sorted(ENEMY_FIELDS - enemy.keys()):
+        errors.append(f"{path}: missing required field: {field}")
+    enemy_id = enemy.get("id")
+    if not isinstance(enemy_id, str) or not SNAKE_CASE.fullmatch(enemy_id):
+        errors.append(f"{path}: id must be non-empty snake_case")
+        return None
+    if enemy_id != path.stem:
+        errors.append(f"{path}: id {enemy_id} does not match filename")
+    if enemy_id in seen:
+        errors.append(f"duplicate runtime enemy id: {enemy_id}")
+    seen.add(enemy_id)
+    if enemy.get("status") != "active":
+        errors.append(f"{path}: runtime enemy status must be active")
+    if not is_integer(enemy.get("content_version")) or enemy["content_version"] < 1:
+        errors.append(f"{path}: content_version must be a positive integer")
+    if not is_integer(enemy.get("health")) or enemy["health"] < 1:
+        errors.append(f"{path}: health must be a positive integer")
+    if not is_integer(enemy.get("damage")) or enemy["damage"] < 0:
+        errors.append(f"{path}: damage must be a non-negative integer")
+    if not is_integer(enemy.get("arrival_step")) or enemy["arrival_step"] < 1:
+        errors.append(f"{path}: arrival_step must be a positive integer")
+    for field in sorted(ENEMY_TEXT_FIELDS):
+        value = enemy.get(field)
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f"{path}: {field} must be non-empty text")
+    target_rooms = validate_string_array(path, enemy.get("target_rooms"), "target_rooms", errors)
+    for room_id in target_rooms:
+        if room_id not in room_ids:
+            errors.append(f"{path}: unknown target room: {room_id}")
+    if enemy.get("doctrine") not in SUPPORTED_DOCTRINES:
+        errors.append(f"{path}: doctrine is unsupported")
+    if enemy.get("counter") not in piece_ids:
+        errors.append(f"{path}: counter references an unknown piece")
+    counter_families = validate_string_array(path, enemy.get("counter_families"), "counter_families", errors)
+    if len(counter_families) < 3:
+        errors.append(f"{path}: counter_families must contain at least three options")
+    presentation = enemy.get("presentation")
+    if not isinstance(presentation, dict):
+        errors.append(f"{path}: presentation must be an object")
+    else:
+        if not isinstance(presentation.get("icon"), str):
+            errors.append(f"{path}: presentation icon must be text")
+        if not isinstance(presentation.get("marker_color_role"), str) or not presentation["marker_color_role"]:
+            errors.append(f"{path}: presentation marker_color_role must be non-empty text")
+        radius_scale = presentation.get("radius_scale")
+        if not isinstance(radius_scale, (int, float)) or isinstance(radius_scale, bool) or radius_scale <= 0:
+            errors.append(f"{path}: presentation radius_scale must be positive")
+    manifest_enemy = manifest_enemies.get(enemy_id)
+    if not isinstance(manifest_enemy, dict):
+        errors.append(f"{path}: enemy is missing from content manifest")
+    elif enemy.get("name") != manifest_enemy.get("name"):
+        errors.append(f"{path}: name differs from content manifest")
+    return enemy_id
+
+
 def validate_pack(
     path: Path,
     pack: dict[str, Any],
@@ -330,6 +404,7 @@ def main() -> int:
     parser.add_argument("--packs", required=True)
     parser.add_argument("--commanders", required=True)
     parser.add_argument("--pieces", required=True)
+    parser.add_argument("--enemies", required=True)
     parser.add_argument("--manifest", required=True)
     args = parser.parse_args()
 
@@ -350,6 +425,10 @@ def main() -> int:
     }
     manifest_packs = {
         item.get("id"): item for item in manifest.get("packs", [])
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+    manifest_enemies = {
+        item.get("id"): item for item in manifest.get("enemies", [])
         if isinstance(item, dict) and isinstance(item.get("id"), str)
     }
     room_ids = {
@@ -388,6 +467,16 @@ def main() -> int:
             runtime_piece_availability[piece_id] = piece["availability"]
     for piece_id in sorted(set(manifest_pieces) - seen_pieces):
         errors.append(f"runtime piece file missing for manifest piece: {piece_id}")
+
+    seen_enemies: set[str] = set()
+    for path in json_files(Path(args.enemies), "enemy", errors):
+        enemy = load_json(path, errors)
+        if not isinstance(enemy, dict):
+            errors.append(f"{path}: root must be an object")
+            continue
+        validate_enemy(path, enemy, room_ids, seen_pieces, manifest_enemies, seen_enemies, errors)
+    for enemy_id in sorted(set(manifest_enemies) - seen_enemies):
+        errors.append(f"runtime enemy file missing for manifest enemy: {enemy_id}")
 
     seen_packs: set[str] = set()
     runtime_pack_families: dict[str, str] = {}
@@ -437,7 +526,8 @@ def main() -> int:
         return 1
     print(
         "runtime content catalog: PASS "
-        f"({len(seen_pieces)} pieces, {len(seen_packs)} packs, {len(seen_commanders)} commanders)"
+        f"({len(seen_pieces)} pieces, {len(seen_packs)} packs, "
+        f"{len(seen_commanders)} commanders, {len(seen_enemies)} enemies)"
     )
     return 0
 

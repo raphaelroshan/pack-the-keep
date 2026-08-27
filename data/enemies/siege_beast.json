@@ -1,0 +1,20 @@
+{
+  "id": "siege_beast",
+  "content_version": 1,
+  "status": "active",
+  "name": "Siege Beast",
+  "short_role": "Apply slow area pressure to several nearby structures.",
+  "question": "Can the keep preserve recovery after one broad impact?",
+  "health": 16,
+  "damage": 3,
+  "arrival_step": 3,
+  "route": "outer_approach",
+  "target_rooms": ["inner_yard", "outer_wall", "old_chapel", "workshop"],
+  "doctrine": "area_pressure",
+  "counter": "fire_team",
+  "telegraph": "Advances slowly with an enlarged impact-radius marker over adjacent rooms.",
+  "counter_families": ["control", "support", "commander_intervention"],
+  "failure_mode": "One impact strains several rooms and consumes the recovery reserve.",
+  "report_phrase": "Area pressure damaged the target and nearby rooms.",
+  "presentation": {"icon": "", "marker_color_role": "area_pressure", "radius_scale": 1.35}
+}
