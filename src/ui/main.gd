@@ -67,6 +67,8 @@ var last_log_size: int = 0
 var focused_enemy_index: int = -1
 var response_preview_label: Label
 var recovery_priority_label: Label
+var guidance_label: Label
+var result_explain_label: Label
 
 func _ready() -> void:
 	keep = PackKeepState.new(3307)
@@ -263,6 +265,11 @@ func _build_ui() -> void:
 	status_label.add_theme_font_size_override("font_size", 16)
 	status_label.add_theme_color_override("font_color", Color("#f2e5d1"))
 	left.add_child(status_label)
+	guidance_label = Label.new()
+	guidance_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	guidance_label.custom_minimum_size = Vector2(800, 64)
+	guidance_label.add_theme_color_override("font_color", Color("#f0dca8"))
+	left.add_child(guidance_label)
 
 	keep_canvas = KeepCanvas.new()
 	keep_canvas.custom_minimum_size = Vector2(810, 292)
@@ -289,6 +296,11 @@ func _build_ui() -> void:
 	metrics_label.custom_minimum_size = Vector2(800, 28)
 	metrics_label.add_theme_color_override("font_color", Color("#aab1b2"))
 	left.add_child(metrics_label)
+	result_explain_label = Label.new()
+	result_explain_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	result_explain_label.custom_minimum_size = Vector2(800, 72)
+	result_explain_label.add_theme_color_override("font_color", Color("#f0dca8"))
+	left.add_child(result_explain_label)
 	combat_explain_label = Label.new()
 	combat_explain_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	combat_explain_label.custom_minimum_size = Vector2(800, 36)
@@ -434,6 +446,11 @@ func _build_ui() -> void:
 	map_place_button.tooltip_text = "Select a cell on either keep floor. The green footprint is authoritative; red means the state will reject it."
 	map_place_button.pressed.connect(_arm_selected_piece)
 	controls.add_child(map_place_button)
+	var recommended_layout_button: Button = Button.new()
+	recommended_layout_button.text = "Use recommended starter layout"
+	recommended_layout_button.tooltip_text = "Places Pike Squad and Narrow Gate in a readable first-battle arrangement; each placement remains authoritative."
+	recommended_layout_button.pressed.connect(_on_recommended_layout)
+	controls.add_child(recommended_layout_button)
 	var cancel_place_button: Button = Button.new()
 	cancel_place_button.text = "Cancel map placement"
 	cancel_place_button.pressed.connect(_on_cancel_placement)
@@ -525,7 +542,6 @@ func _build_ui() -> void:
 	recovery_priority_label.custom_minimum_size = Vector2(292, 80)
 	recovery_priority_label.add_theme_color_override("font_color", Color("#bfe8cf"))
 	controls.add_child(recovery_priority_label)
-
 	var save_button: Button = Button.new()
 	save_button.text = "Save keep state"
 	save_button.pressed.connect(_on_save)
@@ -582,6 +598,22 @@ func _set_screen(next_screen: String) -> void:
 		title_card.visible = screen == "title"
 	if art_banner:
 		art_banner.visible = screen == "title"
+	if forecast_label:
+		forecast_label.visible = screen != "results"
+	if enemy_label:
+		enemy_label.visible = screen != "results"
+	if metrics_label:
+		metrics_label.visible = screen != "title"
+	if result_explain_label:
+		result_explain_label.visible = screen == "results"
+	if combat_explain_label:
+		combat_explain_label.visible = screen != "results"
+	if placement_label:
+		placement_label.visible = screen != "results"
+	if event_label:
+		event_label.visible = screen != "results"
+	if log_label:
+		log_label.visible = screen != "results"
 	if screen_label:
 		screen_label.text = "GREYWATCH / %s" % screen.capitalize()
 	if screen_hint:
@@ -692,6 +724,42 @@ func _clear_placement_mode() -> void:
 func _on_cancel_placement() -> void:
 	_clear_placement_mode()
 	_set_event("Map placement cancelled. Click a room or placed piece to inspect it.")
+	_refresh_ui()
+
+func _has_piece_id(piece_id: String) -> bool:
+	for instance in keep.pieces.values():
+		if String(instance.get("piece_id", "")) == piece_id:
+			return true
+	return false
+
+func _on_recommended_layout() -> void:
+	if keep.wave_active:
+		_set_event("Recommended layout is preparation-only. Resolve the invasion before rebuilding.")
+		return
+	if keep.repair_interval_active:
+		_set_event("Recommended layout is locked during recovery. Finish the repair interval first.")
+		return
+	var placements: Array[Dictionary] = [
+		{"piece_id": "pike_squad", "origin": Vector2i(4, 5), "floor": "ground"},
+		{"piece_id": "narrow_gate", "origin": Vector2i(2, 5), "floor": "ground"}
+	]
+	var added: Array[String] = []
+	var blocked: Array[String] = []
+	for placement in placements:
+		var piece_id: String = String(placement.get("piece_id", ""))
+		if _has_piece_id(piece_id):
+			continue
+		var result: Dictionary = keep.place_piece(piece_id, placement.get("origin", Vector2i.ZERO), String(placement.get("floor", "ground")))
+		if bool(result.get("ok", false)):
+			added.append(String(PackKeepState.PIECES[piece_id].get("name", piece_id)))
+		else:
+			blocked.append("%s: %s" % [String(PackKeepState.PIECES[piece_id].get("name", piece_id)), String(result.get("reason", "blocked"))])
+	if added.is_empty() and blocked.is_empty():
+		_set_event("Recommended layout already placed. Modify it freely, then start the invasion when ready.")
+	elif blocked.is_empty():
+		_set_event("Recommended layout placed: %s. You can modify it with direct map placement." % ", ".join(added))
+	else:
+		_set_event("Recommended layout partly applied: %s. Blocked: %s" % [", ".join(added) if not added.is_empty() else "none", "; ".join(blocked)])
 	_refresh_ui()
 
 func _on_map_hovered(floor: String, cell: Vector2i) -> void:
@@ -964,6 +1032,38 @@ func _on_reset_run() -> void:
 func _set_event(text: String) -> void:
 	event_label.text = text
 
+func _first_battle_guidance() -> String:
+	if screen == "title":
+		return ""
+	if screen == "preparation":
+		if keep.pieces.is_empty():
+			return "FIRST BATTLE GUIDE — 1 Use the recommended starter layout, or place Pike Squad in the courtyard and Narrow Gate by the gate. 2 Open one pack if you want a second doctrine. 3 Start the invasion when the board reads clearly."
+		return "FIRST BATTLE GUIDE — Layout ready. Read the FORECAST, then start the invasion. Battle begins paused; use Space to run or N to resolve one readable step."
+	if screen == "battle":
+		return "FIRST BATTLE GUIDE — The fort stays visible while enemies enter through the gate. Read the event feed after each step; use the focused enemy and response preview before spending the commander ability."
+	if screen == "results":
+		return "FIRST BATTLE GUIDE — Read the causal result below, repair the highest-priority room, then finish the interval before the next doctrine. Change one placement at a time to learn the counter."
+	return ""
+
+func _refresh_result_explanation() -> void:
+	if result_explain_label == null:
+		return
+	if keep.last_outcome.is_empty():
+		result_explain_label.text = "RESULT GUIDE — Finish a wave to see what the forecast, placement, and response produced."
+		return
+	var metrics: Dictionary = keep.combat_metrics
+	var outcome_text: String = ""
+	match keep.last_outcome:
+		"held":
+			outcome_text = "HELD — no room breach was recorded; try a different placement to test the counter."
+		"partial_breach":
+			outcome_text = "PARTIAL BREACH — the keep survived, but at least one function was damaged; repair the most critical room first."
+		"collapse":
+			outcome_text = "COLLAPSE — critical functions or morale failed; compare the forecast with the placement and response lane."
+		_:
+			outcome_text = "OUTCOME — review the event feed and recovery state before changing the layout."
+	result_explain_label.text = "CAUSAL RESULT — %s\nBreach %d | Morale %d | Defeated %d | Room damage %d | Piece damage %d\n%s\n%s" % [keep.last_outcome.replace("_", " ").to_upper(), keep.breach_level, keep.morale, int(metrics.get("defeated_enemies", 0)), int(metrics.get("room_damage", 0)), int(metrics.get("piece_damage", 0)), outcome_text, "Recovery: %s" % keep.repair_interval_reason if keep.repair_interval_active else "Recovery: start a new run to replay the lesson."]
+
 func _refresh_ui() -> void:
 	_refresh_pack_preview()
 	_refresh_scenario_preview()
@@ -1014,17 +1114,21 @@ func _refresh_ui() -> void:
 	keep_canvas.call("set_preview", placement_mode, preview_floor, preview_origin, _selected_id(piece_option), preview_valid)
 	if event_label.text.is_empty():
 		event_label.text = "Open Pike Line or Field Engineers, place a defense on either floor, start First Bell, and advance one step at a time."
+	guidance_label.text = _first_battle_guidance()
 	var recent: Array[String] = []
-	var start: int = maxi(0, keep.battle_report.size() - 3)
+	var start: int = maxi(0, keep.battle_report.size() - 4)
 	for index in range(start, keep.battle_report.size()):
 		recent.append(keep.battle_report[index])
-	log_label.text = "Recent causal report: " + (" | ".join(recent) if not recent.is_empty() else "No wave has started. The report will name the forecast, counter, target, damage, and recovery.")
+	recent.reverse()
+	log_label.text = "COMBAT EVENT FEED — newest first\n" + ("\n".join(recent) if not recent.is_empty() else "No wave has started. This feed will name the forecast, response, target, damage, and recovery.")
+
 	pause_button.text = "Resume battle (Space)" if battle_paused else "Pause battle (Space)"
 	speed_button.text = "Speed: %.1fx (1/2/3)" % _battle_speed()
 	mute_button.text = "Feedback tones: OFF" if audio_muted else "Feedback tones: ON"
 	contrast_button.text = "High-contrast cues: ON" if high_contrast else "High-contrast cues: OFF"
 	_refresh_response_preview()
 	_refresh_recovery_priorities()
+	_refresh_result_explanation()
 	keep_canvas.keep = keep
 	keep_canvas.call("set_focus", focused_enemy_index)
 	keep_canvas.queue_redraw()

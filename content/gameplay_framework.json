@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.8.1-topdown-board",
+  "framework_version": "0.8.2-testability",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -50,6 +50,13 @@
     "metrics": ["ammo_spent", "unit_attacks", "damage_dealt", "enemy_attacks", "room_damage", "piece_damage"],
     "determinism_rule": "presentation_clock_and_focus_do_not alter authoritative step outcomes",
     "deferred": ["projectile_physics", "ammo_resupply_buildings", "direct_target_commands", "controller_remapping"]
+  },
+  "v082_testability": {
+    "status": "implemented",
+    "first_run_guidance": ["preparation_steps", "battle_readability", "results_recovery"],
+    "recommended_layout": "fixed_explainable_starter_placements_through_authoritative_place_piece_api",
+    "combat_readability": ["newest_first_event_feed", "causal_result_metrics", "outcome_interpretation"],
+    "determinism_rule": "guidance_event_feed_and_result_explanation_read_state_without_mutating_authoritative_outcomes"
   },
   "visual_fort_initial_run": {
     "status": "implemented_procedural_fallback",
