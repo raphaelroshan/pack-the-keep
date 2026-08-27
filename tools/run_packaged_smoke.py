@@ -12,7 +12,7 @@ import tempfile
 from pathlib import Path
 
 
-def run_process(command: list[str], environment: dict[str, str], timeout: int, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+def run_process(command: list[str], environment: dict[str, str], timeout: float, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
     try:
         return subprocess.run(
             command,
@@ -24,7 +24,13 @@ def run_process(command: list[str], environment: dict[str, str], timeout: int, c
             cwd=cwd,
         )
     except subprocess.TimeoutExpired as exc:
-        output = "\n".join(part for part in (exc.stdout or "", exc.stderr or "") if part)
+        output_parts: list[str] = []
+        for part in (exc.stdout, exc.stderr):
+            if isinstance(part, bytes):
+                part = part.decode(errors="replace")
+            if part:
+                output_parts.append(part)
+        output = "\n".join(output_parts)
         raise RuntimeError(f"timed out after {timeout}s: {' '.join(command)}\n{output}") from exc
 
 

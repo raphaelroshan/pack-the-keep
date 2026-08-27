@@ -49,6 +49,11 @@ def complete_report(profile_dir: Path, version: str, phase: str, executable: Pat
 
 
 class PackagedSmokeReportTests(unittest.TestCase):
+    def test_timeout_preserves_child_output(self) -> None:
+        command = [sys.executable, "-c", "import time; print('ready', flush=True); time.sleep(5)"]
+        with self.assertRaisesRegex(RuntimeError, "timed out.*ready"):
+            runner.run_process(command, os.environ.copy(), 0.1)
+
     def test_process_runs_from_requested_install_directory(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             install_dir = Path(directory).resolve()
