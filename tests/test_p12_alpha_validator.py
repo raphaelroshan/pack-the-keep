@@ -18,16 +18,29 @@ class P12AlphaValidatorTests(unittest.TestCase):
     def test_accepts_complete_initial_and_reinstall_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "report.json"
+            content_status = {
+                "ok": True, "commander_count": 2, "piece_count": 17, "pack_count": 9,
+                "enemy_count": 7, "doctrine_count": 8, "scenario_count": 8,
+                "event_count": 3, "modifier_count": 2,
+            }
+            shared = {
+                "ok": True, "build_version": "v", "editor_feature": False,
+                "errors": [],
+                "smoke_guard": True, "offline_proxy_guard": True, "main_scene_freed": True,
+                "battle_step": 1, "save_schema_version": 4, "settings_schema_version": 4,
+                "controller_navigation_ready": True, "controller_defaults_ready": True,
+                "content_status": content_status, "user_data_dir": r"C:\\profile",
+                "save_path": r"C:\\profile\\run.save", "settings_path": r"C:\\profile\\settings.json",
+            }
             initial = {
-                "phase": "initial", "ok": True, "build_version": "v", "main_scene_freed": True,
-                "offline_proxy_guard": True, "controller_navigation_ready": True,
-                "controller_defaults_ready": True, "controller_remap_ready": True,
+                **shared, "phase": "initial", "executable_path": r"C:\\build\\pack-the-keep.exe",
+                "profile_files_present": False, "controller_remap_ready": True,
                 "ui_scale_ready": True, "settings_scale_ready": True, "settings_remap_ready": True,
                 "initial_pause_ready": True, "paused_state_frozen": True,
                 "remapped_pause_ready": True, "manual_step_ready": True,
             }
             reinstall = {
-                "phase": "reinstall", "ok": True, "build_version": "v", "main_scene_freed": True,
+                **shared, "phase": "reinstall", "executable_path": r"C:\\reinstalled-app\\pack-the-keep.exe",
                 "profile_files_present": True, "restored_run_ready": True,
                 "restored_scale_ready": True, "restored_remap_ready": True,
             }
@@ -41,8 +54,18 @@ class P12AlphaValidatorTests(unittest.TestCase):
             path = Path(directory) / "report.json"
             path.write_text(json.dumps({
                 "schema_version": 1,
-                "initial": {"phase": "initial", "ok": True, "build_version": "v", "main_scene_freed": False},
-                "reinstall": {"phase": "reinstall", "ok": True, "build_version": "v", "main_scene_freed": True},
+                "initial": {
+                    "phase": "initial", "ok": True, "build_version": "v", "main_scene_freed": False,
+                    "errors": ["failure"],
+                    "profile_files_present": True, "executable_path": r"C:\\same\\pack-the-keep.exe",
+                    "user_data_dir": r"C:\\first", "save_path": r"C:\\escaped\\run.save",
+                    "settings_path": r"C:\\first\\settings.json",
+                },
+                "reinstall": {
+                    "phase": "reinstall", "ok": True, "build_version": "v", "main_scene_freed": True,
+                    "executable_path": r"C:\\same\\pack-the-keep.exe", "user_data_dir": r"C:\\second",
+                    "save_path": r"C:\\second\\run.save", "settings_path": r"C:\\second\\settings.json",
+                },
             }), encoding="utf-8")
             errors: list[str] = []
             validator.validate_report(path, "v", errors)
@@ -50,6 +73,11 @@ class P12AlphaValidatorTests(unittest.TestCase):
             self.assertIn("close cleanly", joined)
             self.assertIn("controller_navigation_ready", joined)
             self.assertIn("restored_run_ready", joined)
+            self.assertIn("clean profile", joined)
+            self.assertIn("relocate the executable", joined)
+            self.assertIn("changed user_data_dir", joined)
+            self.assertIn("runtime errors", joined)
+            self.assertIn("outside user data", joined)
 
 
 if __name__ == "__main__":

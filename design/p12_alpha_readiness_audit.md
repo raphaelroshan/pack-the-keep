@@ -10,6 +10,7 @@ Turn the P12 checklist into a machine-readable release boundary. Every required 
 - Checklist evidence paths must exist and remain reviewable.
 - Build identity must match the project, framework, CI manifest, and checklist.
 - Source jobs validate checklist structure; package/release jobs additionally validate dynamic Windows evidence.
+- The combined artifact must independently prove release-template execution, clean-profile setup, executable relocation, stable user-data paths, current schemas, complete content, and both runtime phases.
 - Status remains `candidate`; commercial or human alpha approval is never inferred from CI.
 - Required human gates remain explicitly `pending` with one manual evidence guide.
 
