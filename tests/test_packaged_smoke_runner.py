@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -15,6 +17,18 @@ SPEC.loader.exec_module(runner)
 
 
 class PackagedSmokeReportTests(unittest.TestCase):
+    def test_process_runs_from_requested_install_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            install_dir = Path(directory).resolve()
+            result = runner.run_process(
+                [sys.executable, "-c", "import os; print(os.getcwd())"],
+                os.environ.copy(),
+                5,
+                install_dir,
+            )
+            self.assertEqual(result.returncode, 0)
+            self.assertEqual(Path(result.stdout.strip()).resolve(), install_dir)
+
     def test_accepts_complete_report_inside_profile(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

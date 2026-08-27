@@ -8,10 +8,11 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 
-def run_process(command: list[str], environment: dict[str, str], timeout: int) -> subprocess.CompletedProcess[str]:
+def run_process(command: list[str], environment: dict[str, str], timeout: int, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
     try:
         return subprocess.run(
             command,
@@ -20,6 +21,7 @@ def run_process(command: list[str], environment: dict[str, str], timeout: int) -
             capture_output=True,
             text=True,
             timeout=timeout,
+            cwd=cwd,
         )
     except subprocess.TimeoutExpired as exc:
         output = "\n".join(part for part in (exc.stdout or "", exc.stderr or "") if part)
@@ -149,9 +151,9 @@ def main() -> int:
     })
     common = [str(executable), "--headless", "--audio-driver", "Dummy"]
     try:
-        launch = run_process(common + ["--quit-after", "2"], environment, args.timeout)
+        launch = run_process(common + ["--quit-after", "2"], environment, args.timeout, executable.parent)
         require_success("packaged main-scene launch", launch)
-        smoke = run_process(common + ["--", "--packaged-smoke"], environment, args.timeout)
+        smoke = run_process(common + ["--", "--packaged-smoke"], environment, args.timeout, executable.parent)
         require_success("packaged gameplay smoke", smoke)
     except RuntimeError as exc:
         print(f"ERROR: {exc}")
@@ -170,13 +172,12 @@ def main() -> int:
     if not isinstance(initial_report.get("executable_path"), str) or not paths_equal(initial_report["executable_path"], executable):
         print(f"ERROR: initial smoke ran from unexpected executable: {initial_report.get('executable_path')!r}")
         return 1
-    reinstall_dir = profile_root.with_name(f"{profile_root.name}-reinstalled-app")
-    reinstall_dir.mkdir(parents=True, exist_ok=True)
+    reinstall_dir = Path(tempfile.mkdtemp(prefix=f"{profile_root.name}-reinstalled-app-", dir=profile_root.parent))
     reinstalled_executable = reinstall_dir / executable.name
     shutil.copy2(executable, reinstalled_executable)
     environment["PACK_THE_KEEP_SMOKE_PHASE"] = "reinstall"
     try:
-        reinstall = run_process([str(reinstalled_executable), "--headless", "--audio-driver", "Dummy", "--", "--packaged-smoke"], environment, args.timeout)
+        reinstall = run_process([str(reinstalled_executable), "--headless", "--audio-driver", "Dummy", "--", "--packaged-smoke"], environment, args.timeout, reinstall_dir)
         require_success("reinstalled packaged gameplay smoke", reinstall)
     except RuntimeError as exc:
         print(f"ERROR: {exc}")
