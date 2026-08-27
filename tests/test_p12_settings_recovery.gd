@@ -25,6 +25,12 @@ func _write(path: String, payload: Variant) -> void:
 		file.store_string(payload if payload is String else JSON.stringify(payload))
 		file.close()
 
+func _has_joypad_binding(action: String, button_index: int) -> bool:
+	for event in InputMap.action_get_events(action):
+		if event is InputEventJoypadButton and event.button_index == button_index:
+			return true
+	return false
+
 func _settings(speed: int, muted: bool, scale: int) -> Dictionary:
 	return {
 		"schema_version": 4,
@@ -33,7 +39,10 @@ func _settings(speed: int, muted: bool, scale: int) -> Dictionary:
 		"high_contrast": muted,
 		"reduced_motion": muted,
 		"ui_scale_index": scale,
-		"input_bindings": {},
+		"input_bindings": {
+			"battle_pause": [{"type": "joypad_button", "button_index": 10}],
+			"placement_arm": [{"type": "key", "physical_keycode": 82}]
+		},
 		"window_size_index": 0,
 		"fullscreen_enabled": false,
 		"effects_volume_index": 3,
@@ -57,6 +66,7 @@ func _initialize() -> void:
 	_write(TEST_BACKUP, _settings(2, true, 2))
 	ui._load_preferences()
 	_check(ui.battle_speed_index == 2 and ui.audio_muted and ui.high_contrast and ui.reduced_motion and ui.ui_scale_index == 2 and ui.auto_pause_on_threat, "malformed primary settings should recover the valid backup")
+	_check(_has_joypad_binding("battle_pause", 10) and not _has_joypad_binding("placement_arm", 10), "backup recovery should restore the conflict-resolved controller remap")
 
 	_remove_test_files()
 	_write(TEST_BACKUP, _settings(0, true, 0))
@@ -73,6 +83,7 @@ func _initialize() -> void:
 	_write(TEST_TEMP, _settings(0, true, 0))
 	ui._load_preferences()
 	_check(ui.battle_speed_index == 1 and not ui.audio_muted and ui.ui_scale_index == 1, "temporary settings alone should fall back to documented defaults")
+	_check(_has_joypad_binding("battle_pause", 6) and _has_joypad_binding("placement_arm", 10), "temporary-only settings should restore default controller bindings")
 
 	_remove_test_files()
 	_write(TEST_SETTINGS, {"schema_version": 99})
