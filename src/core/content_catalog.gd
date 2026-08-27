@@ -12,6 +12,17 @@ const COMMANDER_PATHS: Array[String] = [
 	"res://data/commanders/warden.json"
 ]
 
+const PIECE_PATHS: Array[String] = [
+	"res://data/pieces/pike_squad.json",
+	"res://data/pieces/repair_station.json",
+	"res://data/pieces/fire_team.json",
+	"res://data/pieces/scout_post.json",
+	"res://data/pieces/narrow_gate.json",
+	"res://data/pieces/brace.json",
+	"res://data/pieces/fire_brazier.json",
+	"res://data/pieces/signal_beacon.json"
+]
+
 const REQUIRED_PACK_FIELDS: Array[String] = [
 	"id",
 	"content_version",
@@ -48,19 +59,50 @@ const REQUIRED_COMMANDER_FIELDS: Array[String] = [
 	"favored_pack_families"
 ]
 
+const REQUIRED_PIECE_FIELDS: Array[String] = [
+	"id",
+	"content_version",
+	"status",
+	"name",
+	"short_role",
+	"role",
+	"question",
+	"kind",
+	"category",
+	"footprint",
+	"allowed_floors",
+	"allowed_zones",
+	"cost",
+	"max_health",
+	"placement_question",
+	"skill",
+	"strength_tags",
+	"weakness_tags",
+	"attack_profile",
+	"support_profile",
+	"assignment_rule",
+	"availability",
+	"presentation"
+]
+
 var _packs: Dictionary = {}
 var _commanders: Dictionary = {}
+var _pieces: Dictionary = {}
 var errors: Array[String] = []
 
-func load_default(known_piece_ids: Array) -> Dictionary:
+func load_default(known_room_ids: Array = [], known_enemy_ids: Array = []) -> Dictionary:
 	_packs.clear()
 	_commanders.clear()
+	_pieces.clear()
 	errors.clear()
+	for path in PIECE_PATHS:
+		_load_piece(path, known_room_ids, known_enemy_ids)
 	for path in PACK_PATHS:
-		_load_pack(path, known_piece_ids)
+		_load_pack(path, piece_ids())
 	for path in COMMANDER_PATHS:
 		_load_commander(path)
-	return {"ok": errors.is_empty(), "commanders": _commanders.duplicate(true), "packs": _packs.duplicate(true), "errors": errors.duplicate()}
+	_validate_piece_availability()
+	return {"ok": errors.is_empty(), "commanders": _commanders.duplicate(true), "pieces": _pieces.duplicate(true), "packs": _packs.duplicate(true), "errors": errors.duplicate()}
 
 func commander_ids() -> Array[String]:
 	var result: Array[String] = []
@@ -72,6 +114,17 @@ func commander_ids() -> Array[String]:
 
 func commander_definition(commander_id: String) -> Dictionary:
 	return _commanders.get(commander_id, {}).duplicate(true)
+
+func piece_ids() -> Array[String]:
+	var result: Array[String] = []
+	for path in PIECE_PATHS:
+		var expected_id: String = path.get_file().get_basename()
+		if _pieces.has(expected_id):
+			result.append(expected_id)
+	return result
+
+func piece_definition(piece_id: String) -> Dictionary:
+	return _pieces.get(piece_id, {}).duplicate(true)
 
 func pack_ids() -> Array[String]:
 	var result: Array[String] = []
@@ -85,6 +138,91 @@ func pack_definition(pack_id: String) -> Dictionary:
 	if not _packs.has(pack_id):
 		return {}
 	return _packs[pack_id].duplicate(true)
+
+func validate_piece_definition(piece: Dictionary, expected_id: String, known_room_ids: Array, known_enemy_ids: Array) -> Array[String]:
+	var validation_errors: Array[String] = []
+	for field in REQUIRED_PIECE_FIELDS:
+		if not piece.has(field):
+			validation_errors.append("%s is missing required field: %s" % [expected_id, field])
+	var piece_id: String = String(piece.get("id", ""))
+	if piece_id != expected_id:
+		validation_errors.append("piece id %s does not match filename %s" % [piece_id, expected_id])
+	if not _is_snake_case_id(piece_id):
+		validation_errors.append("piece id %s must be snake_case" % piece_id)
+	if String(piece.get("status", "")) != "active":
+		validation_errors.append("piece %s must have active status" % piece_id)
+	_validate_integer_minimum(piece, "content_version", piece_id, "piece", 1, validation_errors)
+	_validate_integer_minimum(piece, "cost", piece_id, "piece", 0, validation_errors)
+	_validate_integer_minimum(piece, "max_health", piece_id, "piece", 1, validation_errors)
+	for field in ["name", "short_role", "role", "question", "category", "placement_question", "skill", "availability"]:
+		if not piece.get(field) is String or String(piece.get(field, "")).strip_edges().is_empty():
+			validation_errors.append("piece %s must have non-empty text for %s" % [piece_id, field])
+	if not ["unit", "equipment"].has(String(piece.get("kind", ""))):
+		validation_errors.append("piece %s kind must be unit or equipment" % piece_id)
+	var footprint: Variant = piece.get("footprint", [])
+	if not footprint is Array or footprint.size() != 2 or not _is_integer_number(footprint[0]) or not _is_integer_number(footprint[1]) or int(footprint[0]) < 1 or int(footprint[1]) < 1 or int(footprint[0]) > 12 or int(footprint[1]) > 8:
+		validation_errors.append("piece %s footprint must contain two positive integers" % piece_id)
+	_validate_supported_string_array(piece, "allowed_floors", ["ground", "upper"], piece_id, validation_errors)
+	_validate_supported_string_array(piece, "allowed_zones", ["wall", "courtyard", "keep"], piece_id, validation_errors)
+	_validate_non_empty_string_array(piece, "strength_tags", piece_id, validation_errors)
+	_validate_non_empty_string_array(piece, "weakness_tags", piece_id, validation_errors)
+	var attack_profile: Variant = piece.get("attack_profile", {})
+	if not attack_profile is Dictionary:
+		validation_errors.append("piece %s attack_profile must be an object" % piece_id)
+	else:
+		if not ["melee", "ranged", "support", "fortification"].has(String(attack_profile.get("style", ""))):
+			validation_errors.append("piece %s has an unsupported attack style" % piece_id)
+		for field in ["range", "cooldown_steps", "damage", "defense", "ammo_capacity"]:
+			_validate_integer_minimum(attack_profile, field, piece_id, "piece attack profile", 0, validation_errors)
+		var targets: Variant = attack_profile.get("targets", [])
+		if not targets is Array or targets.is_empty():
+			validation_errors.append("piece %s attack targets must be a non-empty array" % piece_id)
+		else:
+			for target in targets:
+				if not target is String or (String(target) != "all" and not known_enemy_ids.has(String(target))):
+					validation_errors.append("piece %s references unknown attack target: %s" % [piece_id, String(target)])
+	var support_profile: Variant = piece.get("support_profile")
+	if support_profile != null:
+		if not support_profile is Dictionary:
+			validation_errors.append("piece %s support_profile must be null or an object" % piece_id)
+		else:
+			if String(support_profile.get("kind", "")).strip_edges().is_empty():
+				validation_errors.append("piece %s support profile must have a kind" % piece_id)
+			if String(support_profile.get("response_modifier", "")).strip_edges().is_empty():
+				validation_errors.append("piece %s support profile must have a response modifier" % piece_id)
+			_validate_integer_minimum(support_profile, "condition_restore", piece_id, "piece support profile", 0, validation_errors)
+			var target_rooms: Variant = support_profile.get("target_rooms", [])
+			if not target_rooms is Array:
+				validation_errors.append("piece %s support target_rooms must be an array" % piece_id)
+			else:
+				for room_id in target_rooms:
+					if not room_id is String or not known_room_ids.has(String(room_id)):
+						validation_errors.append("piece %s references unknown support room: %s" % [piece_id, String(room_id)])
+	var assignment_rule: Variant = piece.get("assignment_rule")
+	if assignment_rule != null:
+		if not assignment_rule is Dictionary:
+			validation_errors.append("piece %s assignment_rule must be null or an object" % piece_id)
+		else:
+			var room_id: String = String(assignment_rule.get("room", ""))
+			if not known_room_ids.has(room_id):
+				validation_errors.append("piece %s references unknown assignment room: %s" % [piece_id, room_id])
+			if String(assignment_rule.get("effect", "")).strip_edges().is_empty():
+				validation_errors.append("piece %s assignment rule must describe its effect" % piece_id)
+	var availability: String = String(piece.get("availability", ""))
+	var known_availability: Array[String] = ["starter"]
+	for path in PACK_PATHS:
+		known_availability.append(path.get_file().get_basename())
+	if not known_availability.has(availability):
+		validation_errors.append("piece %s references unknown availability source: %s" % [piece_id, availability])
+	var presentation: Variant = piece.get("presentation")
+	if not presentation is Dictionary:
+		validation_errors.append("piece %s presentation must be an object" % piece_id)
+	else:
+		if not presentation.get("icon") is String:
+			validation_errors.append("piece %s presentation icon must be text" % piece_id)
+		if not presentation.get("marker_color_role") is String or String(presentation.get("marker_color_role", "")).strip_edges().is_empty():
+			validation_errors.append("piece %s presentation marker color role must be non-empty text" % piece_id)
+	return validation_errors
 
 func validate_commander_definition(commander: Dictionary, expected_id: String) -> Array[String]:
 	var validation_errors: Array[String] = []
@@ -160,6 +298,28 @@ func _load_commander(path: String) -> void:
 	if validation_errors.is_empty():
 		_commanders[commander_id] = commander.duplicate(true)
 
+func _load_piece(path: String, known_room_ids: Array, known_enemy_ids: Array) -> void:
+	if not FileAccess.file_exists(path):
+		errors.append("missing piece file: %s" % path)
+		return
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		errors.append("could not open piece file: %s" % path)
+		return
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		errors.append("piece file must contain one JSON object: %s" % path)
+		return
+	var authored: Dictionary = parsed
+	var piece_id: String = String(authored.get("id", ""))
+	var validation_errors: Array[String] = validate_piece_definition(authored, path.get_file().get_basename(), known_room_ids, known_enemy_ids)
+	if _pieces.has(piece_id):
+		validation_errors.append("duplicate piece id: %s" % piece_id)
+	for validation_error in validation_errors:
+		errors.append("%s: %s" % [path, validation_error])
+	if validation_errors.is_empty():
+		_pieces[piece_id] = _normalize_piece(authored)
+
 func _load_pack(path: String, known_piece_ids: Array) -> void:
 	if not FileAccess.file_exists(path):
 		errors.append("missing pack file: %s" % path)
@@ -184,6 +344,14 @@ func _load_pack(path: String, known_piece_ids: Array) -> void:
 		return
 	_packs[pack_id] = pack.duplicate(true)
 
+func _validate_piece_availability() -> void:
+	for piece_id in piece_ids():
+		var availability: String = String(_pieces[piece_id].get("availability", ""))
+		if availability == "starter":
+			continue
+		if not _packs.has(availability) or not _packs[availability].get("contents", []).has(piece_id):
+			errors.append("piece %s availability pack %s does not contain that piece" % [piece_id, availability])
+
 func _validate_positive_integer(definition: Dictionary, field: String, definition_id: String, validation_errors: Array[String]) -> void:
 	var value: Variant = definition.get(field)
 	if not _is_integer_number(value) or int(value) < 1:
@@ -193,6 +361,44 @@ func _validate_non_negative_integer(definition: Dictionary, field: String, defin
 	var value: Variant = definition.get(field)
 	if not _is_integer_number(value) or int(value) < 0:
 		validation_errors.append("commander %s must have a non-negative integer %s" % [definition_id, field])
+
+func _validate_integer_minimum(definition: Dictionary, field: String, definition_id: String, content_type: String, minimum: int, validation_errors: Array[String]) -> void:
+	var value: Variant = definition.get(field)
+	if not _is_integer_number(value) or int(value) < minimum:
+		validation_errors.append("%s %s must have %s >= %d" % [content_type, definition_id, field, minimum])
+
+func _validate_non_empty_string_array(definition: Dictionary, field: String, definition_id: String, validation_errors: Array[String]) -> void:
+	var values: Variant = definition.get(field, [])
+	if not values is Array or values.is_empty():
+		validation_errors.append("piece %s %s must be a non-empty array" % [definition_id, field])
+		return
+	for value in values:
+		if not value is String or String(value).strip_edges().is_empty():
+			validation_errors.append("piece %s %s must contain non-empty strings" % [definition_id, field])
+
+func _validate_supported_string_array(definition: Dictionary, field: String, supported: Array, definition_id: String, validation_errors: Array[String]) -> void:
+	var values: Variant = definition.get(field, [])
+	if not values is Array or values.is_empty():
+		validation_errors.append("piece %s %s must be a non-empty array" % [definition_id, field])
+		return
+	for value in values:
+		if not value is String or not supported.has(String(value)):
+			validation_errors.append("piece %s %s contains unsupported value: %s" % [definition_id, field, String(value)])
+
+func _normalize_piece(authored: Dictionary) -> Dictionary:
+	var runtime: Dictionary = authored.duplicate(true)
+	var footprint: Array = authored.get("footprint", [1, 1])
+	var attack_profile: Dictionary = authored.get("attack_profile", {})
+	runtime.size = Vector2i(int(footprint[0]), int(footprint[1]))
+	runtime.role = String(authored.get("role", ""))
+	runtime.combat_style = String(attack_profile.get("style", "support"))
+	runtime.range = int(attack_profile.get("range", 0))
+	runtime.attack_interval = int(attack_profile.get("cooldown_steps", 0))
+	runtime.attack = int(attack_profile.get("damage", 0))
+	runtime.defense = int(attack_profile.get("defense", 0))
+	runtime.max_ammo = int(attack_profile.get("ammo_capacity", 0))
+	runtime.targets = attack_profile.get("targets", []).duplicate()
+	return runtime
 
 func _is_integer_number(value: Variant) -> bool:
 	if typeof(value) != TYPE_INT and typeof(value) != TYPE_FLOAT:

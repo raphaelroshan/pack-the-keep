@@ -11,8 +11,45 @@ func _check(condition: bool, message: String) -> void:
 
 func _initialize() -> void:
 	var catalog: RefCounted = ContentCatalog.new()
-	var loaded: Dictionary = catalog.load_default(PackKeepState.PIECES.keys())
+	var known_piece_targets: Array = PackKeepState.ENEMIES.keys()
+	for enemy in PackKeepState.ENEMIES.values():
+		var doctrine: String = String(enemy.get("doctrine", ""))
+		if not doctrine.is_empty() and not known_piece_targets.has(doctrine):
+			known_piece_targets.append(doctrine)
+	var loaded: Dictionary = catalog.load_default(PackKeepState.ROOMS.keys(), known_piece_targets)
 	_check(bool(loaded.get("ok", false)), "active runtime catalog did not load cleanly: %s" % "; ".join(loaded.get("errors", [])))
+	_check(catalog.piece_ids() == ["pike_squad", "repair_station", "fire_team", "scout_post", "narrow_gate", "brace", "fire_brazier", "signal_beacon"], "piece catalog order or active IDs changed")
+	var expected_pieces: Dictionary = {
+		"pike_squad": {"size": Vector2i(2, 1), "cost": 8, "health": 14, "ammo": 0, "attack": 4, "availability": "starter", "assignment": "gate"},
+		"repair_station": {"size": Vector2i(2, 1), "cost": 10, "health": 10, "ammo": 0, "attack": 0, "availability": "field_engineers", "assignment": "workshop"},
+		"fire_team": {"size": Vector2i(2, 1), "cost": 9, "health": 12, "ammo": 4, "attack": 3, "availability": "firekeepers", "assignment": "inner_yard"},
+		"scout_post": {"size": Vector2i(1, 1), "cost": 6, "health": 8, "ammo": 0, "attack": 0, "availability": "scouts", "assignment": "north_tower"},
+		"narrow_gate": {"size": Vector2i(1, 2), "cost": 7, "health": 18, "ammo": 0, "attack": 0, "availability": "starter", "assignment": ""},
+		"brace": {"size": Vector2i(1, 1), "cost": 5, "health": 16, "ammo": 0, "attack": 0, "availability": "field_engineers", "assignment": ""},
+		"fire_brazier": {"size": Vector2i(1, 1), "cost": 6, "health": 12, "ammo": 3, "attack": 1, "availability": "firekeepers", "assignment": ""},
+		"signal_beacon": {"size": Vector2i(1, 1), "cost": 5, "health": 8, "ammo": 0, "attack": 0, "availability": "scouts", "assignment": ""}
+	}
+	for piece_id in expected_pieces.keys():
+		var piece: Dictionary = catalog.piece_definition(String(piece_id))
+		var assignment: Dictionary = piece.get("assignment_rule", {}) if piece.get("assignment_rule") is Dictionary else {}
+		_check(piece.get("size", Vector2i.ZERO) == expected_pieces[piece_id].size, "%s footprint changed during externalization" % piece_id)
+		_check(int(piece.get("cost", -1)) == int(expected_pieces[piece_id].cost) and int(piece.get("max_health", -1)) == int(expected_pieces[piece_id].health), "%s cost or health changed during externalization" % piece_id)
+		_check(int(piece.get("max_ammo", -1)) == int(expected_pieces[piece_id].ammo) and int(piece.get("attack", -1)) == int(expected_pieces[piece_id].attack), "%s combat profile changed during externalization" % piece_id)
+		_check(String(piece.get("availability", "")) == String(expected_pieces[piece_id].availability), "%s availability changed during externalization" % piece_id)
+		_check(String(assignment.get("room", "")) == String(expected_pieces[piece_id].assignment), "%s assignment rule changed during externalization" % piece_id)
+	var copied_piece: Dictionary = catalog.piece_definition("fire_team")
+	copied_piece.attack = 999
+	_check(int(catalog.piece_definition("fire_team").get("attack", -1)) == 3, "callers can mutate the catalog's stored piece definition")
+	var malformed_piece: Dictionary = catalog.piece_definition("fire_team")
+	malformed_piece.erase("question")
+	malformed_piece.footprint = [0, 1]
+	malformed_piece.allowed_floors = ["roof"]
+	malformed_piece.allowed_zones = []
+	malformed_piece.availability = "missing_pack"
+	malformed_piece.attack_profile.targets = ["missing_enemy"]
+	malformed_piece.assignment_rule = {"room": "missing_room", "effect": "bad reference"}
+	var piece_errors: Array[String] = catalog.validate_piece_definition(malformed_piece, "wrong_filename", PackKeepState.ROOMS.keys(), known_piece_targets)
+	_check(piece_errors.size() >= 8, "catalog validator did not reject missing fields, ID mismatch, footprint, floor, zone, availability, enemy, and room references")
 	_check(catalog.commander_ids() == ["castellan", "warden"], "commander catalog order or active IDs changed")
 	var expected_commanders: Dictionary = {
 		"castellan": {"materials": 60, "morale": 6, "ability": "lockdown"},
@@ -52,12 +89,13 @@ func _initialize() -> void:
 	var malformed: Dictionary = catalog.pack_definition("pike_line")
 	malformed.erase("question")
 	malformed.contents = ["missing_piece"]
-	var validation_errors: Array[String] = catalog.validate_pack_definition(malformed, "wrong_filename", PackKeepState.PIECES.keys())
+	var validation_errors: Array[String] = catalog.validate_pack_definition(malformed, "wrong_filename", catalog.piece_ids())
 	_check(validation_errors.size() >= 3, "catalog validator did not reject missing fields, ID mismatch, and unknown piece references")
 
 	var first: PackKeepState = PackKeepState.new(3307)
 	var second: PackKeepState = PackKeepState.new(3307)
-	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("pack_count", 0)) == 4 and int(first.content_catalog_status().get("commander_count", 0)) == 2, "KeepState did not expose a valid four-pack, two-commander catalog")
+	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("pack_count", 0)) == 4 and int(first.content_catalog_status().get("commander_count", 0)) == 2 and int(first.content_catalog_status().get("piece_count", 0)) == 8, "KeepState did not expose a valid four-pack, two-commander, eight-piece catalog")
+	_check(first.piece_ids() == catalog.piece_ids(), "KeepState did not preserve stable piece order")
 	_check(first.commander_ids() == ["castellan", "warden"], "KeepState did not preserve stable commander order")
 	var selected_warden: Dictionary = first.select_commander("warden")
 	_check(bool(selected_warden.get("ok", false)) and first.materials == 52 and first.morale == 7, "externalized Warden did not preserve starting resources")

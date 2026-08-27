@@ -23,8 +23,19 @@ COMMANDER_TEXT_FIELDS = {
     "name", "short_role", "question", "passive", "ability", "ability_name",
     "ability_text", "limitation", "preferred_pattern",
 }
+PIECE_FIELDS = {
+    "id", "content_version", "status", "name", "short_role", "role", "question", "kind",
+    "category", "footprint", "allowed_floors", "allowed_zones", "cost", "max_health",
+    "placement_question", "skill", "strength_tags", "weakness_tags", "attack_profile",
+    "support_profile", "assignment_rule", "availability", "presentation",
+}
+PIECE_TEXT_FIELDS = {
+    "name", "short_role", "role", "question", "category", "placement_question", "skill", "availability",
+}
 SUPPORTED_FLOORS = {"ground", "upper"}
 SUPPORTED_ZONES = {"wall", "courtyard", "keep"}
+SUPPORTED_ATTACK_STYLES = {"melee", "ranged", "support", "fortification"}
+SUPPORTED_NON_ENEMY_TARGETS = {"all", "area_pressure"}
 SNAKE_CASE = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
 
 
@@ -45,6 +56,137 @@ def json_files(directory: Path, content_type: str, errors: list[str]) -> list[Pa
 
 def is_integer(value: Any) -> bool:
     return isinstance(value, int) and not isinstance(value, bool)
+
+
+def validate_string_array(
+    path: Path,
+    value: Any,
+    field: str,
+    errors: list[str],
+    supported: set[str] | None = None,
+) -> list[str]:
+    if not isinstance(value, list) or not value:
+        errors.append(f"{path}: {field} must be a non-empty array")
+        return []
+    strings = [item for item in value if isinstance(item, str) and item]
+    if len(strings) != len(value):
+        errors.append(f"{path}: {field} must contain only non-empty strings")
+    if len(strings) != len(set(strings)):
+        errors.append(f"{path}: {field} contains duplicates")
+    if supported is not None:
+        for item in strings:
+            if item not in supported:
+                errors.append(f"{path}: {field} contains unsupported value: {item}")
+    return strings
+
+
+def validate_piece(
+    path: Path,
+    piece: dict[str, Any],
+    room_ids: set[str],
+    enemy_ids: set[str],
+    pack_ids: set[str],
+    manifest_pieces: dict[str, dict[str, Any]],
+    manifest_assignments: dict[str, dict[str, Any]],
+    seen: set[str],
+    errors: list[str],
+) -> str | None:
+    for field in sorted(PIECE_FIELDS - piece.keys()):
+        errors.append(f"{path}: missing required field: {field}")
+    piece_id = piece.get("id")
+    if not isinstance(piece_id, str) or not SNAKE_CASE.fullmatch(piece_id):
+        errors.append(f"{path}: id must be non-empty snake_case")
+        return None
+    if piece_id != path.stem:
+        errors.append(f"{path}: id {piece_id} does not match filename")
+    if piece_id in seen:
+        errors.append(f"duplicate runtime piece id: {piece_id}")
+    seen.add(piece_id)
+    if piece.get("status") != "active":
+        errors.append(f"{path}: runtime piece status must be active")
+    if not is_integer(piece.get("content_version")) or piece["content_version"] < 1:
+        errors.append(f"{path}: content_version must be a positive integer")
+    if piece.get("kind") not in {"unit", "equipment"}:
+        errors.append(f"{path}: kind must be unit or equipment")
+    for field in sorted(PIECE_TEXT_FIELDS):
+        value = piece.get(field)
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f"{path}: {field} must be non-empty text")
+    footprint = piece.get("footprint")
+    if (
+        not isinstance(footprint, list)
+        or len(footprint) != 2
+        or any(not is_integer(value) or value < 1 for value in footprint)
+        or (isinstance(footprint, list) and len(footprint) == 2 and (footprint[0] > 12 or footprint[1] > 8))
+    ):
+        errors.append(f"{path}: footprint must be two positive integers within the 12x8 grid")
+    validate_string_array(path, piece.get("allowed_floors"), "allowed_floors", errors, SUPPORTED_FLOORS)
+    validate_string_array(path, piece.get("allowed_zones"), "allowed_zones", errors, SUPPORTED_ZONES)
+    validate_string_array(path, piece.get("strength_tags"), "strength_tags", errors)
+    validate_string_array(path, piece.get("weakness_tags"), "weakness_tags", errors)
+    if not is_integer(piece.get("cost")) or piece["cost"] < 0:
+        errors.append(f"{path}: cost must be a non-negative integer")
+    if not is_integer(piece.get("max_health")) or piece["max_health"] < 1:
+        errors.append(f"{path}: max_health must be a positive integer")
+    attack = piece.get("attack_profile")
+    if not isinstance(attack, dict):
+        errors.append(f"{path}: attack_profile must be an object")
+    else:
+        if attack.get("style") not in SUPPORTED_ATTACK_STYLES:
+            errors.append(f"{path}: attack_profile style is unsupported")
+        for field in ("range", "cooldown_steps", "damage", "defense", "ammo_capacity"):
+            if not is_integer(attack.get(field)) or attack[field] < 0:
+                errors.append(f"{path}: attack_profile {field} must be a non-negative integer")
+        targets = validate_string_array(path, attack.get("targets"), "attack_profile.targets", errors)
+        for target in targets:
+            if target not in SUPPORTED_NON_ENEMY_TARGETS and target not in enemy_ids:
+                errors.append(f"{path}: attack_profile references unknown enemy: {target}")
+    support = piece.get("support_profile")
+    if support is not None and not isinstance(support, dict):
+        errors.append(f"{path}: support_profile must be null or an object")
+    elif isinstance(support, dict):
+        target_rooms = support.get("target_rooms")
+        if not isinstance(target_rooms, list) or any(not isinstance(room, str) or room not in room_ids for room in target_rooms):
+            errors.append(f"{path}: support_profile target_rooms contains an unknown room")
+        if not is_integer(support.get("condition_restore")) or support["condition_restore"] < 0:
+            errors.append(f"{path}: support_profile condition_restore must be a non-negative integer")
+        if not isinstance(support.get("kind"), str) or not support["kind"]:
+            errors.append(f"{path}: support_profile kind must be non-empty text")
+        if not isinstance(support.get("response_modifier"), str) or not support["response_modifier"]:
+            errors.append(f"{path}: support_profile response_modifier must be non-empty text")
+    assignment = piece.get("assignment_rule")
+    if assignment is not None and not isinstance(assignment, dict):
+        errors.append(f"{path}: assignment_rule must be null or an object")
+    elif isinstance(assignment, dict):
+        if assignment.get("room") not in room_ids:
+            errors.append(f"{path}: assignment_rule references an unknown room")
+        if not isinstance(assignment.get("effect"), str) or not assignment["effect"].strip():
+            errors.append(f"{path}: assignment_rule effect must be non-empty text")
+        manifest_assignment = manifest_assignments.get(piece_id)
+        if assignment != manifest_assignment:
+            errors.append(f"{path}: assignment_rule differs from content manifest")
+    elif piece_id in manifest_assignments:
+        errors.append(f"{path}: assignment_rule is missing for manifest assignment")
+    availability = piece.get("availability")
+    if availability != "starter" and availability not in pack_ids:
+        errors.append(f"{path}: availability references an unknown pack")
+    presentation = piece.get("presentation")
+    if not isinstance(presentation, dict):
+        errors.append(f"{path}: presentation must be an object")
+    else:
+        if not isinstance(presentation.get("icon"), str):
+            errors.append(f"{path}: presentation icon must be text")
+        if not isinstance(presentation.get("marker_color_role"), str) or not presentation["marker_color_role"]:
+            errors.append(f"{path}: presentation marker_color_role must be non-empty text")
+    manifest_piece = manifest_pieces.get(piece_id)
+    if not isinstance(manifest_piece, dict):
+        errors.append(f"{path}: piece is missing from content manifest")
+    else:
+        if piece.get("name") != manifest_piece.get("name"):
+            errors.append(f"{path}: name differs from content manifest")
+        if footprint != manifest_piece.get("size"):
+            errors.append(f"{path}: footprint differs from content manifest")
+    return piece_id
 
 
 def validate_pack(
@@ -187,6 +329,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--packs", required=True)
     parser.add_argument("--commanders", required=True)
+    parser.add_argument("--pieces", required=True)
     parser.add_argument("--manifest", required=True)
     args = parser.parse_args()
 
@@ -197,8 +340,8 @@ def main() -> int:
         errors.append(f"{manifest_path}: root must be an object")
         manifest = {}
 
-    piece_ids = {
-        item.get("id") for item in manifest.get("pieces", [])
+    manifest_pieces = {
+        item.get("id"): item for item in manifest.get("pieces", [])
         if isinstance(item, dict) and isinstance(item.get("id"), str)
     }
     manifest_commanders = {
@@ -209,21 +352,65 @@ def main() -> int:
         item.get("id"): item for item in manifest.get("packs", [])
         if isinstance(item, dict) and isinstance(item.get("id"), str)
     }
+    room_ids = {
+        item.get("id") for item in manifest.get("rooms", [])
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+    enemy_ids = {
+        item.get("id") for item in manifest.get("enemies", [])
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+    manifest_assignments = {
+        item.get("piece"): {"room": item.get("room"), "effect": item.get("effect")}
+        for item in manifest.get("active_slice", {}).get("room_assignments", [])
+        if isinstance(item, dict) and isinstance(item.get("piece"), str)
+    }
+
+    seen_pieces: set[str] = set()
+    runtime_piece_availability: dict[str, str] = {}
+    for path in json_files(Path(args.pieces), "piece", errors):
+        piece = load_json(path, errors)
+        if not isinstance(piece, dict):
+            errors.append(f"{path}: root must be an object")
+            continue
+        piece_id = validate_piece(
+            path,
+            piece,
+            room_ids,
+            enemy_ids,
+            set(manifest_packs),
+            manifest_pieces,
+            manifest_assignments,
+            seen_pieces,
+            errors,
+        )
+        if piece_id is not None and isinstance(piece.get("availability"), str):
+            runtime_piece_availability[piece_id] = piece["availability"]
+    for piece_id in sorted(set(manifest_pieces) - seen_pieces):
+        errors.append(f"runtime piece file missing for manifest piece: {piece_id}")
 
     seen_packs: set[str] = set()
     runtime_pack_families: dict[str, str] = {}
+    runtime_packs: dict[str, dict[str, Any]] = {}
     for path in json_files(Path(args.packs), "pack", errors):
         pack = load_json(path, errors)
         if not isinstance(pack, dict):
             errors.append(f"{path}: root must be an object")
             continue
         pack_id, family = validate_pack(
-            path, pack, piece_ids, set(manifest_commanders), manifest_packs, seen_packs, errors
+            path, pack, seen_pieces, set(manifest_commanders), manifest_packs, seen_packs, errors
         )
         if pack_id is not None and family is not None:
             runtime_pack_families[pack_id] = family
+            runtime_packs[pack_id] = pack
     for pack_id in sorted(set(manifest_packs) - seen_packs):
         errors.append(f"runtime pack file missing for manifest pack: {pack_id}")
+    for piece_id, availability in sorted(runtime_piece_availability.items()):
+        if availability == "starter":
+            continue
+        pack = runtime_packs.get(availability)
+        if not isinstance(pack, dict) or piece_id not in pack.get("contents", []):
+            errors.append(f"runtime piece {piece_id} is not contained by availability pack {availability}")
 
     seen_commanders: set[str] = set()
     for path in json_files(Path(args.commanders), "commander", errors):
@@ -248,7 +435,10 @@ def main() -> int:
         for error in errors:
             print(f"ERROR: {error}")
         return 1
-    print(f"runtime content catalog: PASS ({len(seen_packs)} packs, {len(seen_commanders)} commanders)")
+    print(
+        "runtime content catalog: PASS "
+        f"({len(seen_pieces)} pieces, {len(seen_packs)} packs, {len(seen_commanders)} commanders)"
+    )
     return 0
 
 

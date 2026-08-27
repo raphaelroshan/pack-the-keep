@@ -463,8 +463,8 @@ func _build_ui() -> void:
 
 	piece_option = OptionButton.new()
 	piece_option.item_selected.connect(func(_index: int) -> void: _on_piece_option_changed())
-	for piece_id in PackKeepState.PIECES.keys():
-		piece_option.add_item(String(PackKeepState.PIECES[piece_id].get("name", piece_id)))
+	for piece_id in keep.piece_ids():
+		piece_option.add_item(String(keep.piece_definition(piece_id).get("name", piece_id)))
 		piece_option.set_item_metadata(piece_option.item_count - 1, piece_id)
 		piece_option.set_item_disabled(piece_option.item_count - 1, not keep.available_pieces.has(String(piece_id)))
 	controls.add_child(_labeled_control("Available piece", piece_option))
@@ -767,7 +767,7 @@ func _next_slot(piece_id: String, floor: String) -> Vector2i:
 	for instance in keep.pieces.values():
 		if String(instance.get("floor", "ground")) == floor:
 			index += 1
-	var size: Vector2i = PackKeepState.PIECES[piece_id].size
+	var size: Vector2i = keep.piece_definition(piece_id).size
 	var x: int = 1 + (index % 4) * 2
 	var y: int = 1 + (index / 4) * 2
 	if x + size.x > PackKeepState.GRID_SIZE.x:
@@ -835,7 +835,7 @@ func _arm_selected_piece() -> void:
 	preview_floor = _selected_id(floor_option)
 	preview_origin = Vector2i.ZERO
 	preview_valid = false
-	if placement_mode and PackKeepState.PIECES.has(piece_id):
+	if placement_mode and not keep.piece_definition(piece_id).is_empty():
 		var preview: Dictionary = keep.piece_preview(piece_id, preview_origin, preview_floor)
 		preview_valid = bool(preview.get("valid", false))
 		placement_label.text = "PLACEMENT ARMED — %s | %s zone | %s footprint | %d materials | click the %s floor grid" % [String(preview.get("name", piece_id)), String(preview.get("placement_zone", "keep")).to_upper(), str(preview.get("size", Vector2i.ONE)), int(preview.get("cost", 0)), preview_floor]
@@ -877,9 +877,9 @@ func _on_recommended_layout() -> void:
 			continue
 		var result: Dictionary = keep.place_piece(piece_id, placement.get("origin", Vector2i.ZERO), String(placement.get("floor", "ground")))
 		if bool(result.get("ok", false)):
-			added.append(String(PackKeepState.PIECES[piece_id].get("name", piece_id)))
+			added.append(String(keep.piece_definition(piece_id).get("name", piece_id)))
 		else:
-			blocked.append("%s: %s" % [String(PackKeepState.PIECES[piece_id].get("name", piece_id)), String(result.get("reason", "blocked"))])
+			blocked.append("%s: %s" % [String(keep.piece_definition(piece_id).get("name", piece_id)), String(result.get("reason", "blocked"))])
 	if added.is_empty() and blocked.is_empty():
 		_set_event("Recommended layout already placed. Modify it freely, then start the invasion when ready.")
 	elif blocked.is_empty():
@@ -1367,7 +1367,7 @@ func _refresh_ui() -> void:
 	combat_explain_label.text = "COMBAT — real-time auto-battle: enemies follow named routes toward behavior targets; defenders auto-attack when their style, floor, counter, cooldown, and ammunition allow. Pause to inspect; skills modify the next resolved step."
 	var available_names: Array[String] = []
 	for available_id in keep.available_pieces:
-		available_names.append(String(PackKeepState.PIECES[available_id].get("name", available_id)))
+		available_names.append(String(keep.piece_definition(available_id).get("name", available_id)))
 	availability_label.text = "AVAILABLE — %s\nPack openings this Preparation: %d/%d" % [", ".join(available_names), keep.pack_openings_this_preparation, 2 if keep.wave_index == 0 else 1]
 	for piece_index in range(piece_option.item_count):
 		var piece_id: String = String(piece_option.get_item_metadata(piece_index))
@@ -1554,9 +1554,9 @@ class KeepCanvas extends Control:
 			if String(instance.get("floor", "ground")) != floor_name:
 				continue
 			var piece_id: String = String(instance.get("piece_id", ""))
-			if not PackKeepState.PIECES.has(piece_id):
+			if keep.piece_definition(piece_id).is_empty():
 				continue
-			var piece: Dictionary = PackKeepState.PIECES[piece_id]
+			var piece: Dictionary = keep.piece_definition(piece_id)
 			var piece_origin: Vector2i = instance.get("origin", Vector2i.ZERO)
 			var piece_rect := Rect2(origin + Vector2(piece_origin.x * CELL_X, piece_origin.y * CELL_Y), Vector2(piece.size.x * CELL_X, piece.size.y * CELL_Y))
 			if box.intersects(piece_rect):
@@ -1657,7 +1657,7 @@ class KeepCanvas extends Control:
 			if String(instance.get("floor", "ground")) != floor_name:
 				continue
 			var piece_id: String = String(instance.get("piece_id", ""))
-			var piece: Dictionary = PackKeepState.PIECES[piece_id]
+			var piece: Dictionary = keep.piece_definition(piece_id)
 			var piece_origin: Vector2i = instance.get("origin", Vector2i.ZERO)
 			var piece_rect: Rect2 = Rect2(origin + Vector2(piece_origin.x * CELL_X, piece_origin.y * CELL_Y), Vector2(piece.size.x * CELL_X, piece.size.y * CELL_Y))
 			var color: Color = Color("#7598aa") if piece_id == "pike_squad" else Color("#83a47d") if piece_id == "repair_station" else Color("#ba6f55") if piece_id == "fire_team" else Color("#cbb56f")
@@ -1751,8 +1751,8 @@ class KeepCanvas extends Control:
 			return
 		_draw_floor("GROUND FLOOR — Gate, Yard, Workshop, Supply", "ground", MAP_ORIGIN)
 		_draw_floor("UPPER FLOOR — Outer Wall, North Tower, Chapel", "upper", UPPER_ORIGIN)
-		if preview_active and PackKeepState.PIECES.has(preview_piece_id):
-			var preview_size: Vector2i = PackKeepState.PIECES[preview_piece_id].size
+		if preview_active and not keep.piece_definition(preview_piece_id).is_empty():
+			var preview_size: Vector2i = keep.piece_definition(preview_piece_id).size
 			var preview_origin_pixel: Vector2 = MAP_ORIGIN if preview_floor == "ground" else UPPER_ORIGIN
 			var rect: Rect2 = Rect2(preview_origin_pixel + Vector2(preview_origin.x * CELL_X, preview_origin.y * CELL_Y), Vector2(preview_size.x * CELL_X, preview_size.y * CELL_Y)).grow(-2)
 			var preview_color: Color = Color(0.27, 0.82, 0.55, 0.42) if preview_valid else Color(0.86, 0.28, 0.32, 0.42)
