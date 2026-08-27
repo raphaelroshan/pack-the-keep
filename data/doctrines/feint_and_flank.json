@@ -1,0 +1,15 @@
+{
+  "id": "feint_and_flank",
+  "content_version": 1,
+  "status": "active",
+  "name": "Feint and Flank",
+  "short_role": "Pair obvious pressure with a visible upper-floor bypass.",
+  "question": "Has the player left an upper response lane?",
+  "composition": ["raider", "climber"],
+  "route_pattern": "gate_feint_and_north_tower_line",
+  "target_priority": "upper_floor_then_gate",
+  "principal_pressure": "North Tower and upper response lane",
+  "likely_target": "north_tower or old_chapel",
+  "uncertainty": "whether the climber lands high or deep",
+  "counter_families": ["recon", "control", "mobile_response"]
+}

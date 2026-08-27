@@ -1,0 +1,15 @@
+{
+  "id": "gate_assault",
+  "content_version": 1,
+  "status": "active",
+  "name": "Gate Assault",
+  "short_role": "Concentrate visible pressure at the shortest entrance.",
+  "question": "Can the keep concentrate strength at the obvious entrance?",
+  "composition": ["raider", "raider"],
+  "route_pattern": "gate_road_concentration",
+  "target_priority": "gate_first",
+  "principal_pressure": "Gate concentration",
+  "likely_target": "gate",
+  "uncertainty": "secondary timing",
+  "counter_families": ["frontline", "fortification", "commander_intervention"]
+}

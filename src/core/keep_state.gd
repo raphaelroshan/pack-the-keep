@@ -24,13 +24,6 @@ const ROOMS: Dictionary = {
 	"old_chapel": {"name": "Old Chapel", "floor": "upper", "origin": Vector2i(8, 5), "size": Vector2i(3, 2), "critical": false, "role": "refuge and evacuation"}
 }
 
-const WAVE_COMPOSITIONS: Dictionary = {
-	"gate_assault": ["raider", "raider"],
-	"distributed_sabotage": ["raider", "sapper"],
-	"feint_and_flank": ["raider", "climber"],
-	"area_pressure": ["siege_beast"]
-}
-
 const SCENARIOS: Dictionary = {
 	"gatehouse_lock": {"name": "Gatehouse Lock", "objective": "Hold Gate without abandoning the response yard.", "lesson": "Concentrate strength, but preserve one interior route.", "starting_doctrine": "gate_assault", "doctrines": ["gate_assault", "distributed_sabotage", "feint_and_flank"], "wave_plans": [["raider", "raider"], ["raider", "sapper"], ["raider", "climber", "sapper"]]},
 	"wrong_wall": {"name": "The Wrong Wall", "objective": "Keep Workshop and North Tower functional through the mixed pressure.", "lesson": "Protect the dependency, not only the obvious wall.", "starting_doctrine": "distributed_sabotage", "doctrines": ["distributed_sabotage", "feint_and_flank", "distributed_sabotage"], "wave_plans": [["raider", "sapper"], ["raider", "climber", "sapper"], ["climber", "sapper", "raider", "sapper"]]},
@@ -53,20 +46,6 @@ const SCENARIO_VARIATIONS: Dictionary = {
 		{"id": "chapel_pressure", "materials": -4, "morale": 1, "target_room": "old_chapel"},
 		{"id": "outer_pressure", "materials": 2, "morale": -1, "target_room": "inner_yard"}
 	]
-}
-
-const DOCTRINE_QUESTIONS: Dictionary = {
-	"gate_assault": "Can the keep concentrate strength at the obvious entrance?",
-	"distributed_sabotage": "Can support rooms survive while the front is under pressure?",
-	"feint_and_flank": "Has the player left an upper response lane?",
-	"area_pressure": "Can the keep preserve recovery when one impact reaches several rooms?"
-}
-
-const DOCTRINE_PRESSURES: Dictionary = {
-	"gate_assault": "Gate concentration",
-	"distributed_sabotage": "Workshop and Supply Room support chain",
-	"feint_and_flank": "North Tower and upper response lane",
-	"area_pressure": "Inner Yard and adjacent support rooms"
 }
 
 var seed: int = 3307
@@ -115,15 +94,17 @@ var _commander_definitions: Dictionary = {}
 var _piece_definitions: Dictionary = {}
 var _pack_definitions: Dictionary = {}
 var _enemy_definitions: Dictionary = {}
+var _doctrine_definitions: Dictionary = {}
 var content_catalog_errors: Array[String] = []
 
 func _init(keep_seed: int = 3307) -> void:
 	content_catalog = ContentCatalog.new()
-	var catalog_result: Dictionary = content_catalog.load_default(ROOMS.keys(), DOCTRINE_QUESTIONS.keys())
+	var catalog_result: Dictionary = content_catalog.load_default(ROOMS.keys())
 	_commander_definitions = catalog_result.get("commanders", {}).duplicate(true)
 	_piece_definitions = catalog_result.get("pieces", {}).duplicate(true)
 	_pack_definitions = catalog_result.get("packs", {}).duplicate(true)
 	_enemy_definitions = catalog_result.get("enemies", {}).duplicate(true)
+	_doctrine_definitions = catalog_result.get("doctrines", {}).duplicate(true)
 	for error in catalog_result.get("errors", []):
 		content_catalog_errors.append(String(error))
 	if not content_catalog_errors.is_empty():
@@ -297,13 +278,21 @@ func enemy_definition(id: String) -> Dictionary:
 		return {}
 	return _enemy_definitions[id].duplicate(true)
 
+func doctrine_ids() -> Array[String]:
+	return content_catalog.doctrine_ids()
+
+func doctrine_definition(id: String) -> Dictionary:
+	if not _doctrine_definitions.has(id):
+		return {}
+	return _doctrine_definitions[id].duplicate(true)
+
 func pack_definition(pack_id: String) -> Dictionary:
 	if not _pack_definitions.has(pack_id):
 		return {}
 	return _pack_definitions[pack_id].duplicate(true)
 
 func content_catalog_status() -> Dictionary:
-	return {"ok": content_catalog_errors.is_empty(), "commander_count": _commander_definitions.size(), "piece_count": _piece_definitions.size(), "pack_count": _pack_definitions.size(), "enemy_count": _enemy_definitions.size(), "errors": content_catalog_errors.duplicate()}
+	return {"ok": content_catalog_errors.is_empty(), "commander_count": _commander_definitions.size(), "piece_count": _piece_definitions.size(), "pack_count": _pack_definitions.size(), "enemy_count": _enemy_definitions.size(), "doctrine_count": _doctrine_definitions.size(), "errors": content_catalog_errors.duplicate()}
 
 func pack_preview(pack_id: String) -> Dictionary:
 	if not _pack_definitions.has(pack_id):
@@ -1020,7 +1009,7 @@ func _append_wave_history() -> void:
 	wave_history.append({
 		"wave": wave_index,
 		"doctrine": enemy_doctrine,
-		"principal_pressure": String(DOCTRINE_PRESSURES.get(enemy_doctrine, "Unknown pressure")),
+		"principal_pressure": String(_doctrine_definitions.get(enemy_doctrine, {}).get("principal_pressure", "Unknown pressure")),
 		"outcome": last_outcome,
 		"breach_level": breach_level,
 		"morale_after": morale,
@@ -1087,7 +1076,7 @@ func _finish_wave() -> Dictionary:
 	return {"ok": true, "resolved": true, "outcome": last_outcome, "timeline": battle_report.duplicate(), "breach_level": breach_level, "repair_interval_active": repair_interval_active, "repair_actions_remaining": repair_actions_remaining}
 
 func start_wave(doctrine: String) -> Dictionary:
-	if not WAVE_COMPOSITIONS.has(doctrine):
+	if not _doctrine_definitions.has(doctrine):
 		return {"ok": false, "reason": "unknown invasion doctrine"}
 	if repair_interval_active:
 		return {"ok": false, "reason": "finish the Greywatch repair interval before starting the next wave"}
@@ -1116,7 +1105,7 @@ func start_wave(doctrine: String) -> Dictionary:
 	last_outcome = ""
 	enemies.clear()
 	battle_report.clear()
-	var composition: Array = WAVE_COMPOSITIONS[doctrine]
+	var composition: Array = _doctrine_definitions[doctrine].get("composition", []).duplicate()
 	if scenario_active and SCENARIOS.has(scenario_id):
 		var wave_plan: Array = SCENARIOS[scenario_id].wave_plans[mini(wave_index - 1, SCENARIOS[scenario_id].wave_plans.size() - 1)]
 		composition = wave_plan.duplicate()
@@ -1125,7 +1114,7 @@ func start_wave(doctrine: String) -> Dictionary:
 		var enemy_id: String = String(composition[index])
 		var enemy_health: int = int(_enemy_definitions[enemy_id].get("health", 1))
 		enemies.append({"enemy_id": enemy_id, "max_health": enemy_health, "hp": enemy_health, "damage": int(_enemy_definitions[enemy_id].get("damage", 0)), "target": "", "defeated": false, "slot": index, "attacks_received": 0, "damage_taken": 0})
-	_battle_log("Forecast: %s. Question: %s" % [doctrine.replace("_", " "), DOCTRINE_QUESTIONS[doctrine]])
+	_battle_log("Forecast: %s. Question: %s" % [doctrine.replace("_", " "), _doctrine_definitions[doctrine].question])
 	_battle_log("Likely pressure: %s. Scout Post can reveal the exact target before contact." % String(_enemy_definitions[String(composition[0])].route).replace("_", " "))
 	return {"ok": true, "message": "Wave %d begins. Pause between steps and read the target before using Lockdown." % wave_index, "forecast": forecast(), "composition": composition.duplicate()}
 
@@ -1234,7 +1223,7 @@ func scenario_report() -> Dictionary:
 		wave_rows.append({
 			"wave": int(history_row.get("wave", wave_rows.size() + 1)),
 			"doctrine": doctrine,
-			"principal_pressure": String(history_row.get("principal_pressure", DOCTRINE_PRESSURES.get(doctrine, "Unknown pressure"))),
+			"principal_pressure": String(history_row.get("principal_pressure", _doctrine_definitions.get(doctrine, {}).get("principal_pressure", "Unknown pressure"))),
 			"outcome": outcome,
 			"defeated_enemies": int(history_row.get("defeated_enemies", 0)),
 			"room_damage": int(history_row.get("room_damage", 0)),
@@ -1313,21 +1302,13 @@ func scenario_report() -> Dictionary:
 	}
 
 func forecast() -> Dictionary:
-	var likely_target: String = "gate"
-	var uncertainty: String = "secondary timing"
-	if enemy_doctrine == "distributed_sabotage":
-		likely_target = "workshop or supply_room"
-		uncertainty = "which support room receives the first mark"
-	elif enemy_doctrine == "feint_and_flank":
-		likely_target = "north_tower or old_chapel"
-		uncertainty = "whether the climber lands high or deep"
-	elif enemy_doctrine == "area_pressure":
-		likely_target = "inner_yard or outer_wall"
-		uncertainty = "which adjacent room shares the impact"
+	var doctrine: Dictionary = _doctrine_definitions.get(enemy_doctrine, {})
+	var likely_target: String = String(doctrine.get("likely_target", "gate"))
+	var uncertainty: String = String(doctrine.get("uncertainty", "secondary timing"))
 	var scout_bonus: bool = _has_unit("scout_post", "upper") or _warden_signal_bonus()
 	if _has_assignment("scout_post", "north_tower"):
 		uncertainty = "none: North Tower assignment reveals the landing room"
-	return {"doctrine": enemy_doctrine, "question": DOCTRINE_QUESTIONS.get(enemy_doctrine, ""), "likely_target": likely_target, "uncertainty": uncertainty, "scout_bonus": scout_bonus, "exact_target_revealed": _has_assignment("scout_post", "north_tower")}
+	return {"doctrine": enemy_doctrine, "question": doctrine.get("question", ""), "likely_target": likely_target, "uncertainty": uncertainty, "scout_bonus": scout_bonus, "exact_target_revealed": _has_assignment("scout_post", "north_tower")}
 
 func summary() -> Dictionary:
 	return {

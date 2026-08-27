@@ -507,8 +507,8 @@ func _build_ui() -> void:
 	controls.add_child(place_button)
 
 	doctrine_option = OptionButton.new()
-	for doctrine_id in ["gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure"]:
-		doctrine_option.add_item(doctrine_id.replace("_", " ").capitalize())
+	for doctrine_id in keep.doctrine_ids():
+		doctrine_option.add_item(String(keep.doctrine_definition(doctrine_id).get("name", doctrine_id)))
 		doctrine_option.set_item_metadata(doctrine_option.item_count - 1, doctrine_id)
 	controls.add_child(_labeled_control("Invasion doctrine", doctrine_option))
 	recovery_actions_panel = VBoxContainer.new()

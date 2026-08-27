@@ -41,6 +41,15 @@ ENEMY_TEXT_FIELDS = {
     "name", "short_role", "question", "route", "doctrine", "counter", "telegraph",
     "failure_mode", "report_phrase",
 }
+DOCTRINE_FIELDS = {
+    "id", "content_version", "status", "name", "short_role", "question", "composition",
+    "route_pattern", "target_priority", "principal_pressure", "likely_target", "uncertainty",
+    "counter_families",
+}
+DOCTRINE_TEXT_FIELDS = {
+    "name", "short_role", "question", "route_pattern", "target_priority",
+    "principal_pressure", "likely_target", "uncertainty",
+}
 SUPPORTED_FLOORS = {"ground", "upper"}
 SUPPORTED_ZONES = {"wall", "courtyard", "keep"}
 SUPPORTED_ATTACK_STYLES = {"melee", "ranged", "support", "fortification"}
@@ -74,6 +83,7 @@ def validate_string_array(
     field: str,
     errors: list[str],
     supported: set[str] | None = None,
+    allow_duplicates: bool = False,
 ) -> list[str]:
     if not isinstance(value, list) or not value:
         errors.append(f"{path}: {field} must be a non-empty array")
@@ -81,7 +91,7 @@ def validate_string_array(
     strings = [item for item in value if isinstance(item, str) and item]
     if len(strings) != len(value):
         errors.append(f"{path}: {field} must contain only non-empty strings")
-    if len(strings) != len(set(strings)):
+    if not allow_duplicates and len(strings) != len(set(strings)):
         errors.append(f"{path}: {field} contains duplicates")
     if supported is not None:
         for item in strings:
@@ -204,6 +214,7 @@ def validate_enemy(
     enemy: dict[str, Any],
     room_ids: set[str],
     piece_ids: set[str],
+    doctrine_ids: set[str],
     manifest_enemies: dict[str, dict[str, Any]],
     seen: set[str],
     errors: list[str],
@@ -237,7 +248,7 @@ def validate_enemy(
     for room_id in target_rooms:
         if room_id not in room_ids:
             errors.append(f"{path}: unknown target room: {room_id}")
-    if enemy.get("doctrine") not in SUPPORTED_DOCTRINES:
+    if enemy.get("doctrine") not in doctrine_ids:
         errors.append(f"{path}: doctrine is unsupported")
     if enemy.get("counter") not in piece_ids:
         errors.append(f"{path}: counter references an unknown piece")
@@ -261,6 +272,44 @@ def validate_enemy(
     elif enemy.get("name") != manifest_enemy.get("name"):
         errors.append(f"{path}: name differs from content manifest")
     return enemy_id
+
+
+def validate_doctrine(
+    path: Path,
+    doctrine: dict[str, Any],
+    enemy_ids: set[str],
+    seen: set[str],
+    errors: list[str],
+) -> str | None:
+    for field in sorted(DOCTRINE_FIELDS - doctrine.keys()):
+        errors.append(f"{path}: missing required field: {field}")
+    doctrine_id = doctrine.get("id")
+    if not isinstance(doctrine_id, str) or not SNAKE_CASE.fullmatch(doctrine_id):
+        errors.append(f"{path}: id must be non-empty snake_case")
+        return None
+    if doctrine_id != path.stem:
+        errors.append(f"{path}: id {doctrine_id} does not match filename")
+    if doctrine_id in seen:
+        errors.append(f"duplicate runtime doctrine id: {doctrine_id}")
+    seen.add(doctrine_id)
+    if doctrine_id not in SUPPORTED_DOCTRINES:
+        errors.append(f"{path}: doctrine is not registered for the active slice")
+    if doctrine.get("status") != "active":
+        errors.append(f"{path}: runtime doctrine status must be active")
+    if not is_integer(doctrine.get("content_version")) or doctrine["content_version"] < 1:
+        errors.append(f"{path}: content_version must be a positive integer")
+    for field in sorted(DOCTRINE_TEXT_FIELDS):
+        value = doctrine.get(field)
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f"{path}: {field} must be non-empty text")
+    composition = validate_string_array(path, doctrine.get("composition"), "composition", errors, allow_duplicates=True)
+    for enemy_id in composition:
+        if enemy_id not in enemy_ids:
+            errors.append(f"{path}: composition references unknown enemy: {enemy_id}")
+    counter_families = validate_string_array(path, doctrine.get("counter_families"), "counter_families", errors)
+    if len(counter_families) < 3:
+        errors.append(f"{path}: counter_families must contain at least three options")
+    return doctrine_id
 
 
 def validate_pack(
@@ -405,6 +454,7 @@ def main() -> int:
     parser.add_argument("--commanders", required=True)
     parser.add_argument("--pieces", required=True)
     parser.add_argument("--enemies", required=True)
+    parser.add_argument("--doctrines", required=True)
     parser.add_argument("--manifest", required=True)
     args = parser.parse_args()
 
@@ -439,6 +489,16 @@ def main() -> int:
         item.get("id") for item in manifest.get("enemies", [])
         if isinstance(item, dict) and isinstance(item.get("id"), str)
     }
+
+    seen_doctrines: set[str] = set()
+    for path in json_files(Path(args.doctrines), "doctrine", errors):
+        doctrine = load_json(path, errors)
+        if not isinstance(doctrine, dict):
+            errors.append(f"{path}: root must be an object")
+            continue
+        validate_doctrine(path, doctrine, set(manifest_enemies), seen_doctrines, errors)
+    for doctrine_id in sorted(SUPPORTED_DOCTRINES - seen_doctrines):
+        errors.append(f"runtime doctrine file missing for active doctrine: {doctrine_id}")
     manifest_assignments = {
         item.get("piece"): {"room": item.get("room"), "effect": item.get("effect")}
         for item in manifest.get("active_slice", {}).get("room_assignments", [])
@@ -474,7 +534,7 @@ def main() -> int:
         if not isinstance(enemy, dict):
             errors.append(f"{path}: root must be an object")
             continue
-        validate_enemy(path, enemy, room_ids, seen_pieces, manifest_enemies, seen_enemies, errors)
+        validate_enemy(path, enemy, room_ids, seen_pieces, seen_doctrines, manifest_enemies, seen_enemies, errors)
     for enemy_id in sorted(set(manifest_enemies) - seen_enemies):
         errors.append(f"runtime enemy file missing for manifest enemy: {enemy_id}")
 
@@ -527,7 +587,8 @@ def main() -> int:
     print(
         "runtime content catalog: PASS "
         f"({len(seen_pieces)} pieces, {len(seen_packs)} packs, "
-        f"{len(seen_commanders)} commanders, {len(seen_enemies)} enemies)"
+        f"{len(seen_commanders)} commanders, {len(seen_enemies)} enemies, "
+        f"{len(seen_doctrines)} doctrines)"
     )
     return 0
 
