@@ -1,0 +1,21 @@
+# Greywatch visual asset manifest
+
+The Greywatch kit is an original, first-pass 2D illustrated asset set generated for this private prototype. The visual target is a top-down orthographic medieval fortification with hand-inked silhouettes, charcoal and parchment neutrals, slate masonry, muted brass accents, and restrained red, amber, and violet semantics for enemy doctrines. PNGs are intentionally kept at manageable test-release sizes; they are not final animation sheets or a complete production tileset.
+
+| File | Dimensions | Role | Integration status |
+|---|---:|---|---|
+| `greywatch_visual_reference.png` | 1280×720 | Internal art-direction reference showing the intended Greywatch presentation language | Reference only; retained to guide future asset work |
+| `greywatch_background.png` | 1280×720 | Reusable Greywatch keep banner/background for the playable prototype | Integrated in `src/ui/main.gd` behind the command table |
+| `castellan_portrait.png` | 512×512 | The Castellan’s commander identity and command-table portrait | Integrated in `src/ui/main.gd` |
+| `pike_squad_icon.png` | 512×512 | Starter defender identity | Integrated in the defender asset strip in `src/ui/main.gd` |
+| `repair_station_icon.png` | 512×512 | Repair facility identity | Integrated in the defender/facility asset strip in `src/ui/main.gd` |
+| `fire_team_icon.png` | 512×512 | Fire Team identity for the pack/unit vocabulary | Integrated in the defender/facility asset strip in `src/ui/main.gd` |
+| `scout_post_icon.png` | 512×512 | Scout Post identity for the pack/unit vocabulary | Integrated in the defender/facility asset strip in `src/ui/main.gd` |
+| `narrow_gate_icon.png` | 512×512 | Starter keep-piece identity | Integrated in the defender/facility asset strip in `src/ui/main.gd` |
+| `raider_icon.png` | 512×512 | Raider identity; direct gate-pressure doctrine | Integrated in the enemy asset strip in `src/ui/main.gd` |
+| `sapper_icon.png` | 512×512 | Sapper identity; support-sabotage doctrine | Integrated in the enemy asset strip in `src/ui/main.gd` |
+| `climber_icon.png` | 512×512 | Climber identity; upper-floor bypass doctrine | Integrated in the enemy asset strip in `src/ui/main.gd` |
+
+## Asset handling
+
+The art is stored as regular repository source content because it is part of the playable prototype and each file remains below the repository’s policy size limit. Godot import metadata and runtime output remain ignored by `.gitignore`. No API keys, private saves, generated Godot metadata, or unreviewed third-party assets are part of this kit. The files should be treated as original generated project content with no third-party attribution currently required; that statement is a provenance note, not a legal license guarantee.

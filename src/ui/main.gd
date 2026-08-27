@@ -1,6 +1,16 @@
 extends Control
 
 const PackKeepState = preload("res://src/core/keep_state.gd")
+const GREYWATCH_BACKGROUND = preload("res://assets/greywatch_background.png")
+const CASTELLAN_PORTRAIT = preload("res://assets/castellan_portrait.png")
+const PIKE_ICON = preload("res://assets/pike_squad_icon.png")
+const REPAIR_ICON = preload("res://assets/repair_station_icon.png")
+const FIRE_ICON = preload("res://assets/fire_team_icon.png")
+const SCOUT_ICON = preload("res://assets/scout_post_icon.png")
+const GATE_ICON = preload("res://assets/narrow_gate_icon.png")
+const RAIDER_ICON = preload("res://assets/raider_icon.png")
+const SAPPER_ICON = preload("res://assets/sapper_icon.png")
+const CLIMBER_ICON = preload("res://assets/climber_icon.png")
 
 var keep: PackKeepState
 var status_label: Label
@@ -64,6 +74,14 @@ func _build_ui() -> void:
 	screen_hint.add_theme_color_override("font_color", Color("#aab1b2"))
 	menu_bar.add_child(screen_hint)
 	shell.add_child(menu_bar)
+
+	var art_banner: TextureRect = TextureRect.new()
+	art_banner.texture = GREYWATCH_BACKGROUND
+	art_banner.custom_minimum_size = Vector2(0, 150)
+	art_banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art_banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	art_banner.modulate = Color(1.0, 1.0, 1.0, 0.78)
+	shell.add_child(art_banner)
 
 	title_card = _build_title_card()
 	shell.add_child(title_card)
@@ -141,6 +159,13 @@ func _build_ui() -> void:
 	panel_title.add_theme_font_size_override("font_size", 19)
 	panel_title.add_theme_color_override("font_color", Color("#e2bd84"))
 	controls.add_child(panel_title)
+	var commander_portrait: TextureRect = TextureRect.new()
+	commander_portrait.texture = CASTELLAN_PORTRAIT
+	commander_portrait.custom_minimum_size = Vector2(0, 92)
+	commander_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	commander_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	commander_portrait.tooltip_text = "The Castellan — Layered Masonry and Lockdown"
+	controls.add_child(commander_portrait)
 
 	commander_option = OptionButton.new()
 	for commander_id in PackKeepState.COMMANDERS.keys():
@@ -165,6 +190,19 @@ func _build_ui() -> void:
 	availability_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	availability_label.add_theme_color_override("font_color", Color("#aab1b2"))
 	controls.add_child(availability_label)
+	var asset_strip: VBoxContainer = VBoxContainer.new()
+	for asset_row in [[PIKE_ICON, REPAIR_ICON, FIRE_ICON, SCOUT_ICON, GATE_ICON], [RAIDER_ICON, SAPPER_ICON, CLIMBER_ICON]]:
+		var row: HBoxContainer = HBoxContainer.new()
+		row.add_theme_constant_override("separation", 4)
+		for asset in asset_row:
+			var icon: TextureRect = TextureRect.new()
+			icon.texture = asset
+			icon.custom_minimum_size = Vector2(42, 42)
+			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+			row.add_child(icon)
+		asset_strip.add_child(row)
+	controls.add_child(asset_strip)
 
 	piece_option = OptionButton.new()
 	for piece_id in PackKeepState.PIECES.keys():

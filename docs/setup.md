@@ -4,7 +4,7 @@
 
 Use a Windows development machine as the primary target because the commercial release is intended for Steam and Epic Games Store. Keep the project in Git and bind the project folder to the coding agent before asking it to edit files. Install Godot 4.x, Git, and a code editor with GDScript diagnostics.
 
-The sandbox used to generate this package does not have Godot installed. The project has been scaffolded and statically reviewed but not executed here. Install and pin a stable Godot 4.x version locally before feature development.
+The internal test-release work has been verified in the sandbox with Godot 4.4.1. For local development, install and pin the same stable Godot 4.x version on the Windows target machine before feature development.
 
 ## First commands
 
@@ -18,7 +18,7 @@ git add .
 git commit -m "Initialize Pack the Keep agent-first prototype"
 ```
 
-Press **F5** to run the project or **F6** to run the current scene. The verification script reports the missing command if Godot is not on PATH.
+Press **F5** to run the project or **F6** to run the current scene. The verification script reports the missing command if Godot is not on PATH. The `export_presets.cfg` file defines the reviewed `Windows Desktop` preset used by the internal release workflow; a local export also requires the matching Godot export templates.
 
 ## Agent access
 
