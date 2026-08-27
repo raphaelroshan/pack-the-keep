@@ -629,29 +629,15 @@ func _load_preferences() -> void:
 	event_feed_retention_index = 0
 	auto_pause_on_threat = false
 	_restore_default_input_bindings()
-	if not FileAccess.file_exists(settings_path):
+	var selected: Dictionary = _load_preferences_candidate(settings_path)
+	if not bool(selected.get("ok", false)):
+		selected = _load_preferences_candidate(settings_backup_path)
+	if not bool(selected.get("ok", false)):
 		_apply_ui_scale()
 		_apply_display_settings()
 		return
-	var parser: JSON = JSON.new()
-	if parser.parse(FileAccess.get_file_as_string(settings_path)) != OK:
-		_apply_ui_scale()
-		return
-	var payload: Variant = parser.data
-	if not payload is Dictionary:
-		_apply_ui_scale()
-		_apply_display_settings()
-		return
-	var schema_value: Variant = payload.get("schema_version")
-	if not (schema_value is int or schema_value is float) or float(schema_value) != floor(float(schema_value)):
-		_apply_ui_scale()
-		_apply_display_settings()
-		return
-	var schema_version: int = int(schema_value)
-	if schema_version < 1 or schema_version > SETTINGS_SCHEMA_VERSION:
-		_apply_ui_scale()
-		_apply_display_settings()
-		return
+	var payload: Dictionary = selected.payload
+	var schema_version: int = int(selected.schema_version)
 	var saved_speed: Variant = payload.get("battle_speed_index")
 	if (saved_speed is int or saved_speed is float) and float(saved_speed) == floor(float(saved_speed)) and int(saved_speed) >= 0 and int(saved_speed) <= 2:
 		battle_speed_index = int(saved_speed)
@@ -683,6 +669,21 @@ func _load_preferences() -> void:
 			auto_pause_on_threat = bool(payload.auto_pause_on_threat)
 	_apply_ui_scale()
 	_apply_display_settings()
+
+func _load_preferences_candidate(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {"ok": false, "reason": "is missing"}
+	var parser: JSON = JSON.new()
+	if parser.parse(FileAccess.get_file_as_string(path)) != OK or not parser.data is Dictionary:
+		return {"ok": false, "reason": "is not valid JSON settings"}
+	var payload: Dictionary = parser.data
+	var schema_value: Variant = payload.get("schema_version")
+	if not (schema_value is int or schema_value is float) or float(schema_value) != floor(float(schema_value)):
+		return {"ok": false, "reason": "has an invalid schema version"}
+	var schema_version: int = int(schema_value)
+	if schema_version < 1 or schema_version > SETTINGS_SCHEMA_VERSION:
+		return {"ok": false, "reason": "uses an unsupported schema version"}
+	return {"ok": true, "payload": payload, "schema_version": schema_version}
 
 func _save_preferences() -> bool:
 	if not preferences_persistence_enabled:

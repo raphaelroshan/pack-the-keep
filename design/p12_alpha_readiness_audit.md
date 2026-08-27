@@ -11,7 +11,7 @@ Turn the P12 checklist into a machine-readable release boundary. Every required 
 - Build identity must match the project, framework, CI manifest, and checklist.
 - Source jobs validate checklist structure; package/release jobs additionally validate dynamic Windows evidence.
 - The combined artifact must independently prove release-template execution, clean-profile setup, executable relocation, stable user-data paths, current schemas, complete content, and both runtime phases.
-- Interrupted-save tests require a valid primary to outrank a stranded temporary file, a missing primary to recover from backup, and a temporary file alone to leave the live run unchanged.
+- Interrupted-save tests require valid run and settings primaries to outrank stranded temporary files, missing primaries to recover from backups, and temporary files alone to leave gameplay unchanged or restore documented presentation defaults.
 - Status remains `candidate`; commercial or human alpha approval is never inferred from CI.
 - Required human gates remain explicitly `pending` with one manual evidence guide.
 

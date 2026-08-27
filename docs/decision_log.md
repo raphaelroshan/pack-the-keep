@@ -351,3 +351,11 @@
 **Reason:** A green collection of unrelated jobs is weaker than an explicit requirement-to-evidence map. The checklist makes omissions, stale versions, and missing artifacts fail before a candidate is presented for human review.
 
 **Trade-off:** Automated readiness remains `candidate` status. Human playtesting, signing, storefront review, and release approval stay outside this gate.
+
+## ADR-045: Presentation settings recover through validated candidates
+
+**Decision:** Load presentation settings from a validated primary candidate, then fall back to the backup candidate when the primary is missing, malformed, or uses an unsupported schema. Temporary files are never promoted during load.
+
+**Reason:** Settings use the same atomic primary/temp/backup replacement shape as run saves. A close between renaming the primary to backup and committing the temporary file must not discard accessibility, scale, display, audio, or remapping preferences.
+
+**Trade-off:** Invalid individual fields inside an otherwise supported settings document still fall back to their documented defaults. A recovered backup is not promoted until a later explicit preference save.

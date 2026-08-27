@@ -12,7 +12,7 @@
     {"id": "scaling", "status": "implemented", "evidence": ["tests/test_p10_controller_scaling.gd", "src/platform/packaged_smoke.gd"]},
     {"id": "input_remapping", "status": "implemented", "evidence": ["tests/test_p10_controller_scaling.gd", "src/platform/packaged_smoke.gd"]},
     {"id": "pause", "status": "implemented", "evidence": ["tests/test_p2_ui.gd", "src/platform/packaged_smoke.gd"]},
-    {"id": "crash_safe_close", "status": "implemented", "evidence": ["tests/test_p12_save_path_isolation.gd", "src/platform/packaged_smoke.gd"]},
+    {"id": "crash_safe_close", "status": "implemented", "evidence": ["tests/test_p12_save_path_isolation.gd", "tests/test_p12_save_recovery.gd", "tests/test_p12_settings_recovery.gd", "src/platform/packaged_smoke.gd"]},
     {"id": "clean_reinstall", "status": "implemented", "evidence": ["tests/test_p12_packaged_profile.gd", "tools/run_packaged_smoke.py", "design/p12_clean_reinstall.md"]}
   ],
   "human_gates": [
