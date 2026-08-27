@@ -95,6 +95,7 @@ var ui_scale_button: Button
 var window_mode_button: Button
 var resolution_button: Button
 var effects_volume_button: Button
+var feedback_cue_label: Label
 var event_feed_button: Button
 var auto_pause_button: Button
 var rebind_action_option: OptionButton
@@ -122,6 +123,7 @@ var preferences_persistence_enabled: bool = true
 var display_application_enabled: bool = true
 var rebind_waiting_action: String = ""
 var last_auto_pause_wave_index: int = -1
+var last_cue_id: String = "none"
 var menu_buttons: Dictionary = {}
 var audio_player: AudioStreamPlayer
 var audio_stream: AudioStreamGenerator
@@ -176,12 +178,12 @@ func _process(delta: float) -> void:
 	var result: Dictionary = keep.advance_wave(advance_delta)
 	if bool(result.get("resolved", false)):
 		battle_paused = true
-		_set_feedback(Color("#bfe8cf"))
+		_set_feedback(Color("#bfe8cf"), _outcome_cue(String(result.get("outcome", "unknown"))))
 		_set_event("Wave resolved: %s. Read the report before rebuilding." % String(result.get("outcome", "unknown")).replace("_", " "))
 		_set_screen("results")
 	else:
 		if keep.battle_report.size() > last_log_size:
-			_set_feedback(Color("#d26155"))
+			_set_feedback(Color("#d26155"), "contact")
 			last_log_size = keep.battle_report.size()
 		var first_threat_step: bool = keep.battle_step > battle_step_before and battle_step_before == 0 and last_auto_pause_wave_index != keep.wave_index
 		var new_breach: bool = keep.breach_level > breach_before
@@ -189,6 +191,7 @@ func _process(delta: float) -> void:
 			battle_paused = true
 			if first_threat_step:
 				last_auto_pause_wave_index = keep.wave_index
+			_play_cue("warning")
 			_set_event("Accessibility auto-pause: %s resolved. Inspect the board, then resume when ready." % ("first threat step" if first_threat_step else "new breach"))
 		_refresh_ui()
 
@@ -255,22 +258,54 @@ func _setup_audio() -> void:
 func _battle_speed() -> float:
 	return [0.5, 1.0, 2.0][battle_speed_index]
 
-func _set_feedback(color: Color) -> void:
+func _set_feedback(color: Color, cue_id: String = "") -> void:
 	if keep_canvas != null:
 		keep_canvas.call("set_feedback", color)
-	if not audio_muted:
-		_play_tone(440.0 if color.g > color.r else 150.0)
+	_play_cue(cue_id if not cue_id.is_empty() else "confirm" if color.g > color.r else "contact")
 
-func _play_tone(frequency: float) -> void:
+func _cue_profile(cue_id: String) -> Dictionary:
+	var profiles: Dictionary = {
+		"warning": {"frequencies": [330.0, 440.0], "duration": 0.055, "gain": 0.9},
+		"contact": {"frequencies": [160.0], "duration": 0.085, "gain": 1.0},
+		"confirm": {"frequencies": [480.0], "duration": 0.07, "gain": 0.75},
+		"repair": {"frequencies": [390.0, 520.0], "duration": 0.06, "gain": 0.8},
+		"ability": {"frequencies": [520.0, 660.0], "duration": 0.065, "gain": 0.9},
+		"error": {"frequencies": [140.0], "duration": 0.1, "gain": 1.0},
+		"pause": {"frequencies": [300.0], "duration": 0.055, "gain": 0.65},
+		"resume": {"frequencies": [500.0], "duration": 0.055, "gain": 0.65},
+		"hold": {"frequencies": [520.0, 660.0, 780.0], "duration": 0.055, "gain": 0.85},
+		"partial_breach": {"frequencies": [360.0, 250.0], "duration": 0.075, "gain": 0.9},
+		"collapse": {"frequencies": [220.0, 150.0], "duration": 0.09, "gain": 1.0}
+	}
+	return Dictionary(profiles.get(cue_id, {})).duplicate(true)
+
+func _outcome_cue(outcome: String) -> String:
+	if outcome in ["hold", "held"]:
+		return "hold"
+	if outcome == "partial_breach":
+		return "partial_breach"
+	return "collapse" if outcome == "collapse" else "confirm"
+
+func _play_cue(cue_id: String) -> void:
+	var profile: Dictionary = _cue_profile(cue_id)
+	if profile.is_empty():
+		return
+	last_cue_id = cue_id
+	if audio_muted:
+		return
+	for frequency in profile.frequencies:
+		_play_tone(float(frequency), float(profile.duration), float(profile.gain))
+
+func _play_tone(frequency: float, duration: float = 0.09, cue_gain: float = 1.0) -> void:
 	if audio_player == null or audio_muted:
 		return
 	var playback: AudioStreamGeneratorPlayback = audio_player.get_stream_playback()
 	if playback == null:
 		return
-	var frame_count: int = int(audio_stream.mix_rate * 0.09)
+	var frame_count: int = int(audio_stream.mix_rate * duration)
 	for frame in range(frame_count):
 		var envelope: float = 1.0 - float(frame) / float(frame_count)
-		var sample: float = sin(TAU * frequency * float(frame) / audio_stream.mix_rate) * 0.08 * _effects_gain() * envelope
+		var sample: float = sin(TAU * frequency * float(frame) / audio_stream.mix_rate) * 0.08 * _effects_gain() * cue_gain * envelope
 		playback.push_frame(Vector2(sample, sample))
 
 func _effects_gain() -> float:
@@ -282,7 +317,7 @@ func _toggle_battle_pause() -> void:
 		return
 	battle_paused = not battle_paused
 	_set_event("Battle paused. Read the forecast and report." if battle_paused else "Battle resumed at %.1fx speed." % _battle_speed())
-	_play_tone(330.0 if battle_paused else 520.0)
+	_play_cue("pause" if battle_paused else "resume")
 	_refresh_ui()
 
 func _set_battle_speed(index: int) -> void:
@@ -1161,6 +1196,11 @@ func _build_ui() -> void:
 	effects_volume_button.tooltip_text = "Adjust generated feedback tones independently from the mute preference."
 	effects_volume_button.pressed.connect(_cycle_effects_volume)
 	controls.add_child(effects_volume_button)
+	feedback_cue_label = Label.new()
+	feedback_cue_label.text = "Last feedback cue: NONE"
+	feedback_cue_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	feedback_cue_label.add_theme_color_override("font_color", Color("#aab1b2"))
+	controls.add_child(feedback_cue_label)
 	event_feed_button = Button.new()
 	event_feed_button.text = "Event feed: newest 4"
 	event_feed_button.tooltip_text = "Change only how many authoritative report entries are shown; the complete report remains saved."
@@ -1792,15 +1832,16 @@ func _on_advance_wave() -> void:
 	var result: Dictionary = keep.advance_wave(1.0)
 	if not bool(result.get("ok", false)):
 		_set_event("Battle blocked: %s." % String(result.get("reason", "unknown")))
+		_play_cue("error")
 	elif bool(result.get("resolved", false)):
-		_set_feedback(Color("#bfe8cf"))
+		_set_feedback(Color("#bfe8cf"), _outcome_cue(String(result.get("outcome", "unknown"))))
 		if keep.has_next_wave() and keep.repair_interval_active:
 			_set_event("Wave %d resolved: %s. Recovery is open; finish the interval to start wave %d automatically." % [keep.wave_index, String(result.get("outcome", "unknown")).replace("_", " "), keep.wave_index + 1])
 		else:
 			_set_event("Wave %d resolved: %s. Read the final report." % [keep.wave_index, String(result.get("outcome", "unknown")).replace("_", " ")])
 		_set_screen("results")
 	else:
-		_set_feedback(Color("#d7a35b"))
+		_set_feedback(Color("#d7a35b"), "contact")
 		_set_event("Battle step %d resolved. Pause and inspect the named target before committing the commander ability." % int(result.get("step", 0)))
 	_refresh_ui()
 
@@ -1810,10 +1851,11 @@ func _on_use_ability() -> void:
 func _run_result(result: Dictionary, label: String) -> void:
 	if bool(result.get("ok", false)):
 		_set_event("%s: %s" % [label, String(result.get("message", "command accepted"))])
-		_set_feedback(Color("#9bd4c3") if label in ["Repair", "Assignment", "Placement"] else Color("#91b7da"))
+		var cue_id: String = "repair" if label == "Repair" else "ability" if label == "Ability" else "warning" if label == "Invasion" else "confirm"
+		_set_feedback(Color("#9bd4c3") if label in ["Repair", "Assignment", "Placement"] else Color("#91b7da"), cue_id)
 	else:
 		_set_event("%s blocked: %s." % [label, String(result.get("reason", "unknown"))])
-		_set_feedback(Color("#d26155"))
+		_set_feedback(Color("#d26155"), "error")
 	_refresh_ui()
 
 func _on_save() -> void:
@@ -2082,6 +2124,7 @@ func _refresh_ui() -> void:
 	window_mode_button.text = "Window mode: Fullscreen" if fullscreen_enabled else "Window mode: Windowed"
 	resolution_button.text = "Window size: %s%s" % [_window_size_text(), " (saved)" if fullscreen_enabled else ""]
 	effects_volume_button.text = "Effects volume: %d%%" % int(_effects_gain() * 100.0)
+	feedback_cue_label.text = "Last feedback cue: %s" % last_cue_id.replace("_", " ").to_upper()
 	event_feed_button.text = "Event feed: newest %d" % _event_feed_retention()
 	auto_pause_button.text = "Threat auto-pause: ON" if auto_pause_on_threat else "Threat auto-pause: OFF"
 	_refresh_binding_controls()
