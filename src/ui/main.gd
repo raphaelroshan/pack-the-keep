@@ -12,6 +12,7 @@ var pack_option: OptionButton
 var piece_option: OptionButton
 var floor_option: OptionButton
 var doctrine_option: OptionButton
+var room_option: OptionButton
 var keep_canvas: Control
 
 func _ready() -> void:
@@ -126,6 +127,11 @@ func _build_ui() -> void:
 	floor_option.add_item("Upper floor")
 	floor_option.set_item_metadata(1, "upper")
 	controls.add_child(_labeled_control("Floor", floor_option))
+	room_option = OptionButton.new()
+	for room_id in PackKeepState.ROOMS.keys():
+		room_option.add_item(String(PackKeepState.ROOMS[room_id].get("name", room_id)))
+		room_option.set_item_metadata(room_option.item_count - 1, room_id)
+	controls.add_child(_labeled_control("Room", room_option))
 	var place_button: Button = Button.new()
 	place_button.text = "Place at next slot"
 	place_button.pressed.connect(_on_place_piece)
@@ -136,6 +142,29 @@ func _build_ui() -> void:
 		doctrine_option.add_item(doctrine_id.replace("_", " ").capitalize())
 		doctrine_option.set_item_metadata(doctrine_option.item_count - 1, doctrine_id)
 	controls.add_child(_labeled_control("Invasion doctrine", doctrine_option))
+	var assign_button: Button = Button.new()
+	assign_button.text = "Assign selected piece to room"
+	assign_button.tooltip_text = "Consumes one repair-interval action and activates the unit’s room behavior."
+	assign_button.pressed.connect(_on_assign_piece)
+	controls.add_child(assign_button)
+
+	var clear_assignment_button: Button = Button.new()
+	clear_assignment_button.text = "Clear selected assignment"
+	clear_assignment_button.pressed.connect(_on_clear_assignment)
+	controls.add_child(clear_assignment_button)
+
+	var repair_room_button: Button = Button.new()
+	repair_room_button.text = "Repair selected room"
+	repair_room_button.tooltip_text = "Consumes one repair-interval action and 8 materials."
+	repair_room_button.pressed.connect(_on_repair_room)
+	controls.add_child(repair_room_button)
+
+	var finish_interval_button: Button = Button.new()
+	finish_interval_button.text = "Finish repair interval"
+	finish_interval_button.tooltip_text = "Close recovery and unlock the next invasion."
+	finish_interval_button.pressed.connect(_on_finish_interval)
+	controls.add_child(finish_interval_button)
+
 	var start_button: Button = Button.new()
 	start_button.text = "Start invasion"
 	start_button.pressed.connect(_on_start_wave)
@@ -205,6 +234,25 @@ func _on_place_piece() -> void:
 func _on_start_wave() -> void:
 	_run_result(keep.start_wave(_selected_id(doctrine_option)), "Invasion")
 
+func _selected_piece_instance() -> String:
+	var piece_id: String = _selected_id(piece_option)
+	for instance_id in keep.pieces.keys():
+		if String(keep.pieces[instance_id].get("piece_id", "")) == piece_id:
+			return String(instance_id)
+	return ""
+
+func _on_assign_piece() -> void:
+	_run_result(keep.assign_piece_to_room(_selected_piece_instance(), _selected_id(room_option)), "Assignment")
+
+func _on_clear_assignment() -> void:
+	_run_result(keep.clear_piece_assignment(_selected_piece_instance()), "Assignment")
+
+func _on_repair_room() -> void:
+	_run_result(keep.repair_room(_selected_id(room_option)), "Repair")
+
+func _on_finish_interval() -> void:
+	_run_result(keep.finish_repair_interval(), "Interval")
+
 func _on_advance_wave() -> void:
 	var result: Dictionary = keep.advance_wave(1.0)
 	if not bool(result.get("ok", false)):
@@ -234,7 +282,10 @@ func _set_event(text: String) -> void:
 	event_label.text = text
 
 func _refresh_ui() -> void:
-	status_label.text = "Castellan | Materials %d | Command %d | Morale %d | Pieces %d | Wave %d | Step %d | Breach %d | Outcome %s" % [keep.materials, keep.command_points, keep.morale, keep.pieces.size(), keep.wave_index, keep.battle_step, keep.breach_level, keep.last_outcome if not keep.last_outcome.is_empty() else "active"]
+	var interval_text: String = "closed"
+	if keep.repair_interval_active:
+		interval_text = "%d action(s): %s" % [keep.repair_actions_remaining, keep.repair_interval_reason]
+	status_label.text = "Castellan | Materials %d | Command %d | Morale %d | Pieces %d | Wave %d | Step %d | Breach %d | Outcome %s | Repair %s" % [keep.materials, keep.command_points, keep.morale, keep.pieces.size(), keep.wave_index, keep.battle_step, keep.breach_level, keep.last_outcome if not keep.last_outcome.is_empty() else "active", interval_text]
 	var forecast: Dictionary = keep.forecast()
 	forecast_label.text = "FORECAST — %s | Likely target: %s | Uncertainty: %s | Scout: %s" % [String(forecast.get("doctrine", "")).replace("_", " "), String(forecast.get("likely_target", "")), String(forecast.get("uncertainty", "")), "revealed" if bool(forecast.get("scout_bonus", false)) else "not revealed"]
 	if event_label.text.is_empty():
@@ -297,8 +348,12 @@ class KeepCanvas extends Control:
 			draw_rect(piece_rect.grow(-2), color, true)
 			draw_rect(piece_rect.grow(-2), Color("#f1dfb8"), false, 1.5)
 			draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(2, 11), String(piece.name), HORIZONTAL_ALIGNMENT_LEFT, piece_rect.size.x - 4, 8, Color("#201a25"))
-			if float(instance.get("condition", 0.0)) < 1.0:
-				draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(2, piece_rect.size.y - 3), "%d%%" % int(float(instance.get("condition", 0.0)) * 100.0), HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#201a25"))
+			var piece_status: String = "%d%%" % int(float(instance.get("condition", 0.0)) * 100.0)
+			var assignment: String = String(instance.get("assignment", ""))
+			if not assignment.is_empty():
+				piece_status += " " + assignment
+			if float(instance.get("condition", 0.0)) < 1.0 or not assignment.is_empty():
+				draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(2, piece_rect.size.y - 3), piece_status, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#201a25"))
 
 	func _draw() -> void:
 		if keep == null:

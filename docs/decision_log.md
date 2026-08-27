@@ -87,3 +87,19 @@
 **Reason:** Players should learn from a damaged layout rather than losing after a long preparation phase. Materials, repairs, and the battle report make recovery a strategic continuation.
 
 **Trade-off:** The first slice must make damaged states visually distinct and prevent repeated breach damage from falsely escalating the collapse counter.
+
+## ADR-012: Recovery is a two-action authored interval
+
+**Decision:** After a Hold or Partial Breach at Greywatch, open a named repair interval with exactly two actions. Allow room repair, piece repair, specialist assignment, assignment clearing, and early closure. Collapse skips the interval.
+
+**Reason:** Recovery should be meaningful but bounded. Two actions create a short priority puzzle that can be authored, tested, and explained without turning between-wave play into a second construction game.
+
+**Trade-off:** Players cannot repair every damaged room or freely reconfigure the keep after every wave. The restriction preserves consequence and makes “repair the Gate versus assign the Scout Post” a real decision.
+
+## ADR-013: Assignments are role commitments
+
+**Decision:** Each active unit has one specialist room: Pike Squad → Gate, Repair Station → Workshop, Fire Team → Inner Yard, and Scout Post → North Tower. Assignment is made only during the repair interval, costs one action, must match the unit’s floor and room, and persists into the next wave.
+
+**Reason:** Room assignment gives the two-floor keep a human staffing layer without adding individual worker simulation. It makes the authored rooms mechanically legible and changes the next battle’s causal report.
+
+**Trade-off:** An assigned unit cannot be reassigned in the middle of combat. The player must forecast which function deserves a specialist and accept the opportunity cost of committing it there.

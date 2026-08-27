@@ -67,6 +67,13 @@ const DOCTRINE_QUESTIONS: Dictionary = {
 	"feint_and_flank": "Has the player left an upper response lane?"
 }
 
+const ASSIGNMENT_RULES: Dictionary = {
+	"pike_squad": {"room": "gate", "effect": "Gate Road hold bonus +2"},
+	"repair_station": {"room": "workshop", "effect": "repair amount +4 and Workshop priority"},
+	"fire_team": {"room": "inner_yard", "effect": "denial zone reaches the response space"},
+	"scout_post": {"room": "north_tower", "effect": "secondary target revealed before contact"}
+}
+
 var seed: int = 3307
 var commander_id: String = ACTIVE_COMMANDER
 var materials: int = 60
@@ -89,6 +96,10 @@ var battle_report: Array[String] = []
 var lockdown_pending: bool = false
 var lockdown_used: bool = false
 var last_outcome: String = ""
+var repair_interval_active: bool = false
+var repair_actions_remaining: int = 0
+var repair_interval_reason: String = ""
+var assigned_rooms: Dictionary = {}
 
 func _init(keep_seed: int = 3307) -> void:
 	seed = keep_seed
@@ -150,14 +161,62 @@ func place_piece(piece_id: String, origin: Vector2i, floor: String = "ground") -
 		return {"ok": false, "reason": "not enough materials"}
 	materials -= cost
 	var instance_id: String = "%s_%d" % [piece_id, pieces.size()]
-	pieces[instance_id] = {"piece_id": piece_id, "origin": origin, "floor": floor, "condition": 1.0}
+	pieces[instance_id] = {"piece_id": piece_id, "origin": origin, "floor": floor, "condition": 1.0, "assignment": ""}
 	return {"ok": true, "piece_instance": instance_id, "message": "Placed %s on the %s floor: %s." % [PIECES[piece_id].name, floor, PIECES[piece_id].role]}
 
 func remove_piece(instance_id: String) -> Dictionary:
 	if not pieces.has(instance_id):
 		return {"ok": false, "reason": "unknown defensive piece"}
+	var assignment: String = String(pieces[instance_id].get("assignment", ""))
+	if not assignment.is_empty():
+		assigned_rooms.erase(assignment)
 	pieces.erase(instance_id)
 	return {"ok": true, "message": "Removed defensive piece; materials are not refunded during an active run."}
+
+func assign_piece_to_room(instance_id: String, room_id: String) -> Dictionary:
+	if not repair_interval_active:
+		return {"ok": false, "reason": "room assignments are made during the repair interval"}
+	if repair_actions_remaining <= 0:
+		return {"ok": false, "reason": "no repair actions remain"}
+	if not pieces.has(instance_id):
+		return {"ok": false, "reason": "unknown defensive piece"}
+	if not rooms.has(room_id):
+		return {"ok": false, "reason": "unknown keep room"}
+	var piece_id: String = String(pieces[instance_id].get("piece_id", ""))
+	if not ASSIGNMENT_RULES.has(piece_id):
+		return {"ok": false, "reason": "%s has no room assignment behavior" % PIECES[piece_id].name}
+	var rule: Dictionary = ASSIGNMENT_RULES[piece_id]
+	if String(rule.get("room", "")) != room_id:
+		return {"ok": false, "reason": "%s can only be assigned to %s" % [PIECES[piece_id].name, ROOMS[String(rule.get("room", ""))].name]}
+	if String(pieces[instance_id].get("floor", "ground")) != String(ROOMS[room_id].get("floor", "ground")):
+		return {"ok": false, "reason": "piece and assigned room must share a floor"}
+	if not _piece_is_adjacent_to_room(pieces[instance_id], room_id):
+		return {"ok": false, "reason": "piece must be inside or adjacent to its assigned room"}
+	if assigned_rooms.has(room_id) and String(assigned_rooms[room_id]) != instance_id:
+		return {"ok": false, "reason": "%s already has an assigned piece" % ROOMS[room_id].name}
+	var existing_assignment: String = String(pieces[instance_id].get("assignment", ""))
+	if not existing_assignment.is_empty():
+		return {"ok": false, "reason": "piece is already assigned to %s; clear it during the interval first" % ROOMS[existing_assignment].name}
+	assigned_rooms[room_id] = instance_id
+	pieces[instance_id].assignment = room_id
+	repair_actions_remaining -= 1
+	_log("Assigned %s to %s: %s." % [PIECES[piece_id].name, ROOMS[room_id].name, rule.effect])
+	return {"ok": true, "message": "Assigned %s to %s: %s." % [PIECES[piece_id].name, ROOMS[room_id].name, rule.effect], "actions_remaining": repair_actions_remaining}
+
+func clear_piece_assignment(instance_id: String) -> Dictionary:
+	if not repair_interval_active:
+		return {"ok": false, "reason": "assignment changes are made during the repair interval"}
+	if repair_actions_remaining <= 0:
+		return {"ok": false, "reason": "no repair actions remain"}
+	if not pieces.has(instance_id):
+		return {"ok": false, "reason": "unknown defensive piece"}
+	var assignment: String = String(pieces[instance_id].get("assignment", ""))
+	if assignment.is_empty():
+		return {"ok": false, "reason": "piece has no room assignment"}
+	assigned_rooms.erase(assignment)
+	pieces[instance_id].assignment = ""
+	repair_actions_remaining -= 1
+	return {"ok": true, "message": "Cleared %s from %s." % [PIECES[String(pieces[instance_id].get("piece_id", ""))].name, ROOMS[assignment].name], "actions_remaining": repair_actions_remaining}
 
 func room_condition(room_id: String) -> int:
 	if not rooms.has(room_id):
@@ -212,6 +271,12 @@ func _living_piece_count(piece_id: String, floor: String = "") -> int:
 func _has_unit(piece_id: String, floor: String = "") -> bool:
 	return _living_piece_count(piece_id, floor) > 0
 
+func _has_assignment(piece_id: String, room_id: String) -> bool:
+	if not assigned_rooms.has(room_id):
+		return false
+	var instance_id: String = String(assigned_rooms[room_id])
+	return pieces.has(instance_id) and String(pieces[instance_id].get("piece_id", "")) == piece_id and float(pieces[instance_id].get("condition", 0.0)) > 0.0
+
 func _defender_damage(enemy_id: String) -> int:
 	var enemy: Dictionary = ENEMIES[enemy_id]
 	var damage: int = 0
@@ -228,6 +293,10 @@ func _defender_damage(enemy_id: String) -> int:
 			contribution = 0
 		if piece_id == "fire_team" and enemy_id != "climber":
 			contribution = 1
+		if piece_id == "pike_squad" and String(instance.get("assignment", "")) == "gate" and enemy_id == "raider":
+			contribution += 2
+		if piece_id == "fire_team" and String(instance.get("assignment", "")) == "inner_yard" and enemy_id == "climber":
+			contribution += 1
 		if _castellan_adjacent(instance, String(enemy.target_rooms[0])):
 			contribution += 1
 		damage += contribution
@@ -297,15 +366,21 @@ func _repair_after_defenders() -> void:
 		if String(instance.get("piece_id", "")) != "repair_station" or float(instance.get("condition", 0.0)) <= 0.0:
 			continue
 		var best_room: String = ""
-		var lowest: int = 101
-		for room_id in rooms.keys():
-			if room_condition(room_id) > 0 and room_condition(room_id) < lowest:
-				lowest = room_condition(room_id)
-				best_room = String(room_id)
-		if not best_room.is_empty() and lowest < 100:
-			rooms[best_room].condition = mini(100, lowest + 8)
+		var repair_amount: int = 8
+		var assigned_room: String = String(instance.get("assignment", ""))
+		if assigned_room == "workshop" and room_condition(assigned_room) > 0 and room_condition(assigned_room) < 100:
+			best_room = assigned_room
+			repair_amount = 12
+		else:
+			var lowest: int = 101
+			for room_id in rooms.keys():
+				if room_condition(room_id) > 0 and room_condition(room_id) < lowest:
+					lowest = room_condition(room_id)
+					best_room = String(room_id)
+		if not best_room.is_empty() and room_condition(best_room) < 100:
+			rooms[best_room].condition = mini(100, room_condition(best_room) + repair_amount)
 			_update_room_state(best_room)
-			_battle_log("Repair Station restored %s by 8; it is now %s." % [ROOMS[best_room].name, rooms[best_room].state])
+			_battle_log("Repair Station restored %s by %d; it is now %s." % [ROOMS[best_room].name, repair_amount, rooms[best_room].state])
 			break
 
 func _battle_step() -> Dictionary:
@@ -357,27 +432,53 @@ func _critical_breach_count() -> int:
 			count += 1
 	return count
 
+func _open_repair_interval(outcome: String) -> void:
+	repair_interval_active = true
+	repair_actions_remaining = 2
+	if outcome == "partial_breach":
+		repair_interval_reason = "The breach is quiet for now. Stabilize one function, then choose who takes the next post."
+	else:
+		repair_interval_reason = "The bells stop. Assign the crew before the next warning."
+	_log("Greywatch repair interval opened: %s" % repair_interval_reason)
+
+func finish_repair_interval() -> Dictionary:
+	if not repair_interval_active:
+		return {"ok": false, "reason": "no Greywatch repair interval is open"}
+	var unused: int = repair_actions_remaining
+	repair_interval_active = false
+	repair_actions_remaining = 0
+	repair_interval_reason = ""
+	_log("Repair interval closed with %d unused action(s). The next doctrine can begin." % unused)
+	return {"ok": true, "message": "Repair interval closed. Greywatch is ready for the next forecast.", "unused_actions": unused}
+
 func _finish_wave() -> Dictionary:
 	wave_active = false
 	var critical_breaches: int = _critical_breach_count()
 	if critical_breaches >= 3 or morale <= 0:
 		last_outcome = "collapse"
+		repair_interval_active = false
+		repair_actions_remaining = 0
+		repair_interval_reason = ""
 		_battle_log("Outcome: collapse. Three critical functions or morale failed; the report identifies the chain.")
 	elif breach_level > 0:
 		last_outcome = "partial_breach"
 		morale = maxi(0, morale - 1)
 		materials += 5
 		_battle_log("Outcome: partial breach. The keep remains playable and receives 5 recovery materials.")
+		_open_repair_interval(last_outcome)
 	else:
 		last_outcome = "held"
 		morale = mini(10, morale + 1)
 		materials += 8
 		_battle_log("Outcome: held. The defenders gain 8 materials and 1 morale.")
-	return {"ok": true, "resolved": true, "outcome": last_outcome, "step": battle_step, "timeline": battle_report.duplicate(), "breach_level": breach_level}
+		_open_repair_interval(last_outcome)
+	return {"ok": true, "resolved": true, "outcome": last_outcome, "timeline": battle_report.duplicate(), "breach_level": breach_level, "repair_interval_active": repair_interval_active, "repair_actions_remaining": repair_actions_remaining}
 
 func start_wave(doctrine: String) -> Dictionary:
 	if not WAVE_COMPOSITIONS.has(doctrine):
 		return {"ok": false, "reason": "unknown invasion doctrine"}
+	if repair_interval_active:
+		return {"ok": false, "reason": "finish the Greywatch repair interval before starting the next wave"}
 	if wave_active:
 		return {"ok": false, "reason": "an invasion is already active"}
 	if pieces.is_empty():
@@ -428,15 +529,26 @@ func use_commander_ability() -> Dictionary:
 	return {"ok": true, "message": "Lockdown is armed for the next battle step.", "command_points": command_points}
 
 func repair_piece(instance_id: String) -> Dictionary:
+	if not repair_interval_active:
+		return {"ok": false, "reason": "piece repairs are made during the Greywatch repair interval"}
+	if repair_actions_remaining <= 0:
+		return {"ok": false, "reason": "no repair actions remain"}
 	if not pieces.has(instance_id):
 		return {"ok": false, "reason": "unknown defensive piece"}
+	if float(pieces[instance_id].get("condition", 0.0)) >= 1.0:
+		return {"ok": false, "reason": "piece is already stable"}
 	if materials < 6:
 		return {"ok": false, "reason": "not enough materials"}
 	materials -= 6
 	pieces[instance_id].condition = minf(1.0, float(pieces[instance_id].condition) + 0.30)
-	return {"ok": true, "condition": pieces[instance_id].condition, "message": "Repair restored the named piece without erasing its battle history."}
+	repair_actions_remaining -= 1
+	return {"ok": true, "condition": pieces[instance_id].condition, "actions_remaining": repair_actions_remaining, "message": "Repair restored the named piece without erasing its battle history."}
 
 func repair_room(room_id: String) -> Dictionary:
+	if not repair_interval_active:
+		return {"ok": false, "reason": "room repairs are made during the Greywatch repair interval"}
+	if repair_actions_remaining <= 0:
+		return {"ok": false, "reason": "no repair actions remain"}
 	if not rooms.has(room_id):
 		return {"ok": false, "reason": "unknown keep room"}
 	if materials < 8:
@@ -446,7 +558,8 @@ func repair_room(room_id: String) -> Dictionary:
 	materials -= 8
 	rooms[room_id].condition = mini(100, room_condition(room_id) + 30)
 	_update_room_state(room_id)
-	return {"ok": true, "message": "Repaired %s to %s." % [ROOMS[room_id].name, rooms[room_id].state]}
+	repair_actions_remaining -= 1
+	return {"ok": true, "actions_remaining": repair_actions_remaining, "message": "Repaired %s to %s." % [ROOMS[room_id].name, rooms[room_id].state]}
 
 func forecast() -> Dictionary:
 	var likely_target: String = "gate"
@@ -457,7 +570,10 @@ func forecast() -> Dictionary:
 	elif enemy_doctrine == "feint_and_flank":
 		likely_target = "north_tower or old_chapel"
 		uncertainty = "whether the climber lands high or deep"
-	return {"doctrine": enemy_doctrine, "question": DOCTRINE_QUESTIONS.get(enemy_doctrine, ""), "likely_target": likely_target, "uncertainty": uncertainty, "scout_bonus": _has_unit("scout_post", "upper")}
+	var scout_bonus: bool = _has_unit("scout_post", "upper")
+	if _has_assignment("scout_post", "north_tower"):
+		uncertainty = "none: North Tower assignment reveals the landing room"
+	return {"doctrine": enemy_doctrine, "question": DOCTRINE_QUESTIONS.get(enemy_doctrine, ""), "likely_target": likely_target, "uncertainty": uncertainty, "scout_bonus": scout_bonus, "exact_target_revealed": _has_assignment("scout_post", "north_tower")}
 
 func summary() -> Dictionary:
 	return {
@@ -472,6 +588,10 @@ func summary() -> Dictionary:
 		"enemy_doctrine": enemy_doctrine,
 		"breach_level": breach_level,
 		"last_outcome": last_outcome,
+		"repair_interval_active": repair_interval_active,
+		"repair_actions_remaining": repair_actions_remaining,
+		"repair_interval_reason": repair_interval_reason,
+		"assigned_rooms": assigned_rooms.duplicate(),
 		"forecast": forecast(),
 		"rooms": rooms.duplicate(true),
 		"pieces": pieces.duplicate(true),
@@ -501,7 +621,11 @@ func serialize() -> Dictionary:
 		"battle_report": battle_report.duplicate(),
 		"lockdown_pending": lockdown_pending,
 		"lockdown_used": lockdown_used,
-		"last_outcome": last_outcome
+		"last_outcome": last_outcome,
+		"repair_interval_active": repair_interval_active,
+		"repair_actions_remaining": repair_actions_remaining,
+		"repair_interval_reason": repair_interval_reason,
+		"assigned_rooms": assigned_rooms.duplicate()
 	}
 
 func load_serialized(data: Dictionary) -> void:
@@ -527,3 +651,12 @@ func load_serialized(data: Dictionary) -> void:
 	lockdown_pending = bool(data.get("lockdown_pending", lockdown_pending))
 	lockdown_used = bool(data.get("lockdown_used", lockdown_used))
 	last_outcome = String(data.get("last_outcome", last_outcome))
+	repair_interval_active = bool(data.get("repair_interval_active", repair_interval_active))
+	repair_actions_remaining = int(data.get("repair_actions_remaining", repair_actions_remaining))
+	repair_interval_reason = String(data.get("repair_interval_reason", repair_interval_reason))
+	assigned_rooms = data.get("assigned_rooms", {}).duplicate()
+	if assigned_rooms.is_empty():
+		for instance_id in pieces.keys():
+			var assignment: String = String(pieces[instance_id].get("assignment", ""))
+			if not assignment.is_empty():
+				assigned_rooms[assignment] = instance_id

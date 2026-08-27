@@ -42,6 +42,13 @@
       "held",
       "partial_breach",
       "collapse"
+    ],
+    "repair_interval_id": "greywatch_repair_interval",
+    "assignment_ids": [
+      "pike_to_gate",
+      "repair_to_workshop",
+      "fire_to_yard",
+      "scout_to_tower"
     ]
   },
   "unit_roles": [
@@ -980,5 +987,60 @@
     "telegraph_rule": "reveal doctrine, approach, likely target, approximate arrival, and one uncertainty",
     "damage_rule": "room damage changes named room functions; piece damage changes condition and can disable a unit",
     "recovery_rule": "a single breached critical room is recoverable; collapse requires three critical breaches or zero morale"
-  }
+  },
+  "repair_interval": {
+    "id": "greywatch_repair_interval",
+    "status": "vertical_slice",
+    "actions": 2,
+    "opens_after": [
+      "held",
+      "partial_breach"
+    ],
+    "blocked_during": [
+      "wave_active"
+    ],
+    "closes_with": "finish_repair_interval",
+    "action_types": [
+      "repair_room",
+      "repair_piece",
+      "assign_piece",
+      "clear_assignment"
+    ],
+    "costs": {
+      "repair_room_materials": 8,
+      "repair_piece_materials": 6
+    },
+    "collapse_behavior": "collapse has no repair interval and restarts from preparation",
+    "design_purpose": "make damage matter without turning recovery into a hidden reset or a second construction phase"
+  },
+  "room_assignments": [
+    {
+      "id": "pike_to_gate",
+      "piece": "pike_squad",
+      "room": "gate",
+      "effect": "Gate Road hold bonus +2",
+      "action_cost": 1
+    },
+    {
+      "id": "repair_to_workshop",
+      "piece": "repair_station",
+      "room": "workshop",
+      "effect": "repair amount +4 and Workshop priority",
+      "action_cost": 1
+    },
+    {
+      "id": "fire_to_yard",
+      "piece": "fire_team",
+      "room": "inner_yard",
+      "effect": "denial zone reaches the response space",
+      "action_cost": 1
+    },
+    {
+      "id": "scout_to_tower",
+      "piece": "scout_post",
+      "room": "north_tower",
+      "effect": "secondary target revealed before contact",
+      "action_cost": 1
+    }
+  ]
 }

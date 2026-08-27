@@ -789,6 +789,40 @@
       "held",
       "partial_breach",
       "collapse"
+    ],
+    "repair_interval": {
+      "id": "greywatch_repair_interval",
+      "actions": [
+        "repair_room",
+        "repair_piece",
+        "assign_piece",
+        "clear_assignment",
+        "finish_repair_interval"
+      ],
+      "prompt_held": "The bells stop. Assign the crew before the next warning.",
+      "prompt_partial_breach": "The breach is quiet for now. Stabilize one function, then choose who takes the next post."
+    },
+    "room_assignments": [
+      {
+        "piece": "pike_squad",
+        "room": "gate",
+        "effect": "Gate Road hold bonus +2"
+      },
+      {
+        "piece": "repair_station",
+        "room": "workshop",
+        "effect": "repair amount +4 and Workshop priority"
+      },
+      {
+        "piece": "fire_team",
+        "room": "inner_yard",
+        "effect": "denial zone reaches the response space"
+      },
+      {
+        "piece": "scout_post",
+        "room": "north_tower",
+        "effect": "secondary target revealed before contact"
+      }
     ]
   }
 }
