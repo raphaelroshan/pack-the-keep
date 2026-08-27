@@ -1,7 +1,7 @@
 {
   "slug": "pack-the-keep",
   "display_name": "Pack the Keep",
-  "build_version": "0.12.3-alpha-packaged-pause-close",
+  "build_version": "0.12.4-alpha-clean-reinstall",
   "godot_test": "res://tests/test_keep_state.gd",
   "primary_repo": "raphaelroshan/pack-the-keep",
   "release_platforms": ["steam", "epic-games-store"],

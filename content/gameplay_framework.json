@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.12.3-alpha-packaged-pause-close",
+  "framework_version": "0.12.4-alpha-clean-reinstall",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -180,6 +180,12 @@
     "input_rule": "persisted_controller_pause_binding_toggles_resume_and_pause",
     "manual_rule": "one_manual_step_advances_exactly_once_while_presentation_remains_paused",
     "close_rule": "main_scene_frees_before_zero_process_exit"
+  },
+  "p12_clean_reinstall_smoke": {
+    "status": "implemented",
+    "install_rule": "embedded_executable_runs_from_a_new_install_directory",
+    "profile_rule": "relocated_build_reuses_user_profile_without_executable_relative_state",
+    "continuity": ["battle_step_one", "125_percent_scale", "remapped_pause_button"]
   },
   "v090_multi_wave": {
     "status": "implemented",

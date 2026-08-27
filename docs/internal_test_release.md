@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.12.3-alpha-packaged-pause-close` — packaged Windows pause, input, scaling, persistence, and recovery validation
+**Current build identity:** `0.12.4-alpha-clean-reinstall` — packaged Windows reinstall continuity, pause, input, scaling, persistence, and recovery validation
 
 ## Purpose
 
@@ -45,6 +45,10 @@ The exported Windows smoke now verifies controller navigation defaults, all game
 ## v0.12.3 Packaged pause and close additions
 
 The Windows artifact now proves battle begins paused, paused presentation cannot advance simulation, the persisted controller binding toggles pause/resume, a manual step advances exactly once, and the main scene tears down before a zero process exit.
+
+## v0.12.4 Clean reinstall additions
+
+CI copies the embedded Windows executable to a fresh install directory and launches that relocated copy against the same isolated profile. The reinstalled build must restore active battle step one, 125% scale, and the remapped pause binding; the uploaded smoke artifact records both phases.
 
 ## v0.8.2 testability additions
 

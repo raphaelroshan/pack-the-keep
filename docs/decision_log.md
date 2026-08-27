@@ -327,3 +327,11 @@
 **Reason:** Pause is a core strategic and accessibility promise. Testing it after export confirms that input, UI state, and deterministic simulation remain correctly separated in the shipped boundary.
 
 **Trade-off:** Headless teardown verifies a clean Godot scene/process path, not forced termination or desktop window-manager behavior.
+
+## ADR-042: Reinstall continuity is profile-owned
+
+**Decision:** Relocate the exported single-file executable and relaunch it against the same isolated profile. Require the new install location to restore the previous run and presentation settings.
+
+**Reason:** Saves and preferences belong to the user profile, not the installation directory. A relocation test catches accidental executable-relative persistence before installer/storefront work begins.
+
+**Trade-off:** This models a portable reinstall and does not yet validate a signed installer, registry cleanup, or storefront-specific uninstall semantics.

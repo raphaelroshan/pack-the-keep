@@ -42,7 +42,11 @@ def path_is_within(path: str, root: Path) -> bool:
         return False
 
 
-def validate_report(report_path: Path, profile_root: Path, expected_version: str) -> list[str]:
+def paths_equal(first: str, second: Path) -> bool:
+    return os.path.normcase(os.path.abspath(first)) == os.path.normcase(os.path.abspath(second))
+
+
+def validate_report(report_path: Path, profile_root: Path, expected_version: str, expected_phase: str = "initial") -> list[str]:
     errors: list[str] = []
     try:
         report = json.loads(report_path.read_text(encoding="utf-8"))
@@ -50,6 +54,8 @@ def validate_report(report_path: Path, profile_root: Path, expected_version: str
         return [f"cannot read packaged smoke report: {exc}"]
     if report.get("schema_version") != 1:
         errors.append("smoke report schema_version must be 1")
+    if report.get("phase") != expected_phase:
+        errors.append(f"smoke report phase {report.get('phase')!r} does not match {expected_phase!r}")
     if report.get("build_version") != expected_version:
         errors.append(f"packaged build version {report.get('build_version')!r} does not match {expected_version!r}")
     if report.get("ok") is not True:
@@ -66,12 +72,24 @@ def validate_report(report_path: Path, profile_root: Path, expected_version: str
         errors.append("packaged gameplay did not save deterministic battle step one")
     if report.get("save_schema_version") != 4 or report.get("settings_schema_version") != 4:
         errors.append("packaged persistence schemas do not match the current runtime")
-    for field in ("controller_navigation_ready", "controller_defaults_ready", "controller_remap_ready", "ui_scale_ready", "settings_scale_ready", "settings_remap_ready"):
+    for field in ("controller_navigation_ready", "controller_defaults_ready"):
         if report.get(field) is not True:
             errors.append(f"packaged input/scaling assertion failed: {field}")
-    for field in ("initial_pause_ready", "paused_state_frozen", "remapped_pause_ready", "manual_step_ready"):
-        if report.get(field) is not True:
-            errors.append(f"packaged pause assertion failed: {field}")
+    if expected_phase == "initial":
+        if report.get("profile_files_present") is not False:
+            errors.append("initial packaged profile was not clean")
+        for field in ("controller_remap_ready", "ui_scale_ready", "settings_scale_ready", "settings_remap_ready"):
+            if report.get(field) is not True:
+                errors.append(f"packaged input/scaling assertion failed: {field}")
+        for field in ("initial_pause_ready", "paused_state_frozen", "remapped_pause_ready", "manual_step_ready"):
+            if report.get(field) is not True:
+                errors.append(f"packaged pause assertion failed: {field}")
+    elif expected_phase == "reinstall":
+        if report.get("profile_files_present") is not True:
+            errors.append("reinstalled build did not observe existing profile files")
+        for field in ("restored_run_ready", "restored_scale_ready", "restored_remap_ready"):
+            if report.get(field) is not True:
+                errors.append(f"packaged reinstall assertion failed: {field}")
     content_status = report.get("content_status")
     if not isinstance(content_status, dict) or content_status.get("ok") is not True:
         errors.append("packaged runtime content catalog did not load")
@@ -125,6 +143,7 @@ def main() -> int:
         "ALL_PROXY": "http://127.0.0.1:9",
         "NO_PROXY": "",
         "PACK_THE_KEEP_PACKAGED_SMOKE": "1",
+        "PACK_THE_KEEP_SMOKE_PHASE": "initial",
     })
     common = [str(executable), "--headless", "--audio-driver", "Dummy"]
     try:
@@ -139,15 +158,40 @@ def main() -> int:
     if len(reports) != 1:
         print(f"ERROR: expected one packaged smoke report below {profile_root}, found {len(reports)}")
         return 1
-    errors = validate_report(reports[0], profile_root, expected_version)
+    initial_report_path = reports[0]
+    errors = validate_report(initial_report_path, profile_root, expected_version, "initial")
     if errors:
         for error in errors:
             print(f"ERROR: {error}")
         return 1
+    initial_report = json.loads(initial_report_path.read_text(encoding="utf-8"))
+    if not isinstance(initial_report.get("executable_path"), str) or not paths_equal(initial_report["executable_path"], executable):
+        print(f"ERROR: initial smoke ran from unexpected executable: {initial_report.get('executable_path')!r}")
+        return 1
+    reinstall_dir = profile_root.with_name(f"{profile_root.name}-reinstalled-app")
+    reinstall_dir.mkdir(parents=True, exist_ok=True)
+    reinstalled_executable = reinstall_dir / executable.name
+    shutil.copy2(executable, reinstalled_executable)
+    environment["PACK_THE_KEEP_SMOKE_PHASE"] = "reinstall"
+    try:
+        reinstall = run_process([str(reinstalled_executable), "--headless", "--audio-driver", "Dummy", "--", "--packaged-smoke"], environment, args.timeout)
+        require_success("reinstalled packaged gameplay smoke", reinstall)
+    except RuntimeError as exc:
+        print(f"ERROR: {exc}")
+        return 1
+    errors = validate_report(initial_report_path, profile_root, expected_version, "reinstall")
+    if errors:
+        for error in errors:
+            print(f"ERROR: {error}")
+        return 1
+    reinstall_report = json.loads(initial_report_path.read_text(encoding="utf-8"))
+    if not isinstance(reinstall_report.get("executable_path"), str) or not paths_equal(reinstall_report["executable_path"], reinstalled_executable):
+        print(f"ERROR: reinstall smoke ran from unexpected executable: {reinstall_report.get('executable_path')!r}")
+        return 1
     if args.report_copy is not None:
         args.report_copy.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(reports[0], args.report_copy)
-    print(f"packaged smoke: PASS ({reports[0]})")
+        args.report_copy.write_text(json.dumps({"schema_version": 1, "initial": initial_report, "reinstall": reinstall_report}, indent=2), encoding="utf-8")
+    print(f"packaged smoke: PASS ({initial_report_path}; relocated to {reinstalled_executable})")
     return 0
 
 

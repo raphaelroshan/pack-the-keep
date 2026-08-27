@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
 **Document status:** Active planning contract for post-v0.10.0 development
-**Current release baseline:** `v0.12.3-alpha-packaged-pause-close`
+**Current release baseline:** `v0.12.4-alpha-clean-reinstall`
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
 **Primary keep:** Greywatch Keep
@@ -19,7 +19,7 @@ Pack the Keep currently has a playable Greywatch vertical slice. The authoritati
 
 The current slice supports two commanders, seventeen active defender pieces/equipment, nine packs, seven enemy types, eight invasion doctrines, eight authored scenarios, two mutually exclusive run modifiers, a two-floor square fort, deterministic six-step combat waves, repair and assignment intervals, finite ranged ammunition, authored armor and armor-piercing counters, nearby ranged support, linked signal redundancy, bounded forecast disruption, adjacent room/piece protection, protection-piercing target selection, commander abilities, pause/speed/manual-step controls, controller navigation/remapping, persistent presentation settings, map-first enemy focus, placement previews, save/load, a quick-playtest flow, and three-wave authored sequences that advance only after explicit recovery completion.
 
-P11 content breadth is complete. Three teaching pairs are implemented: Crossbow Watch versus Shielded Advance, Bell Guard versus Smoke and Signal, and Shieldwall versus Break the Line. Three Bells at Dusk composes all three questions across two viable two-pack baselines. The Campaign Ledger offers Roadside Intelligence or the Hardened Vanguard durability challenge through one data-driven selection boundary. P12 alpha hardening is in progress: Windows artifacts pass packaged offline, persistence, controller-remap, scaling, pause/manual-step, and clean-teardown smoke, while load validates primary/backup candidates away from live state. The next bounded objective is clean reinstall behavior.
+P11 content breadth is complete. Three teaching pairs are implemented: Crossbow Watch versus Shielded Advance, Bell Guard versus Smoke and Signal, and Shieldwall versus Break the Line. Three Bells at Dusk composes all three questions across two viable two-pack baselines. The Campaign Ledger offers Roadside Intelligence or the Hardened Vanguard durability challenge through one data-driven selection boundary. P12 alpha hardening is in progress: Windows artifacts pass packaged offline, persistence, controller-remap, scaling, pause/manual-step, clean-teardown, and relocated-reinstall continuity smoke, while load validates primary/backup candidates away from live state. The next bounded objective is a release-candidate audit against the remaining alpha checklist.
 
 The next objective is not to add a large roster. The next objective is to make Greywatch feel like a complete, legible, replayable game loop and to establish safe extension points so new content can be added without turning the core simulation into an opaque collection of special cases.
 
