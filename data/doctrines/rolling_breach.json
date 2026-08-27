@@ -1,0 +1,9 @@
+{
+  "id": "rolling_breach", "content_version": 1, "status": "active", "name": "Rolling Breach",
+  "short_role": "Escalate from quick contact into support pressure and a broad final impact.",
+  "question": "Did the keep preserve a reserve after answering the first threat?",
+  "composition": ["raider", "sapper", "siege_beast"], "route_pattern": "gate_then_support_then_area_impact",
+  "target_priority": "gate_then_lowest_condition_support_then_cluster", "principal_pressure": "Gate, support chain, and fallback space",
+  "likely_target": "gate, then the weakest support room", "uncertainty": "which damaged room shares the final impact",
+  "counter_families": ["mobile_response", "support", "control", "commander_intervention"]
+}

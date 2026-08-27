@@ -1,0 +1,14 @@
+{
+  "id": "rear_guard", "content_version": 1, "status": "active", "name": "Rear Guard",
+  "short_role": "Turn a visible breach into a stronger second-line response.", "role": "holds the fallback line",
+  "question": "Which room still has a defender when the first line bends?", "kind": "unit", "category": "mobile_response",
+  "footprint": [1, 1], "allowed_floors": ["ground", "upper"], "allowed_zones": ["wall", "courtyard", "keep"],
+  "cost": 8, "max_health": 13, "placement_question": "Where should the reserve wait without blocking movement?",
+  "skill": "Last Line: gains +2 response after any room becomes strained or breached, plus 1 while assigned to Barracks.",
+  "strength_tags": ["fallback", "recovery", "mixed_pressure"], "weakness_tags": ["first_contact", "isolated_position"],
+  "attack_profile": {"style": "melee", "range": 1, "cooldown_steps": 1, "damage": 2, "defense": 2, "ammo_capacity": 0, "targets": ["all"]},
+  "support_profile": null,
+  "assignment_rule": {"room": "barracks", "effect": "fallback response remains ready behind the first line"},
+  "availability": "fallback_convoy",
+  "presentation": {"icon": "", "marker_color_role": "mobile_response", "radius_scale": 1.0}
+}

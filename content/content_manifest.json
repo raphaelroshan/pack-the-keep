@@ -23,6 +23,16 @@
     "validation": "positive catalog load plus malformed piece, enemy, doctrine, and scenario regression coverage",
     "next_slice": "p7_second_doctrines"
   },
+  "p7_mobile_response": {
+    "status": "implemented",
+    "family": "mobile_response",
+    "packs": ["runner_network", "fallback_convoy"],
+    "pieces": ["runner_pair", "supply_cache", "rear_guard", "breakaway_barricade"],
+    "doctrine": "rolling_breach",
+    "scenario": "relief_road",
+    "validation": "36-run legacy balance baseline, 12-run Relief Road matrix, deterministic mechanic tests, save/load coverage, and preparation/battle/results UI smoke",
+    "next_slice": "p8_authored_events"
+  },
   "campaign": {
     "title": "The Bell at Dusk",
     "premise": "A small keep is granted one season to become a refuge before a coalition of raiders, sappers, climbers, and siege beasts tests every defensive doctrine at once.",
@@ -176,6 +186,24 @@
       "doctrine": "early_warning",
       "limitation": "Information does not stop a breach unless the keep can act on it.",
       "choice_text": "Spend a pack on knowing where the next problem will be."
+    },
+    {
+      "id": "runner_network",
+      "name": "Runner Network",
+      "purpose": "Make open layouts and rapid relief viable.",
+      "pieces": ["runner_pair", "supply_cache"],
+      "doctrine": "rapid_redeployment",
+      "limitation": "Fragile pieces lose value when lanes close or support is exposed.",
+      "choice_text": "Spend space on movement and a reserve instead of immediate stopping power."
+    },
+    {
+      "id": "fallback_convoy",
+      "name": "Fallback Convoy",
+      "purpose": "Hold a second line and spend one structure to save another.",
+      "pieces": ["rear_guard", "breakaway_barricade"],
+      "doctrine": "controlled_fallback",
+      "limitation": "Provides less value before contact and consumes precious reserve space.",
+      "choice_text": "Reserve space and condition now so the keep can yield without collapsing."
     }
   ],
   "pieces": [
@@ -250,6 +278,30 @@
         1,
         1
       ]
+    },
+    {
+      "id": "runner_pair",
+      "name": "Runner Pair",
+      "role": "redeploys through open lanes",
+      "size": [1, 1]
+    },
+    {
+      "id": "supply_cache",
+      "name": "Supply Cache",
+      "role": "stores a recovery reserve",
+      "size": [1, 1]
+    },
+    {
+      "id": "rear_guard",
+      "name": "Rear Guard",
+      "role": "holds the fallback line",
+      "size": [1, 1]
+    },
+    {
+      "id": "breakaway_barricade",
+      "name": "Breakaway Barricade",
+      "role": "creates a disposable fallback edge",
+      "size": [1, 1]
     }
   ],
   "rooms": [
@@ -767,7 +819,9 @@
       "pike_squad",
       "repair_station",
       "fire_team",
-      "scout_post"
+      "scout_post",
+      "runner_pair",
+      "rear_guard"
     ],
     "enemy_ids": [
       "raider",
@@ -778,7 +832,8 @@
     "scenario_ids": [
       "gatehouse_lock",
       "wrong_wall",
-      "open_yard_net"
+      "open_yard_net",
+      "relief_road"
     ],
     "variation_contract": "seed-derived bounded target or resource variation; scenario objective and counter meaning remain fixed",
     "waves": [
@@ -851,6 +906,11 @@
         "piece": "scout_post",
         "room": "north_tower",
         "effect": "secondary target revealed before contact"
+      },
+      {
+        "piece": "rear_guard",
+        "room": "barracks",
+        "effect": "fallback response remains ready behind the first line"
       }
     ],
     "menu_states": [

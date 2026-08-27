@@ -14,12 +14,13 @@ func _initialize() -> void:
 	var loaded: Dictionary = catalog.load_default(PackKeepState.ROOMS.keys())
 	_check(bool(loaded.get("ok", false)), "active runtime catalog did not load cleanly: %s" % "; ".join(loaded.get("errors", [])))
 	var known_doctrines: Array = catalog.doctrine_ids()
-	_check(known_doctrines == ["gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure"], "doctrine catalog order or active IDs changed")
+	_check(known_doctrines == ["gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach"], "doctrine catalog order or active IDs changed")
 	var expected_doctrines: Dictionary = {
 		"gate_assault": {"composition": ["raider", "raider"], "target": "gate", "pressure": "Gate concentration"},
 		"distributed_sabotage": {"composition": ["raider", "sapper"], "target": "workshop or supply_room", "pressure": "Workshop and Supply Room support chain"},
 		"feint_and_flank": {"composition": ["raider", "climber"], "target": "north_tower or old_chapel", "pressure": "North Tower and upper response lane"},
-		"area_pressure": {"composition": ["siege_beast"], "target": "inner_yard or outer_wall", "pressure": "Inner Yard and adjacent support rooms"}
+		"area_pressure": {"composition": ["siege_beast"], "target": "inner_yard or outer_wall", "pressure": "Inner Yard and adjacent support rooms"},
+		"rolling_breach": {"composition": ["raider", "sapper", "siege_beast"], "target": "gate, then the weakest support room", "pressure": "Gate, support chain, and fallback space"}
 	}
 	for doctrine_id in expected_doctrines.keys():
 		var doctrine: Dictionary = catalog.doctrine_definition(String(doctrine_id))
@@ -35,7 +36,7 @@ func _initialize() -> void:
 	malformed_doctrine.counter_families = ["only_one"]
 	var doctrine_errors: Array[String] = catalog.validate_doctrine_definition(malformed_doctrine, "wrong_filename", catalog.enemy_ids())
 	_check(doctrine_errors.size() >= 4, "catalog validator did not reject missing fields, ID mismatch, enemy references, and incomplete counters")
-	_check(catalog.scenario_ids() == ["gatehouse_lock", "wrong_wall", "open_yard_net"], "scenario catalog order or active IDs changed")
+	_check(catalog.scenario_ids() == ["gatehouse_lock", "wrong_wall", "open_yard_net", "relief_road"], "scenario catalog order or active IDs changed")
 	var gatehouse: Dictionary = catalog.scenario_definition("gatehouse_lock")
 	_check(String(gatehouse.get("starting_doctrine", "")) == "gate_assault" and gatehouse.get("wave_plans", []).size() == 3, "Gatehouse Lock sequence changed during externalization")
 	_check(gatehouse.get("variations", []).size() == 3 and String(gatehouse.variations[1].get("id", "")) == "thin_supply", "Gatehouse Lock variations changed during externalization")
@@ -78,7 +79,7 @@ func _initialize() -> void:
 	for doctrine in known_doctrines:
 		if not known_piece_targets.has(doctrine):
 			known_piece_targets.append(doctrine)
-	_check(catalog.piece_ids() == ["pike_squad", "repair_station", "fire_team", "scout_post", "narrow_gate", "brace", "fire_brazier", "signal_beacon"], "piece catalog order or active IDs changed")
+	_check(catalog.piece_ids() == ["pike_squad", "repair_station", "fire_team", "scout_post", "narrow_gate", "brace", "fire_brazier", "signal_beacon", "runner_pair", "supply_cache", "rear_guard", "breakaway_barricade"], "piece catalog order or active IDs changed")
 	var expected_pieces: Dictionary = {
 		"pike_squad": {"size": Vector2i(2, 1), "cost": 8, "health": 14, "ammo": 0, "attack": 4, "availability": "starter", "assignment": "gate"},
 		"repair_station": {"size": Vector2i(2, 1), "cost": 10, "health": 10, "ammo": 0, "attack": 0, "availability": "field_engineers", "assignment": "workshop"},
@@ -130,12 +131,14 @@ func _initialize() -> void:
 	malformed_commander.favored_pack_families = ["missing_family"]
 	var commander_errors: Array[String] = catalog.validate_commander_definition(malformed_commander, "wrong_filename")
 	_check(commander_errors.size() >= 4, "catalog validator did not reject missing fields, ID mismatch, invalid morale, and unknown pack families")
-	_check(catalog.pack_ids() == ["pike_line", "field_engineers", "firekeepers", "scouts"], "pack catalog order or active IDs changed")
+	_check(catalog.pack_ids() == ["pike_line", "field_engineers", "firekeepers", "scouts", "runner_network", "fallback_convoy"], "pack catalog order or active IDs changed")
 	var expected: Dictionary = {
 		"pike_line": {"cost": 4, "contents": ["pike_squad", "narrow_gate"], "doctrine": "compact_corridors"},
 		"field_engineers": {"cost": 4, "contents": ["repair_station", "brace"], "doctrine": "redundancy"},
 		"firekeepers": {"cost": 5, "contents": ["fire_team", "fire_brazier"], "doctrine": "denial_zones"},
-		"scouts": {"cost": 3, "contents": ["scout_post", "signal_beacon"], "doctrine": "early_warning"}
+		"scouts": {"cost": 3, "contents": ["scout_post", "signal_beacon"], "doctrine": "early_warning"},
+		"runner_network": {"cost": 4, "contents": ["runner_pair", "supply_cache"], "doctrine": "rapid_redeployment"},
+		"fallback_convoy": {"cost": 4, "contents": ["rear_guard", "breakaway_barricade"], "doctrine": "controlled_fallback"}
 	}
 	for pack_id in expected.keys():
 		var definition: Dictionary = catalog.pack_definition(String(pack_id))
@@ -154,7 +157,7 @@ func _initialize() -> void:
 
 	var first: PackKeepState = PackKeepState.new(3307)
 	var second: PackKeepState = PackKeepState.new(3307)
-	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("pack_count", 0)) == 4 and int(first.content_catalog_status().get("commander_count", 0)) == 2 and int(first.content_catalog_status().get("piece_count", 0)) == 8 and int(first.content_catalog_status().get("enemy_count", 0)) == 4 and int(first.content_catalog_status().get("doctrine_count", 0)) == 4 and int(first.content_catalog_status().get("scenario_count", 0)) == 3, "KeepState did not expose a valid commander, piece, pack, enemy, doctrine, and scenario catalog")
+	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("pack_count", 0)) == 6 and int(first.content_catalog_status().get("commander_count", 0)) == 2 and int(first.content_catalog_status().get("piece_count", 0)) == 12 and int(first.content_catalog_status().get("enemy_count", 0)) == 4 and int(first.content_catalog_status().get("doctrine_count", 0)) == 5 and int(first.content_catalog_status().get("scenario_count", 0)) == 4, "KeepState did not expose the complete P7 runtime catalog")
 	_check(first.piece_ids() == catalog.piece_ids(), "KeepState did not preserve stable piece order")
 	_check(first.enemy_ids() == catalog.enemy_ids(), "KeepState did not preserve stable enemy order")
 	_check(first.doctrine_ids() == catalog.doctrine_ids(), "KeepState did not preserve stable doctrine order")
