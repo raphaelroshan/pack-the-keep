@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.12.5-alpha-readiness-audit` — machine-audited P12 candidate evidence pending human approval
+**Current build identity:** `0.12.6-alpha-persistence-recovery` — machine-audited P12 candidate evidence pending human approval
 
 ## Purpose
 
@@ -53,6 +53,10 @@ CI copies the embedded Windows executable to a fresh install directory and launc
 ## v0.12.5 Alpha readiness audit
 
 The repository now carries a versioned checklist for all eleven P12 hardening requirements. Source CI verifies unique implemented entries and durable evidence paths; Windows packaging additionally validates the combined initial/reinstall report. Passing remains candidate evidence, not automatic release approval.
+
+## v0.12.6 Persistence recovery
+
+Presentation settings now use the same validated primary/backup candidate discipline as run saves. A malformed or missing primary can recover the last valid backup, a valid primary outranks a stranded temporary file, and a temporary file alone restores documented defaults rather than being promoted.
 
 ## v0.8.2 testability additions
 

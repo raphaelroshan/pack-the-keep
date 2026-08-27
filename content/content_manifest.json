@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.12.5",
+  "content_version": "0.12.6",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -168,7 +168,14 @@
     "checklist": "content/p12_alpha_checklist.json",
     "required_checks": 11,
     "dynamic_evidence": "combined_initial_and_reinstall_windows_smoke_report",
-    "release_status": "candidate_pending_human_approval"
+    "release_status": "candidate_pending_human_approval",
+    "next_slice": "p12_settings_recovery"
+  },
+  "p12_settings_recovery": {
+    "status": "implemented",
+    "selection": "validate_primary_then_backup_before_applying_presentation_preferences",
+    "temporary_file_rule": "never_promote_temporary_settings_during_load",
+    "coverage": ["malformed_primary", "missing_primary", "valid_primary_with_stranded_temp", "temp_only", "invalid_primary_and_backup"]
   },
   "campaign": {
     "title": "The Bell at Dusk",
