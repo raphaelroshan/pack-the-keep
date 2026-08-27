@@ -35,6 +35,20 @@ func _initialize() -> void:
 	malformed_doctrine.counter_families = ["only_one"]
 	var doctrine_errors: Array[String] = catalog.validate_doctrine_definition(malformed_doctrine, "wrong_filename", catalog.enemy_ids())
 	_check(doctrine_errors.size() >= 4, "catalog validator did not reject missing fields, ID mismatch, enemy references, and incomplete counters")
+	_check(catalog.scenario_ids() == ["gatehouse_lock", "wrong_wall", "open_yard_net"], "scenario catalog order or active IDs changed")
+	var gatehouse: Dictionary = catalog.scenario_definition("gatehouse_lock")
+	_check(String(gatehouse.get("starting_doctrine", "")) == "gate_assault" and gatehouse.get("wave_plans", []).size() == 3, "Gatehouse Lock sequence changed during externalization")
+	_check(gatehouse.get("variations", []).size() == 3 and String(gatehouse.variations[1].get("id", "")) == "thin_supply", "Gatehouse Lock variations changed during externalization")
+	var copied_scenario: Dictionary = catalog.scenario_definition("wrong_wall")
+	copied_scenario.wave_plans.clear()
+	_check(catalog.scenario_definition("wrong_wall").get("wave_plans", []).size() == 3, "callers can mutate the catalog's stored scenario definition")
+	var malformed_scenario: Dictionary = catalog.scenario_definition("open_yard_net")
+	malformed_scenario.erase("lesson")
+	malformed_scenario.doctrines = ["missing_doctrine"]
+	malformed_scenario.wave_plans = [["missing_enemy"]]
+	malformed_scenario.variations = [{"id": "bad variation", "materials": 0.5, "morale": 0, "target_room": "missing_room"}]
+	var scenario_errors: Array[String] = catalog.validate_scenario_definition(malformed_scenario, "wrong_filename", PackKeepState.ROOMS.keys())
+	_check(scenario_errors.size() >= 6, "catalog validator did not reject missing fields, ID mismatch, wave shape, variation ID/value, and room references")
 	_check(catalog.enemy_ids() == ["raider", "sapper", "climber", "siege_beast"], "enemy catalog order or active IDs changed")
 	var expected_enemies: Dictionary = {
 		"raider": {"health": 8, "damage": 2, "arrival": 2, "route": "gate_road", "targets": ["gate"], "doctrine": "gate_assault", "counter": "pike_squad"},
@@ -140,10 +154,11 @@ func _initialize() -> void:
 
 	var first: PackKeepState = PackKeepState.new(3307)
 	var second: PackKeepState = PackKeepState.new(3307)
-	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("pack_count", 0)) == 4 and int(first.content_catalog_status().get("commander_count", 0)) == 2 and int(first.content_catalog_status().get("piece_count", 0)) == 8 and int(first.content_catalog_status().get("enemy_count", 0)) == 4 and int(first.content_catalog_status().get("doctrine_count", 0)) == 4, "KeepState did not expose a valid commander, piece, pack, enemy, and doctrine catalog")
+	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("pack_count", 0)) == 4 and int(first.content_catalog_status().get("commander_count", 0)) == 2 and int(first.content_catalog_status().get("piece_count", 0)) == 8 and int(first.content_catalog_status().get("enemy_count", 0)) == 4 and int(first.content_catalog_status().get("doctrine_count", 0)) == 4 and int(first.content_catalog_status().get("scenario_count", 0)) == 3, "KeepState did not expose a valid commander, piece, pack, enemy, doctrine, and scenario catalog")
 	_check(first.piece_ids() == catalog.piece_ids(), "KeepState did not preserve stable piece order")
 	_check(first.enemy_ids() == catalog.enemy_ids(), "KeepState did not preserve stable enemy order")
 	_check(first.doctrine_ids() == catalog.doctrine_ids(), "KeepState did not preserve stable doctrine order")
+	_check(first.scenario_ids() == catalog.scenario_ids(), "KeepState did not preserve stable scenario order")
 	_check(first.commander_ids() == ["castellan", "warden"], "KeepState did not preserve stable commander order")
 	var selected_warden: Dictionary = first.select_commander("warden")
 	_check(bool(selected_warden.get("ok", false)) and first.materials == 52 and first.morale == 7, "externalized Warden did not preserve starting resources")

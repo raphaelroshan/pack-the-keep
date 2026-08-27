@@ -199,3 +199,11 @@
 **Reason:** A doctrine is a teaching and targeting policy, not an enemy stat block. Separating it allows future scenarios to reuse actors in different compositions without duplicating health, timing, or route data.
 
 **Trade-off:** Scenario wave plans remain in simulation code for one more migration slice, so catalog validators must check their doctrine and enemy references at the boundary.
+
+## ADR-026: Store each scenario with its bounded variations
+
+**Decision:** Keep a scenario's identity, teaching sequence, wave plans, and seed-selected bounded variations in one validated JSON file.
+
+**Reason:** Variations only have meaning relative to the scenario whose lesson they preserve. Co-locating them makes review and reference validation explicit without changing deterministic selection.
+
+**Trade-off:** Scenario files contain nested wave and variation arrays, but remain small, independent, and easier to audit than one global scenario table.

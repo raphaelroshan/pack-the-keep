@@ -413,8 +413,8 @@ func _build_ui() -> void:
 
 	scenario_option = OptionButton.new()
 	scenario_option.item_selected.connect(func(_index: int) -> void: _on_select_scenario())
-	for scenario_id in PackKeepState.SCENARIOS.keys():
-		scenario_option.add_item(String(PackKeepState.SCENARIOS[scenario_id].get("name", scenario_id)))
+	for scenario_id in keep.scenario_ids():
+		scenario_option.add_item(String(keep.scenario_definition(scenario_id).get("name", scenario_id)))
 		scenario_option.set_item_metadata(scenario_option.item_count - 1, scenario_id)
 	controls.add_child(_labeled_control("Greywatch scenario", scenario_option))
 	scenario_preview_label = Label.new()
