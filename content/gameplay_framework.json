@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.11.2-greywatch-shieldwall",
+  "framework_version": "0.11.3-greywatch-three-bells",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -137,6 +137,13 @@
     "scenario": "the_splintered_gate",
     "presentation": ["steel_shield_glyph", "shutter_bars", "shieldbreaker_hammer_marker", "explicit_protection_piercing_text"],
     "determinism_rule": "protection_and_target_selection_use_stable_categories_positions_health_and_ids"
+  },
+  "p11_three_bells_challenge": {
+    "status": "implemented",
+    "scenario": "three_bells_at_dusk",
+    "combined_questions": ["armor", "signal_disruption", "protection_piercing"],
+    "tested_pack_pairs": [["crossbow_watch", "bell_guard"], ["shieldwall", "bell_guard"]],
+    "guardrail": "composition_uses_existing_rules_and_preserves_the_two_pack_preparation_limit"
   },
   "v090_multi_wave": {
     "status": "implemented",

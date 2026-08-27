@@ -65,7 +65,8 @@ const SCENARIO_PATHS: Array[String] = [
 	"res://data/scenarios/relief_road.json",
 	"res://data/scenarios/red_banner_road.json",
 	"res://data/scenarios/ash_at_the_bell.json",
-	"res://data/scenarios/the_splintered_gate.json"
+	"res://data/scenarios/the_splintered_gate.json",
+	"res://data/scenarios/three_bells_at_dusk.json"
 ]
 
 const EVENT_PATHS: Array[String] = [
