@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.5.0-p3",
+  "framework_version": "0.6.0-initial-combat",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -39,6 +39,17 @@
     "recovery_priorities": "deterministic criticality_then_condition_then_stable_room_id ranking; advisory only",
     "determinism_rule": "focus, hit-testing, preview, and selection order do not mutate authoritative battle outcomes",
     "deferred": ["direct_enemy_retargeting", "controller_remapping", "new_enemy_types", "new_commanders"]
+  },
+  "initial_real_time_auto_battle": {
+    "status": "implemented",
+    "model": "real_time_presentation_over_deterministic_one_second_auto_battle_steps",
+    "enemy_behavior": ["authored_named_routes", "behavior_targets", "approach_then_contact", "causal_contact_reports"],
+    "defender_behavior": ["automatic_counter_fire", "melee_and_ranged_styles", "floor_and_assignment_modifiers", "cooldown_and_health_gates"],
+    "ammunition": "finite_rounds_for_ranged_pieces; reload at recovery transition; melee uses none",
+    "skills": ["piece_role_skills", "castellan_lockdown", "warden_rally"],
+    "metrics": ["ammo_spent", "unit_attacks", "damage_dealt", "enemy_attacks", "room_damage", "piece_damage"],
+    "determinism_rule": "presentation_clock_and_focus_do_not alter authoritative step outcomes",
+    "deferred": ["projectile_physics", "ammo_resupply_buildings", "direct_target_commands", "controller_remapping"]
   },
   "vertical_slice": {
     "commanders": [

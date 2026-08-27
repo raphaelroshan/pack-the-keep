@@ -60,14 +60,14 @@ const PACK_EXPLANATIONS: Dictionary = {
 }
 
 const PIECES: Dictionary = {
-	"pike_squad": {"name": "Pike Squad", "size": Vector2i(2, 1), "cost": 8, "role": "holds Gate Road", "attack": 4, "defense": 2, "max_health": 14, "attack_interval": 1, "range": 1, "availability": "starter", "targets": ["raider"]},
-	"repair_station": {"name": "Repair Station", "size": Vector2i(2, 1), "cost": 10, "role": "restores nearby structures", "attack": 0, "defense": 1, "max_health": 10, "attack_interval": 1, "range": 1, "availability": "field_engineers", "targets": ["sapper", "area_pressure"]},
-	"fire_team": {"name": "Fire Team", "size": Vector2i(2, 1), "cost": 9, "role": "controls an approach zone", "attack": 3, "defense": 1, "max_health": 12, "attack_interval": 1, "range": 2, "availability": "firekeepers", "targets": ["climber", "raider", "siege_beast"]},
-	"scout_post": {"name": "Scout Post", "size": Vector2i(1, 1), "cost": 6, "role": "reveals target and arrival", "attack": 0, "defense": 0, "max_health": 8, "attack_interval": 1, "range": 3, "availability": "scouts", "targets": ["all"]},
-	"narrow_gate": {"name": "Narrow Gate", "size": Vector2i(1, 2), "cost": 7, "role": "concentrates Gate pressure", "attack": 0, "defense": 3, "max_health": 18, "attack_interval": 1, "range": 1, "availability": "starter", "targets": ["raider"]},
-	"brace": {"name": "Wall Brace", "size": Vector2i(1, 1), "cost": 5, "role": "reduces adjacent room damage", "attack": 0, "defense": 2, "max_health": 16, "attack_interval": 1, "range": 1, "availability": "field_engineers", "targets": ["all"]},
-	"fire_brazier": {"name": "Fire Brazier", "size": Vector2i(1, 1), "cost": 6, "role": "extends Fire Team denial", "attack": 1, "defense": 0, "max_health": 12, "attack_interval": 1, "range": 2, "availability": "firekeepers", "targets": ["climber"]},
-	"signal_beacon": {"name": "Signal Beacon", "size": Vector2i(1, 1), "cost": 5, "role": "improves warning time", "attack": 0, "defense": 0, "max_health": 8, "attack_interval": 1, "range": 3, "availability": "scouts", "targets": ["all"]}
+	"pike_squad": {"name": "Pike Squad", "size": Vector2i(2, 1), "cost": 8, "role": "holds Gate Road", "skill": "Brace the Gate: melee contact control gains +2 against Gate Road Raiders when assigned to Gate.", "combat_style": "melee", "attack": 4, "defense": 2, "max_health": 14, "max_ammo": 0, "attack_interval": 1, "range": 1, "availability": "starter", "targets": ["raider"]},
+	"repair_station": {"name": "Repair Station", "size": Vector2i(2, 1), "cost": 10, "role": "restores nearby structures", "skill": "Field Repair: restores the lowest-condition room after defender attacks.", "combat_style": "support", "attack": 0, "defense": 1, "max_health": 10, "max_ammo": 0, "attack_interval": 1, "range": 1, "availability": "field_engineers", "targets": ["sapper", "area_pressure"]},
+	"fire_team": {"name": "Fire Team", "size": Vector2i(2, 1), "cost": 9, "role": "controls an approach zone", "skill": "Denial Zone: ranged counter fire is strongest from the upper floor or Inner Yard assignment.", "combat_style": "ranged", "attack": 3, "defense": 1, "max_health": 12, "max_ammo": 4, "attack_interval": 1, "range": 2, "availability": "firekeepers", "targets": ["climber", "raider", "siege_beast"]},
+	"scout_post": {"name": "Scout Post", "size": Vector2i(1, 1), "cost": 6, "role": "reveals target and arrival", "skill": "Early Warning: reveals target timing and improves the keeper’s read of the next contact.", "combat_style": "support", "attack": 0, "defense": 0, "max_health": 8, "max_ammo": 0, "attack_interval": 1, "range": 3, "availability": "scouts", "targets": ["all"]},
+	"narrow_gate": {"name": "Narrow Gate", "size": Vector2i(1, 2), "cost": 7, "role": "concentrates Gate pressure", "skill": "Choke Point: increases the Gate’s defensive hold without dealing direct damage.", "combat_style": "fortification", "attack": 0, "defense": 3, "max_health": 18, "max_ammo": 0, "attack_interval": 1, "range": 1, "availability": "starter", "targets": ["raider"]},
+	"brace": {"name": "Wall Brace", "size": Vector2i(1, 1), "cost": 5, "role": "reduces adjacent room damage", "skill": "Bracework: reduces damage to an adjacent room by one.", "combat_style": "fortification", "attack": 0, "defense": 2, "max_health": 16, "max_ammo": 0, "attack_interval": 1, "range": 1, "availability": "field_engineers", "targets": ["all"]},
+	"fire_brazier": {"name": "Fire Brazier", "size": Vector2i(1, 1), "cost": 6, "role": "extends Fire Team denial", "skill": "Signal Flame: extends the Fire Team denial lane on the upper floor.", "combat_style": "ranged", "attack": 1, "defense": 0, "max_health": 12, "max_ammo": 3, "attack_interval": 1, "range": 2, "availability": "firekeepers", "targets": ["climber"]},
+	"signal_beacon": {"name": "Signal Beacon", "size": Vector2i(1, 1), "cost": 5, "role": "improves warning time", "skill": "Signal Relay: expands Warden signal coverage without direct damage.", "combat_style": "support", "attack": 0, "defense": 0, "max_health": 8, "max_ammo": 0, "attack_interval": 1, "range": 3, "availability": "scouts", "targets": ["all"]}
 }
 
 const ENEMIES: Dictionary = {
@@ -222,7 +222,8 @@ func _reset_combat_metrics() -> void:
 		"piece_damage": 0,
 		"repairs": 0,
 		"disabled_units": 0,
-		"defeated_enemies": 0
+		"defeated_enemies": 0,
+		"ammo_spent": 0
 	}
 
 func _preparation_pack_limit() -> int:
@@ -380,7 +381,8 @@ func place_piece(piece_id: String, origin: Vector2i, floor: String = "ground") -
 	materials -= cost
 	var instance_id: String = "%s_%d" % [piece_id, pieces.size()]
 	var max_health: int = int(PIECES[piece_id].get("max_health", 10))
-	pieces[instance_id] = {"piece_id": piece_id, "origin": origin, "floor": floor, "max_health": max_health, "health": max_health, "condition": 1.0, "assignment": "", "attack_cooldown": 0, "attacks": 0, "damage_dealt": 0, "targets_stopped": 0, "disabled": false, "last_target": ""}
+	var max_ammo: int = int(PIECES[piece_id].get("max_ammo", 0))
+	pieces[instance_id] = {"piece_id": piece_id, "origin": origin, "floor": floor, "max_health": max_health, "health": max_health, "condition": 1.0, "assignment": "", "attack_cooldown": 0, "attacks": 0, "damage_dealt": 0, "targets_stopped": 0, "disabled": false, "last_target": "", "max_ammo": max_ammo, "ammo": max_ammo}
 	return {"ok": true, "piece_instance": instance_id, "message": "Placed %s on the %s floor: %s." % [PIECES[piece_id].name, floor, PIECES[piece_id].role]}
 
 func _set_piece_health(instance_id: String, value: int) -> void:
@@ -428,7 +430,7 @@ func inspect_piece(instance_id: String) -> Dictionary:
 	if not PIECES.has(piece_id):
 		return {"ok": false, "reason": "piece definition is unavailable"}
 	var piece: Dictionary = PIECES[piece_id]
-	return {"ok": true, "kind": "piece", "id": instance_id, "piece_id": piece_id, "name": String(piece.name), "floor": String(instance.get("floor", "ground")), "origin": instance.get("origin", Vector2i.ZERO), "role": String(piece.role), "health": int(instance.get("health", 0)), "max_health": int(instance.get("max_health", piece.max_health)), "condition": float(instance.get("condition", 0.0)), "assignment": String(instance.get("assignment", "")), "disabled": bool(instance.get("disabled", false)), "attack": int(piece.attack), "defense": int(piece.defense), "range": int(piece.range), "availability": String(piece.availability)}
+	return {"ok": true, "kind": "piece", "id": instance_id, "piece_id": piece_id, "name": String(piece.name), "floor": String(instance.get("floor", "ground")), "origin": instance.get("origin", Vector2i.ZERO), "role": String(piece.role), "health": int(instance.get("health", 0)), "max_health": int(instance.get("max_health", piece.max_health)), "condition": float(instance.get("condition", 0.0)), "assignment": String(instance.get("assignment", "")), "disabled": bool(instance.get("disabled", false)), "attack": int(piece.attack), "defense": int(piece.defense), "range": int(piece.range), "combat_style": String(piece.get("combat_style", "support")), "skill": String(piece.get("skill", "")), "ammo": int(instance.get("ammo", piece.get("max_ammo", 0))), "max_ammo": int(instance.get("max_ammo", piece.get("max_ammo", 0))), "availability": String(piece.availability)}
 
 func inspect_enemy(index: int) -> Dictionary:
 	if index < 0 or index >= enemies.size():
@@ -571,6 +573,16 @@ func _has_assignment(piece_id: String, room_id: String) -> bool:
 	var instance_id: String = String(assigned_rooms[room_id])
 	return pieces.has(instance_id) and String(pieces[instance_id].get("piece_id", "")) == piece_id and float(pieces[instance_id].get("condition", 0.0)) > 0.0
 
+func _reload_ammunition() -> void:
+	for instance_id in pieces.keys():
+		var instance: Dictionary = pieces[instance_id]
+		var piece_id: String = String(instance.get("piece_id", ""))
+		if not PIECES.has(piece_id):
+			continue
+		var max_ammo: int = int(instance.get("max_ammo", PIECES[piece_id].get("max_ammo", 0)))
+		instance.max_ammo = max_ammo
+		instance.ammo = max_ammo
+
 func _defender_damage(enemy_id: String) -> int:
 	var enemy: Dictionary = ENEMIES[enemy_id]
 	var damage: int = 0
@@ -582,6 +594,10 @@ func _defender_damage(enemy_id: String) -> int:
 			continue
 		var piece_id: String = String(instance.get("piece_id", ""))
 		var piece: Dictionary = PIECES[piece_id]
+		var combat_style: String = String(piece.get("combat_style", "support"))
+		var ammo: int = int(instance.get("ammo", piece.get("max_ammo", 0)))
+		if combat_style == "ranged" and ammo <= 0:
+			continue
 		var valid: bool = piece.targets.has("all") or piece.targets.has(enemy_id)
 		if not valid:
 			continue
@@ -590,10 +606,14 @@ func _defender_damage(enemy_id: String) -> int:
 			instance.attack_cooldown = cooldown - 1
 			continue
 		var contribution: int = int(piece.attack)
-		if piece_id == "pike_squad" and String(enemy.route) != "gate_road":
+		if piece_id == "pike_squad" and (String(enemy.route) != "gate_road" or String(instance.get("floor", "ground")) != "ground"):
 			contribution = 0
 		if piece_id == "fire_team" and enemy_id != "climber":
 			contribution = 1
+		if piece_id == "fire_team" and enemy_id == "climber" and String(instance.get("floor", "ground")) != "upper" and String(instance.get("assignment", "")) != "inner_yard":
+			contribution = 1
+		if piece_id == "fire_brazier" and String(instance.get("floor", "ground")) != "upper":
+			contribution = 0
 		if piece_id == "pike_squad" and String(instance.get("assignment", "")) == "gate" and enemy_id == "raider":
 			contribution += 2
 		if piece_id == "fire_team" and String(instance.get("assignment", "")) == "inner_yard" and enemy_id == "climber":
@@ -607,6 +627,9 @@ func _defender_damage(enemy_id: String) -> int:
 		if contribution > 0:
 			_last_attackers.append(String(instance_id))
 			_last_attack_damage[String(instance_id)] = contribution
+			if combat_style == "ranged":
+				instance.ammo = maxi(0, ammo - 1)
+				combat_metrics["ammo_spent"] = int(combat_metrics.get("ammo_spent", 0)) + 1
 			damage += contribution
 	return damage
 
@@ -813,7 +836,8 @@ func finish_repair_interval() -> Dictionary:
 	repair_interval_active = false
 	repair_actions_remaining = 0
 	repair_interval_reason = ""
-	_log("Repair interval closed with %d unused action(s). The next doctrine can begin." % unused)
+	_reload_ammunition()
+	_log("Repair interval closed with %d unused action(s). The next doctrine can begin; surviving ranged defenders reload." % unused)
 	return {"ok": true, "message": "Repair interval closed. Greywatch is ready for the next forecast.", "unused_actions": unused}
 
 func _finish_wave() -> Dictionary:
@@ -824,7 +848,8 @@ func _finish_wave() -> Dictionary:
 		repair_interval_active = false
 		repair_actions_remaining = 0
 		repair_interval_reason = ""
-		_battle_log("Outcome: collapse. Three critical functions or morale failed; the report identifies the chain.")
+		_reload_ammunition()
+		_battle_log("Outcome: collapse. Three critical functions or morale failed; the report identifies the chain; surviving ranged defenders reload for the next attempt.")
 	elif breach_level > 0:
 		last_outcome = "partial_breach"
 		morale = maxi(0, morale - 1)
@@ -1150,6 +1175,9 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		pieces[instance_id].health = int(pieces[instance_id].get("health", roundf(float(pieces[instance_id].get("condition", 1.0)) * float(pieces[instance_id].max_health))))
 		pieces[instance_id].condition = float(pieces[instance_id].health) / float(pieces[instance_id].max_health)
 		pieces[instance_id].disabled = bool(pieces[instance_id].get("disabled", pieces[instance_id].health <= 0))
+		var max_ammo: int = int(PIECES[piece_id].get("max_ammo", 0))
+		pieces[instance_id].max_ammo = max_ammo
+		pieces[instance_id].ammo = clampi(int(pieces[instance_id].get("ammo", max_ammo)), 0, max_ammo)
 	if assigned_rooms.is_empty():
 		for instance_id in pieces.keys():
 			var assignment: String = String(pieces[instance_id].get("assignment", ""))

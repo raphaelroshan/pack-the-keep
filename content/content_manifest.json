@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.5.0",
+  "content_version": "0.6.0",
   "campaign": {
     "title": "The Bell at Dusk",
     "premise": "A small keep is granted one season to become a refuge before a coalition of raiders, sappers, climbers, and siege beasts tests every defensive doctrine at once.",
@@ -854,6 +854,15 @@
       "response_preview": ["focused threat", "declared target or approaching", "counter family", "commander ability state", "paused timing"],
       "recovery_priority": "criticality then condition then stable room ID; advisory only",
       "deferred": ["direct_enemy_retargeting", "controller_remapping"]
+    },
+    "initial_real_time_auto_battle": {
+      "status": "implemented",
+      "model": "real_time_presentation_over_deterministic_one_second_auto_battle_steps",
+      "enemy_behavior": ["named_routes", "behavior_targets", "approach_then_contact", "causal_reports"],
+      "defender_behavior": ["automatic_counter_fire", "melee_and_ranged_styles", "floor_and_assignment_modifiers"],
+      "ammunition": "finite ranged rounds; reload at recovery; melee uses none",
+      "skills": ["piece_role_skills", "commander_skills"],
+      "determinism": "presentation timing and ammunition transitions are authoritative and replayable"
     },
     "presentation_input_contract": {
       "status": "implemented",

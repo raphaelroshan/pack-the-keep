@@ -20,6 +20,7 @@ var status_label: Label
 var forecast_label: Label
 var enemy_label: Label
 var metrics_label: Label
+var combat_explain_label: Label
 var availability_label: Label
 var pack_preview_label: Label
 var inspector_label: Label
@@ -280,6 +281,11 @@ func _build_ui() -> void:
 	metrics_label.custom_minimum_size = Vector2(800, 28)
 	metrics_label.add_theme_color_override("font_color", Color("#aab1b2"))
 	left.add_child(metrics_label)
+	combat_explain_label = Label.new()
+	combat_explain_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	combat_explain_label.custom_minimum_size = Vector2(800, 36)
+	combat_explain_label.add_theme_color_override("font_color", Color("#d8c389"))
+	left.add_child(combat_explain_label)
 	placement_label = Label.new()
 	placement_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	placement_label.custom_minimum_size = Vector2(800, 42)
@@ -729,7 +735,7 @@ func _format_inspection(data: Dictionary) -> String:
 		return "INSPECTOR — ROOM %s\n%s floor | %s | %d%% condition | %s\n%s" % [String(data.name), String(data.floor).capitalize(), "critical" if bool(data.critical) else "support", int(data.condition), String(data.state), String(data.role)]
 	if String(data.get("kind", "")) == "enemy":
 		return "INSPECTOR — ENEMY %s\n%s via %s | %d/%d hp | damage %d\nCounter: %s | Target: %s" % [String(data.name), String(data.doctrine).replace("_", " "), String(data.route).replace("_", " "), int(data.health), int(data.max_health), int(data.damage), String(data.counter), String(data.target if not String(data.target).is_empty() else "approaching")]
-	return "INSPECTOR — %s\n%s floor | %d/%d hp | %s\nAttack %d | Defense %d | Range %d | Assignment %s" % [String(data.name), String(data.floor).capitalize(), int(data.health), int(data.max_health), String(data.role), int(data.attack), int(data.defense), int(data.range), String(data.assignment if not String(data.assignment).is_empty() else "none")]
+	return "INSPECTOR — %s\n%s floor | %d/%d hp | %s\n%s %d attack | Defense %d | Range %d | Ammo %d/%d\nSkill: %s\nAssignment %s" % [String(data.name), String(data.floor).capitalize(), int(data.health), int(data.max_health), String(data.role), String(data.combat_style).to_upper(), int(data.attack), int(data.defense), int(data.range), int(data.ammo), int(data.max_ammo), String(data.skill), String(data.assignment if not String(data.assignment).is_empty() else "none")]
 
 func _on_inspect_enemy() -> void:
 	if enemy_option.selected < 0:
@@ -976,13 +982,15 @@ func _refresh_ui() -> void:
 	for enemy in keep.enemies:
 		var enemy_id: String = String(enemy.get("enemy_id", ""))
 		var enemy_state: String = "defeated" if bool(enemy.get("defeated", false)) else "%d/%d hp" % [int(enemy.get("hp", 0)), int(enemy.get("max_health", PackKeepState.ENEMIES[enemy_id].get("health", 0)))]
+		var phase: String = "contact" if keep.battle_step >= int(PackKeepState.ENEMIES[enemy_id].get("arrival_step", 0)) else "approach"
 		var target: String = String(enemy.get("target", ""))
 		if target.is_empty():
 			target = "approach"
-		enemy_lines.append("%s [%s] — %s — route %s — target %s" % [String(PackKeepState.ENEMIES[enemy_id].get("name", enemy_id)), enemy_id, enemy_state, String(PackKeepState.ENEMIES[enemy_id].get("route", "")), target])
+		enemy_lines.append("%s [%s] — %s/%s — route %s — target %s" % [String(PackKeepState.ENEMIES[enemy_id].get("name", enemy_id)), enemy_id, phase, enemy_state, String(PackKeepState.ENEMIES[enemy_id].get("route", "")), target])
 	enemy_label.text = "ENEMIES — " + (" | ".join(enemy_lines) if not enemy_lines.is_empty() else "No active enemies. Start an invasion to see doctrine-driven actors.")
 	var metrics: Dictionary = keep.combat_metrics
-	metrics_label.text = "METRICS — steps %d | unit attacks %d | damage dealt %d | enemy attacks %d | room damage %d | piece damage %d | repairs %d | disabled %d | defeated %d" % [int(metrics.get("battle_steps", 0)), int(metrics.get("unit_attacks", 0)), int(metrics.get("damage_dealt", 0)), int(metrics.get("enemy_attacks", 0)), int(metrics.get("room_damage", 0)), int(metrics.get("piece_damage", 0)), int(metrics.get("repairs", 0)), int(metrics.get("disabled_units", 0)), int(metrics.get("defeated_enemies", 0))]
+	metrics_label.text = "METRICS — steps %d | unit attacks %d | damage dealt %d | ammo spent %d | enemy attacks %d | room damage %d | piece damage %d | repairs %d | disabled %d | defeated %d" % [int(metrics.get("battle_steps", 0)), int(metrics.get("unit_attacks", 0)), int(metrics.get("damage_dealt", 0)), int(metrics.get("ammo_spent", 0)), int(metrics.get("enemy_attacks", 0)), int(metrics.get("room_damage", 0)), int(metrics.get("piece_damage", 0)), int(metrics.get("repairs", 0)), int(metrics.get("disabled_units", 0)), int(metrics.get("defeated_enemies", 0))]
+	combat_explain_label.text = "COMBAT — real-time auto-battle: enemies follow named routes toward behavior targets; defenders auto-attack when their style, floor, counter, cooldown, and ammunition allow. Pause to inspect; skills modify the next resolved step."
 	var available_names: Array[String] = []
 	for available_id in keep.available_pieces:
 		available_names.append(String(PackKeepState.PIECES[available_id].get("name", available_id)))
@@ -1176,6 +1184,9 @@ class KeepCanvas extends Control:
 			draw_rect(piece_rect.grow(-2), Color("#f1dfb8"), false, 1.5)
 			draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(2, 11), String(piece.name), HORIZONTAL_ALIGNMENT_LEFT, piece_rect.size.x - 4, 8, Color("#201a25"))
 			var piece_status: String = "%d/%d hp" % [int(instance.get("health", 0)), int(instance.get("max_health", piece.get("max_health", 0)))]
+			var max_ammo: int = int(instance.get("max_ammo", piece.get("max_ammo", 0)))
+			if max_ammo > 0:
+				piece_status += " AMMO %d/%d" % [int(instance.get("ammo", max_ammo)), max_ammo]
 			if bool(instance.get("disabled", false)):
 				piece_status += " DISABLED"
 			var assignment: String = String(instance.get("assignment", ""))
