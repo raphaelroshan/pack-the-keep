@@ -140,7 +140,7 @@ jobs:
           use-dotnet: false
           include-templates: true
       - name: Import and validate project
-        run: godot --headless --path . --editor --quit
+        run: godot --headless --path . --import
       - name: Export Windows build when presets exist
         run: |
           mkdir -p build artifacts
