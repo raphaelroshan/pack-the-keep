@@ -36,6 +36,15 @@ func _settings_has_joypad_binding(settings_payload: Dictionary, action: String, 
 			return true
 	return false
 
+func _profile_file_status(save_paths: Array, settings_paths: Array) -> Dictionary:
+	var files_present: bool = false
+	for path in save_paths + settings_paths:
+		files_present = files_present or FileAccess.file_exists(String(path))
+	return {
+		"present": files_present,
+		"complete": FileAccess.file_exists(String(save_paths[0])) and FileAccess.file_exists(String(settings_paths[0]))
+	}
+
 func run(ui: Control) -> void:
 	var errors: Array[String] = []
 	var phase: String = OS.get_environment("PACK_THE_KEEP_SMOKE_PHASE")
@@ -52,12 +61,12 @@ func run(ui: Control) -> void:
 	ui.settings_path = SETTINGS_PATH
 	ui.settings_temp_path = SETTINGS_TEMP_PATH
 	ui.settings_backup_path = SETTINGS_BACKUP_PATH
-	var save_file_present: bool = FileAccess.file_exists(SAVE_PATH)
-	var settings_file_present: bool = FileAccess.file_exists(SETTINGS_PATH)
-	var profile_files_present: bool = save_file_present or settings_file_present \
-		or FileAccess.file_exists(SAVE_TEMP_PATH) or FileAccess.file_exists(SAVE_BACKUP_PATH) \
-		or FileAccess.file_exists(SETTINGS_TEMP_PATH) or FileAccess.file_exists(SETTINGS_BACKUP_PATH)
-	var profile_files_complete: bool = save_file_present and settings_file_present
+	var profile_status: Dictionary = _profile_file_status(
+		[SAVE_PATH, SAVE_TEMP_PATH, SAVE_BACKUP_PATH],
+		[SETTINGS_PATH, SETTINGS_TEMP_PATH, SETTINGS_BACKUP_PATH]
+	)
+	var profile_files_present: bool = bool(profile_status.present)
+	var profile_files_complete: bool = bool(profile_status.complete)
 	var controller_navigation_ready: bool = _has_joypad_binding("ui_accept") and _has_joypad_binding("ui_down")
 	_record_error(errors, controller_navigation_ready, "packaged UI navigation lost its controller path")
 	var controller_defaults_ready: bool = true
