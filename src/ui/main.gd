@@ -14,10 +14,26 @@ const CLIMBER_ICON = preload("res://assets/climber_icon.png")
 const SAVE_PATH := "user://pack_the_keep_prototype.save"
 const SAVE_TEMP_PATH := "user://pack_the_keep_prototype.save.tmp"
 const SAVE_BACKUP_PATH := "user://pack_the_keep_prototype.save.bak"
-const SETTINGS_SCHEMA_VERSION := 1
+const SETTINGS_SCHEMA_VERSION := 2
 const SETTINGS_PATH := "user://pack_the_keep_settings.json"
 const SETTINGS_TEMP_PATH := "user://pack_the_keep_settings.json.tmp"
 const SETTINGS_BACKUP_PATH := "user://pack_the_keep_settings.json.bak"
+const UI_SCALE_PRESETS := [0.8, 1.0, 1.25, 1.5]
+const RESERVED_CONTROLLER_NAVIGATION_BUTTONS := [0, 11, 12, 13, 14]
+const REMAPPABLE_ACTIONS := [
+	"battle_pause", "battle_manual_step", "commander_ability", "placement_arm", "placement_cancel",
+	"focus_cycle_forward", "focus_enemy", "report_focus"
+]
+const ACTION_LABELS := {
+	"battle_pause": "Pause / resume battle",
+	"battle_manual_step": "Advance one battle step",
+	"commander_ability": "Commander ability",
+	"placement_arm": "Arm placement",
+	"placement_cancel": "Cancel placement",
+	"focus_cycle_forward": "Cycle focused enemy",
+	"focus_enemy": "Inspect focused enemy",
+	"report_focus": "Focus combat report"
+}
 
 var keep: PackKeepState
 var status_label: Label
@@ -58,17 +74,25 @@ var preview_origin: Vector2i = Vector2i.ZERO
 var preview_valid: bool = false
 var selected_instance_id: String = ""
 var inspected_text: String = "Click a room or placed piece on the keep to inspect its authoritative state."
-var gameplay_columns: Control
+var gameplay_columns: BoxContainer
+var page_scroll: ScrollContainer
 var command_scroll: ScrollContainer
+var command_panel: PanelContainer
 var title_card: PanelContainer
 var screen_label: Label
 var screen_hint: Label
 var art_banner: TextureRect
 var pause_button: Button
+var start_invasion_button: Button
 var speed_button: Button
 var mute_button: Button
 var contrast_button: Button
 var reduced_motion_button: Button
+var ui_scale_button: Button
+var rebind_action_option: OptionButton
+var rebind_button: Button
+var reset_bindings_button: Button
+var binding_summary_label: Label
 var input_help_label: Label
 var quick_test_button: Button
 var screen: String = "title"
@@ -77,10 +101,13 @@ var battle_speed_index: int = 1
 var audio_muted: bool = false
 var high_contrast: bool = false
 var reduced_motion: bool = false
+var ui_scale_index: int = 1
 var settings_path: String = SETTINGS_PATH
 var settings_temp_path: String = SETTINGS_TEMP_PATH
 var settings_backup_path: String = SETTINGS_BACKUP_PATH
 var preferences_persistence_enabled: bool = true
+var rebind_waiting_action: String = ""
+var menu_buttons: Dictionary = {}
 var audio_player: AudioStreamPlayer
 var audio_stream: AudioStreamGenerator
 var last_log_size: int = 0
@@ -111,9 +138,13 @@ var playtest_status_label: Label
 
 func _ready() -> void:
 	keep = PackKeepState.new(3307)
+	_restore_default_input_bindings()
+	_ensure_controller_navigation_bindings()
 	preferences_persistence_enabled = DisplayServer.get_name() != "headless"
 	if preferences_persistence_enabled:
 		_load_preferences()
+	else:
+		_apply_ui_scale()
 	_setup_audio()
 	_build_ui()
 	_set_screen("title")
@@ -133,9 +164,23 @@ func _process(delta: float) -> void:
 			last_log_size = keep.battle_report.size()
 		_refresh_ui()
 
-func _unhandled_key_input(event: InputEvent) -> void:
-	if not event is InputEventKey or not event.pressed or event.echo:
+func _input(event: InputEvent) -> void:
+	if not rebind_waiting_action.is_empty() and _capture_rebind_input(event):
+		get_viewport().set_input_as_handled()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if _capture_rebind_input(event):
+		get_viewport().set_input_as_handled()
 		return
+	if _handle_named_action(event):
+		get_viewport().set_input_as_handled()
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	_handle_named_action(event)
+
+func _handle_named_action(event: InputEvent) -> bool:
+	if not event.is_pressed() or (event is InputEventKey and event.echo):
+		return false
 	if event.is_action_pressed("battle_pause"):
 		_toggle_battle_pause()
 	elif event.is_action_pressed("battle_advance"):
@@ -158,12 +203,17 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_toggle_mute()
 	elif event.is_action_pressed("contrast_toggle"):
 		_toggle_contrast()
+	elif event.is_action_pressed("reduced_motion_toggle"):
+		_toggle_reduced_motion()
 	elif event.is_action_pressed("focus_cycle_backward"):
 		_cycle_enemy_focus(-1)
 	elif event.is_action_pressed("focus_cycle_forward"):
 		_cycle_enemy_focus(1)
 	elif event.is_action_pressed("focus_enemy"):
 		_focus_selected_enemy()
+	else:
+		return false
+	return true
 
 func _setup_audio() -> void:
 	audio_player = AudioStreamPlayer.new()
@@ -235,15 +285,227 @@ func _toggle_reduced_motion() -> void:
 	_set_event("Reduced motion enabled; transient board flashes are suppressed." if reduced_motion else "Standard motion feedback restored.")
 	_refresh_ui()
 
+func _set_ui_scale(index: int) -> void:
+	ui_scale_index = clampi(index, 0, UI_SCALE_PRESETS.size() - 1)
+	_apply_ui_scale()
+	_save_preferences()
+	_set_event("UI scale set to %d%%. Layout remains scrollable at larger sizes." % int(UI_SCALE_PRESETS[ui_scale_index] * 100.0))
+	_refresh_ui()
+
+func _cycle_ui_scale() -> void:
+	_set_ui_scale((ui_scale_index + 1) % UI_SCALE_PRESETS.size())
+
+func _apply_ui_scale() -> void:
+	get_window().content_scale_factor = float(UI_SCALE_PRESETS[ui_scale_index])
+	if gameplay_columns != null:
+		gameplay_columns.vertical = ui_scale_index >= 2
+	if command_panel != null:
+		command_panel.custom_minimum_size.x = 810.0 if ui_scale_index >= 2 else 292.0
+		command_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL if ui_scale_index >= 2 else Control.SIZE_SHRINK_BEGIN
+
+func _begin_rebind(action: String = "") -> void:
+	if action.is_empty() and rebind_action_option != null and rebind_action_option.selected >= 0:
+		action = String(rebind_action_option.get_item_metadata(rebind_action_option.selected))
+	if not action in REMAPPABLE_ACTIONS:
+		return
+	rebind_waiting_action = action
+	if rebind_button != null:
+		rebind_button.text = "Press a key or controller button…"
+	_set_event("Listening for a new %s binding. Escape cancels." % String(ACTION_LABELS.get(action, action)))
+
+func _capture_rebind_input(event: InputEvent) -> bool:
+	if rebind_waiting_action.is_empty():
+		return false
+	if event is InputEventKey:
+		if not event.pressed or event.echo:
+			return true
+		if event.physical_keycode == KEY_ESCAPE:
+			rebind_waiting_action = ""
+			_refresh_binding_controls()
+			_set_event("Input rebinding cancelled.")
+			return true
+		_replace_binding_family(rebind_waiting_action, _normalized_binding(event))
+	elif event is InputEventJoypadButton:
+		if not event.pressed:
+			return true
+		if event.button_index in RESERVED_CONTROLLER_NAVIGATION_BUTTONS:
+			_set_event("That controller button is reserved for menu navigation. Choose another button or press Escape to cancel.")
+			return true
+		_replace_binding_family(rebind_waiting_action, _normalized_binding(event))
+	else:
+		return true
+	var action: String = rebind_waiting_action
+	rebind_waiting_action = ""
+	_save_preferences()
+	_refresh_binding_controls()
+	_set_event("Updated %s binding." % String(ACTION_LABELS.get(action, action)))
+	return true
+
+func _normalized_binding(event: InputEvent) -> InputEvent:
+	if event is InputEventKey:
+		var key_event: InputEventKey = InputEventKey.new()
+		key_event.physical_keycode = event.physical_keycode
+		key_event.shift_pressed = event.shift_pressed
+		key_event.ctrl_pressed = event.ctrl_pressed
+		key_event.alt_pressed = event.alt_pressed
+		key_event.meta_pressed = event.meta_pressed
+		return key_event
+	var source_joy: InputEventJoypadButton = event as InputEventJoypadButton
+	var joy_event: InputEventJoypadButton = InputEventJoypadButton.new()
+	joy_event.button_index = source_joy.button_index
+	return joy_event
+
+func _replace_binding_family(action: String, replacement: InputEvent) -> void:
+	for other_action in REMAPPABLE_ACTIONS:
+		if other_action == action:
+			continue
+		for existing in InputMap.action_get_events(other_action):
+			if _bindings_match(existing, replacement):
+				InputMap.action_erase_event(other_action, existing)
+	var retained: Array[InputEvent] = []
+	for existing in InputMap.action_get_events(action):
+		if replacement is InputEventKey and existing is InputEventKey:
+			continue
+		if replacement is InputEventJoypadButton and existing is InputEventJoypadButton:
+			continue
+		retained.append(existing)
+	InputMap.action_erase_events(action)
+	for existing in retained:
+		InputMap.action_add_event(action, existing)
+	InputMap.action_add_event(action, replacement)
+
+func _bindings_match(first: InputEvent, second: InputEvent) -> bool:
+	if first is InputEventJoypadButton and second is InputEventJoypadButton:
+		return first.button_index == second.button_index
+	if first is InputEventKey and second is InputEventKey:
+		return first.physical_keycode == second.physical_keycode and first.shift_pressed == second.shift_pressed and first.ctrl_pressed == second.ctrl_pressed and first.alt_pressed == second.alt_pressed and first.meta_pressed == second.meta_pressed
+	return false
+
+func _restore_default_input_bindings() -> void:
+	for action in REMAPPABLE_ACTIONS:
+		if not InputMap.has_action(action):
+			continue
+		var definition: Variant = ProjectSettings.get_setting("input/%s" % action, {})
+		if not definition is Dictionary or not definition.get("events", []) is Array:
+			continue
+		InputMap.action_erase_events(action)
+		for event in definition.get("events", []):
+			if event is InputEvent:
+				InputMap.action_add_event(action, event)
+
+func _ensure_controller_navigation_bindings() -> void:
+	var navigation_buttons: Dictionary = {
+		"ui_accept": 0, "ui_cancel": 1, "ui_up": 11,
+		"ui_down": 12, "ui_left": 13, "ui_right": 14
+	}
+	for action in navigation_buttons:
+		if not InputMap.has_action(action):
+			InputMap.add_action(action)
+		var button_index: int = int(navigation_buttons[action])
+		var already_bound: bool = false
+		for event in InputMap.action_get_events(action):
+			if event is InputEventJoypadButton and event.button_index == button_index:
+				already_bound = true
+				break
+		if not already_bound:
+			var joy_event: InputEventJoypadButton = InputEventJoypadButton.new()
+			joy_event.button_index = button_index
+			InputMap.action_add_event(action, joy_event)
+
+func _reset_input_bindings() -> void:
+	rebind_waiting_action = ""
+	_restore_default_input_bindings()
+	_save_preferences()
+	_refresh_binding_controls()
+	_set_event("Keyboard and controller bindings restored to project defaults.")
+
+func _serialize_input_bindings() -> Dictionary:
+	var serialized: Dictionary = {}
+	for action in REMAPPABLE_ACTIONS:
+		var events: Array[Dictionary] = []
+		for event in InputMap.action_get_events(action):
+			if event is InputEventKey:
+				events.append({
+					"type": "key", "physical_keycode": int(event.physical_keycode),
+					"shift": event.shift_pressed, "ctrl": event.ctrl_pressed,
+					"alt": event.alt_pressed, "meta": event.meta_pressed
+				})
+			elif event is InputEventJoypadButton:
+				events.append({"type": "joypad_button", "button_index": event.button_index})
+		serialized[action] = events
+	return serialized
+
+func _apply_saved_input_bindings(saved: Variant) -> void:
+	if not saved is Dictionary:
+		return
+	for action in REMAPPABLE_ACTIONS:
+		var records: Variant = saved.get(action)
+		if not records is Array:
+			continue
+		var events: Array[InputEvent] = []
+		for record in records:
+			if not record is Dictionary:
+				continue
+			if record.get("type") == "key" and (record.get("physical_keycode") is int or record.get("physical_keycode") is float) and float(record.get("physical_keycode")) == floor(float(record.get("physical_keycode"))) and int(record.get("physical_keycode")) > 0:
+				var key_event: InputEventKey = InputEventKey.new()
+				key_event.physical_keycode = int(record.physical_keycode)
+				key_event.shift_pressed = bool(record.get("shift", false))
+				key_event.ctrl_pressed = bool(record.get("ctrl", false))
+				key_event.alt_pressed = bool(record.get("alt", false))
+				key_event.meta_pressed = bool(record.get("meta", false))
+				events.append(key_event)
+			elif record.get("type") == "joypad_button" and (record.get("button_index") is int or record.get("button_index") is float) and float(record.get("button_index")) == floor(float(record.get("button_index"))) and int(record.get("button_index")) >= 0 and int(record.get("button_index")) < 128 and int(record.get("button_index")) not in RESERVED_CONTROLLER_NAVIGATION_BUTTONS:
+				var joy_event: InputEventJoypadButton = InputEventJoypadButton.new()
+				joy_event.button_index = int(record.button_index)
+				events.append(joy_event)
+		if events.is_empty():
+			continue
+		InputMap.action_erase_events(action)
+		for event in events:
+			InputMap.action_add_event(action, event)
+
+func _binding_text(action: String) -> String:
+	var labels: Array[String] = []
+	for event in InputMap.action_get_events(action):
+		if event is InputEventKey or event is InputEventJoypadButton:
+			labels.append(event.as_text())
+	return " / ".join(labels) if not labels.is_empty() else "Unbound"
+
+func _refresh_binding_controls() -> void:
+	if rebind_button == null or binding_summary_label == null or rebind_action_option == null:
+		return
+	if not rebind_waiting_action.is_empty():
+		rebind_button.text = "Press a key or controller button…"
+		return
+	rebind_button.text = "Rebind selected action"
+	var action: String = String(rebind_action_option.get_item_metadata(rebind_action_option.selected))
+	binding_summary_label.text = "%s: %s" % [String(ACTION_LABELS.get(action, action)), _binding_text(action)]
+
 func _load_preferences() -> void:
 	battle_speed_index = 1
 	audio_muted = false
 	high_contrast = false
 	reduced_motion = false
+	ui_scale_index = 1
+	_restore_default_input_bindings()
 	if not FileAccess.file_exists(settings_path):
+		_apply_ui_scale()
 		return
-	var payload: Variant = JSON.parse_string(FileAccess.get_file_as_string(settings_path))
-	if not payload is Dictionary or int(payload.get("schema_version", 0)) != SETTINGS_SCHEMA_VERSION:
+	var parser: JSON = JSON.new()
+	if parser.parse(FileAccess.get_file_as_string(settings_path)) != OK:
+		_apply_ui_scale()
+		return
+	var payload: Variant = parser.data
+	if not payload is Dictionary:
+		_apply_ui_scale()
+		return
+	var schema_value: Variant = payload.get("schema_version")
+	if not (schema_value is int or schema_value is float) or float(schema_value) != floor(float(schema_value)):
+		_apply_ui_scale()
+		return
+	var schema_version: int = int(schema_value)
+	if schema_version < 1 or schema_version > SETTINGS_SCHEMA_VERSION:
+		_apply_ui_scale()
 		return
 	var saved_speed: Variant = payload.get("battle_speed_index")
 	if (saved_speed is int or saved_speed is float) and float(saved_speed) == floor(float(saved_speed)) and int(saved_speed) >= 0 and int(saved_speed) <= 2:
@@ -254,6 +516,12 @@ func _load_preferences() -> void:
 		high_contrast = bool(payload.high_contrast)
 	if payload.get("reduced_motion") is bool:
 		reduced_motion = bool(payload.reduced_motion)
+	if schema_version >= 2:
+		var saved_scale: Variant = payload.get("ui_scale_index")
+		if (saved_scale is int or saved_scale is float) and float(saved_scale) == floor(float(saved_scale)) and int(saved_scale) >= 0 and int(saved_scale) < UI_SCALE_PRESETS.size():
+			ui_scale_index = int(saved_scale)
+		_apply_saved_input_bindings(payload.get("input_bindings", {}))
+	_apply_ui_scale()
 
 func _save_preferences() -> bool:
 	if not preferences_persistence_enabled:
@@ -261,7 +529,7 @@ func _save_preferences() -> bool:
 	var file: FileAccess = FileAccess.open(settings_temp_path, FileAccess.WRITE)
 	if file == null:
 		return false
-	file.store_string(JSON.stringify({"schema_version": SETTINGS_SCHEMA_VERSION, "battle_speed_index": battle_speed_index, "audio_muted": audio_muted, "high_contrast": high_contrast, "reduced_motion": reduced_motion}))
+	file.store_string(JSON.stringify({"schema_version": SETTINGS_SCHEMA_VERSION, "battle_speed_index": battle_speed_index, "audio_muted": audio_muted, "high_contrast": high_contrast, "reduced_motion": reduced_motion, "ui_scale_index": ui_scale_index, "input_bindings": _serialize_input_bindings()}))
 	file.flush()
 	file.close()
 	var directory: DirAccess = DirAccess.open("user://")
@@ -293,13 +561,21 @@ func _build_ui() -> void:
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(background)
 
+	page_scroll = ScrollContainer.new()
+	page_scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	page_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	page_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	add_child(page_scroll)
+
 	var margin: MarginContainer = MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	margin.custom_minimum_size = Vector2(0, 720)
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	margin.add_theme_constant_override("margin_left", 24)
 	margin.add_theme_constant_override("margin_top", 20)
 	margin.add_theme_constant_override("margin_right", 24)
 	margin.add_theme_constant_override("margin_bottom", 20)
-	add_child(margin)
+	page_scroll.add_child(margin)
 
 	var shell: VBoxContainer = VBoxContainer.new()
 	shell.add_theme_constant_override("separation", 10)
@@ -317,6 +593,7 @@ func _build_ui() -> void:
 		menu_button.text = String(menu_item).capitalize()
 		menu_button.pressed.connect(func() -> void: _set_screen(String(menu_item)))
 		menu_bar.add_child(menu_button)
+		menu_buttons[menu_item] = menu_button
 	screen_hint = Label.new()
 	screen_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	screen_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -335,7 +612,8 @@ func _build_ui() -> void:
 	title_card = _build_title_card()
 	shell.add_child(title_card)
 
-	var columns: HBoxContainer = HBoxContainer.new()
+	var columns: BoxContainer = BoxContainer.new()
+	columns.vertical = ui_scale_index >= 2
 	columns.add_theme_constant_override("separation", 14)
 	columns.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	gameplay_columns = columns
@@ -438,17 +716,19 @@ func _build_ui() -> void:
 	log_label.add_theme_color_override("font_color", Color("#aab1b2"))
 	left.add_child(log_label)
 
-	var right: PanelContainer = PanelContainer.new()
-	right.custom_minimum_size = Vector2(292, 0)
-	right.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	columns.add_child(right)
+	command_panel = PanelContainer.new()
+	command_panel.custom_minimum_size = Vector2(810, 0) if ui_scale_index >= 2 else Vector2(292, 0)
+	command_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL if ui_scale_index >= 2 else Control.SIZE_SHRINK_BEGIN
+	columns.add_child(command_panel)
 	command_scroll = ScrollContainer.new()
 	command_scroll.custom_minimum_size = Vector2(286, 520)
 	command_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right.add_child(command_scroll)
+	command_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	command_panel.add_child(command_scroll)
 	var controls: VBoxContainer = VBoxContainer.new()
 	controls.add_theme_constant_override("separation", 8)
 	controls.custom_minimum_size = Vector2(278, 0)
+	controls.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	command_scroll.add_child(controls)
 
 	var panel_title: Label = Label.new()
@@ -457,7 +737,7 @@ func _build_ui() -> void:
 	panel_title.add_theme_color_override("font_color", Color("#e2bd84"))
 	controls.add_child(panel_title)
 	input_help_label = Label.new()
-	input_help_label.text = "P3 INPUT — Space pause | 1/2/3 speed | N step | R place | Esc cancel | Tab focus | E enemy | M mute | C contrast"
+	input_help_label.text = "INPUT — keyboard and controller use the same named actions. Tab/D-pad cycles focus; Enter/A activates. Bindings and scale are below."
 	input_help_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	input_help_label.add_theme_font_size_override("font_size", 10)
 	input_help_label.add_theme_color_override("font_color", Color("#aab1b2"))
@@ -668,10 +948,10 @@ func _build_ui() -> void:
 	controls.move_child(authored_event_panel, 2)
 	controls.move_child(campaign_ledger_panel, 4)
 
-	var start_button: Button = Button.new()
-	start_button.text = "Start invasion"
-	start_button.pressed.connect(_on_start_wave)
-	controls.add_child(start_button)
+	start_invasion_button = Button.new()
+	start_invasion_button.text = "Start invasion"
+	start_invasion_button.pressed.connect(_on_start_wave)
+	controls.add_child(start_invasion_button)
 
 	var advance_button: Button = Button.new()
 	advance_button.text = "Advance one battle step"
@@ -748,6 +1028,31 @@ func _build_ui() -> void:
 	reduced_motion_button.tooltip_text = "Suppress transient board flashes without changing simulation timing or outcomes."
 	reduced_motion_button.pressed.connect(_toggle_reduced_motion)
 	controls.add_child(reduced_motion_button)
+	ui_scale_button = Button.new()
+	ui_scale_button.text = "UI scale: 100%"
+	ui_scale_button.tooltip_text = "Cycle 80%, 100%, 125%, and 150% interface scaling; the command rail remains scrollable."
+	ui_scale_button.pressed.connect(_cycle_ui_scale)
+	controls.add_child(ui_scale_button)
+	rebind_action_option = OptionButton.new()
+	for action in REMAPPABLE_ACTIONS:
+		rebind_action_option.add_item(String(ACTION_LABELS.get(action, action)))
+		rebind_action_option.set_item_metadata(rebind_action_option.item_count - 1, action)
+	rebind_action_option.item_selected.connect(func(_index: int) -> void: _refresh_binding_controls())
+	controls.add_child(_labeled_control("Input action", rebind_action_option))
+	binding_summary_label = Label.new()
+	binding_summary_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	binding_summary_label.add_theme_color_override("font_color", Color("#c9bfd0"))
+	controls.add_child(binding_summary_label)
+	rebind_button = Button.new()
+	rebind_button.text = "Rebind selected action"
+	rebind_button.tooltip_text = "Capture one keyboard key or controller button while preserving the other device path."
+	rebind_button.pressed.connect(func() -> void: _begin_rebind())
+	controls.add_child(rebind_button)
+	reset_bindings_button = Button.new()
+	reset_bindings_button.text = "Reset input bindings"
+	reset_bindings_button.pressed.connect(_reset_input_bindings)
+	controls.add_child(reset_bindings_button)
+	_refresh_binding_controls()
 
 func _build_title_card() -> PanelContainer:
 	var card: PanelContainer = PanelContainer.new()
@@ -767,13 +1072,13 @@ func _build_title_card() -> PanelContainer:
 	copy.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	copy.add_theme_color_override("font_color", Color("#c0b2c8"))
 	content.add_child(copy)
-	var start_button: Button = Button.new()
-	start_button.text = "Start Game — Quick Playtest"
-	start_button.tooltip_text = "Open a deterministic preset Greywatch state with Pike Squad and Narrow Gate already placed."
-	start_button.custom_minimum_size = Vector2(280, 38)
-	start_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	start_button.pressed.connect(_on_start_quick_playtest)
-	content.add_child(start_button)
+	quick_test_button = Button.new()
+	quick_test_button.text = "Start Game — Quick Playtest"
+	quick_test_button.tooltip_text = "Open a deterministic preset Greywatch state with Pike Squad and Narrow Gate already placed."
+	quick_test_button.custom_minimum_size = Vector2(280, 38)
+	quick_test_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	quick_test_button.pressed.connect(_on_start_quick_playtest)
+	content.add_child(quick_test_button)
 	var empty_button: Button = Button.new()
 	empty_button.text = "Open Empty Preparation"
 	empty_button.tooltip_text = "Enter the normal preparation screen without the quick-playtest preset."
@@ -824,8 +1129,29 @@ func _set_screen(next_screen: String) -> void:
 		else:
 			screen_hint.text = "A compact two-floor defense about pressure and recovery."
 	_refresh_ui()
+	call_deferred("_focus_screen_control")
 	if screen == "results" and keep and keep.repair_interval_active:
 		call_deferred("_focus_recovery_controls")
+
+func _focus_screen_control() -> void:
+	var target: Control
+	if screen == "title":
+		target = quick_test_button
+	elif screen == "preparation":
+		target = pack_option
+	elif screen == "battle":
+		target = pause_button
+	elif screen == "results" and recovery_actions_panel.visible:
+		target = recovery_room_button
+	else:
+		target = menu_buttons.get("preparation")
+	if target == null or not target.is_visible_in_tree():
+		return
+	target.grab_focus()
+	if command_scroll != null and target != quick_test_button and target != menu_buttons.get("preparation"):
+		command_scroll.ensure_control_visible(target)
+	if page_scroll != null:
+		page_scroll.ensure_control_visible(target)
 
 func _focus_recovery_controls() -> void:
 	if command_scroll and recovery_actions_panel and recovery_actions_panel.visible:
@@ -1612,6 +1938,8 @@ func _refresh_ui() -> void:
 	mute_button.text = "Feedback tones: OFF" if audio_muted else "Feedback tones: ON"
 	contrast_button.text = "High-contrast cues: ON" if high_contrast else "High-contrast cues: OFF"
 	reduced_motion_button.text = "Reduced motion: ON" if reduced_motion else "Reduced motion: OFF"
+	ui_scale_button.text = "UI scale: %d%%" % int(UI_SCALE_PRESETS[ui_scale_index] * 100.0)
+	_refresh_binding_controls()
 	_refresh_response_preview()
 	_refresh_layout_lens()
 	_refresh_recovery_priorities()
