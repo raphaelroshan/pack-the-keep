@@ -319,3 +319,11 @@
 **Reason:** Source tests alone do not prove that input-map resources and settings serialization survive export. Injected events make the package gate deterministic while still traversing the real UI handlers.
 
 **Trade-off:** This verifies mappings and layout logic without claiming physical-controller, analog, or GPU coverage.
+
+## ADR-041: Packaged pause smoke separates presentation from simulation
+
+**Decision:** In the exported artifact, start battle through the UI, prove paused presentation cannot advance the keep, toggle pause through the remapped named action, and resolve one explicit manual step before teardown.
+
+**Reason:** Pause is a core strategic and accessibility promise. Testing it after export confirms that input, UI state, and deterministic simulation remain correctly separated in the shipped boundary.
+
+**Trade-off:** Headless teardown verifies a clean Godot scene/process path, not forced termination or desktop window-manager behavior.

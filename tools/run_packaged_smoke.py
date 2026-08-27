@@ -69,6 +69,9 @@ def validate_report(report_path: Path, profile_root: Path, expected_version: str
     for field in ("controller_navigation_ready", "controller_defaults_ready", "controller_remap_ready", "ui_scale_ready", "settings_scale_ready", "settings_remap_ready"):
         if report.get(field) is not True:
             errors.append(f"packaged input/scaling assertion failed: {field}")
+    for field in ("initial_pause_ready", "paused_state_frozen", "remapped_pause_ready", "manual_step_ready"):
+        if report.get(field) is not True:
+            errors.append(f"packaged pause assertion failed: {field}")
     content_status = report.get("content_status")
     if not isinstance(content_status, dict) or content_status.get("ok") is not True:
         errors.append("packaged runtime content catalog did not load")
