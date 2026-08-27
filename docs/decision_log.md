@@ -223,3 +223,11 @@
 **Reason:** The first progression reward should add a planning decision and demonstrate persistent unlock state without introducing grind or making old content obsolete. Information has value across scenarios while the morale cost keeps the choice situational.
 
 **Trade-off:** This is a ledger-style prototype rather than a regional map. It proves unlock, equip, reset, save migration, and forecast integration before a larger campaign surface is justified.
+
+## ADR-029: Accessibility preferences are separate from run saves
+
+**Decision:** Persist high contrast, feedback mute, battle speed, and reduced motion in a small versioned settings file owned by the UI layer. Do not include them in `PackKeepState` serialization.
+
+**Reason:** These choices belong to the player and should survive runs, but they must not affect deterministic replay or save migration for the defense simulation.
+
+**Trade-off:** Settings have their own validation and atomic-write path. Controller remapping and display scaling remain later P10 slices.
