@@ -1,0 +1,22 @@
+{
+  "id": "field_engineers",
+  "content_version": 1,
+  "status": "active",
+  "name": "Field Engineers",
+  "short_role": "Make the keep recoverable after structural damage.",
+  "question": "What can I afford to lose because I prepared a second chance?",
+  "family": "support",
+  "contents": ["repair_station", "brace"],
+  "doctrine": "redundancy",
+  "cost": 4,
+  "strength": "Room damage and partial-breach recovery.",
+  "weakness": "Consumes materials and creates a high-value support target.",
+  "choice": "Spend immediate strength on the ability to survive a later mistake.",
+  "commander_affinity": ["castellan", "warden"],
+  "spatial_demand": {
+    "preferred_floors": ["ground"],
+    "preferred_zones": ["keep"],
+    "needs_open_lane": false,
+    "needs_adjacency": true
+  }
+}

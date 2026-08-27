@@ -35,6 +35,8 @@ jobs:
         run: python tools/validate_gameplay_framework.py --framework content/gameplay_framework.json
       - name: Validate vertical layers
         run: python tools/validate_vertical_layers.py --layers content/vertical_layers.json
+      - name: Validate runtime content catalog
+        run: python tools/validate_runtime_content.py --packs data/packs --manifest content/content_manifest.json
 
   tests:
     name: Godot headless tests (${{ matrix.os }})

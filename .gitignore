@@ -1,5 +1,6 @@
 .godot/
 *.import
+*.gd.uid
 export.cfg
 *.save
 *.log

@@ -1,0 +1,22 @@
+{
+  "id": "pike_line",
+  "content_version": 1,
+  "status": "active",
+  "name": "Pike Line",
+  "short_role": "Build a strong, readable corridor defense.",
+  "question": "Which approach is worth making narrow and strong?",
+  "family": "frontline",
+  "contents": ["pike_squad", "narrow_gate"],
+  "doctrine": "compact_corridors",
+  "cost": 4,
+  "strength": "Gate pressure and raider contact.",
+  "weakness": "Requires a committed ground-floor corridor and loses value against spread pressure.",
+  "choice": "Spend space to make one approach exceptionally readable.",
+  "commander_affinity": ["castellan"],
+  "spatial_demand": {
+    "preferred_floors": ["ground"],
+    "preferred_zones": ["courtyard", "keep"],
+    "needs_open_lane": false,
+    "needs_adjacency": true
+  }
+}

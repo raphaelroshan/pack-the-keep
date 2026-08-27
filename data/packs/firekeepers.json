@@ -1,0 +1,22 @@
+{
+  "id": "firekeepers",
+  "content_version": 1,
+  "status": "active",
+  "name": "Firekeepers",
+  "short_role": "Shape open space into a temporary denial zone.",
+  "question": "Which empty space should become expensive to cross?",
+  "family": "control",
+  "contents": ["fire_team", "fire_brazier"],
+  "doctrine": "denial_zones",
+  "cost": 5,
+  "strength": "Climber approaches and open-space denial.",
+  "weakness": "Needs clear sightlines and can constrain friendly movement.",
+  "choice": "Shape the battlefield rather than simply add another body.",
+  "commander_affinity": ["warden"],
+  "spatial_demand": {
+    "preferred_floors": ["ground", "upper"],
+    "preferred_zones": ["courtyard", "wall"],
+    "needs_open_lane": true,
+    "needs_adjacency": false
+  }
+}
