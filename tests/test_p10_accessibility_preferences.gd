@@ -64,6 +64,12 @@ func _initialize() -> void:
 	restored._load_preferences()
 	_check(not restored.audio_muted and not restored.high_contrast and not restored.reduced_motion and restored.battle_speed_index == 1, "invalid setting types should fall back to documented defaults")
 
+	file = FileAccess.open(TEST_SETTINGS, FileAccess.WRITE)
+	file.store_string("{malformed")
+	file.close()
+	restored._load_preferences()
+	_check(not restored.audio_muted and not restored.high_contrast and not restored.reduced_motion and restored.battle_speed_index == 1, "malformed settings should fall back to documented defaults")
+
 	ui.queue_free()
 	restored.queue_free()
 	await process_frame

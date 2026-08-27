@@ -57,6 +57,13 @@
     "storage": "versioned_user_settings_separate_from_authoritative_run_save",
     "next_slice": "p10_controller_and_scaling"
   },
+  "p10_controller_and_scaling": {
+    "status": "implemented",
+    "ui_scale_presets": [80, 100, 125, 150],
+    "input": "controller_navigation_and_keyboard_controller_binding_capture",
+    "layout": "large_scales_stack_board_and_command_rail_inside_a_page_scroll",
+    "next_slice": "p10_display_and_audio_settings"
+  },
   "campaign": {
     "title": "The Bell at Dusk",
     "premise": "A small keep is granted one season to become a refuge before a coalition of raiders, sappers, climbers, and siege beasts tests every defensive doctrine at once.",

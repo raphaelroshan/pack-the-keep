@@ -5,7 +5,7 @@ var failures: Array[String] = []
 func _initialize() -> void:
 	var required_actions: Array[String] = [
 		"battle_pause", "battle_advance", "battle_speed_half", "battle_speed_normal", "battle_speed_double",
-		"battle_manual_step", "commander_ability", "placement_arm", "placement_cancel", "report_focus", "feedback_mute", "contrast_toggle"
+		"battle_manual_step", "commander_ability", "placement_arm", "placement_cancel", "report_focus", "feedback_mute", "contrast_toggle", "reduced_motion_toggle"
 	]
 	for action in required_actions:
 		if not InputMap.has_action(action):

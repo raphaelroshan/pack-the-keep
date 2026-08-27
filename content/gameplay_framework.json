@@ -90,6 +90,12 @@
     "determinism_rule": "preferences remain outside PackKeepState serialization and never change battle outcomes",
     "persistence": "versioned atomic user settings with safe defaults for malformed or future files"
   },
+  "p10_controller_and_scaling": {
+    "status": "implemented",
+    "input_rule": "named actions preserve keyboard and controller paths; rebinding one device family preserves the other",
+    "scale_rule": "80_100_125_150_percent_presets_with_stacked_scroll_safe_large_scale_layout",
+    "determinism_rule": "focus_navigation_remapping_and_scaling_do_not_mutate_authoritative_state"
+  },
   "v090_multi_wave": {
     "status": "implemented",
     "authored_sequence": "scenario_wave_plans_and_doctrines_define_three_escalating_waves",

@@ -231,3 +231,11 @@
 **Reason:** These choices belong to the player and should survive runs, but they must not affect deterministic replay or save migration for the defense simulation.
 
 **Trade-off:** Settings have their own validation and atomic-write path. Controller remapping and display scaling remain later P10 slices.
+
+## ADR-030: Remapping preserves device paths and project defaults
+
+**Decision:** Persist supported keyboard and controller overrides by named input action. Capturing a binding replaces only events from the captured device family, while reset reconstructs the project-defined defaults. UI scale is a preset applied through the root window and stored in the same presentation-only settings file.
+
+**Reason:** Named actions already separate input intent from simulation commands. Preserving the other device family prevents a controller change from silently removing keyboard access, and project defaults remain the single recovery baseline.
+
+**Trade-off:** The first remapping UI supports keys and controller buttons, not mouse buttons, chords, or analog-axis tuning. Those can be added without changing the command boundary.

@@ -14,7 +14,7 @@ High contrast, feedback audio, battle speed, and reduced motion should behave as
 
 ## Storage
 
-Preferences use `user://pack_the_keep_settings.json` with schema version 1. Writes use a temporary file followed by atomic replacement. The save contains only presentation fields and is deliberately separate from `PackKeepState.serialize()`.
+Preferences use `user://pack_the_keep_settings.json`; this slice introduced schema version 1, which the later controller/scaling slice migrates to schema 2. Writes use a temporary file followed by atomic replacement. The save contains only presentation fields and is deliberately separate from `PackKeepState.serialize()`.
 
 ## Acceptance criteria
 
