@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.8.2-testability",
+  "framework_version": "0.8.4-quick-playtest",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -57,6 +57,13 @@
     "recommended_layout": "fixed_explainable_starter_placements_through_authoritative_place_piece_api",
     "combat_readability": ["newest_first_event_feed", "causal_result_metrics", "outcome_interpretation"],
     "determinism_rule": "guidance_event_feed_and_result_explanation_read_state_without_mutating_authoritative_outcomes"
+  },
+  "v084_quick_playtest": {
+    "status": "implemented",
+    "main_menu": "start_game_quick_playtest_and_open_empty_preparation",
+    "preset": "seed_3307_gatehouse_lock_gate_assault_recommended_starter_layout",
+    "test_action": "start_invasion_and_advance_one_paused_battle_step",
+    "determinism_rule": "quick_entry_reuses_authoritative_reset_scenario_layout_and_wave_handlers"
   },
   "v083_placement_boxes": {
     "status": "implemented",

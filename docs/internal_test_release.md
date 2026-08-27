@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.8.3-placement-boxes` — reference-informed fort rooms, wall slots, and readable placement boxes
+**Current build identity:** `0.8.4-quick-playtest` — one-click preset entry and one-step battle validation
 
 ## Purpose
 
@@ -9,6 +9,12 @@ This package is an internal pre-alpha test release, not a commercial demo or sto
 ## v0.8.2 testability additions
 
 Preparation now displays a numbered first-battle guide that recommends the authoritative starter arrangement and explains what to read before starting. The command table includes **Use recommended starter layout**, which places Pike Squad and Narrow Gate at fixed, readable ground-floor origins through the same validated placement API used by direct map placement; it is a recommendation, not a forced opening build. During battle, the left panel presents the latest four authoritative battle-report lines in a newest-first **Combat Event Feed**. Results present a **Causal Result** panel with outcome, breach, morale, defeated enemies, room damage, piece damage, and a plain-language interpretation of what to test next. Guidance changes between preparation, battle, and results while the fort remains visible.
+
+## v0.8.4 quick-playtest additions
+
+The Title screen now has a clear **Start Game — Quick Playtest** button. It resets deterministic seed `3307`, selects Gatehouse Lock and Gate Assault, applies the existing recommended Pike Squad and Narrow Gate arrangement through the authoritative placement API, and opens Preparation with the fort already visible. **Open Empty Preparation** remains available for testing the unseeded setup path.
+
+The command table now includes **Quick test: advance one battle step**. It starts the preset invasion and resolves one deterministic step, then leaves Battle paused so a tester can inspect the gate-entry route, enemy marker, target, defender overlays, placement boxes, and event text before using Space or N for more steps. Repeated activation during an active wave is blocked safely.
 
 ## v0.8.3 placement-box additions
 
@@ -47,6 +53,12 @@ A tester should begin Preparation, compare The Castellan and The Warden profiles
 ## v0.8.2 acceptance checks
 
 On a fresh run, enter Preparation and confirm the first-battle guide names the recommended starter layout. Use the recommendation and verify that Pike Squad appears in the courtyard and Narrow Gate is placed near the gate, then modify the arrangement if desired. Start the invasion and confirm the guide explains that the fort remains visible, the event feed shows the deterministic forecast, and a manual step adds newer causal lines above older ones. Let the wave resolve, confirm the screen switches to Results, and verify that the causal panel names outcome, breach, morale, defeated enemies, room damage, piece damage, and recovery advice. Refresh the guide and result panel without commands and confirm the serialized keep state remains unchanged.
+
+## v0.8.4 acceptance checks
+
+From a fresh launch, confirm the Title screen shows **Start Game — Quick Playtest**. Click it and verify Preparation opens with Gatehouse Lock active, Pike Squad and Narrow Gate already placed, and the fort board visible. Confirm that the preset remains editable and that the normal placement, focus, pause, and speed controls remain available.
+
+Click **Quick test: advance one battle step**. Verify the screen changes to Battle, the invasion is active, exactly one deterministic step has advanced, and the battle is still paused. Confirm that the gate-entry route, enemy marker, target information, unit overlays, placement boxes, and event text remain visible. Use N or Space to continue, and verify the existing Results flow still appears after resolution.
 
 ## v0.8.3 acceptance checks
 

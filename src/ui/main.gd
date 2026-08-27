@@ -451,6 +451,11 @@ func _build_ui() -> void:
 	recommended_layout_button.tooltip_text = "Places Pike Squad and Narrow Gate in a readable first-battle arrangement; each placement remains authoritative."
 	recommended_layout_button.pressed.connect(_on_recommended_layout)
 	controls.add_child(recommended_layout_button)
+	var quick_test_button: Button = Button.new()
+	quick_test_button.text = "Quick test: advance one battle step"
+	quick_test_button.tooltip_text = "Start the preset Gatehouse Lock invasion and advance one readable combat step, leaving the battle paused for inspection."
+	quick_test_button.pressed.connect(_on_quick_test_action)
+	controls.add_child(quick_test_button)
 	var cancel_place_button: Button = Button.new()
 	cancel_place_button.text = "Cancel map placement"
 	cancel_place_button.pressed.connect(_on_cancel_placement)
@@ -583,11 +588,19 @@ func _build_title_card() -> PanelContainer:
 	copy.add_theme_color_override("font_color", Color("#c0b2c8"))
 	content.add_child(copy)
 	var start_button: Button = Button.new()
-	start_button.text = "Begin preparation"
-	start_button.custom_minimum_size = Vector2(220, 34)
+	start_button.text = "Start Game — Quick Playtest"
+	start_button.tooltip_text = "Open a deterministic preset Greywatch state with Pike Squad and Narrow Gate already placed."
+	start_button.custom_minimum_size = Vector2(280, 38)
 	start_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	start_button.pressed.connect(func() -> void: _set_screen("preparation"))
+	start_button.pressed.connect(_on_start_quick_playtest)
 	content.add_child(start_button)
+	var empty_button: Button = Button.new()
+	empty_button.text = "Open Empty Preparation"
+	empty_button.tooltip_text = "Enter the normal preparation screen without the quick-playtest preset."
+	empty_button.custom_minimum_size = Vector2(220, 30)
+	empty_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	empty_button.pressed.connect(func() -> void: _set_screen("preparation"))
+	content.add_child(empty_button)
 	return card
 
 func _set_screen(next_screen: String) -> void:
@@ -1015,6 +1028,39 @@ func _on_load() -> void:
 	inspected_text = "Save loaded. Click a room or piece to inspect the restored run."
 	_set_event("Keep state loaded%s." % (" from a legacy save" if bool(result.get("legacy", false)) else ""))
 	_refresh_ui()
+
+func _on_start_quick_playtest() -> void:
+	keep.reset_run(3307)
+	focused_enemy_index = -1
+	battle_paused = true
+	battle_speed_index = 1
+	last_log_size = 0
+	_clear_placement_mode()
+	selected_instance_id = ""
+	for index in range(scenario_option.item_count):
+		if String(scenario_option.get_item_metadata(index)) == "gatehouse_lock":
+			scenario_option.select(index)
+			break
+	keep.select_scenario("gatehouse_lock")
+	for index in range(doctrine_option.item_count):
+		if String(doctrine_option.get_item_metadata(index)) == "gate_assault":
+			doctrine_option.select(index)
+			break
+	_on_recommended_layout()
+	_set_screen("preparation")
+	_set_event("Quick playtest ready: Pike Squad and Narrow Gate are placed. Click Quick test: advance one battle step to stage the gate attack.")
+	_refresh_ui()
+
+func _on_quick_test_action() -> void:
+	if screen == "title":
+		_on_start_quick_playtest()
+	if keep.wave_active:
+		_set_event("Quick test already active. Press Space to run or N to advance the staged invasion.")
+		_refresh_ui()
+		return
+	_on_start_wave()
+	if keep.wave_active:
+		_on_advance_wave()
 
 func _on_reset_run() -> void:
 	keep.reset_run(3307)
