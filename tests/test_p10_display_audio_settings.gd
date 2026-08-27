@@ -43,7 +43,7 @@ func _initialize() -> void:
 	_check(String(ui.window_mode_button.text).contains("Fullscreen") and String(ui.resolution_button.text).contains("1600×900") and String(ui.effects_volume_button.text).contains("50%"), "display and volume controls should expose current values as text")
 	_check(JSON.stringify(ui.keep.serialize()) == state_before, "display and audio settings should not mutate authoritative run state")
 	var payload: Variant = JSON.parse_string(FileAccess.get_file_as_string(TEST_SETTINGS))
-	_check(payload is Dictionary and int(payload.get("schema_version", 0)) == 3, "display and audio preferences should write settings schema 3")
+	_check(payload is Dictionary and int(payload.get("schema_version", 0)) == 4, "display and audio preferences should write the current settings schema")
 
 	var restored: Control = load("res://scenes/Main.tscn").instantiate()
 	root.add_child(restored)

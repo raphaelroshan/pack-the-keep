@@ -70,6 +70,12 @@
     "audio": "effects_volume_presets_plus_independent_mute",
     "next_slice": "p10_event_feed_and_game_feel"
   },
+  "p10_event_feed_and_game_feel": {
+    "status": "implemented",
+    "event_feed_retention": [4, 8, 16, 32],
+    "auto_pause": "after_first_resolved_threat_step_per_wave_and_each_new_breach",
+    "next_slice": "p10_game_feel_feedback"
+  },
   "campaign": {
     "title": "The Bell at Dusk",
     "premise": "A small keep is granted one season to become a refuge before a coalition of raiders, sappers, climbers, and siege beasts tests every defensive doctrine at once.",

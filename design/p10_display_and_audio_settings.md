@@ -9,7 +9,7 @@ Complete the first desktop settings pass with explicit window mode, resolution, 
 - Window mode toggles between windowed and fullscreen.
 - Windowed resolution cycles through 1280×720, 1600×900, and 1920×1080; the selected windowed size is retained while fullscreen is active and restored when returning to windowed mode.
 - Effects volume cycles through 25%, 50%, 75%, and 100%. The existing mute control remains an independent immediate override.
-- Settings schema 3 loads schema-1 and schema-2 files with documented display/audio defaults.
+- This slice introduced settings schema 3, loading schema-1 and schema-2 files with documented display/audio defaults; the later feed/auto-pause slice migrates it to schema 4.
 - Unsupported values, malformed JSON, and future schemas fall back safely.
 - Headless verification can disable OS-window mutations while still exercising validation and persistence.
 

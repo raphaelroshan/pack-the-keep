@@ -82,7 +82,7 @@ func _initialize() -> void:
 	for action in ui.REMAPPABLE_ACTIONS:
 		_check(not InputMap.action_get_events(action).is_empty(), "%s should remain usable after conflict resolution" % action)
 	var saved_payload: Variant = JSON.parse_string(FileAccess.get_file_as_string(TEST_SETTINGS))
-	_check(saved_payload is Dictionary and int(saved_payload.get("schema_version", 0)) == 3 and saved_payload.get("input_bindings") is Dictionary, "controller and scale preferences should persist in the current settings schema")
+	_check(saved_payload is Dictionary and int(saved_payload.get("schema_version", 0)) == 4 and saved_payload.get("input_bindings") is Dictionary, "controller and scale preferences should persist in the current settings schema")
 	_check(JSON.stringify(ui.keep.serialize()) == state_before, "scaling and rebinding should not mutate authoritative run state")
 
 	ui._on_place_piece()

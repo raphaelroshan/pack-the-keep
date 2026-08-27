@@ -14,13 +14,14 @@ const CLIMBER_ICON = preload("res://assets/climber_icon.png")
 const SAVE_PATH := "user://pack_the_keep_prototype.save"
 const SAVE_TEMP_PATH := "user://pack_the_keep_prototype.save.tmp"
 const SAVE_BACKUP_PATH := "user://pack_the_keep_prototype.save.bak"
-const SETTINGS_SCHEMA_VERSION := 3
+const SETTINGS_SCHEMA_VERSION := 4
 const SETTINGS_PATH := "user://pack_the_keep_settings.json"
 const SETTINGS_TEMP_PATH := "user://pack_the_keep_settings.json.tmp"
 const SETTINGS_BACKUP_PATH := "user://pack_the_keep_settings.json.bak"
 const UI_SCALE_PRESETS := [0.8, 1.0, 1.25, 1.5]
 const WINDOW_SIZE_PRESETS := [Vector2i(1280, 720), Vector2i(1600, 900), Vector2i(1920, 1080)]
 const EFFECTS_VOLUME_PRESETS := [0.25, 0.5, 0.75, 1.0]
+const EVENT_FEED_RETENTION_PRESETS := [4, 8, 16, 32]
 const RESERVED_CONTROLLER_NAVIGATION_BUTTONS := [0, 11, 12, 13, 14]
 const REMAPPABLE_ACTIONS := [
 	"battle_pause", "battle_manual_step", "commander_ability", "placement_arm", "placement_cancel",
@@ -94,6 +95,8 @@ var ui_scale_button: Button
 var window_mode_button: Button
 var resolution_button: Button
 var effects_volume_button: Button
+var event_feed_button: Button
+var auto_pause_button: Button
 var rebind_action_option: OptionButton
 var rebind_button: Button
 var reset_bindings_button: Button
@@ -110,12 +113,15 @@ var ui_scale_index: int = 1
 var window_size_index: int = 0
 var fullscreen_enabled: bool = false
 var effects_volume_index: int = 3
+var event_feed_retention_index: int = 0
+var auto_pause_on_threat: bool = false
 var settings_path: String = SETTINGS_PATH
 var settings_temp_path: String = SETTINGS_TEMP_PATH
 var settings_backup_path: String = SETTINGS_BACKUP_PATH
 var preferences_persistence_enabled: bool = true
 var display_application_enabled: bool = true
 var rebind_waiting_action: String = ""
+var last_auto_pause_wave_index: int = -1
 var menu_buttons: Dictionary = {}
 var audio_player: AudioStreamPlayer
 var audio_stream: AudioStreamGenerator
@@ -162,7 +168,12 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if battle_paused or not keep.wave_active:
 		return
-	var result: Dictionary = keep.advance_wave(delta * _battle_speed())
+	var battle_step_before: int = keep.battle_step
+	var breach_before: int = keep.breach_level
+	var advance_delta: float = delta * _battle_speed()
+	if auto_pause_on_threat and battle_step_before == 0 and last_auto_pause_wave_index != keep.wave_index:
+		advance_delta = minf(advance_delta, maxf(0.0, 1.0 - keep.battle_clock))
+	var result: Dictionary = keep.advance_wave(advance_delta)
 	if bool(result.get("resolved", false)):
 		battle_paused = true
 		_set_feedback(Color("#bfe8cf"))
@@ -172,6 +183,13 @@ func _process(delta: float) -> void:
 		if keep.battle_report.size() > last_log_size:
 			_set_feedback(Color("#d26155"))
 			last_log_size = keep.battle_report.size()
+		var first_threat_step: bool = keep.battle_step > battle_step_before and battle_step_before == 0 and last_auto_pause_wave_index != keep.wave_index
+		var new_breach: bool = keep.breach_level > breach_before
+		if auto_pause_on_threat and (first_threat_step or new_breach):
+			battle_paused = true
+			if first_threat_step:
+				last_auto_pause_wave_index = keep.wave_index
+			_set_event("Accessibility auto-pause: %s resolved. Inspect the board, then resume when ready." % ("first threat step" if first_threat_step else "new breach"))
 		_refresh_ui()
 
 func _input(event: InputEvent) -> void:
@@ -333,6 +351,24 @@ func _set_effects_volume(index: int) -> void:
 
 func _cycle_effects_volume() -> void:
 	_set_effects_volume((effects_volume_index + 1) % EFFECTS_VOLUME_PRESETS.size())
+
+func _set_event_feed_retention(index: int) -> void:
+	event_feed_retention_index = clampi(index, 0, EVENT_FEED_RETENTION_PRESETS.size() - 1)
+	_save_preferences()
+	_set_event("Combat event feed now retains the newest %d entries." % _event_feed_retention())
+	_refresh_ui()
+
+func _cycle_event_feed_retention() -> void:
+	_set_event_feed_retention((event_feed_retention_index + 1) % EVENT_FEED_RETENTION_PRESETS.size())
+
+func _event_feed_retention() -> int:
+	return int(EVENT_FEED_RETENTION_PRESETS[event_feed_retention_index])
+
+func _toggle_auto_pause_on_threat() -> void:
+	auto_pause_on_threat = not auto_pause_on_threat
+	_save_preferences()
+	_set_event("Threat auto-pause enabled; real-time play stops after the first threat step and new breaches." if auto_pause_on_threat else "Threat auto-pause disabled.")
+	_refresh_ui()
 
 func _window_size_text() -> String:
 	var size: Vector2i = WINDOW_SIZE_PRESETS[window_size_index]
@@ -542,6 +578,8 @@ func _load_preferences() -> void:
 	window_size_index = 0
 	fullscreen_enabled = false
 	effects_volume_index = 3
+	event_feed_retention_index = 0
+	auto_pause_on_threat = false
 	_restore_default_input_bindings()
 	if not FileAccess.file_exists(settings_path):
 		_apply_ui_scale()
@@ -589,6 +627,12 @@ func _load_preferences() -> void:
 		var saved_effects_volume: Variant = payload.get("effects_volume_index")
 		if (saved_effects_volume is int or saved_effects_volume is float) and float(saved_effects_volume) == floor(float(saved_effects_volume)) and int(saved_effects_volume) >= 0 and int(saved_effects_volume) < EFFECTS_VOLUME_PRESETS.size():
 			effects_volume_index = int(saved_effects_volume)
+	if schema_version >= 4:
+		var saved_feed_retention: Variant = payload.get("event_feed_retention_index")
+		if (saved_feed_retention is int or saved_feed_retention is float) and float(saved_feed_retention) == floor(float(saved_feed_retention)) and int(saved_feed_retention) >= 0 and int(saved_feed_retention) < EVENT_FEED_RETENTION_PRESETS.size():
+			event_feed_retention_index = int(saved_feed_retention)
+		if payload.get("auto_pause_on_threat") is bool:
+			auto_pause_on_threat = bool(payload.auto_pause_on_threat)
 	_apply_ui_scale()
 	_apply_display_settings()
 
@@ -598,7 +642,7 @@ func _save_preferences() -> bool:
 	var file: FileAccess = FileAccess.open(settings_temp_path, FileAccess.WRITE)
 	if file == null:
 		return false
-	file.store_string(JSON.stringify({"schema_version": SETTINGS_SCHEMA_VERSION, "battle_speed_index": battle_speed_index, "audio_muted": audio_muted, "high_contrast": high_contrast, "reduced_motion": reduced_motion, "ui_scale_index": ui_scale_index, "input_bindings": _serialize_input_bindings(), "window_size_index": window_size_index, "fullscreen_enabled": fullscreen_enabled, "effects_volume_index": effects_volume_index}))
+	file.store_string(JSON.stringify({"schema_version": SETTINGS_SCHEMA_VERSION, "battle_speed_index": battle_speed_index, "audio_muted": audio_muted, "high_contrast": high_contrast, "reduced_motion": reduced_motion, "ui_scale_index": ui_scale_index, "input_bindings": _serialize_input_bindings(), "window_size_index": window_size_index, "fullscreen_enabled": fullscreen_enabled, "effects_volume_index": effects_volume_index, "event_feed_retention_index": event_feed_retention_index, "auto_pause_on_threat": auto_pause_on_threat}))
 	file.flush()
 	file.close()
 	var directory: DirAccess = DirAccess.open("user://")
@@ -1117,6 +1161,16 @@ func _build_ui() -> void:
 	effects_volume_button.tooltip_text = "Adjust generated feedback tones independently from the mute preference."
 	effects_volume_button.pressed.connect(_cycle_effects_volume)
 	controls.add_child(effects_volume_button)
+	event_feed_button = Button.new()
+	event_feed_button.text = "Event feed: newest 4"
+	event_feed_button.tooltip_text = "Change only how many authoritative report entries are shown; the complete report remains saved."
+	event_feed_button.pressed.connect(_cycle_event_feed_retention)
+	controls.add_child(event_feed_button)
+	auto_pause_button = Button.new()
+	auto_pause_button.text = "Threat auto-pause: OFF"
+	auto_pause_button.tooltip_text = "Pause after the first resolved threat step in each wave and after a new breach; resume manually when ready."
+	auto_pause_button.pressed.connect(_toggle_auto_pause_on_threat)
+	controls.add_child(auto_pause_button)
 	rebind_action_option = OptionButton.new()
 	for action in REMAPPABLE_ACTIONS:
 		rebind_action_option.add_item(String(ACTION_LABELS.get(action, action)))
@@ -1824,6 +1878,7 @@ func _on_start_quick_playtest() -> void:
 	keep.reset_run(3307)
 	focused_enemy_index = -1
 	battle_paused = true
+	last_auto_pause_wave_index = -1
 	last_log_size = 0
 	_clear_placement_mode()
 	selected_instance_id = ""
@@ -1863,6 +1918,7 @@ func _on_reset_run() -> void:
 	keep.reset_run(3307)
 	focused_enemy_index = -1
 	battle_paused = true
+	last_auto_pause_wave_index = -1
 	last_log_size = 0
 	_clear_placement_mode()
 	selected_instance_id = ""
@@ -2011,11 +2067,11 @@ func _refresh_ui() -> void:
 				playtest_button.tooltip_text = "Reset seed 3307 and replay the preset Gatehouse Lock test."
 				playtest_status_label.text = "FINAL RESULTS — %s | Replay %s" % [_scorecard_compact_text(), String(keep.scenario_scorecard().get("replay_key", ""))]
 	var recent: Array[String] = []
-	var start: int = maxi(0, keep.battle_report.size() - 4)
+	var start: int = maxi(0, keep.battle_report.size() - _event_feed_retention())
 	for index in range(start, keep.battle_report.size()):
 		recent.append(keep.battle_report[index])
 	recent.reverse()
-	log_label.text = "COMBAT EVENT FEED — newest first\n" + ("\n".join(recent) if not recent.is_empty() else "No wave has started. This feed will name the forecast, response, target, damage, and recovery.")
+	log_label.text = "COMBAT EVENT FEED — newest %d, newest first\n" % _event_feed_retention() + ("\n".join(recent) if not recent.is_empty() else "No wave has started. This feed will name the forecast, response, target, damage, and recovery.")
 
 	pause_button.text = "Resume battle (Space)" if battle_paused else "Pause battle (Space)"
 	speed_button.text = "Speed: %.1fx (1/2/3)" % _battle_speed()
@@ -2026,6 +2082,8 @@ func _refresh_ui() -> void:
 	window_mode_button.text = "Window mode: Fullscreen" if fullscreen_enabled else "Window mode: Windowed"
 	resolution_button.text = "Window size: %s%s" % [_window_size_text(), " (saved)" if fullscreen_enabled else ""]
 	effects_volume_button.text = "Effects volume: %d%%" % int(_effects_gain() * 100.0)
+	event_feed_button.text = "Event feed: newest %d" % _event_feed_retention()
+	auto_pause_button.text = "Threat auto-pause: ON" if auto_pause_on_threat else "Threat auto-pause: OFF"
 	_refresh_binding_controls()
 	_refresh_response_preview()
 	_refresh_layout_lens()

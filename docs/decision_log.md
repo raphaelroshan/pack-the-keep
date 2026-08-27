@@ -247,3 +247,11 @@
 **Reason:** A fullscreen toggle should be reversible and predictable, while a bounded preset list avoids invalid desktop dimensions. Separating mute from gain preserves a player's chosen listening level when sound is re-enabled.
 
 **Trade-off:** The first pass does not expose monitor selection, VSync, music, or voice buses. It establishes a migration-safe settings shape for those later additions.
+
+## ADR-032: Accessibility auto-pause occurs after an atomic step
+
+**Decision:** Detect a new-wave threat or increased breach by comparing authoritative state immediately before and after a normal `advance_wave()` call, then pause only the presentation loop. Retain the complete core report and apply feed-length preferences only while formatting UI text.
+
+**Reason:** Players gain time to inspect meaningful changes without introducing a partial tick, alternate combat path, or truncated replay history.
+
+**Trade-off:** Auto-pause reacts after the triggering step, not before it, and the first-threat trigger fires once per wave. More granular categories can be added later without changing simulation authority.
