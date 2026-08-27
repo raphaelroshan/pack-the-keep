@@ -49,6 +49,12 @@
       "repair_to_workshop",
       "fire_to_yard",
       "scout_to_tower"
+    ],
+    "menu_states": [
+      "title",
+      "preparation",
+      "battle",
+      "results"
     ]
   },
   "unit_roles": [
@@ -1041,6 +1047,58 @@
       "room": "north_tower",
       "effect": "secondary target revealed before contact",
       "action_cost": 1
+    }
+  ],
+  "enemy_presentation": {
+    "status": "vertical_slice",
+    "actors": [
+      {
+        "id": "raider",
+        "color_role": "red",
+        "marker": "gate-road circle",
+        "readout": "health, route, target, arrival step"
+      },
+      {
+        "id": "sapper",
+        "color_role": "amber",
+        "marker": "service-lane circle",
+        "readout": "health, route, support-room target"
+      },
+      {
+        "id": "climber",
+        "color_role": "violet",
+        "marker": "upper-wall circle",
+        "readout": "health, bypass route, landing target"
+      }
+    ],
+    "requirements": [
+      "visible route",
+      "visible health",
+      "doctrine label",
+      "causal target report",
+      "defeated state disappears from active map"
+    ]
+  },
+  "menu_states": [
+    {
+      "id": "title",
+      "purpose": "introduce Greywatch and the core promise",
+      "primary_action": "begin preparation"
+    },
+    {
+      "id": "preparation",
+      "purpose": "choose pack, place pieces, assign rooms, and repair",
+      "primary_action": "start invasion"
+    },
+    {
+      "id": "battle",
+      "purpose": "inspect forecast, enemy actors, and step-by-step contact",
+      "primary_action": "advance battle step"
+    },
+    {
+      "id": "results",
+      "purpose": "read outcome and return to recovery or preparation",
+      "primary_action": "finish repair interval"
     }
   ]
 }

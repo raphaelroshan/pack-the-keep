@@ -65,3 +65,9 @@ See [`design/first_keep_battle_slice.md`](design/first_keep_battle_slice.md) for
 After a **Held** or **Partial Breach** result, Greywatch opens an authored two-action repair interval. The player can repair a room for 8 materials, repair a damaged piece for 6 materials, assign a unit to its specialist room, clear an old assignment, or close the interval early. The next wave is blocked until the interval closes; collapse skips the interval and returns to preparation.
 
 The implemented assignment rules are Pike Squad → Gate, Repair Station → Workshop, Fire Team → Inner Yard, and Scout Post → North Tower. Assignments are persisted in the state and reported during battle. A Repair Station assigned to Workshop prioritizes that room and repairs it for 12 instead of 8 during contact. The detailed contract is in [`design/greywatch_repair_and_room_assignments.md`](design/greywatch_repair_and_room_assignments.md).
+
+## Enemy actors and menu flow
+
+Raiders, Sappers, and Climbers are now concrete active actors in the prototype. Their route, health, doctrine role, and current target are shown in the enemy readout, while colored markers appear on the Greywatch map: red for Gate pressure, amber for support sabotage, and violet for upper-floor bypass.
+
+The prototype now exposes four menu states: **Title**, **Preparation**, **Battle**, and **Results**. Title begins the run, Preparation handles packs, placement, repair, and assignment, Battle advances the forecasted invasion one step at a time, and Results exposes the outcome and recovery path. Navigation is a UI layer over `PackKeepState`; it does not create a second game-state authority. See [`design/enemy_presentation_and_menu_flow.md`](design/enemy_presentation_and_menu_flow.md) for the presentation contract.

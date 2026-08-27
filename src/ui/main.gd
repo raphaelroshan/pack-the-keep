@@ -5,6 +5,7 @@ const PackKeepState = preload("res://src/core/keep_state.gd")
 var keep: PackKeepState
 var status_label: Label
 var forecast_label: Label
+var enemy_label: Label
 var event_label: Label
 var log_label: Label
 var commander_option: OptionButton
@@ -14,6 +15,11 @@ var floor_option: OptionButton
 var doctrine_option: OptionButton
 var room_option: OptionButton
 var keep_canvas: Control
+var gameplay_columns: Control
+var title_card: PanelContainer
+var screen_label: Label
+var screen_hint: Label
+var screen: String = "title"
 
 func _ready() -> void:
 	keep = PackKeepState.new(3307)
@@ -34,9 +40,36 @@ func _build_ui() -> void:
 	margin.add_theme_constant_override("margin_bottom", 20)
 	add_child(margin)
 
+	var shell: VBoxContainer = VBoxContainer.new()
+	shell.add_theme_constant_override("separation", 10)
+	margin.add_child(shell)
+
+	var menu_bar: HBoxContainer = HBoxContainer.new()
+	menu_bar.add_theme_constant_override("separation", 8)
+	screen_label = Label.new()
+	screen_label.custom_minimum_size = Vector2(170, 0)
+	screen_label.add_theme_font_size_override("font_size", 16)
+	screen_label.add_theme_color_override("font_color", Color("#e2bd84"))
+	menu_bar.add_child(screen_label)
+	for menu_item in ["title", "preparation", "battle", "results"]:
+		var menu_button: Button = Button.new()
+		menu_button.text = String(menu_item).capitalize()
+		menu_button.pressed.connect(func() -> void: _set_screen(String(menu_item)))
+		menu_bar.add_child(menu_button)
+	screen_hint = Label.new()
+	screen_hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	screen_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	screen_hint.add_theme_color_override("font_color", Color("#aab1b2"))
+	menu_bar.add_child(screen_hint)
+	shell.add_child(menu_bar)
+
+	title_card = _build_title_card()
+	shell.add_child(title_card)
+
 	var columns: HBoxContainer = HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 22)
-	margin.add_child(columns)
+	gameplay_columns = columns
+	shell.add_child(columns)
 
 	var left: VBoxContainer = VBoxContainer.new()
 	left.custom_minimum_size = Vector2(820, 0)
@@ -64,6 +97,12 @@ func _build_ui() -> void:
 	forecast_label.custom_minimum_size = Vector2(800, 48)
 	forecast_label.add_theme_color_override("font_color", Color("#d8c389"))
 	left.add_child(forecast_label)
+
+	enemy_label = Label.new()
+	enemy_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	enemy_label.custom_minimum_size = Vector2(800, 42)
+	enemy_label.add_theme_color_override("font_color", Color("#e89270"))
+	left.add_child(enemy_label)
 
 	keep_canvas = KeepCanvas.new()
 	keep_canvas.custom_minimum_size = Vector2(810, 390)
@@ -192,6 +231,51 @@ func _build_ui() -> void:
 	save_button.pressed.connect(_on_save)
 	controls.add_child(save_button)
 
+func _build_title_card() -> PanelContainer:
+	var card: PanelContainer = PanelContainer.new()
+	card.custom_minimum_size = Vector2(0, 170)
+	var content: VBoxContainer = VBoxContainer.new()
+	content.alignment = BoxContainer.ALIGNMENT_CENTER
+	content.add_theme_constant_override("separation", 8)
+	card.add_child(content)
+	var heading: Label = Label.new()
+	heading.text = "GREYWATCH KEEP"
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	heading.add_theme_font_size_override("font_size", 34)
+	heading.add_theme_color_override("font_color", Color("#e2bd84"))
+	content.add_child(heading)
+	var copy: Label = Label.new()
+	copy.text = "Pack the Keep — a readable, deterministic defense of one two-floor stronghold.\nChoose a pack, place the defense, read the enemy doctrine, and recover what survives."
+	copy.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	copy.add_theme_color_override("font_color", Color("#c0b2c8"))
+	content.add_child(copy)
+	var start_button: Button = Button.new()
+	start_button.text = "Begin preparation"
+	start_button.custom_minimum_size = Vector2(220, 34)
+	start_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	start_button.pressed.connect(func() -> void: _set_screen("preparation"))
+	content.add_child(start_button)
+	return card
+
+func _set_screen(next_screen: String) -> void:
+	screen = next_screen
+	if gameplay_columns:
+		gameplay_columns.visible = screen != "title"
+	if title_card:
+		title_card.visible = screen == "title"
+	if screen_label:
+		screen_label.text = "GREYWATCH / %s" % screen.capitalize()
+	if screen_hint:
+		if screen == "preparation":
+			screen_hint.text = "Place and assign before opening the next doctrine."
+		elif screen == "battle":
+			screen_hint.text = "Advance one step; inspect enemies before spending Lockdown."
+		elif screen == "results":
+			screen_hint.text = "Read the report, repair what matters, then return to preparation."
+		else:
+			screen_hint.text = "A compact two-floor defense about pressure and recovery."
+	_refresh_ui()
+
 func _labeled_control(label_text: String, control: Control) -> VBoxContainer:
 	var group: VBoxContainer = VBoxContainer.new()
 	var label: Label = Label.new()
@@ -232,7 +316,10 @@ func _on_place_piece() -> void:
 	_run_result(keep.place_piece(piece_id, _next_slot(piece_id, floor), floor), "Placement")
 
 func _on_start_wave() -> void:
-	_run_result(keep.start_wave(_selected_id(doctrine_option)), "Invasion")
+	var result: Dictionary = keep.start_wave(_selected_id(doctrine_option))
+	_run_result(result, "Invasion")
+	if bool(result.get("ok", false)):
+		_set_screen("battle")
 
 func _selected_piece_instance() -> String:
 	var piece_id: String = _selected_id(piece_option)
@@ -251,14 +338,18 @@ func _on_repair_room() -> void:
 	_run_result(keep.repair_room(_selected_id(room_option)), "Repair")
 
 func _on_finish_interval() -> void:
-	_run_result(keep.finish_repair_interval(), "Interval")
+	var result: Dictionary = keep.finish_repair_interval()
+	_run_result(result, "Interval")
+	if bool(result.get("ok", false)):
+		_set_screen("preparation")
 
 func _on_advance_wave() -> void:
 	var result: Dictionary = keep.advance_wave(1.0)
 	if not bool(result.get("ok", false)):
 		_set_event("Battle blocked: %s." % String(result.get("reason", "unknown")))
 	elif bool(result.get("resolved", false)):
-		_set_event("Wave resolved: %s. Read the report before rebuilding." % String(result.get("outcome", "unknown")).replace("_", " "))
+			_set_event("Wave resolved: %s. Read the report before rebuilding." % String(result.get("outcome", "unknown")).replace("_", " "))
+			_set_screen("results")
 	else:
 		_set_event("Battle step %d resolved. Pause and inspect the named target before committing Lockdown." % int(result.get("step", 0)))
 	_refresh_ui()
@@ -288,6 +379,15 @@ func _refresh_ui() -> void:
 	status_label.text = "Castellan | Materials %d | Command %d | Morale %d | Pieces %d | Wave %d | Step %d | Breach %d | Outcome %s | Repair %s" % [keep.materials, keep.command_points, keep.morale, keep.pieces.size(), keep.wave_index, keep.battle_step, keep.breach_level, keep.last_outcome if not keep.last_outcome.is_empty() else "active", interval_text]
 	var forecast: Dictionary = keep.forecast()
 	forecast_label.text = "FORECAST — %s | Likely target: %s | Uncertainty: %s | Scout: %s" % [String(forecast.get("doctrine", "")).replace("_", " "), String(forecast.get("likely_target", "")), String(forecast.get("uncertainty", "")), "revealed" if bool(forecast.get("scout_bonus", false)) else "not revealed"]
+	var enemy_lines: Array[String] = []
+	for enemy in keep.enemies:
+		var enemy_id: String = String(enemy.get("enemy_id", ""))
+		var enemy_state: String = "defeated" if bool(enemy.get("defeated", false)) else "%d hp" % int(enemy.get("hp", 0))
+		var target: String = String(enemy.get("target", ""))
+		if target.is_empty():
+			target = "approach"
+		enemy_lines.append("%s [%s] — %s — route %s — target %s" % [String(PackKeepState.ENEMIES[enemy_id].get("name", enemy_id)), enemy_id, enemy_state, String(PackKeepState.ENEMIES[enemy_id].get("route", "")), target])
+	enemy_label.text = "ENEMIES — " + (" | ".join(enemy_lines) if not enemy_lines.is_empty() else "No active enemies. Start an invasion to see doctrine-driven actors.")
 	if event_label.text.is_empty():
 		event_label.text = "Open Pike Line or Field Engineers, place a defense on either floor, start First Bell, and advance one step at a time."
 	var recent: Array[String] = []
@@ -355,11 +455,31 @@ class KeepCanvas extends Control:
 			if float(instance.get("condition", 0.0)) < 1.0 or not assignment.is_empty():
 				draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(2, piece_rect.size.y - 3), piece_status, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#201a25"))
 
+	func _draw_enemies() -> void:
+		if keep == null or not keep.wave_active:
+			return
+		for index in range(keep.enemies.size()):
+			var enemy: Dictionary = keep.enemies[index]
+			if bool(enemy.get("defeated", false)):
+				continue
+			var enemy_id: String = String(enemy.get("enemy_id", ""))
+			var enemy_def: Dictionary = PackKeepState.ENEMIES[enemy_id]
+			var enemy_origin: Vector2 = MAP_ORIGIN + Vector2(20 + keep.wave_progress * 220.0, MAP_SIZE.y + 54 + index * 18)
+			if enemy_id == "climber":
+				enemy_origin = MAP_ORIGIN + Vector2(424 + 20 + keep.wave_progress * 220.0, -10 + index * 18)
+			elif enemy_id == "sapper":
+				enemy_origin = MAP_ORIGIN + Vector2(20 + keep.wave_progress * 220.0, MAP_SIZE.y + 54 + index * 18)
+			var enemy_color: Color = Color("#d26155") if enemy_id == "raider" else Color("#d7a35b") if enemy_id == "sapper" else Color("#a77bd1")
+			draw_circle(enemy_origin, 8.0, enemy_color)
+			draw_circle(enemy_origin, 8.0, Color("#f1dfb8"), false, 1.5)
+			draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(12, 4), "%s %dhp" % [String(enemy_def.get("name", enemy_id)), int(enemy.get("hp", 0))], HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#f2e5d1"))
+
 	func _draw() -> void:
 		if keep == null:
 			return
 		_draw_floor("GROUND FLOOR — Gate, Yard, Workshop, Supply", "ground", MAP_ORIGIN)
 		_draw_floor("UPPER FLOOR — Outer Wall, North Tower, Chapel", "upper", MAP_ORIGIN + Vector2(424, 0))
+		_draw_enemies()
 		if keep.wave_active:
 			var progress_width: float = 2.0 * MAP_SIZE.x * keep.wave_progress
 			draw_rect(Rect2(MAP_ORIGIN + Vector2(0, MAP_SIZE.y + 12), Vector2(2.0 * MAP_SIZE.x, 8)), Color("#402630"), true)

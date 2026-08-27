@@ -823,6 +823,17 @@
         "room": "north_tower",
         "effect": "secondary target revealed before contact"
       }
+    ],
+    "menu_states": [
+      "title",
+      "preparation",
+      "battle",
+      "results"
+    ],
+    "enemy_presentation": [
+      "raider_actor",
+      "sapper_actor",
+      "climber_actor"
     ]
   }
 }
