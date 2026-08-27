@@ -1,0 +1,8 @@
+{
+  "id": "shieldwall", "content_version": 1, "status": "active", "name": "Shieldwall",
+  "short_role": "Build one resilient anchor that protects the function behind it.", "question": "Which line deserves protection, and what remains exposed?",
+  "family": "frontline", "contents": ["shield_wardens", "emergency_shutters"], "doctrine": "anchored_gates", "cost": 5,
+  "strength": "Adjacent piece and room protection makes ordinary pressure easier to absorb.", "weakness": "Protection consumes space and is ignored by dedicated Shieldbreakers.",
+  "choice": "Fortify one boundary while preserving a second answer elsewhere.", "commander_affinity": ["castellan"],
+  "spatial_demand": {"preferred_floors": ["ground"], "preferred_zones": ["wall", "keep"], "needs_open_lane": false, "needs_adjacency": true}
+}

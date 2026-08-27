@@ -279,3 +279,11 @@
 **Reason:** Smoke should create a visible operational problem rather than an accuracy penalty or hidden randomness. Requiring a short signal chain makes shared pack infrastructure and placement matter while keeping the rule deterministic and reusable.
 
 **Trade-off:** The first version models signal integrity as a binary link and does not simulate sight lines, wind, relay direction, or partial coverage.
+
+## ADR-036: Protection is authored support that some enemies can pierce
+
+**Decision:** Allow support profiles to author bounded room or adjacent-piece damage reduction. Room protection stacks because it consumes multiple placements; adjacent-piece guards use the strongest single effect. Enemies may explicitly ignore protection and target the highest-health piece in authored categories.
+
+**Reason:** Shieldwall needs to make adjacency valuable without creating a second health system, while Shieldbreaker needs a deterministic way to expose the limits of one fortified line. Data fields keep both rules reusable and visible to validators.
+
+**Trade-off:** Protection has no facing or activation timing. A protection-piercing enemy bypasses the complete supported reduction rather than degrading it gradually.

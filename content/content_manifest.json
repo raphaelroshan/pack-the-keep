@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.11.1",
+  "content_version": "0.11.2",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -102,7 +102,18 @@
     "scenario": "ash_at_the_bell",
     "signal_rule": "a_same_floor_in_range_bellkeeper_to_beacon_link_preserves_forecast_detail_and_authored_arrival_timing",
     "validation": "profile_validation_link_distance_lone_piece_failures_save_load_seeded_replays_and_battle_ui",
-    "next_slice": "p11_third_teaching_pair"
+    "next_slice": "p11_shieldwall"
+  },
+  "p11_shieldwall": {
+    "status": "implemented",
+    "pack": "shieldwall",
+    "pieces": ["shield_wardens", "emergency_shutters"],
+    "enemy": "shieldbreaker",
+    "doctrine": "break_the_line",
+    "scenario": "the_splintered_gate",
+    "protection_rule": "authored_adjacent_protection_reduces_ordinary_damage_while_explicit_breakers_ignore_it",
+    "validation": "room_and_piece_protection_target_priority_save_load_seeded_replays_and_battle_ui",
+    "next_slice": "p11_challenge_modifiers"
   },
   "campaign": {
     "title": "The Bell at Dusk",
@@ -293,6 +304,15 @@
       "doctrine": "coordinated_response",
       "limitation": "Both pieces are non-attacking and the link fails across floors or beyond range.",
       "choice_text": "Spend support positions on a warning chain that keeps the forecast trustworthy."
+    },
+    {
+      "id": "shieldwall",
+      "name": "Shieldwall",
+      "purpose": "Build one resilient anchor and understand when protection will be bypassed.",
+      "pieces": ["shield_wardens", "emergency_shutters"],
+      "doctrine": "anchored_gates",
+      "limitation": "Static protection cannot stop a Shieldbreaker and leaves separated routes exposed.",
+      "choice_text": "Protect one line while retaining a direct answer or secondary defense."
     }
   ],
   "pieces": [
@@ -408,6 +428,18 @@
       "id": "bellkeepers",
       "name": "Bellkeepers",
       "role": "preserves a linked warning network",
+      "size": [1, 1]
+    },
+    {
+      "id": "shield_wardens",
+      "name": "Shield Wardens",
+      "role": "guards one adjacent defender",
+      "size": [2, 1]
+    },
+    {
+      "id": "emergency_shutters",
+      "name": "Emergency Shutters",
+      "role": "protects one adjacent room",
       "size": [1, 1]
     }
   ],
@@ -584,6 +616,13 @@
         "signal_beacon",
         "signal_redundancy"
       ]
+    },
+    {
+      "id": "shieldbreaker",
+      "name": "Shieldbreaker",
+      "role": "frontline disruption",
+      "teaching_question": "Did the player preserve a second line behind static protection?",
+      "counter_options": ["direct_damage", "precision", "mobile_response", "commander_intervention"]
     }
   ],
   "events": [
@@ -954,7 +993,8 @@
       "runner_pair",
       "rear_guard",
       "crossbow_patrol",
-      "bellkeepers"
+      "bellkeepers",
+      "shield_wardens"
     ],
     "enemy_ids": [
       "raider",
@@ -962,7 +1002,8 @@
       "climber",
       "siege_beast",
       "shield_guard",
-      "ash_slinger"
+      "ash_slinger",
+      "shieldbreaker"
     ],
     "scenario_ids": [
       "gatehouse_lock",
@@ -970,7 +1011,8 @@
       "open_yard_net",
       "relief_road",
       "red_banner_road",
-      "ash_at_the_bell"
+      "ash_at_the_bell",
+      "the_splintered_gate"
     ],
     "variation_contract": "seed-derived bounded target or resource variation; scenario objective and counter meaning remain fixed",
     "waves": [
@@ -1063,11 +1105,13 @@
       "siege_beast_actor",
       "shield_guard_actor",
       "ash_slinger_actor",
+      "shieldbreaker_actor",
       "declared_target_lines",
       "health_and_condition_bars",
       "siege_beast_area_radius",
       "shield_guard_armor_ring",
-      "ash_slinger_smoke_ring"
+      "ash_slinger_smoke_ring",
+      "shieldbreaker_break_marker"
     ],
     "focus_response_contract": {
       "status": "implemented",

@@ -8,7 +8,8 @@ const PACK_PATHS: Array[String] = [
 	"res://data/packs/runner_network.json",
 	"res://data/packs/fallback_convoy.json",
 	"res://data/packs/crossbow_watch.json",
-	"res://data/packs/bell_guard.json"
+	"res://data/packs/bell_guard.json",
+	"res://data/packs/shieldwall.json"
 ]
 
 const COMMANDER_PATHS: Array[String] = [
@@ -31,7 +32,9 @@ const PIECE_PATHS: Array[String] = [
 	"res://data/pieces/breakaway_barricade.json",
 	"res://data/pieces/crossbow_patrol.json",
 	"res://data/pieces/watch_banner.json",
-	"res://data/pieces/bellkeepers.json"
+	"res://data/pieces/bellkeepers.json",
+	"res://data/pieces/shield_wardens.json",
+	"res://data/pieces/emergency_shutters.json"
 ]
 
 const ENEMY_PATHS: Array[String] = [
@@ -40,7 +43,8 @@ const ENEMY_PATHS: Array[String] = [
 	"res://data/enemies/climber.json",
 	"res://data/enemies/siege_beast.json",
 	"res://data/enemies/shield_guard.json",
-	"res://data/enemies/ash_slinger.json"
+	"res://data/enemies/ash_slinger.json",
+	"res://data/enemies/shieldbreaker.json"
 ]
 
 const DOCTRINE_PATHS: Array[String] = [
@@ -50,7 +54,8 @@ const DOCTRINE_PATHS: Array[String] = [
 	"res://data/doctrines/area_pressure.json",
 	"res://data/doctrines/rolling_breach.json",
 	"res://data/doctrines/shielded_advance.json",
-	"res://data/doctrines/smoke_and_signal.json"
+	"res://data/doctrines/smoke_and_signal.json",
+	"res://data/doctrines/break_the_line.json"
 ]
 
 const SCENARIO_PATHS: Array[String] = [
@@ -59,7 +64,8 @@ const SCENARIO_PATHS: Array[String] = [
 	"res://data/scenarios/open_yard_net.json",
 	"res://data/scenarios/relief_road.json",
 	"res://data/scenarios/red_banner_road.json",
-	"res://data/scenarios/ash_at_the_bell.json"
+	"res://data/scenarios/ash_at_the_bell.json",
+	"res://data/scenarios/the_splintered_gate.json"
 ]
 
 const EVENT_PATHS: Array[String] = [
@@ -365,6 +371,9 @@ func validate_piece_definition(piece: Dictionary, expected_id: String, known_roo
 			if String(support_profile.get("response_modifier", "")).strip_edges().is_empty():
 				validation_errors.append("piece %s support profile must have a response modifier" % piece_id)
 			_validate_integer_minimum(support_profile, "condition_restore", piece_id, "piece support profile", 0, validation_errors)
+			for reduction_field in ["room_damage_reduction", "piece_damage_reduction"]:
+				if support_profile.has(reduction_field):
+					_validate_integer_minimum(support_profile, reduction_field, piece_id, "piece support profile", 0, validation_errors)
 			var target_rooms: Variant = support_profile.get("target_rooms", [])
 			if not target_rooms is Array:
 				validation_errors.append("piece %s support target_rooms must be an array" % piece_id)
@@ -436,6 +445,12 @@ func validate_enemy_definition(enemy: Dictionary, expected_id: String, known_roo
 				var modifier: String = String(disruption.get(modifier_field, ""))
 				if not modifier.is_empty() and not support_modifiers.has(modifier):
 					validation_errors.append("enemy %s references unknown support modifier: %s" % [enemy_id, modifier])
+	if enemy.has("target_piece_categories"):
+		_validate_non_empty_string_array(enemy, "target_piece_categories", enemy_id, validation_errors)
+		if String(enemy.get("target_piece_preference", "")) != "highest_max_health":
+			validation_errors.append("enemy %s target_piece_preference must be highest_max_health" % enemy_id)
+	if enemy.has("ignores_protection") and not enemy.get("ignores_protection") is bool:
+		validation_errors.append("enemy %s ignores_protection must be boolean" % enemy_id)
 	for field in ["name", "short_role", "question", "route", "doctrine", "counter", "telegraph", "failure_mode", "report_phrase"]:
 		if not enemy.get(field) is String or String(enemy.get(field, "")).strip_edges().is_empty():
 			validation_errors.append("enemy %s must have non-empty text for %s" % [enemy_id, field])

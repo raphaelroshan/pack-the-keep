@@ -18,7 +18,7 @@
   "strength_tags": ["adjacency", "damage_reduction"],
   "weakness_tags": ["isolated_position", "no_direct_stop"],
   "attack_profile": {"style": "fortification", "range": 1, "cooldown_steps": 1, "damage": 0, "defense": 2, "ammo_capacity": 0, "targets": ["all"]},
-  "support_profile": {"kind": "fortification", "target_rooms": [], "condition_restore": 0, "response_modifier": "adjacent_room_damage_minus_one"},
+  "support_profile": {"kind": "fortification", "target_rooms": [], "condition_restore": 0, "response_modifier": "adjacent_room_damage_minus_one", "room_damage_reduction": 1},
   "assignment_rule": null,
   "availability": "field_engineers",
   "presentation": {"icon": "", "marker_color_role": "support"}

@@ -1,0 +1,13 @@
+{
+  "id": "shield_wardens", "content_version": 1, "status": "active", "name": "Shield Wardens",
+  "short_role": "Anchor a line and guard one adjacent defender.", "role": "protects adjacent defenders",
+  "question": "Which specialist needs a resilient frontline neighbor?", "kind": "unit", "category": "frontline",
+  "footprint": [2, 1], "allowed_floors": ["ground", "upper"], "allowed_zones": ["wall", "courtyard", "keep"],
+  "cost": 10, "max_health": 16, "placement_question": "Which adjacent piece should fight behind the shield arc?",
+  "skill": "Guard Arc: the strongest adjacent guard reduces incoming piece damage by one.",
+  "strength_tags": ["adjacency", "gate_hold", "damage_sharing"], "weakness_tags": ["slow_rotation", "area_pressure", "shieldbreaker"],
+  "attack_profile": {"style": "melee", "range": 1, "cooldown_steps": 1, "damage": 3, "defense": 3, "ammo_capacity": 0, "targets": ["raider", "shieldbreaker"]},
+  "support_profile": {"kind": "protection", "target_rooms": [], "condition_restore": 0, "response_modifier": "adjacent_piece_guard", "piece_damage_reduction": 1},
+  "assignment_rule": null, "availability": "shieldwall",
+  "presentation": {"icon": "", "marker_color_role": "frontline", "radius_scale": 1.1}
+}

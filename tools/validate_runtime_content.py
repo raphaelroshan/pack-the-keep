@@ -65,7 +65,7 @@ MODIFIER_FIELDS = {
 SUPPORTED_FLOORS = {"ground", "upper"}
 SUPPORTED_ZONES = {"wall", "courtyard", "keep"}
 SUPPORTED_ATTACK_STYLES = {"melee", "ranged", "support", "fortification"}
-SUPPORTED_DOCTRINES = {"gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach", "shielded_advance", "smoke_and_signal"}
+SUPPORTED_DOCTRINES = {"gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach", "shielded_advance", "smoke_and_signal", "break_the_line"}
 SUPPORTED_NON_ENEMY_TARGETS = {"all"} | SUPPORTED_DOCTRINES
 SUPPORTED_EVENT_TYPES = {"forecast", "recovery", "scenario_conclusion"}
 SUPPORTED_EVENT_PHASES = {"preparation", "recovery", "results"}
@@ -194,6 +194,9 @@ def validate_piece(
             errors.append(f"{path}: support_profile kind must be non-empty text")
         if not isinstance(support.get("response_modifier"), str) or not support["response_modifier"]:
             errors.append(f"{path}: support_profile response_modifier must be non-empty text")
+        for field in ("room_damage_reduction", "piece_damage_reduction"):
+            if field in support and (not is_integer(support.get(field)) or support[field] < 0):
+                errors.append(f"{path}: support_profile {field} must be a non-negative integer")
     assignment = piece.get("assignment_rule")
     if assignment is not None and not isinstance(assignment, dict):
         errors.append(f"{path}: assignment_rule must be null or an object")
@@ -284,6 +287,12 @@ def validate_enemy(
                 modifier = disruption.get(field)
                 if isinstance(modifier, str) and modifier and modifier not in support_modifiers:
                     errors.append(f"{path}: disruption_profile references unknown support modifier: {modifier}")
+    if "target_piece_categories" in enemy:
+        validate_string_array(path, enemy.get("target_piece_categories"), "target_piece_categories", errors)
+        if enemy.get("target_piece_preference") != "highest_max_health":
+            errors.append(f"{path}: target_piece_preference must be highest_max_health")
+    if "ignores_protection" in enemy and not isinstance(enemy.get("ignores_protection"), bool):
+        errors.append(f"{path}: ignores_protection must be boolean")
     for field in sorted(ENEMY_TEXT_FIELDS):
         value = enemy.get(field)
         if not isinstance(value, str) or not value.strip():

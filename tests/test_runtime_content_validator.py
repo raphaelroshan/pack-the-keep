@@ -72,6 +72,23 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         self.assertIn("arrival_step_delta", joined)
         self.assertIn("relay_modifier", joined)
 
+    def test_protection_fields_and_breaker_profile_are_typed(self) -> None:
+        piece = copy.deepcopy(load("data/pieces/emergency_shutters.json"))
+        piece["support_profile"]["room_damage_reduction"] = -1
+        errors: list[str] = []
+        validator.validate_piece(Path("emergency_shutters.json"), piece, {"gate"}, {"shieldbreaker"}, {"shieldwall"}, {}, {}, set(), errors)
+        self.assertIn("room_damage_reduction", "\n".join(errors))
+
+        enemy = copy.deepcopy(load("data/enemies/shieldbreaker.json"))
+        enemy["target_piece_categories"] = []
+        enemy["target_piece_preference"] = "random"
+        enemy["ignores_protection"] = "yes"
+        errors = []
+        validator.validate_enemy(Path("shieldbreaker.json"), enemy, {"gate", "barracks", "inner_yard"}, {"shield_wardens"}, {"break_the_line"}, set(), {}, set(), errors)
+        joined = "\n".join(errors)
+        for expected in ("target_piece_categories", "target_piece_preference", "ignores_protection"):
+            self.assertIn(expected, joined)
+
     def test_doctrine_allows_repeated_actors_but_rejects_unknown_ones(self) -> None:
         doctrine = copy.deepcopy(load("data/doctrines/gate_assault.json"))
         errors: list[str] = []
