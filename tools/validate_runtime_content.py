@@ -54,11 +54,22 @@ SCENARIO_FIELDS = {
     "id", "content_version", "status", "name", "short_role", "question", "objective",
     "lesson", "starting_doctrine", "doctrines", "wave_plans", "variations",
 }
+EVENT_FIELDS = {
+    "id", "content_version", "status", "title", "short_role", "type", "scenario",
+    "trigger", "setup", "choices", "follow_up",
+}
 SUPPORTED_FLOORS = {"ground", "upper"}
 SUPPORTED_ZONES = {"wall", "courtyard", "keep"}
 SUPPORTED_ATTACK_STYLES = {"melee", "ranged", "support", "fortification"}
 SUPPORTED_DOCTRINES = {"gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach"}
 SUPPORTED_NON_ENEMY_TARGETS = {"all"} | SUPPORTED_DOCTRINES
+SUPPORTED_EVENT_TYPES = {"forecast", "recovery", "scenario_conclusion"}
+SUPPORTED_EVENT_PHASES = {"preparation", "recovery", "results"}
+SUPPORTED_EVENT_REQUIREMENTS = {"command_points", "recovery_actions", "morale"}
+SUPPORTED_EVENT_EFFECTS = {
+    "spend_command_points", "spend_recovery_action", "add_materials", "add_morale",
+    "set_flag", "record_outcome",
+}
 SNAKE_CASE = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
 
 
@@ -391,6 +402,111 @@ def validate_scenario(
     return scenario_id
 
 
+def validate_event(
+    path: Path,
+    event: dict[str, Any],
+    scenario_ids: set[str],
+    seen: set[str],
+    errors: list[str],
+) -> tuple[str | None, str, str]:
+    for field in sorted(EVENT_FIELDS - event.keys()):
+        errors.append(f"{path}: missing required field: {field}")
+    event_id = event.get("id")
+    if not isinstance(event_id, str) or not SNAKE_CASE.fullmatch(event_id):
+        errors.append(f"{path}: id must be non-empty snake_case")
+        return None, "", ""
+    if event_id != path.stem:
+        errors.append(f"{path}: id {event_id} does not match filename")
+    if event_id in seen:
+        errors.append(f"duplicate runtime event id: {event_id}")
+    seen.add(event_id)
+    if event.get("status") != "active":
+        errors.append(f"{path}: runtime event status must be active")
+    if not is_integer(event.get("content_version")) or event["content_version"] < 1:
+        errors.append(f"{path}: content_version must be a positive integer")
+    for field in ("title", "short_role", "setup"):
+        if not isinstance(event.get(field), str) or not event[field].strip():
+            errors.append(f"{path}: {field} must be non-empty text")
+    if event.get("type") not in SUPPORTED_EVENT_TYPES:
+        errors.append(f"{path}: unsupported event type")
+    scenario_id = event.get("scenario")
+    if not isinstance(scenario_id, str) or scenario_id not in scenario_ids:
+        errors.append(f"{path}: unknown scenario reference")
+        scenario_id = ""
+    trigger = event.get("trigger")
+    if not isinstance(trigger, dict):
+        errors.append(f"{path}: trigger must be an object")
+    else:
+        if trigger.get("phase") not in SUPPORTED_EVENT_PHASES:
+            errors.append(f"{path}: unsupported trigger phase")
+        wave = trigger.get("wave")
+        if not is_integer(wave) or not 0 <= wave <= 3:
+            errors.append(f"{path}: trigger wave must be an integer from 0 to 3")
+    choices = event.get("choices")
+    choice_ids: set[str] = set()
+    if not isinstance(choices, list) or not choices:
+        errors.append(f"{path}: choices must be a non-empty array")
+        choices = []
+    for choice in choices:
+        if not isinstance(choice, dict):
+            errors.append(f"{path}: choice must be an object")
+            continue
+        choice_id = choice.get("id")
+        if not isinstance(choice_id, str) or not SNAKE_CASE.fullmatch(choice_id):
+            errors.append(f"{path}: choice id must be snake_case")
+            choice_id = "invalid"
+        elif choice_id in choice_ids:
+            errors.append(f"{path}: duplicate choice id: {choice_id}")
+        choice_ids.add(choice_id)
+        for field in ("label", "visible_result"):
+            if not isinstance(choice.get(field), str) or not choice[field].strip():
+                errors.append(f"{path}: choice {choice_id} {field} must be non-empty text")
+        requirements = choice.get("requirements")
+        if not isinstance(requirements, dict):
+            errors.append(f"{path}: choice {choice_id} requirements must be an object")
+            requirements = {}
+        for requirement_id, constraint in requirements.items():
+            if requirement_id not in SUPPORTED_EVENT_REQUIREMENTS:
+                errors.append(f"{path}: choice {choice_id} has unsupported requirement: {requirement_id}")
+                continue
+            if not isinstance(constraint, dict) or len(constraint) != 1:
+                errors.append(f"{path}: choice {choice_id} requirement {requirement_id} must contain one constraint")
+                continue
+            operator, value = next(iter(constraint.items()))
+            if operator not in {"gte", "lt"} or not is_integer(value):
+                errors.append(f"{path}: choice {choice_id} requirement {requirement_id} has invalid constraint")
+        effects = choice.get("effects")
+        if not isinstance(effects, list) or not effects:
+            errors.append(f"{path}: choice {choice_id} effects must be a non-empty array")
+            effects = []
+        for effect in effects:
+            if not isinstance(effect, dict):
+                errors.append(f"{path}: choice {choice_id} effect must be an object")
+                continue
+            operation = effect.get("op")
+            if operation not in SUPPORTED_EVENT_EFFECTS:
+                errors.append(f"{path}: choice {choice_id} has unsupported effect: {operation}")
+                continue
+            if operation in {"spend_command_points", "spend_recovery_action", "add_materials", "add_morale"}:
+                if not is_integer(effect.get("amount")) or effect["amount"] <= 0:
+                    errors.append(f"{path}: choice {choice_id} effect {operation} needs a positive integer amount")
+            elif operation == "set_flag":
+                if not isinstance(effect.get("flag"), str) or not SNAKE_CASE.fullmatch(effect["flag"]):
+                    errors.append(f"{path}: choice {choice_id} set_flag needs a snake_case flag")
+                if not isinstance(effect.get("value"), bool):
+                    errors.append(f"{path}: choice {choice_id} set_flag needs a boolean value")
+            elif operation == "record_outcome":
+                if not isinstance(effect.get("tag"), str) or not SNAKE_CASE.fullmatch(effect["tag"]):
+                    errors.append(f"{path}: choice {choice_id} record_outcome needs a snake_case tag")
+    follow_up = event.get("follow_up")
+    if not isinstance(follow_up, str) or (follow_up and not SNAKE_CASE.fullmatch(follow_up)):
+        errors.append(f"{path}: follow_up must be empty or snake_case")
+        follow_up = ""
+    if follow_up == event_id:
+        errors.append(f"{path}: event cannot follow itself")
+    return event_id, scenario_id, follow_up
+
+
 def validate_pack(
     path: Path,
     pack: dict[str, Any],
@@ -535,6 +651,7 @@ def main() -> int:
     parser.add_argument("--enemies", required=True)
     parser.add_argument("--doctrines", required=True)
     parser.add_argument("--scenarios", required=True)
+    parser.add_argument("--events", required=True)
     parser.add_argument("--manifest", required=True)
     args = parser.parse_args()
 
@@ -623,16 +740,60 @@ def main() -> int:
         if isinstance(value, str)
     }
     seen_scenarios: set[str] = set()
+    runtime_scenarios: dict[str, dict[str, Any]] = {}
     for path in json_files(Path(args.scenarios), "scenario", errors):
         scenario = load_json(path, errors)
         if not isinstance(scenario, dict):
             errors.append(f"{path}: root must be an object")
             continue
-        validate_scenario(path, scenario, room_ids, seen_enemies, seen_doctrines, seen_scenarios, errors)
+        scenario_id = validate_scenario(path, scenario, room_ids, seen_enemies, seen_doctrines, seen_scenarios, errors)
+        if scenario_id is not None:
+            runtime_scenarios[scenario_id] = scenario
     for scenario_id in sorted(manifest_scenario_ids - seen_scenarios):
         errors.append(f"runtime scenario file missing for active scenario: {scenario_id}")
     for scenario_id in sorted(seen_scenarios - manifest_scenario_ids):
         errors.append(f"runtime scenario is missing from active-slice manifest: {scenario_id}")
+
+    manifest_event_ids = {
+        value for value in manifest.get("p8_authored_events", {}).get("event_chain", [])
+        if isinstance(value, str)
+    }
+    seen_events: set[str] = set()
+    runtime_events: dict[str, tuple[str, str]] = {}
+    for path in json_files(Path(args.events), "event", errors):
+        event = load_json(path, errors)
+        if not isinstance(event, dict):
+            errors.append(f"{path}: root must be an object")
+            continue
+        event_id, event_scenario, follow_up = validate_event(path, event, seen_scenarios, seen_events, errors)
+        if event_id is not None:
+            runtime_events[event_id] = (event_scenario, follow_up)
+    for event_id in sorted(manifest_event_ids - seen_events):
+        errors.append(f"runtime event file missing for active event: {event_id}")
+    for event_id in sorted(seen_events - manifest_event_ids):
+        errors.append(f"runtime event is missing from P8 manifest: {event_id}")
+    for event_id, (event_scenario, follow_up) in runtime_events.items():
+        if follow_up and follow_up not in seen_events:
+            errors.append(f"runtime event {event_id} references unknown follow_up: {follow_up}")
+        chain = runtime_scenarios.get(event_scenario, {}).get("event_chain", [])
+        if event_id not in chain:
+            errors.append(f"runtime event {event_id} is missing from scenario {event_scenario} event_chain")
+    for scenario_id, scenario in runtime_scenarios.items():
+        chain = scenario.get("event_chain", [])
+        if not isinstance(chain, list):
+            errors.append(f"runtime scenario {scenario_id} event_chain must be an array")
+            continue
+        if len(chain) != len(set(chain)):
+            errors.append(f"runtime scenario {scenario_id} event_chain contains duplicates")
+        for index, event_id in enumerate(chain):
+            if event_id not in seen_events:
+                errors.append(f"runtime scenario {scenario_id} references unknown event: {event_id}")
+            elif runtime_events[event_id][0] != scenario_id:
+                errors.append(f"runtime scenario {scenario_id} references event for another scenario: {event_id}")
+            else:
+                expected_follow_up = chain[index + 1] if index + 1 < len(chain) else ""
+                if runtime_events[event_id][1] != expected_follow_up:
+                    errors.append(f"runtime scenario {scenario_id} event {event_id} follow_up does not match chain order")
 
     seen_packs: set[str] = set()
     runtime_pack_families: dict[str, str] = {}
@@ -684,7 +845,8 @@ def main() -> int:
         "runtime content catalog: PASS "
         f"({len(seen_pieces)} pieces, {len(seen_packs)} packs, "
         f"{len(seen_commanders)} commanders, {len(seen_enemies)} enemies, "
-        f"{len(seen_doctrines)} doctrines, {len(seen_scenarios)} scenarios)"
+        f"{len(seen_doctrines)} doctrines, {len(seen_scenarios)} scenarios, "
+        f"{len(seen_events)} events)"
     )
     return 0
 

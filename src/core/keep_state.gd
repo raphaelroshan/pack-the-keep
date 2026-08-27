@@ -9,7 +9,7 @@ const GRID_SIZE := Vector2i(12, 8)
 const FLOORS := ["ground", "upper"]
 const ACTIVE_COMMANDER := "castellan"
 const STARTER_PIECES := ["pike_squad", "narrow_gate"]
-const SAVE_SCHEMA_VERSION := 2
+const SAVE_SCHEMA_VERSION := 3
 const GAME_ID := "pack-the-keep"
 
 const ROOMS: Dictionary = {
@@ -63,6 +63,10 @@ var repair_interval_reason: String = ""
 var assigned_rooms: Dictionary = {}
 var combat_metrics: Dictionary = {}
 var wave_history: Array[Dictionary] = []
+var active_event_id: String = ""
+var resolved_event_ids: Array[String] = []
+var event_flags: Dictionary = {}
+var event_history: Array[Dictionary] = []
 var _last_attackers: Array[String] = []
 var _last_attack_damage: Dictionary = {}
 var content_catalog: RefCounted
@@ -72,6 +76,7 @@ var _pack_definitions: Dictionary = {}
 var _enemy_definitions: Dictionary = {}
 var _doctrine_definitions: Dictionary = {}
 var _scenario_definitions: Dictionary = {}
+var _event_definitions: Dictionary = {}
 var content_catalog_errors: Array[String] = []
 
 func _init(keep_seed: int = 3307) -> void:
@@ -83,6 +88,7 @@ func _init(keep_seed: int = 3307) -> void:
 	_enemy_definitions = catalog_result.get("enemies", {}).duplicate(true)
 	_doctrine_definitions = catalog_result.get("doctrines", {}).duplicate(true)
 	_scenario_definitions = catalog_result.get("scenarios", {}).duplicate(true)
+	_event_definitions = catalog_result.get("events", {}).duplicate(true)
 	for error in catalog_result.get("errors", []):
 		content_catalog_errors.append(String(error))
 	if not content_catalog_errors.is_empty():
@@ -134,6 +140,10 @@ func reset_run(new_seed: int = 3307) -> void:
 	assigned_rooms.clear()
 	_reset_combat_metrics()
 	wave_history.clear()
+	active_event_id = ""
+	resolved_event_ids.clear()
+	event_flags.clear()
+	event_history.clear()
 	_log("Greywatch Keep is quiet. The Castellan waits for a first doctrine.")
 
 func _reset_combat_metrics() -> void:
@@ -176,6 +186,8 @@ func select_commander(id: String) -> Dictionary:
 		return {"ok": false, "reason": "unknown commander"}
 	if wave_active or repair_interval_active:
 		return {"ok": false, "reason": "commander cannot change during an invasion or repair interval"}
+	if not event_history.is_empty():
+		return {"ok": false, "reason": "commander cannot change after scenario events begin"}
 	commander_id = id
 	materials = int(_commander_definitions[id].starting_materials)
 	morale = int(_commander_definitions[id].starting_morale)
@@ -199,6 +211,10 @@ func select_scenario(id: String) -> Dictionary:
 		return {"ok": false, "reason": "scenario cannot change during an invasion or repair interval"}
 	if not pieces.is_empty() or wave_index > 0:
 		return {"ok": false, "reason": "start a new run before changing scenarios"}
+	active_event_id = ""
+	resolved_event_ids.clear()
+	event_flags.clear()
+	event_history.clear()
 	scenario_id = id
 	scenario_active = true
 	enemy_doctrine = String(_scenario_definitions[id].get("starting_doctrine", "gate_assault"))
@@ -210,6 +226,7 @@ func select_scenario(id: String) -> Dictionary:
 	materials = int(_commander_definitions[commander_id].starting_materials) + variation_materials
 	morale = clampi(int(_commander_definitions[commander_id].starting_morale) + variation_morale, 0, 10)
 	_log("Scenario selected: %s / variation %s. %s" % [_scenario_definitions[id].name, scenario_variation_id, _scenario_definitions[id].lesson])
+	_refresh_active_event()
 	return {"ok": true, "message": "%s selected: %s Variation: %s." % [_scenario_definitions[id].name, _scenario_definitions[id].objective, scenario_variation_id], "scenario": scenario_preview(id)}
 
 func scenario_preview(id: String = "") -> Dictionary:
@@ -218,6 +235,162 @@ func scenario_preview(id: String = "") -> Dictionary:
 		return {"ok": false, "reason": "unknown Greywatch scenario"}
 	var scenario: Dictionary = _scenario_definitions[selected_id]
 	return {"ok": true, "scenario_id": selected_id, "name": String(scenario.name), "objective": String(scenario.objective), "lesson": String(scenario.lesson), "starting_doctrine": String(scenario.starting_doctrine), "wave_count": scenario.wave_plans.size(), "variation_id": scenario_variation_id if selected_id == scenario_id else String(_variation_for_scenario(selected_id).get("id", "standard_bell"))}
+
+func current_event() -> Dictionary:
+	if active_event_id.is_empty() or not _event_definitions.has(active_event_id):
+		return {"ok": false, "reason": "no_active_event", "message": "No authored event is active."}
+	var definition: Dictionary = _event_definitions[active_event_id]
+	var choice_previews: Array[Dictionary] = []
+	for choice in definition.get("choices", []):
+		var choice_id: String = String(choice.get("id", ""))
+		var preview: Dictionary = event_choice_preview(choice_id)
+		choice_previews.append({
+			"id": choice_id,
+			"label": String(choice.get("label", choice_id)),
+			"visible_result": String(choice.get("visible_result", "")),
+			"available": bool(preview.get("ok", false)),
+			"reason": String(preview.get("reason", ""))
+		})
+	return {"ok": true, "id": active_event_id, "title": String(definition.get("title", active_event_id)), "type": String(definition.get("type", "")), "setup": String(definition.get("setup", "")), "phase": _current_event_phase(), "choices": choice_previews}
+
+func event_choice_preview(choice_id: String) -> Dictionary:
+	if active_event_id.is_empty() or not _event_definitions.has(active_event_id):
+		return {"ok": false, "reason": "no_active_event", "message": "No authored event is active.", "state_changes": []}
+	var choice: Dictionary = _event_choice(_event_definitions[active_event_id], choice_id)
+	if choice.is_empty():
+		return {"ok": false, "reason": "unknown_event_choice", "message": "That event choice is unavailable.", "state_changes": []}
+	var requirement_reason: String = _event_requirement_failure(choice.get("requirements", {}))
+	if not requirement_reason.is_empty():
+		return {"ok": false, "reason": requirement_reason, "message": "The event requirements are no longer satisfied.", "state_changes": []}
+	var effect_reason: String = _event_effect_failure(choice.get("effects", []))
+	if not effect_reason.is_empty():
+		return {"ok": false, "reason": effect_reason, "message": "The event effect cannot be applied safely.", "state_changes": []}
+	return {"ok": true, "reason": "", "message": String(choice.get("visible_result", "")), "state_changes": []}
+
+func choose_event_option(choice_id: String) -> Dictionary:
+	var preview: Dictionary = event_choice_preview(choice_id)
+	if not bool(preview.get("ok", false)):
+		return preview
+	var event_id: String = active_event_id
+	var definition: Dictionary = _event_definitions[event_id]
+	var choice: Dictionary = _event_choice(definition, choice_id)
+	var state_changes: Array[Dictionary] = []
+	for effect in choice.get("effects", []):
+		state_changes.append(_apply_event_effect(effect))
+	var history_entry: Dictionary = {
+		"event_id": event_id,
+		"choice_id": choice_id,
+		"wave": wave_index,
+		"phase": _current_event_phase(),
+		"visible_result": String(choice.get("visible_result", "")),
+		"state_changes": state_changes.duplicate(true)
+	}
+	event_history.append(history_entry)
+	resolved_event_ids.append(event_id)
+	active_event_id = ""
+	_log("Event resolved — %s: %s" % [String(definition.get("title", event_id)), String(choice.get("visible_result", ""))])
+	_refresh_active_event()
+	return {"ok": true, "reason": "", "message": String(choice.get("visible_result", "")), "event_id": event_id, "choice_id": choice_id, "state_changes": state_changes}
+
+func _event_choice(definition: Dictionary, choice_id: String) -> Dictionary:
+	for choice in definition.get("choices", []):
+		if String(choice.get("id", "")) == choice_id:
+			return choice
+	return {}
+
+func _event_requirement_failure(requirements: Variant) -> String:
+	if not requirements is Dictionary:
+		return "malformed_event_requirements"
+	var requirement_ids: Array = requirements.keys()
+	requirement_ids.sort()
+	for requirement_id in requirement_ids:
+		var current: int = command_points if String(requirement_id) == "command_points" else repair_actions_remaining if String(requirement_id) == "recovery_actions" else morale if String(requirement_id) == "morale" else -1
+		if current < 0:
+			return "unsupported_event_requirement"
+		var constraint: Dictionary = requirements[requirement_id]
+		if constraint.has("gte") and current < int(constraint.gte):
+			return "event_requirement_%s" % String(requirement_id)
+		if constraint.has("lt") and current >= int(constraint.lt):
+			return "event_requirement_%s" % String(requirement_id)
+	return ""
+
+func _event_effect_failure(effects: Variant) -> String:
+	if not effects is Array:
+		return "malformed_event_effects"
+	var remaining_command: int = command_points
+	var remaining_actions: int = repair_actions_remaining
+	for effect in effects:
+		var operation: String = String(effect.get("op", ""))
+		var amount: int = int(effect.get("amount", 0))
+		if operation == "spend_command_points":
+			remaining_command -= amount
+			if remaining_command < 0:
+				return "event_requirement_command_points"
+		elif operation == "spend_recovery_action":
+			if not repair_interval_active:
+				return "event_requires_recovery"
+			remaining_actions -= amount
+			if remaining_actions < 0:
+				return "event_requirement_recovery_actions"
+		elif not ["add_materials", "add_morale", "set_flag", "record_outcome"].has(operation):
+			return "unsupported_event_effect"
+	return ""
+
+func _apply_event_effect(effect: Dictionary) -> Dictionary:
+	var operation: String = String(effect.get("op", ""))
+	var amount: int = int(effect.get("amount", 0))
+	if operation == "spend_command_points":
+		command_points -= amount
+		return {"op": operation, "amount": amount, "remaining": command_points}
+	if operation == "spend_recovery_action":
+		repair_actions_remaining -= amount
+		return {"op": operation, "amount": amount, "remaining": repair_actions_remaining}
+	if operation == "add_materials":
+		materials += amount
+		return {"op": operation, "amount": amount, "total": materials}
+	if operation == "add_morale":
+		var before: int = morale
+		morale = mini(10, morale + amount)
+		return {"op": operation, "amount": morale - before, "total": morale}
+	if operation == "set_flag":
+		var flag_id: String = String(effect.get("flag", ""))
+		event_flags[flag_id] = bool(effect.get("value", false))
+		return {"op": operation, "flag": flag_id, "value": event_flags[flag_id]}
+	if operation == "record_outcome":
+		return {"op": operation, "tag": String(effect.get("tag", "")), "outcome": last_outcome, "materials": materials, "morale": morale, "breach_level": breach_level, "surviving_pieces": _surviving_piece_count()}
+	return {"op": operation}
+
+func _current_event_phase() -> String:
+	if repair_interval_active and not has_next_wave() and not last_outcome.is_empty():
+		return "results"
+	if repair_interval_active:
+		return "recovery"
+	if not wave_active and wave_index == 0:
+		return "preparation"
+	return "battle"
+
+func _event_trigger_matches(definition: Dictionary) -> bool:
+	var trigger: Dictionary = definition.get("trigger", {})
+	return String(definition.get("scenario", "")) == scenario_id and String(trigger.get("phase", "")) == _current_event_phase() and int(trigger.get("wave", -1)) == wave_index
+
+func _refresh_active_event() -> void:
+	if not active_event_id.is_empty() or not scenario_active or not _scenario_definitions.has(scenario_id):
+		return
+	for event_id_value in _scenario_definitions[scenario_id].get("event_chain", []):
+		var event_id: String = String(event_id_value)
+		if resolved_event_ids.has(event_id):
+			continue
+		if _event_definitions.has(event_id) and _event_trigger_matches(_event_definitions[event_id]):
+			active_event_id = event_id
+			_log("Event opened — %s." % String(_event_definitions[event_id].get("title", event_id)))
+		break
+
+func _surviving_piece_count() -> int:
+	var count: int = 0
+	for piece in pieces.values():
+		if not bool(piece.get("disabled", false)) and int(piece.get("health", 0)) > 0:
+			count += 1
+	return count
 
 func authored_wave_count() -> int:
 	if scenario_active and _scenario_definitions.has(scenario_id):
@@ -272,13 +445,21 @@ func scenario_definition(id: String) -> Dictionary:
 		return {}
 	return _scenario_definitions[id].duplicate(true)
 
+func event_ids() -> Array[String]:
+	return content_catalog.event_ids()
+
+func event_definition(id: String) -> Dictionary:
+	if not _event_definitions.has(id):
+		return {}
+	return _event_definitions[id].duplicate(true)
+
 func pack_definition(pack_id: String) -> Dictionary:
 	if not _pack_definitions.has(pack_id):
 		return {}
 	return _pack_definitions[pack_id].duplicate(true)
 
 func content_catalog_status() -> Dictionary:
-	return {"ok": content_catalog_errors.is_empty(), "commander_count": _commander_definitions.size(), "piece_count": _piece_definitions.size(), "pack_count": _pack_definitions.size(), "enemy_count": _enemy_definitions.size(), "doctrine_count": _doctrine_definitions.size(), "scenario_count": _scenario_definitions.size(), "errors": content_catalog_errors.duplicate()}
+	return {"ok": content_catalog_errors.is_empty(), "commander_count": _commander_definitions.size(), "piece_count": _piece_definitions.size(), "pack_count": _pack_definitions.size(), "enemy_count": _enemy_definitions.size(), "doctrine_count": _doctrine_definitions.size(), "scenario_count": _scenario_definitions.size(), "event_count": _event_definitions.size(), "errors": content_catalog_errors.duplicate()}
 
 func pack_preview(pack_id: String) -> Dictionary:
 	if not _pack_definitions.has(pack_id):
@@ -498,6 +679,9 @@ func recovery_action_preview(action_id: String, instance_id: String = "", room_i
 		return preview
 	if not repair_interval_active:
 		preview.reason = "no recovery interval is open"
+		return preview
+	if not active_event_id.is_empty():
+		preview.reason = "resolve the active event first"
 		return preview
 	if repair_actions_remaining <= 0:
 		preview.reason = "no recovery actions remain"
@@ -861,6 +1045,10 @@ func _apply_enemy_damage(enemy_id: String, target_id: String) -> void:
 	var reduced: bool = lockdown_pending or rally_pending
 	if reduced:
 		damage = maxi(1, int(ceil(float(damage) * 0.5)))
+	if enemy_id == "sapper" and bool(event_flags.get("support_lane_marked", false)):
+		damage = maxi(0, damage - 1)
+		event_flags.support_lane_marked = false
+		_battle_log("The marked support lane reduced the first Sapper contact by 1 damage and is now spent.")
 	if enemy_id == "siege_beast":
 		var area_targets: Array[String] = []
 		for room_id in _enemy_definitions[enemy_id].target_rooms:
@@ -1055,6 +1243,8 @@ func _fallback_is_active() -> bool:
 func finish_repair_interval() -> Dictionary:
 	if not repair_interval_active:
 		return {"ok": false, "reason": "no Greywatch repair interval is open"}
+	if not active_event_id.is_empty():
+		return {"ok": false, "reason": "active_event_unresolved", "message": "Resolve the active event before closing recovery.", "state_changes": []}
 	var unused: int = repair_actions_remaining
 	if not wave_history.is_empty():
 		wave_history[wave_history.size() - 1].recovery_actions_used = 2 - unused
@@ -1093,6 +1283,7 @@ func _finish_wave() -> Dictionary:
 		materials += 8
 		_battle_log("Outcome: held. The defenders gain 8 materials and 1 morale.")
 		_open_repair_interval(last_outcome)
+	_refresh_active_event()
 	return {"ok": true, "resolved": true, "outcome": last_outcome, "timeline": battle_report.duplicate(), "breach_level": breach_level, "repair_interval_active": repair_interval_active, "repair_actions_remaining": repair_actions_remaining}
 
 func start_wave(doctrine: String) -> Dictionary:
@@ -1102,6 +1293,8 @@ func start_wave(doctrine: String) -> Dictionary:
 		return {"ok": false, "reason": "finish the Greywatch repair interval before starting the next wave"}
 	if wave_active:
 		return {"ok": false, "reason": "an invasion is already active"}
+	if not active_event_id.is_empty():
+		return {"ok": false, "reason": "active_event_unresolved", "message": "Resolve the active event before starting the wave.", "state_changes": []}
 	if pieces.is_empty():
 		return {"ok": false, "reason": "place at least one defensive piece first"}
 	if scenario_active and last_outcome == "collapse":
@@ -1309,7 +1502,7 @@ func scenario_report() -> Dictionary:
 		"scenario_name": String(scorecard.get("scenario_name", scenario_id)),
 		"commander_id": commander_id,
 		"commander_name": String(_commander_definitions[commander_id].name),
-		"status": "complete" if not has_next_wave() and not wave_active else "in_progress",
+		"status": "complete" if not has_next_wave() and not wave_active and active_event_id.is_empty() else "in_progress",
 		"wave_rows": wave_rows,
 		"final_state": {
 			"morale": morale,
@@ -1321,7 +1514,8 @@ func scenario_report() -> Dictionary:
 		"what_worked": what_worked,
 		"what_failed": what_failed,
 		"suggested_experiment": suggested_experiment,
-		"replay_key": String(scorecard.get("replay_key", ""))
+		"replay_key": String(scorecard.get("replay_key", "")),
+		"event_history": event_history.duplicate(true)
 	}
 
 func forecast() -> Dictionary:
@@ -1372,6 +1566,9 @@ func summary() -> Dictionary:
 		"pieces": pieces.duplicate(true),
 		"enemies": enemies.duplicate(true),
 		"wave_history": wave_history.duplicate(true),
+		"active_event": current_event(),
+		"resolved_event_ids": resolved_event_ids.duplicate(),
+		"event_history": event_history.duplicate(true),
 		"recovery_advice": recovery_advice(),
 		"scenario_scorecard": scenario_scorecard()
 	}
@@ -1417,6 +1614,10 @@ func serialize() -> Dictionary:
 		"reserved_pack_id": reserved_pack_id,
 		"combat_metrics": combat_metrics.duplicate(),
 		"wave_history": wave_history.duplicate(true),
+		"active_event_id": active_event_id,
+		"resolved_event_ids": resolved_event_ids.duplicate(),
+		"event_flags": event_flags.duplicate(true),
+		"event_history": event_history.duplicate(true),
 		"schema_version": SAVE_SCHEMA_VERSION,
 		"game_id": GAME_ID
 	}
@@ -1448,6 +1649,39 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		return {"ok": false, "reason": "save rooms collection is malformed"}
 	if data.has("enemies") and not (data.get("enemies") is Array):
 		return {"ok": false, "reason": "save enemies collection is malformed"}
+	if data.has("active_event_id") and not data.get("active_event_id") is String:
+		return {"ok": false, "reason": "save active event id is malformed"}
+	var saved_active_event: String = String(data.get("active_event_id", ""))
+	if not saved_active_event.is_empty() and not _event_definitions.has(saved_active_event):
+		return {"ok": false, "reason": "save contains an unknown active event"}
+	var saved_scenario_id: String = String(data.get("scenario_id", scenario_id))
+	if not saved_active_event.is_empty() and String(_event_definitions[saved_active_event].get("scenario", "")) != saved_scenario_id:
+		return {"ok": false, "reason": "save active event does not belong to its scenario"}
+	if data.has("resolved_event_ids") and not data.get("resolved_event_ids") is Array:
+		return {"ok": false, "reason": "save resolved event list is malformed"}
+	var saved_resolved_events: Array[String] = []
+	for event_id_value in data.get("resolved_event_ids", []):
+		if not event_id_value is String or not _event_definitions.has(String(event_id_value)):
+			return {"ok": false, "reason": "save contains an unknown resolved event"}
+		if saved_resolved_events.has(String(event_id_value)):
+			return {"ok": false, "reason": "save resolved event list contains duplicates"}
+		saved_resolved_events.append(String(event_id_value))
+	if data.has("event_flags") and not data.get("event_flags") is Dictionary:
+		return {"ok": false, "reason": "save event flags are malformed"}
+	for flag_value in data.get("event_flags", {}).values():
+		if not flag_value is bool:
+			return {"ok": false, "reason": "save event flag value is malformed"}
+	if data.has("event_history") and not data.get("event_history") is Array:
+		return {"ok": false, "reason": "save event history is malformed"}
+	for history_value in data.get("event_history", []):
+		if not history_value is Dictionary:
+			return {"ok": false, "reason": "save event history entry is malformed"}
+		var history_event_id: String = String(history_value.get("event_id", ""))
+		var history_choice_id: String = String(history_value.get("choice_id", ""))
+		if not _event_definitions.has(history_event_id) or _event_choice(_event_definitions[history_event_id], history_choice_id).is_empty():
+			return {"ok": false, "reason": "save event history reference is malformed"}
+	if not saved_active_event.is_empty() and saved_resolved_events.has(saved_active_event):
+		return {"ok": false, "reason": "save event cannot be active and resolved"}
 	seed = int(data.get("seed", seed))
 	commander_id = String(data.get("commander_id", ACTIVE_COMMANDER))
 	if not _commander_definitions.has(commander_id):
@@ -1511,6 +1745,15 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	for history_entry in data.get("wave_history", []):
 		if history_entry is Dictionary:
 			wave_history.append(history_entry.duplicate(true))
+	active_event_id = saved_active_event
+	resolved_event_ids.clear()
+	for event_id_value in data.get("resolved_event_ids", []):
+		resolved_event_ids.append(String(event_id_value))
+	event_flags = data.get("event_flags", {}).duplicate(true)
+	event_history.clear()
+	for history_entry in data.get("event_history", []):
+		if history_entry is Dictionary:
+			event_history.append(history_entry.duplicate(true))
 	if combat_metrics.is_empty():
 		_reset_combat_metrics()
 	repair_interval_active = bool(data.get("repair_interval_active", repair_interval_active))
@@ -1535,4 +1778,22 @@ func load_serialized(data: Dictionary) -> Dictionary:
 			var assignment: String = String(pieces[instance_id].get("assignment", ""))
 			if not assignment.is_empty():
 				assigned_rooms[assignment] = instance_id
-	return {"ok": true, "message": "Save loaded.", "schema_version": schema_version, "legacy": not data.has("schema_version")}
+	if schema_version < 3:
+		_migrate_legacy_event_state()
+	_refresh_active_event()
+	return {"ok": true, "message": "Save loaded.", "schema_version": schema_version, "legacy": not data.has("schema_version"), "migrated": schema_version < SAVE_SCHEMA_VERSION}
+
+func _migrate_legacy_event_state() -> void:
+	active_event_id = ""
+	resolved_event_ids.clear()
+	event_flags.clear()
+	event_history.clear()
+	if not scenario_active or not _scenario_definitions.has(scenario_id):
+		return
+	for event_id_value in _scenario_definitions[scenario_id].get("event_chain", []):
+		var event_id: String = String(event_id_value)
+		if not _event_definitions.has(event_id):
+			continue
+		var trigger_wave: int = int(_event_definitions[event_id].get("trigger", {}).get("wave", 0))
+		if trigger_wave < wave_index:
+			resolved_event_ids.append(event_id)

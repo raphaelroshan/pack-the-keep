@@ -1,0 +1,21 @@
+{
+  "id": "relief_road_report",
+  "content_version": 1,
+  "status": "active",
+  "title": "The Refuge Bell",
+  "short_role": "Record what the relief road cost and what the keep preserved.",
+  "type": "scenario_conclusion",
+  "scenario": "relief_road",
+  "trigger": {"phase": "results", "wave": 3},
+  "setup": "The last bell carries beyond Greywatch. Record the keep that survived, including its damage and remaining reserve.",
+  "choices": [
+    {
+      "id": "record_the_cost",
+      "label": "Record the outcome",
+      "requirements": {},
+      "effects": [{"op": "record_outcome", "tag": "relief_road_complete"}],
+      "visible_result": "The final outcome, resources, breach level, and surviving defenders are preserved in the event history."
+    }
+  ],
+  "follow_up": ""
+}

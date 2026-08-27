@@ -33,6 +33,11 @@ var commander_profile_label: Label
 var commander_ability_button: Button
 var scenario_option: OptionButton
 var scenario_preview_label: Label
+var authored_event_panel: VBoxContainer
+var authored_event_title: Label
+var authored_event_setup: Label
+var authored_event_choice_buttons: Array[Button] = []
+var authored_event_choice_details: Array[Label] = []
 var pack_option: OptionButton
 var piece_option: OptionButton
 var floor_option: OptionButton
@@ -422,6 +427,28 @@ func _build_ui() -> void:
 	scenario_preview_label.custom_minimum_size = Vector2(292, 82)
 	scenario_preview_label.add_theme_color_override("font_color", Color("#d8c389"))
 	controls.add_child(scenario_preview_label)
+	authored_event_panel = VBoxContainer.new()
+	authored_event_panel.add_theme_constant_override("separation", 4)
+	controls.add_child(authored_event_panel)
+	authored_event_title = Label.new()
+	authored_event_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	authored_event_title.add_theme_font_size_override("font_size", 16)
+	authored_event_title.add_theme_color_override("font_color", Color("#e2bd84"))
+	authored_event_panel.add_child(authored_event_title)
+	authored_event_setup = Label.new()
+	authored_event_setup.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	authored_event_setup.add_theme_color_override("font_color", Color("#c9bfd0"))
+	authored_event_panel.add_child(authored_event_setup)
+	for choice_index in range(2):
+		var choice_detail: Label = Label.new()
+		choice_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		choice_detail.add_theme_color_override("font_color", Color("#aab1b2"))
+		authored_event_panel.add_child(choice_detail)
+		authored_event_choice_details.append(choice_detail)
+		var choice_button: Button = Button.new()
+		choice_button.pressed.connect(_on_authored_event_choice.bind(choice_index))
+		authored_event_panel.add_child(choice_button)
+		authored_event_choice_buttons.append(choice_button)
 
 	pack_option = OptionButton.new()
 	pack_option.item_selected.connect(func(_index: int) -> void: _refresh_pack_preview())
@@ -554,6 +581,7 @@ func _build_ui() -> void:
 	finish_interval_button.pressed.connect(_on_finish_interval)
 	recovery_actions_panel.add_child(finish_interval_button)
 	controls.move_child(recovery_actions_panel, 2)
+	controls.move_child(authored_event_panel, 2)
 
 	var start_button: Button = Button.new()
 	start_button.text = "Start invasion"
@@ -800,6 +828,37 @@ func _refresh_scenario_preview() -> void:
 		scenario_preview_label.text = "SCENARIO — %s" % String(preview.get("reason", "unavailable"))
 		return
 	scenario_preview_label.text = "SCENARIO — %s\nObjective: %s\nLesson: %s\nWaves: %d | Seed variation: %s" % [String(preview.get("name", "")), String(preview.get("objective", "")), String(preview.get("lesson", "")), int(preview.get("wave_count", 0)), String(preview.get("variation_id", "standard"))]
+
+func _refresh_authored_event() -> void:
+	if authored_event_panel == null:
+		return
+	var event: Dictionary = keep.current_event()
+	authored_event_panel.visible = bool(event.get("ok", false))
+	if not authored_event_panel.visible:
+		return
+	authored_event_title.text = "AUTHORED EVENT — %s | %s" % [String(event.get("title", "")), String(event.get("phase", "")).to_upper()]
+	authored_event_setup.text = String(event.get("setup", ""))
+	var choices: Array = event.get("choices", [])
+	for index in range(authored_event_choice_buttons.size()):
+		var button: Button = authored_event_choice_buttons[index]
+		var detail: Label = authored_event_choice_details[index]
+		var has_choice: bool = index < choices.size()
+		button.visible = has_choice
+		detail.visible = has_choice
+		if not has_choice:
+			continue
+		var choice: Dictionary = choices[index]
+		button.text = String(choice.get("label", "Choose"))
+		button.disabled = not bool(choice.get("available", false))
+		button.set_meta("choice_id", String(choice.get("id", "")))
+		var reason: String = String(choice.get("reason", ""))
+		detail.text = "%s%s" % [String(choice.get("visible_result", "")), "\nBLOCKED — %s" % reason.replace("_", " ") if not reason.is_empty() else ""]
+
+func _on_authored_event_choice(index: int) -> void:
+	if index < 0 or index >= authored_event_choice_buttons.size():
+		return
+	var choice_id: String = String(authored_event_choice_buttons[index].get_meta("choice_id", ""))
+	_run_result(keep.choose_event_option(choice_id), "Event")
 
 func _refresh_pack_preview() -> void:
 	if pack_preview_label == null:
@@ -1083,7 +1142,8 @@ func _refresh_recovery_action_cards() -> void:
 	_apply_recovery_action_card(recovery_piece_card_title, recovery_piece_card_detail, recovery_piece_button, "REPAIR PIECE", keep.recovery_action_preview("repair_piece", instance_id))
 	_apply_recovery_action_card(recovery_assign_card_title, recovery_assign_card_detail, recovery_assign_button, "ASSIGN SPECIALIST", keep.recovery_action_preview("assign_piece", instance_id, room_id))
 	_apply_recovery_action_card(recovery_clear_card_title, recovery_clear_card_detail, recovery_clear_button, "CLEAR ASSIGNMENT", keep.recovery_action_preview("clear_assignment", instance_id))
-	finish_interval_button.disabled = false
+	finish_interval_button.disabled = not keep.active_event_id.is_empty()
+	finish_interval_button.tooltip_text = "Resolve the active event before continuing." if finish_interval_button.disabled else "Close recovery explicitly; unused actions are recorded and never spent automatically."
 	if keep.has_next_wave():
 		finish_interval_button.text = "CONTINUE — START WAVE %d/%d" % [keep.wave_index + 1, keep.authored_wave_count()]
 	else:
@@ -1301,6 +1361,8 @@ func _first_battle_guidance() -> String:
 	if screen == "title":
 		return ""
 	if screen == "preparation":
+		if not keep.active_event_id.is_empty():
+			return "FIRST BATTLE GUIDE — Resolve the authored forecast choice in the command table, then place the defense and start the invasion."
 		if keep.pieces.is_empty():
 			return "FIRST BATTLE GUIDE — 1 Use the recommended starter layout, or place Pike Squad in the courtyard and Narrow Gate by the gate. 2 Open one pack if you want a second doctrine. 3 Start the invasion when the board reads clearly."
 		return "FIRST BATTLE GUIDE — Layout ready. Read the FORECAST, then start the invasion. Battle begins paused; use Space to run or N to resolve one readable step."
@@ -1340,11 +1402,16 @@ func _refresh_result_explanation() -> void:
 	for wave in report.get("wave_rows", []):
 		score_rows.append("W%d — %s — %s\nPressure: %s | Defeated %d | Room %d | Piece %d | recovery actions %d" % [int(wave.get("wave", score_rows.size() + 1)), String(wave.get("doctrine", "")).replace("_", " ").capitalize(), String(wave.get("outcome", "")).replace("_", " ").to_upper(), String(wave.get("principal_pressure", "Unknown pressure")), int(wave.get("defeated_enemies", 0)), int(wave.get("room_damage", 0)), int(wave.get("piece_damage", 0)), int(wave.get("recovery_actions_used", 0))])
 	var report_heading: String = "SCENARIO REPORT" if String(report.get("status", "in_progress")) == "complete" else "RUN SO FAR"
-	scorecard_label.text = "%s — %s | %s\n%s\nREPLAY KEY — %s" % [report_heading, String(report.get("scenario_name", keep.scenario_id)), String(report.get("commander_name", keep.commander_id)), "\n".join(score_rows) if not score_rows.is_empty() else "No resolved waves yet.", String(report.get("replay_key", ""))]
+	var event_rows: Array[String] = []
+	for event_entry in report.get("event_history", []):
+		event_rows.append("%s → %s" % [String(event_entry.get("event_id", "event")).replace("_", " ").capitalize(), String(event_entry.get("visible_result", ""))])
+	var event_report: String = "\nEVENT CONSEQUENCES\n%s" % "\n".join(event_rows) if not event_rows.is_empty() else ""
+	scorecard_label.text = "%s — %s | %s\n%s%s\nREPLAY KEY — %s" % [report_heading, String(report.get("scenario_name", keep.scenario_id)), String(report.get("commander_name", keep.commander_id)), "\n".join(score_rows) if not score_rows.is_empty() else "No resolved waves yet.", event_report, String(report.get("replay_key", ""))]
 
 func _refresh_ui() -> void:
 	_refresh_pack_preview()
 	_refresh_scenario_preview()
+	_refresh_authored_event()
 	var interval_text: String = "closed"
 	if keep.repair_interval_active:
 		interval_text = "%d action(s): %s" % [keep.repair_actions_remaining, keep.repair_interval_reason]
@@ -1398,9 +1465,12 @@ func _refresh_ui() -> void:
 	if playtest_button:
 		if screen == "preparation":
 			playtest_button.text = "RUN QUICK TEST — ONE BATTLE STEP"
-			playtest_button.disabled = keep.pieces.is_empty() or keep.repair_interval_active
+			playtest_button.disabled = keep.pieces.is_empty() or keep.repair_interval_active or not keep.active_event_id.is_empty()
 			playtest_button.tooltip_text = "Start the preset invasion and leave Battle paused after one deterministic step."
-			playtest_status_label.text = "TEST READY — %d starter piece(s) placed. One click starts the gate attack and leaves it paused." % keep.pieces.size() if not keep.pieces.is_empty() else "TEST WAITING — use the recommended layout or place at least one defender first."
+			if not keep.active_event_id.is_empty():
+				playtest_status_label.text = "EVENT WAITING — choose an authored response before the invasion can begin."
+			else:
+				playtest_status_label.text = "TEST READY — %d starter piece(s) placed. One click starts the gate attack and leaves it paused." % keep.pieces.size() if not keep.pieces.is_empty() else "TEST WAITING — use the recommended layout or place at least one defender first."
 		elif screen == "battle":
 			playtest_button.text = "ADVANCE ONE STEP — INSPECT"
 			playtest_button.disabled = not keep.wave_active

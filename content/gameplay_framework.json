@@ -66,6 +66,15 @@
     "layout_comparison": "preparation_only_selected_piece_removal_without_material_refund",
     "save_compatibility": "wave_history_defaults_empty_for_older_schema_2_saves"
   },
+  "p8_authored_events": {
+    "status": "implemented",
+    "scenario": "relief_road",
+    "chain": ["relief_road_warning", "relief_road_recovery", "relief_road_report"],
+    "command_boundary": "choose_event_option validates the complete choice before applying typed effects",
+    "supported_effects": ["spend_command_points", "spend_recovery_action", "add_materials", "add_morale", "set_flag", "record_outcome"],
+    "persistence": "active event, resolved IDs, flags, and event history are authoritative schema-3 state",
+    "non_goals": ["arbitrary_scripts", "random_event_selection", "branching_campaign_graph"]
+  },
   "v090_multi_wave": {
     "status": "implemented",
     "authored_sequence": "scenario_wave_plans_and_doctrines_define_three_escalating_waves",
