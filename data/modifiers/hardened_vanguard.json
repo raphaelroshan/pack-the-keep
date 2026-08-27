@@ -1,0 +1,13 @@
+{
+  "id": "hardened_vanguard",
+  "content_version": 1,
+  "status": "active",
+  "name": "Hardened Vanguard",
+  "short_role": "Give every enemy two additional health for the full run.",
+  "question": "Can the same defense hold when each formation takes longer to break?",
+  "unlock_event": "relief_road_report",
+  "effect": "enemy_health_bonus",
+  "enemy_health_bonus": 2,
+  "starting_morale_cost": 0,
+  "limitation": "This challenge grants no score, materials, or combat reward; it only increases enemy durability."
+}

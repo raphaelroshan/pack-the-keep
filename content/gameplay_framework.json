@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.11.3-greywatch-three-bells",
+  "framework_version": "0.11.4-greywatch-challenge-ledger",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -77,10 +77,10 @@
   },
   "p9_run_progression": {
     "status": "implemented",
-    "modifier": "roadside_intelligence",
+    "modifiers": ["roadside_intelligence", "hardened_vanguard"],
     "unlock_source": "relief_road_report",
-    "effect": "reveal_wave_composition",
-    "cost": "one_starting_morale",
+    "effects": ["reveal_wave_composition", "enemy_health_bonus"],
+    "selection": "one_modifier_or_none",
     "persistence": "unlocked_and_equipped_modifier_ids_survive_new_run_and_save_load",
     "non_goals": ["experience_grind", "permanent_damage_bonus", "regional_map"]
   },
@@ -144,6 +144,14 @@
     "combined_questions": ["armor", "signal_disruption", "protection_piercing"],
     "tested_pack_pairs": [["crossbow_watch", "bell_guard"], ["shieldwall", "bell_guard"]],
     "guardrail": "composition_uses_existing_rules_and_preserves_the_two_pack_preparation_limit"
+  },
+  "p11_challenge_modifiers": {
+    "status": "implemented",
+    "modifier": "hardened_vanguard",
+    "rule": "every_enemy_runtime_instance_receives_two_additional_current_and_maximum_health_at_wave_creation",
+    "presentation": "campaign_ledger_selector_names_lock_state_effect_tradeoff_and_equipped_choice",
+    "determinism_rule": "modifier_application_occurs_before_combat_and_is_persisted_in_enemy_runtime_state",
+    "non_goals": ["modifier_stacking", "score_multiplier", "permanent_player_power"]
   },
   "v090_multi_wave": {
     "status": "implemented",

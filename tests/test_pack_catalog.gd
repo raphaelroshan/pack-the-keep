@@ -41,15 +41,23 @@ func _initialize() -> void:
 	_check(doctrine_errors.size() >= 4, "catalog validator did not reject missing fields, ID mismatch, enemy references, and incomplete counters")
 	_check(catalog.scenario_ids() == ["gatehouse_lock", "wrong_wall", "open_yard_net", "relief_road", "red_banner_road", "ash_at_the_bell", "the_splintered_gate", "three_bells_at_dusk"], "scenario catalog order or active IDs changed")
 	_check(catalog.event_ids() == ["relief_road_warning", "relief_road_recovery", "relief_road_report"], "event catalog order or active IDs changed")
-	_check(catalog.modifier_ids() == ["roadside_intelligence"], "modifier catalog order or active IDs changed")
+	_check(catalog.modifier_ids() == ["roadside_intelligence", "hardened_vanguard"], "modifier catalog order or active IDs changed")
 	var intelligence: Dictionary = catalog.modifier_definition("roadside_intelligence")
 	_check(String(intelligence.get("unlock_event", "")) == "relief_road_report" and int(intelligence.get("starting_morale_cost", 0)) == 1, "Roadside Intelligence did not load its unlock source and tradeoff")
+	var hardened: Dictionary = catalog.modifier_definition("hardened_vanguard")
+	_check(String(hardened.get("effect", "")) == "enemy_health_bonus" and int(hardened.get("enemy_health_bonus", 0)) == 2, "Hardened Vanguard did not load its bounded challenge effect")
 	var malformed_modifier: Dictionary = intelligence.duplicate(true)
 	malformed_modifier.effect = "raw_power"
 	malformed_modifier.unlock_event = "missing_event"
 	malformed_modifier.starting_morale_cost = -1
 	var modifier_errors: Array[String] = catalog.validate_modifier_definition(malformed_modifier, "wrong_filename")
 	_check(modifier_errors.size() >= 4, "catalog validator did not reject modifier ID, unlock, effect, and morale-cost failures")
+	var malformed_hardened: Dictionary = hardened.duplicate(true)
+	malformed_hardened.enemy_health_bonus = 9
+	_check(not catalog.validate_modifier_definition(malformed_hardened, "hardened_vanguard").is_empty(), "catalog validator did not reject an out-of-bounds enemy health bonus")
+	var mismatched_intelligence: Dictionary = intelligence.duplicate(true)
+	mismatched_intelligence.enemy_health_bonus = 2
+	_check(not catalog.validate_modifier_definition(mismatched_intelligence, "roadside_intelligence").is_empty(), "catalog validator accepted a health bonus on the information effect")
 	var warning_event: Dictionary = catalog.event_definition("relief_road_warning")
 	_check(String(warning_event.get("scenario", "")) == "relief_road" and warning_event.get("choices", []).size() == 2, "Relief Road warning event did not load its authored choices")
 	var copied_event: Dictionary = catalog.event_definition("relief_road_warning")
@@ -193,7 +201,7 @@ func _initialize() -> void:
 
 	var first: PackKeepState = PackKeepState.new(3307)
 	var second: PackKeepState = PackKeepState.new(3307)
-	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("pack_count", 0)) == 9 and int(first.content_catalog_status().get("commander_count", 0)) == 2 and int(first.content_catalog_status().get("piece_count", 0)) == 17 and int(first.content_catalog_status().get("enemy_count", 0)) == 7 and int(first.content_catalog_status().get("doctrine_count", 0)) == 8 and int(first.content_catalog_status().get("scenario_count", 0)) == 8 and int(first.content_catalog_status().get("event_count", 0)) == 3 and int(first.content_catalog_status().get("modifier_count", 0)) == 1, "KeepState did not expose the complete P11 runtime catalog")
+	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("pack_count", 0)) == 9 and int(first.content_catalog_status().get("commander_count", 0)) == 2 and int(first.content_catalog_status().get("piece_count", 0)) == 17 and int(first.content_catalog_status().get("enemy_count", 0)) == 7 and int(first.content_catalog_status().get("doctrine_count", 0)) == 8 and int(first.content_catalog_status().get("scenario_count", 0)) == 8 and int(first.content_catalog_status().get("event_count", 0)) == 3 and int(first.content_catalog_status().get("modifier_count", 0)) == 2, "KeepState did not expose the complete P11 runtime catalog")
 	_check(first.piece_ids() == catalog.piece_ids(), "KeepState did not preserve stable piece order")
 	_check(first.enemy_ids() == catalog.enemy_ids(), "KeepState did not preserve stable enemy order")
 	_check(first.doctrine_ids() == catalog.doctrine_ids(), "KeepState did not preserve stable doctrine order")

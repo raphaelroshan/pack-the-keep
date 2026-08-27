@@ -287,3 +287,11 @@
 **Reason:** Shieldwall needs to make adjacency valuable without creating a second health system, while Shieldbreaker needs a deterministic way to expose the limits of one fortified line. Data fields keep both rules reusable and visible to validators.
 
 **Trade-off:** Protection has no facing or activation timing. A protection-piercing enemy bypasses the complete supported reduction rather than degrading it gradually.
+
+## ADR-037: Run modifiers are mutually exclusive data-driven rules
+
+**Decision:** Keep one equipped modifier ID in persistent profile state and allow the Campaign Ledger to select any validated modifier or none. Hardened Vanguard authors a bounded `enemy_health_bonus` that is applied once when enemy runtime instances are created.
+
+**Reason:** A second modifier should prove that progression is a real content boundary rather than a Roadside Intelligence special case. Mutual exclusivity keeps the pre-run choice legible, while wave-creation application makes the challenge deterministic and naturally saveable.
+
+**Trade-off:** Modifiers cannot yet stack or express compound effects. New effect types still require explicit validator, simulation, presentation, migration, and regression support.

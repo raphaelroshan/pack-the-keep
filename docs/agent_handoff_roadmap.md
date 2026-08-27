@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
 **Document status:** Active planning contract for post-v0.10.0 development
-**Current release baseline:** `v0.11.3-greywatch-three-bells`
+**Current release baseline:** `v0.11.4-greywatch-challenge-ledger`
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
 **Primary keep:** Greywatch Keep
@@ -17,9 +17,9 @@ This document is intended to be handed to a GPT coding agent together with `AGEN
 
 Pack the Keep currently has a playable Greywatch vertical slice. The authoritative simulation is in `src/core/keep_state.gd`; the runtime-built presentation and fort renderer are in `src/ui/main.gd`; the main scene is `scenes/Main.tscn`; machine-readable capability declarations are in `content/content_manifest.json` and `content/gameplay_framework.json`.
 
-The current slice supports two commanders, seventeen active defender pieces/equipment, nine packs, seven enemy types, eight invasion doctrines, eight authored scenarios, a two-floor square fort, deterministic six-step combat waves, repair and assignment intervals, finite ranged ammunition, authored armor and armor-piercing counters, nearby ranged support, linked signal redundancy, bounded forecast disruption, adjacent room/piece protection, protection-piercing target selection, commander abilities, pause/speed/manual-step controls, controller navigation/remapping, persistent presentation settings, map-first enemy focus, placement previews, save/load, a quick-playtest flow, and three-wave authored sequences that advance only after explicit recovery completion.
+The current slice supports two commanders, seventeen active defender pieces/equipment, nine packs, seven enemy types, eight invasion doctrines, eight authored scenarios, two mutually exclusive run modifiers, a two-floor square fort, deterministic six-step combat waves, repair and assignment intervals, finite ranged ammunition, authored armor and armor-piercing counters, nearby ranged support, linked signal redundancy, bounded forecast disruption, adjacent room/piece protection, protection-piercing target selection, commander abilities, pause/speed/manual-step controls, controller navigation/remapping, persistent presentation settings, map-first enemy focus, placement previews, save/load, a quick-playtest flow, and three-wave authored sequences that advance only after explicit recovery completion.
 
-P11 content breadth is in progress. Three teaching pairs are implemented: Crossbow Watch versus Shielded Advance, Bell Guard versus Smoke and Signal, and Shieldwall versus Break the Line. Three Bells at Dusk now composes all three questions across two viable two-pack baselines. The next bounded objective is challenge modifiers, not a broad roster expansion.
+P11 content breadth is complete. Three teaching pairs are implemented: Crossbow Watch versus Shielded Advance, Bell Guard versus Smoke and Signal, and Shieldwall versus Break the Line. Three Bells at Dusk composes all three questions across two viable two-pack baselines. The Campaign Ledger now offers Roadside Intelligence or the Hardened Vanguard durability challenge through one data-driven selection boundary. The next bounded objective is P12 alpha hardening.
 
 The next objective is not to add a large roster. The next objective is to make Greywatch feel like a complete, legible, replayable game loop and to establish safe extension points so new content can be added without turning the core simulation into an opaque collection of special cases.
 

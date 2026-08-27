@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.11.3",
+  "content_version": "0.11.4",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -44,7 +44,7 @@
   },
   "p9_run_progression": {
     "status": "implemented",
-    "modifiers": ["roadside_intelligence"],
+    "modifiers": ["roadside_intelligence", "hardened_vanguard"],
     "source_event": "relief_road_report",
     "tradeoff": "reveal_next_wave_composition_for_one_less_starting_morale",
     "persistence": "save_schema_4_profile_state_survives_new_run_reset",
@@ -122,6 +122,14 @@
     "tested_loadouts": [["crossbow_watch", "bell_guard"], ["shieldwall", "bell_guard"]],
     "validation": "two_commanders_two_loadouts_three_seeds_full_replay_and_ui",
     "next_slice": "p11_challenge_modifiers"
+  },
+  "p11_challenge_modifiers": {
+    "status": "implemented",
+    "modifier": "hardened_vanguard",
+    "effect": "enemy_health_bonus_2",
+    "selection": "one_modifier_or_none_before_setup_or_after_completed_scenario",
+    "validation": "bounded_effect_contract_unlock_selection_wave_creation_save_load_replay_balance_and_ui",
+    "next_slice": "p12_alpha_hardening"
   },
   "campaign": {
     "title": "The Bell at Dusk",

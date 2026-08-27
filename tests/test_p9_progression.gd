@@ -56,13 +56,13 @@ func _test_unlock_equip_and_reset() -> void:
 	_check(JSON.stringify(locked.serialize()) == before_locked, "rejected modifier equip should not mutate state")
 
 	var keep: PackKeepState = _complete_relief_road()
-	_check(keep.unlocked_modifier_ids == ["roadside_intelligence"], "Relief Road conclusion should unlock Roadside Intelligence exactly once")
+	_check(keep.unlocked_modifier_ids == ["roadside_intelligence", "hardened_vanguard"], "Relief Road conclusion should unlock both authored run modifiers in stable order")
 	var duplicate: Dictionary = keep.unlock_modifier("roadside_intelligence", "relief_road_report")
-	_check(bool(duplicate.get("ok", false)) and keep.unlocked_modifier_ids.size() == 1, "repeated unlock should be idempotent")
+	_check(bool(duplicate.get("ok", false)) and keep.unlocked_modifier_ids.size() == 2, "repeated unlock should be idempotent")
 	var final_morale: int = keep.morale
 	_check(bool(keep.equip_modifier("roadside_intelligence").get("ok", false)) and keep.morale == final_morale, "equipping after Results should apply to the next run without rewriting the completed run")
 	keep.reset_run(3308)
-	_check(keep.unlocked_modifier_ids == ["roadside_intelligence"] and keep.equipped_modifier_id == "roadside_intelligence", "new run should preserve unlocked and equipped progression")
+	_check(keep.unlocked_modifier_ids == ["roadside_intelligence", "hardened_vanguard"] and keep.equipped_modifier_id == "roadside_intelligence", "new run should preserve unlocked and equipped progression")
 	_check(keep.morale == 5, "equipped Roadside Intelligence should cost the Castellan one starting morale")
 
 func _test_forecast_and_save_migration() -> void:
