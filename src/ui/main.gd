@@ -328,12 +328,12 @@ func _build_ui() -> void:
 	left.add_child(metrics_label)
 	result_explain_label = Label.new()
 	result_explain_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	result_explain_label.custom_minimum_size = Vector2(800, 72)
+	result_explain_label.custom_minimum_size = Vector2(800, 118)
 	result_explain_label.add_theme_color_override("font_color", Color("#f0dca8"))
 	left.add_child(result_explain_label)
 	scorecard_label = Label.new()
 	scorecard_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	scorecard_label.custom_minimum_size = Vector2(800, 82)
+	scorecard_label.custom_minimum_size = Vector2(800, 126)
 	scorecard_label.add_theme_color_override("font_color", Color("#c9bfd0"))
 	left.add_child(scorecard_label)
 	combat_explain_label = Label.new()
@@ -1329,26 +1329,20 @@ func _refresh_result_explanation() -> void:
 	if keep.last_outcome.is_empty():
 		result_explain_label.text = "RESULT GUIDE — Finish a wave to see what the forecast, placement, and response produced."
 		return
-	var metrics: Dictionary = keep.combat_metrics
-	var outcome_text: String = ""
-	match keep.last_outcome:
-		"held":
-			outcome_text = "HELD — no room breach was recorded; try a different placement to test the counter."
-		"partial_breach":
-			outcome_text = "PARTIAL BREACH — the keep survived, but at least one function was damaged; repair the most critical room first."
-		"collapse":
-			outcome_text = "COLLAPSE — critical functions or morale failed; compare the forecast with the placement and response lane."
-		_:
-			outcome_text = "OUTCOME — review the event feed and recovery state before changing the layout."
-	result_explain_label.text = "CAUSAL RESULT — %s\nBreach %d | Morale %d | Defeated %d | Room damage %d | Piece damage %d\n%s\n%s" % [keep.last_outcome.replace("_", " ").to_upper(), keep.breach_level, keep.morale, int(metrics.get("defeated_enemies", 0)), int(metrics.get("room_damage", 0)), int(metrics.get("piece_damage", 0)), outcome_text, "Recovery: %s" % keep.repair_interval_reason if keep.repair_interval_active else "Recovery: start a new run to replay the lesson."]
-	var scorecard: Dictionary = keep.scenario_scorecard()
+	var report: Dictionary = keep.scenario_report()
+	var final_state: Dictionary = report.get("final_state", {})
+	var worked_lines: Array[String] = []
+	for item in report.get("what_worked", []):
+		worked_lines.append("- %s" % String(item))
+	var failed_lines: Array[String] = []
+	for item in report.get("what_failed", []):
+		failed_lines.append("- %s" % String(item))
+	result_explain_label.text = "CAUSAL RESULT — FINAL KEEP\nMorale %d | Breach %d | Materials %d | Defenders %d active / %d disabled\nWHAT WORKED\n%s\nWHAT FAILED\n%s\nTRY NEXT — %s" % [int(final_state.get("morale", 0)), int(final_state.get("breach_level", 0)), int(final_state.get("materials", 0)), int(final_state.get("surviving_pieces", 0)), int(final_state.get("disabled_pieces", 0)), "\n".join(worked_lines), "\n".join(failed_lines), String(report.get("suggested_experiment", "Replay one changed decision."))]
 	var score_rows: Array[String] = []
-	for index in range(keep.wave_history.size()):
-		var wave: Dictionary = keep.wave_history[index]
-		score_rows.append("W%d %s/%s D%d R%d A%d" % [int(wave.get("wave", index + 1)), String(wave.get("doctrine", "")).replace("_", " "), String(wave.get("outcome", "")).replace("_", " "), int(wave.get("defeated_enemies", 0)), int(wave.get("room_damage", 0)), int(wave.get("recovery_actions_used", 0))])
-	var score_rows_text: String = " | ".join(score_rows) if not score_rows.is_empty() else "No resolved waves yet."
-	var score_outcome_text: String = String(scorecard.get("final_outcome", "in progress")).replace("_", " ").to_upper()
-	scorecard_label.text = "SCENARIO SCORECARD — %d/%d waves | %s\n%s\nTOTALS — defeated %d | room damage %d | piece damage %d | recovery actions %d\nREPLAY KEY — %s" % [int(scorecard.get("completed_waves", 0)), int(scorecard.get("wave_count", 0)), score_outcome_text, score_rows_text, int(scorecard.get("total_defeated", 0)), int(scorecard.get("total_room_damage", 0)), int(scorecard.get("total_piece_damage", 0)), int(scorecard.get("recovery_actions_used", 0)), String(scorecard.get("replay_key", ""))]
+	for wave in report.get("wave_rows", []):
+		score_rows.append("W%d — %s — %s\nPressure: %s | Defeated %d | Room %d | Piece %d | recovery actions %d" % [int(wave.get("wave", score_rows.size() + 1)), String(wave.get("doctrine", "")).replace("_", " ").capitalize(), String(wave.get("outcome", "")).replace("_", " ").to_upper(), String(wave.get("principal_pressure", "Unknown pressure")), int(wave.get("defeated_enemies", 0)), int(wave.get("room_damage", 0)), int(wave.get("piece_damage", 0)), int(wave.get("recovery_actions_used", 0))])
+	var report_heading: String = "SCENARIO REPORT" if String(report.get("status", "in_progress")) == "complete" else "RUN SO FAR"
+	scorecard_label.text = "%s — %s | %s\n%s\nREPLAY KEY — %s" % [report_heading, String(report.get("scenario_name", keep.scenario_id)), String(report.get("commander_name", keep.commander_id)), "\n".join(score_rows) if not score_rows.is_empty() else "No resolved waves yet.", String(report.get("replay_key", ""))]
 
 func _refresh_ui() -> void:
 	_refresh_pack_preview()

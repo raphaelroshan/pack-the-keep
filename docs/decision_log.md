@@ -143,3 +143,11 @@
 **Reason:** Recovery is the next major player decision, but generic buttons hide costs, benefits, trade-offs, and rejection reasons. A shared authoritative preview keeps the interface explanatory without creating a second copy of legality rules in `main.gd`.
 
 **Trade-off:** The simulation API gains presentation-neutral preview metadata and must keep it synchronized with command behavior. Tests therefore verify that previews do not mutate state and that commands reject whenever their matching preview is blocked.
+
+## ADR-019: Results are derived from authoritative state
+
+**Decision:** Build the P5 causal report from wave-history fields and current keep state. Store each wave's principal pressure as structured history and derive successes, failures, final condition, and one replay experiment without parsing event-log prose.
+
+**Reason:** The final screen should teach why a defense worked or failed while remaining deterministic, testable, and independent from wording in the event feed.
+
+**Trade-off:** The first report uses compact rule-based observations rather than authored narrative variants. Richer prose can be added later as data, but it must continue to resolve from stable state and identifiers.

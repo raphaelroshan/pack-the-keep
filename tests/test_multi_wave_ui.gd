@@ -64,6 +64,10 @@ func _initialize() -> void:
 		failures.append("terminal Results did not expose restart action")
 	if not String(ui.scorecard_label.text).contains("W1") or not String(ui.scorecard_label.text).contains("W2") or not String(ui.scorecard_label.text).contains("W3") or not String(ui.scorecard_label.text).contains("recovery actions"):
 		failures.append("terminal Results did not expose the complete three-wave scorecard")
+	if not String(ui.scorecard_label.text).contains("SCENARIO REPORT") or not String(ui.scorecard_label.text).contains("Pressure:"):
+		failures.append("terminal Results did not expose the causal scenario report")
+	if not String(ui.result_explain_label.text).contains("WHAT WORKED") or not String(ui.result_explain_label.text).contains("WHAT FAILED") or not String(ui.result_explain_label.text).contains("TRY NEXT"):
+		failures.append("terminal Results did not expose derived lessons and a replay experiment")
 	ui.queue_free()
 	await process_frame
 	if failures.is_empty():

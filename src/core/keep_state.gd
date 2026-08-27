@@ -115,6 +115,13 @@ const DOCTRINE_QUESTIONS: Dictionary = {
 	"area_pressure": "Can the keep preserve recovery when one impact reaches several rooms?"
 }
 
+const DOCTRINE_PRESSURES: Dictionary = {
+	"gate_assault": "Gate concentration",
+	"distributed_sabotage": "Workshop and Supply Room support chain",
+	"feint_and_flank": "North Tower and upper response lane",
+	"area_pressure": "Inner Yard and adjacent support rooms"
+}
+
 const ASSIGNMENT_RULES: Dictionary = {
 	"pike_squad": {"room": "gate", "effect": "Gate Road hold bonus +2"},
 	"repair_station": {"room": "workshop", "effect": "repair amount +4 and Workshop priority"},
@@ -941,6 +948,7 @@ func _append_wave_history() -> void:
 	wave_history.append({
 		"wave": wave_index,
 		"doctrine": enemy_doctrine,
+		"principal_pressure": String(DOCTRINE_PRESSURES.get(enemy_doctrine, "Unknown pressure")),
 		"outcome": last_outcome,
 		"breach_level": breach_level,
 		"morale_after": morale,
@@ -1138,6 +1146,99 @@ func scenario_scorecard() -> Dictionary:
 		total_piece_damage += int(row.get("piece_damage", 0))
 		total_recovery_actions += int(row.get("recovery_actions_used", 0))
 	return {"scenario_id": scenario_id, "scenario_name": String(SCENARIOS.get(scenario_id, {}).get("name", scenario_id)), "completed_waves": wave_history.size(), "wave_count": authored_wave_count(), "outcomes": outcomes, "total_defeated": total_defeated, "total_room_damage": total_room_damage, "total_piece_damage": total_piece_damage, "recovery_actions_used": total_recovery_actions, "final_outcome": last_outcome, "replay_key": "%s/%s/%d" % [scenario_id, commander_id, seed]}
+
+func scenario_report() -> Dictionary:
+	var scorecard: Dictionary = scenario_scorecard()
+	var wave_rows: Array[Dictionary] = []
+	var held_waves: int = 0
+	var breached_waves: int = 0
+	for history_row in wave_history:
+		var doctrine: String = String(history_row.get("doctrine", ""))
+		var outcome: String = String(history_row.get("outcome", ""))
+		if outcome == "held":
+			held_waves += 1
+		elif outcome == "partial_breach" or outcome == "collapse":
+			breached_waves += 1
+		wave_rows.append({
+			"wave": int(history_row.get("wave", wave_rows.size() + 1)),
+			"doctrine": doctrine,
+			"principal_pressure": String(history_row.get("principal_pressure", DOCTRINE_PRESSURES.get(doctrine, "Unknown pressure"))),
+			"outcome": outcome,
+			"defeated_enemies": int(history_row.get("defeated_enemies", 0)),
+			"room_damage": int(history_row.get("room_damage", 0)),
+			"piece_damage": int(history_row.get("piece_damage", 0)),
+			"recovery_actions_used": int(history_row.get("recovery_actions_used", 0))
+		})
+	var surviving_pieces: int = 0
+	var disabled_pieces: int = 0
+	for piece in pieces.values():
+		if bool(piece.get("disabled", false)) or int(piece.get("health", 0)) <= 0:
+			disabled_pieces += 1
+		else:
+			surviving_pieces += 1
+	var damaged_rooms: Array[Dictionary] = []
+	for room_id in rooms.keys():
+		var condition: int = room_condition(String(room_id))
+		if condition < 100:
+			damaged_rooms.append({"id": String(room_id), "condition": condition})
+	for outer in range(damaged_rooms.size()):
+		for inner in range(outer + 1, damaged_rooms.size()):
+			var left: Dictionary = damaged_rooms[outer]
+			var right: Dictionary = damaged_rooms[inner]
+			if int(right.condition) < int(left.condition) or (int(right.condition) == int(left.condition) and String(right.id) < String(left.id)):
+				damaged_rooms[outer] = right
+				damaged_rooms[inner] = left
+	var what_worked: Array[String] = []
+	if held_waves > 0:
+		what_worked.append("%d wave%s held without a room breach." % [held_waves, "" if held_waves == 1 else "s"])
+	if int(scorecard.get("total_defeated", 0)) > 0:
+		what_worked.append("Defenders stopped %d attacker%s." % [int(scorecard.total_defeated), "" if int(scorecard.total_defeated) == 1 else "s"])
+	if int(scorecard.get("recovery_actions_used", 0)) > 0:
+		what_worked.append("Recovery committed %d action%s to the next defense." % [int(scorecard.recovery_actions_used), "" if int(scorecard.recovery_actions_used) == 1 else "s"])
+	if what_worked.is_empty():
+		what_worked.append("The run produced a deterministic record that can be replayed with the same command sequence.")
+	var what_failed: Array[String] = []
+	if last_outcome == "collapse":
+		what_failed.append("The final state collapsed because critical functions or morale reached the failure threshold.")
+	elif breached_waves > 0:
+		what_failed.append("%d wave%s breached at least one keep function." % [breached_waves, "" if breached_waves == 1 else "s"])
+	if not damaged_rooms.is_empty():
+		var weakest: Dictionary = damaged_rooms[0]
+		what_failed.append("%s finished at %d%% condition." % [String(ROOMS[String(weakest.id)].name), int(weakest.condition)])
+	if disabled_pieces > 0:
+		what_failed.append("%d defensive piece%s finished disabled." % [disabled_pieces, "" if disabled_pieces == 1 else "s"])
+	if what_failed.is_empty():
+		what_failed.append("No structural failure was recorded in the resolved waves.")
+	var suggested_experiment: String = "Replay with The Warden and preserve an open response lane."
+	if last_outcome == "collapse":
+		suggested_experiment = "Replay the same seed and preserve one recovery action for the weakest critical function."
+	elif room_condition("gate") < 100:
+		suggested_experiment = "Assign Pike Squad to Gate and compare the Gate Assault result."
+	elif room_condition("workshop") < 100 or room_condition("supply_room") < 100:
+		suggested_experiment = "Protect the support chain with Field Engineers or an assigned Repair Station."
+	elif room_condition("north_tower") < 100 or room_condition("old_chapel") < 100:
+		suggested_experiment = "Preserve an upper response lane and test Scout Post coverage."
+	elif commander_id == "warden":
+		suggested_experiment = "Replay with The Castellan and compare a compact adjacent layout."
+	return {
+		"scenario_id": scenario_id,
+		"scenario_name": String(scorecard.get("scenario_name", scenario_id)),
+		"commander_id": commander_id,
+		"commander_name": String(COMMANDERS[commander_id].name),
+		"status": "complete" if not has_next_wave() and not wave_active else "in_progress",
+		"wave_rows": wave_rows,
+		"final_state": {
+			"morale": morale,
+			"breach_level": breach_level,
+			"materials": materials,
+			"surviving_pieces": surviving_pieces,
+			"disabled_pieces": disabled_pieces
+		},
+		"what_worked": what_worked,
+		"what_failed": what_failed,
+		"suggested_experiment": suggested_experiment,
+		"replay_key": String(scorecard.get("replay_key", ""))
+	}
 
 func forecast() -> Dictionary:
 	var likely_target: String = "gate"

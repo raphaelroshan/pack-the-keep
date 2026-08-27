@@ -16,6 +16,7 @@ func _init() -> void:
 	_test_repair_interval_and_assignments()
 	_test_assignment_rules_and_action_budget()
 	_test_recovery_action_previews()
+	_test_causal_scenario_reports()
 	_test_deterministic_battle_report()
 	_test_save_round_trip()
 	_test_p0_pack_preview_and_reserve()
@@ -221,6 +222,39 @@ func _test_recovery_action_previews() -> void:
 	_expect(bool(assigned.get("ok", false)) and not assigned.get("state_changes", []).is_empty(), "assignment should report structured state changes")
 	var exhausted: Dictionary = keep.recovery_action_preview("repair_piece", "pike_squad_0")
 	_expect(not bool(exhausted.get("ok", false)) and String(exhausted.get("reason", "")).contains("no recovery actions"), "preview should expose an exhausted action budget")
+
+func _test_causal_scenario_reports() -> void:
+	var held: PackKeepState = PackKeepState.new(3307)
+	held.place_piece("pike_squad", Vector2i(0, 3), "ground")
+	held.start_wave("gate_assault")
+	held.advance_wave(6.0)
+	var held_before: String = JSON.stringify(held.serialize())
+	var held_report: Dictionary = held.scenario_report()
+	_expect(JSON.stringify(held.serialize()) == held_before, "scenario report must not mutate authoritative state")
+	_expect(String(held_report.get("commander_name", "")).contains("Castellan"), "scenario report should identify the commander")
+	_expect(not held_report.get("wave_rows", []).is_empty() and String(held_report.wave_rows[0].get("principal_pressure", "")).contains("Gate"), "scenario report should name the wave's principal pressure")
+	_expect(String(held_report.get("what_worked", [""])[0]).contains("held"), "held report should derive a concrete success")
+
+	var partial: PackKeepState = PackKeepState.new(3307)
+	partial.open_pack("scouts")
+	partial.place_piece("scout_post", Vector2i(0, 0), "upper")
+	partial.start_wave("gate_assault")
+	partial.advance_wave(6.0)
+	var partial_report: Dictionary = partial.scenario_report()
+	_expect(partial.last_outcome == "partial_breach", "partial-report fixture should produce a partial breach")
+	_expect(String(partial_report.get("what_failed", [""])[0]).contains("breached"), "partial-breach report should identify breached waves")
+	_expect(String(partial_report.get("suggested_experiment", "")).contains("Pike Squad"), "Gate damage should suggest a concrete Gate experiment")
+
+	var collapsed: PackKeepState = PackKeepState.new(3307)
+	collapsed.open_pack("scouts")
+	collapsed.place_piece("scout_post", Vector2i(0, 0), "upper")
+	collapsed.start_wave("gate_assault")
+	collapsed.morale = 0
+	collapsed.advance_wave(6.0)
+	var collapsed_report: Dictionary = collapsed.scenario_report()
+	_expect(collapsed.last_outcome == "collapse", "collapse-report fixture should produce collapse")
+	_expect(String(collapsed_report.get("what_failed", [""])[0]).contains("collapsed"), "collapse report should identify the terminal failure threshold")
+	_expect(String(collapsed_report.get("suggested_experiment", "")).contains("same seed"), "collapse report should preserve a deterministic replay experiment")
 
 func _test_deterministic_battle_report() -> void:
 	var first: PackKeepState = PackKeepState.new(17)

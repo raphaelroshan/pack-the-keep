@@ -12,7 +12,8 @@
   "p5_greywatch_mastery": {
     "status": "in_progress",
     "recovery_action_cards": "implemented_with_authoritative_preview_cost_benefit_tradeoff_and_blocking_reason",
-    "next_slice": "causal_final_report"
+    "causal_final_report": "implemented_from_wave_history_final_keep_state_and_deterministic_replay_experiment",
+    "next_slice": "layout_summary_and_commander_comparison"
   },
   "campaign": {
     "title": "The Bell at Dusk",
