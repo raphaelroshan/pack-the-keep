@@ -168,7 +168,8 @@ func _ready() -> void:
 		_load_preferences()
 	else:
 		_apply_ui_scale()
-	_setup_audio()
+	if DisplayServer.get_name() != "headless":
+		_setup_audio()
 	_build_ui()
 	_set_screen("title")
 	if OS.get_cmdline_user_args().has("--packaged-smoke") and OS.get_environment("PACK_THE_KEEP_PACKAGED_SMOKE") == "1":

@@ -45,7 +45,7 @@ Pushes to `main` produce a release-candidate artifact containing a source snapsh
 
 The packaged smoke uses a CI-owned profile root and unreachable proxy endpoints. It launches the actual exported main scene, executes a guarded smoke path through normal gameplay and persistence APIs, verifies controller navigation/remapping, 125% stacked scaling, initial pause, frozen paused ticks, and deterministic manual stepping, then copies the executable to a fresh install directory and requires that relocated build to restore the same run and settings from the profile. Both phases require clean teardown and bounded zero exit.
 
-Godot 4.4.1 can intermittently return exit 139 on Windows after a headless UI test has already printed PASS. CI retries the complete deterministic suite once only for that Windows-specific exit code. Any ordinary assertion failure, non-Windows failure, or repeated shutdown fault still blocks the build.
+Headless runs do not initialize the procedural audio player; they still validate semantic cue profiles and visible cue state. Interactive and packaged non-headless builds retain normal audio initialization.
 
 Publishing to Steam or Epic Games Store remains a deliberate human-controlled step. Add store upload credentials only after the build has passed a release review, and use protected environments with required reviewers for actual deployment.
 

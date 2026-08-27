@@ -64,7 +64,7 @@ jobs:
       - name: Verify Godot
         run: godot --version
       - name: Run deterministic tests
-        run: bash scripts/verify_ci.sh
+        run: bash scripts/verify.sh
 
   ai-review:
     name: Multi-agent AI review

@@ -335,3 +335,11 @@
 **Reason:** Saves and preferences belong to the user profile, not the installation directory. A relocation test catches accidental executable-relative persistence before installer/storefront work begins.
 
 **Trade-off:** This models a portable reinstall and does not yet validate a signed installer, registry cleanup, or storefront-specific uninstall semantics.
+
+## ADR-043: Headless validation does not initialize audio playback
+
+**Decision:** Preserve semantic cue IDs and profiles in headless mode, but do not create or play an `AudioStreamGenerator` when no display/audio presentation is active.
+
+**Reason:** Headless tests validate cue meaning rather than sound output, and Godot 4.4.1 can crash during Windows shutdown while releasing unnecessary audio playback resources.
+
+**Trade-off:** Actual sample generation remains covered by interactive builds and manual audio checks, while headless automation covers the presentation-independent cue contract.
