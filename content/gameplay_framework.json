@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.12.4-alpha-clean-reinstall",
+  "framework_version": "0.12.5-alpha-readiness-audit",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -186,6 +186,12 @@
     "install_rule": "embedded_executable_runs_from_a_new_install_directory",
     "profile_rule": "relocated_build_reuses_user_profile_without_executable_relative_state",
     "continuity": ["battle_step_one", "125_percent_scale", "remapped_pause_button"]
+  },
+  "p12_release_candidate_audit": {
+    "status": "implemented",
+    "checklist": "all_required_p12_items_have_unique_ids_and_existing_evidence_paths",
+    "package_gate": "combined_windows_initial_and_reinstall_report_must_satisfy_dynamic_fields",
+    "human_boundary": "automated_success_does_not_publish_or_approve_alpha"
   },
   "v090_multi_wave": {
     "status": "implemented",

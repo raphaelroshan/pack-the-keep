@@ -39,6 +39,8 @@ jobs:
         run: python tools/validate_runtime_content.py --pieces data/pieces --packs data/packs --commanders data/commanders --enemies data/enemies --doctrines data/doctrines --scenarios data/scenarios --events data/events --modifiers data/modifiers --manifest content/content_manifest.json
       - name: Validate offline gameplay boundary
         run: python tools/validate_offline_boundary.py
+      - name: Validate P12 alpha checklist
+        run: python tools/validate_p12_alpha.py
 
   tests:
     name: Godot headless tests (${{ matrix.os }})
@@ -155,6 +157,8 @@ jobs:
             --executable "build/${slug}.exe" \
             --profile-root "${RUNNER_TEMP}/pack-the-keep-smoke" \
             --report-copy artifacts/packaged-smoke.json
+      - name: Audit packaged alpha evidence
+        run: python tools/validate_p12_alpha.py --report artifacts/packaged-smoke.json
       - name: Package source snapshot
         run: |
           mkdir -p artifacts

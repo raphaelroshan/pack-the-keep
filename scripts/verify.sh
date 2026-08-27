@@ -9,6 +9,8 @@ python3 tests/test_runtime_content_validator.py
 python3 tools/validate_offline_boundary.py
 python3 tests/test_packaged_smoke_runner.py
 python3 tests/test_release_identity.py
+python3 tools/validate_p12_alpha.py
+python3 tests/test_p12_alpha_validator.py
 
 if command -v godot >/dev/null 2>&1; then
   godot --headless --audio-driver Dummy --path . --editor --quit

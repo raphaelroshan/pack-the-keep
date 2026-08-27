@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.12.4",
+  "content_version": "0.12.5",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -162,6 +162,13 @@
     "restores": ["active_battle_step", "ui_scale", "controller_remap"],
     "artifact": "combined_initial_and_reinstall_packaged_smoke_report",
     "next_slice": "p12_release_candidate_audit"
+  },
+  "p12_release_candidate_audit": {
+    "status": "implemented",
+    "checklist": "content/p12_alpha_checklist.json",
+    "required_checks": 11,
+    "dynamic_evidence": "combined_initial_and_reinstall_windows_smoke_report",
+    "release_status": "candidate_pending_human_approval"
   },
   "campaign": {
     "title": "The Bell at Dusk",

@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.12.4-alpha-clean-reinstall` — packaged Windows reinstall continuity, pause, input, scaling, persistence, and recovery validation
+**Current build identity:** `0.12.5-alpha-readiness-audit` — machine-audited P12 candidate evidence pending human approval
 
 ## Purpose
 
@@ -49,6 +49,10 @@ The Windows artifact now proves battle begins paused, paused presentation cannot
 ## v0.12.4 Clean reinstall additions
 
 CI copies the embedded Windows executable to a fresh install directory and launches that relocated copy against the same isolated profile. The reinstalled build must restore active battle step one, 125% scale, and the remapped pause binding; the uploaded smoke artifact records both phases.
+
+## v0.12.5 Alpha readiness audit
+
+The repository now carries a versioned checklist for all eleven P12 hardening requirements. Source CI verifies unique implemented entries and durable evidence paths; Windows packaging additionally validates the combined initial/reinstall report. Passing remains candidate evidence, not automatic release approval.
 
 ## v0.8.2 testability additions
 

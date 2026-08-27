@@ -343,3 +343,11 @@
 **Reason:** Headless tests validate cue meaning rather than sound output, and Godot 4.4.1 can crash during Windows shutdown while releasing unnecessary audio playback resources.
 
 **Trade-off:** Actual sample generation remains covered by interactive builds and manual audio checks, while headless automation covers the presentation-independent cue contract.
+
+## ADR-044: Alpha readiness has a machine-readable evidence index
+
+**Decision:** Maintain one versioned P12 checklist that maps every required hardening item to repository evidence and validate it both statically and against the combined Windows packaged-smoke report.
+
+**Reason:** A green collection of unrelated jobs is weaker than an explicit requirement-to-evidence map. The checklist makes omissions, stale versions, and missing artifacts fail before a candidate is presented for human review.
+
+**Trade-off:** Automated readiness remains `candidate` status. Human playtesting, signing, storefront review, and release approval stay outside this gate.
