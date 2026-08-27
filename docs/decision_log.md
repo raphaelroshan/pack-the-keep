@@ -159,3 +159,11 @@
 **Reason:** Commander differentiation is easier to understand when the player can see how one fort creates different opportunities and risks under each doctrine.
 
 **Trade-off:** The comparison reports spatial evidence rather than a numeric power score. It deliberately avoids promising a winner before the authored wave actually tests the layout.
+
+## ADR-021: Load active pack definitions through a validated catalog
+
+**Decision:** Move the four active pack definitions into individual JSON files under `data/packs/` and load them through a small `ContentCatalog`. `PackKeepState` keeps ownership of pack commands and receives an immutable copy of validated definitions.
+
+**Reason:** Pack content is the first bounded proof of the P6 data architecture. Separate files provide stable review boundaries and allow future content to be added without expanding the core simulation script.
+
+**Trade-off:** Startup now includes deterministic local file parsing and validation. Missing or malformed pack data is treated as a development error and leaves the catalog unavailable rather than silently substituting different gameplay.

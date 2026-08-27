@@ -1,0 +1,22 @@
+{
+  "id": "scouts",
+  "content_version": 1,
+  "status": "active",
+  "name": "Scouts",
+  "short_role": "Reveal pressure early enough for the keep to respond.",
+  "question": "Where will earlier knowledge create an actual response?",
+  "family": "recon",
+  "contents": ["scout_post", "signal_beacon"],
+  "doctrine": "early_warning",
+  "cost": 3,
+  "strength": "Forecast uncertainty and upper-floor target information.",
+  "weakness": "Information does not stop a breach without reserve space or command points.",
+  "choice": "Spend a pack on knowing where the next problem will be.",
+  "commander_affinity": ["warden"],
+  "spatial_demand": {
+    "preferred_floors": ["upper"],
+    "preferred_zones": ["wall"],
+    "needs_open_lane": true,
+    "needs_adjacency": false
+  }
+}

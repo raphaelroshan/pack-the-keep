@@ -3,6 +3,8 @@ extends RefCounted
 ## Presentation-independent simulation for the Pack the Keep first battle slice.
 ## The same seed, keep layout, doctrine, and commands produce the same report.
 
+const ContentCatalog = preload("res://src/core/content_catalog.gd")
+
 const GRID_SIZE := Vector2i(12, 8)
 const FLOORS := ["ground", "upper"]
 const ACTIVE_COMMANDER := "castellan"
@@ -43,20 +45,6 @@ const COMMANDERS: Dictionary = {
 		"starting_materials": 52,
 		"starting_morale": 7
 	}
-}
-
-const PACKS: Dictionary = {
-	"pike_line": {"name": "Pike Line", "pieces": ["pike_squad", "narrow_gate"], "doctrine": "compact_corridors", "cost": 4},
-	"field_engineers": {"name": "Field Engineers", "pieces": ["repair_station", "brace"], "doctrine": "redundancy", "cost": 4},
-	"firekeepers": {"name": "Firekeepers", "pieces": ["fire_team", "fire_brazier"], "doctrine": "denial_zones", "cost": 5},
-	"scouts": {"name": "Scouts", "pieces": ["scout_post", "signal_beacon"], "doctrine": "early_warning", "cost": 3}
-}
-
-const PACK_EXPLANATIONS: Dictionary = {
-	"pike_line": {"solves": "Gate pressure and raider contact", "asks": "A committed ground-floor corridor", "preview": "Reliable front-line control; strongest when Pike Squad reaches Gate Road."},
-	"field_engineers": {"solves": "Room damage and partial-breach recovery", "asks": "Materials and a safe Workshop footprint", "preview": "Turns surviving the first hit into a repair decision instead of a restart."},
-	"firekeepers": {"solves": "Climber approaches and denial zones", "asks": "Power and a response-space position", "preview": "Punishes upper-floor feints; less efficient against support-room sabotage."},
-	"scouts": {"solves": "Forecast uncertainty and upper-floor targets", "asks": "A visible North Tower post", "preview": "Improves agency before contact, but contributes little direct damage."}
 }
 
 const PIECES: Dictionary = {
@@ -170,8 +158,18 @@ var combat_metrics: Dictionary = {}
 var wave_history: Array[Dictionary] = []
 var _last_attackers: Array[String] = []
 var _last_attack_damage: Dictionary = {}
+var content_catalog: RefCounted
+var _pack_definitions: Dictionary = {}
+var content_catalog_errors: Array[String] = []
 
 func _init(keep_seed: int = 3307) -> void:
+	content_catalog = ContentCatalog.new()
+	var catalog_result: Dictionary = content_catalog.load_default(PIECES.keys())
+	_pack_definitions = catalog_result.get("packs", {}).duplicate(true)
+	for error in catalog_result.get("errors", []):
+		content_catalog_errors.append(String(error))
+	if not content_catalog_errors.is_empty():
+		push_error("Pack content catalog failed validation: %s" % "; ".join(content_catalog_errors))
 	reset_run(keep_seed)
 
 func _reset_rooms() -> void:
@@ -243,9 +241,9 @@ func _rebuild_available_pieces() -> void:
 	for piece_id in STARTER_PIECES:
 		available_pieces.append(String(piece_id))
 	for pack_id in owned_packs:
-		if not PACKS.has(pack_id):
+		if not _pack_definitions.has(pack_id):
 			continue
-		for piece_id in PACKS[pack_id].pieces:
+		for piece_id in _pack_definitions[pack_id].contents:
 			if not available_pieces.has(String(piece_id)):
 				available_pieces.append(String(piece_id))
 
@@ -314,19 +312,29 @@ func has_next_wave() -> bool:
 		return false
 	return authored_wave_count() > wave_index
 
+func pack_ids() -> Array[String]:
+	return content_catalog.pack_ids()
+
+func pack_definition(pack_id: String) -> Dictionary:
+	if not _pack_definitions.has(pack_id):
+		return {}
+	return _pack_definitions[pack_id].duplicate(true)
+
+func content_catalog_status() -> Dictionary:
+	return {"ok": content_catalog_errors.is_empty(), "pack_count": _pack_definitions.size(), "errors": content_catalog_errors.duplicate()}
+
 func pack_preview(pack_id: String) -> Dictionary:
-	if not PACKS.has(pack_id):
+	if not _pack_definitions.has(pack_id):
 		return {"ok": false, "reason": "unknown pack"}
-	var pack: Dictionary = PACKS[pack_id]
-	var explanation: Dictionary = PACK_EXPLANATIONS.get(pack_id, {})
+	var pack: Dictionary = _pack_definitions[pack_id]
 	var piece_previews: Array[Dictionary] = []
-	for piece_id in pack.pieces:
+	for piece_id in pack.contents:
 		var piece: Dictionary = PIECES[String(piece_id)]
 		piece_previews.append({"id": String(piece_id), "name": String(piece.name), "cost": int(piece.cost), "size": piece.size, "role": String(piece.role), "availability": String(piece.availability)})
-	return {"ok": true, "pack_id": pack_id, "name": String(pack.name), "doctrine": String(pack.doctrine), "cost": int(pack.cost), "pieces": piece_previews, "solves": String(explanation.get("solves", "")), "asks": String(explanation.get("asks", "")), "preview": String(explanation.get("preview", "")), "owned": owned_packs.has(pack_id), "reserved": reserved_pack_id == pack_id, "openings_remaining": _preparation_pack_limit() - pack_openings_this_preparation, "materials": materials}
+	return {"ok": true, "pack_id": pack_id, "name": String(pack.name), "doctrine": String(pack.doctrine), "cost": int(pack.cost), "pieces": piece_previews, "solves": String(pack.get("strength", "")), "asks": String(pack.get("weakness", "")), "preview": String(pack.get("choice", "")), "question": String(pack.get("question", "")), "owned": owned_packs.has(pack_id), "reserved": reserved_pack_id == pack_id, "openings_remaining": _preparation_pack_limit() - pack_openings_this_preparation, "materials": materials}
 
 func reserve_pack(pack_id: String) -> Dictionary:
-	if not PACKS.has(pack_id):
+	if not _pack_definitions.has(pack_id):
 		return {"ok": false, "reason": "unknown pack"}
 	if wave_active or repair_interval_active:
 		return {"ok": false, "reason": "packs can only be reserved during Preparation"}
@@ -336,10 +344,10 @@ func reserve_pack(pack_id: String) -> Dictionary:
 		reserved_pack_id = ""
 		return {"ok": true, "message": "Reserve cleared."}
 	reserved_pack_id = pack_id
-	return {"ok": true, "message": "Reserved %s for the next Preparation." % PACKS[pack_id].name, "reserved_pack_id": reserved_pack_id}
+	return {"ok": true, "message": "Reserved %s for the next Preparation." % _pack_definitions[pack_id].name, "reserved_pack_id": reserved_pack_id}
 
 func open_pack(pack_id: String) -> Dictionary:
-	if not PACKS.has(pack_id):
+	if not _pack_definitions.has(pack_id):
 		return {"ok": false, "reason": "unknown pack"}
 	if wave_active or repair_interval_active:
 		return {"ok": false, "reason": "packs can only be opened during Preparation"}
@@ -347,7 +355,7 @@ func open_pack(pack_id: String) -> Dictionary:
 		return {"ok": false, "reason": "pack already opened"}
 	if pack_openings_this_preparation >= _preparation_pack_limit():
 		return {"ok": false, "reason": "this Preparation has no pack openings remaining"}
-	var pack_cost: int = int(PACKS[pack_id].get("cost", 0))
+	var pack_cost: int = int(_pack_definitions[pack_id].get("cost", 0))
 	if materials < pack_cost:
 		return {"ok": false, "reason": "not enough materials to open this pack"}
 	materials -= pack_cost
@@ -355,10 +363,10 @@ func open_pack(pack_id: String) -> Dictionary:
 	pack_openings_this_preparation += 1
 	if reserved_pack_id == pack_id:
 		reserved_pack_id = ""
-	for piece_id in PACKS[pack_id].pieces:
+	for piece_id in _pack_definitions[pack_id].contents:
 		if not available_pieces.has(piece_id):
 			available_pieces.append(piece_id)
-	return {"ok": true, "message": "Opened %s for %d materials: %s. Available units updated." % [PACKS[pack_id].name, pack_cost, PACKS[pack_id].doctrine.replace("_", " ")], "available_pieces": available_pieces.duplicate(), "openings_remaining": _preparation_pack_limit() - pack_openings_this_preparation, "materials": materials}
+	return {"ok": true, "message": "Opened %s for %d materials: %s. Available units updated." % [_pack_definitions[pack_id].name, pack_cost, _pack_definitions[pack_id].doctrine.replace("_", " ")], "available_pieces": available_pieces.duplicate(), "openings_remaining": _preparation_pack_limit() - pack_openings_this_preparation, "materials": materials}
 
 func piece_fits(piece_id: String, origin: Vector2i, floor: String = "ground") -> bool:
 	if not PIECES.has(piece_id) or not FLOORS.has(floor):
@@ -1482,7 +1490,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		_rebuild_available_pieces()
 	pack_openings_this_preparation = int(data.get("pack_openings_this_preparation", pack_openings_this_preparation))
 	reserved_pack_id = String(data.get("reserved_pack_id", reserved_pack_id))
-	if not reserved_pack_id.is_empty() and not PACKS.has(reserved_pack_id):
+	if not reserved_pack_id.is_empty() and not _pack_definitions.has(reserved_pack_id):
 		reserved_pack_id = ""
 	enemies.clear()
 	for enemy_data in data.get("enemies", []):

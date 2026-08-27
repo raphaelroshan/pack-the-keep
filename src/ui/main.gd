@@ -425,8 +425,8 @@ func _build_ui() -> void:
 
 	pack_option = OptionButton.new()
 	pack_option.item_selected.connect(func(_index: int) -> void: _refresh_pack_preview())
-	for pack_id in PackKeepState.PACKS.keys():
-		pack_option.add_item(String(PackKeepState.PACKS[pack_id].get("name", pack_id)))
+	for pack_id in keep.pack_ids():
+		pack_option.add_item(String(keep.pack_definition(pack_id).get("name", pack_id)))
 		pack_option.set_item_metadata(pack_option.item_count - 1, pack_id)
 	controls.add_child(_labeled_control("Pack offer", pack_option))
 	var pack_button: Button = Button.new()

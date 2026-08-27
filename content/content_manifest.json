@@ -16,6 +16,12 @@
     "layout_summary": "implemented_with_shared_spatial_facts_commander_comparison_and_deterministic_warnings",
     "next_slice": "p6_data_contract"
   },
+  "p6_data_contract": {
+    "status": "in_progress",
+    "externalized": ["packs"],
+    "runtime_catalog": "src/core/content_catalog.gd",
+    "next_slice": "content_validators"
+  },
   "campaign": {
     "title": "The Bell at Dusk",
     "premise": "A small keep is granted one season to become a refuge before a coalition of raiders, sappers, climbers, and siege beasts tests every defensive doctrine at once.",

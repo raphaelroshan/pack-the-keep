@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+python3 tools/validate_runtime_content.py --packs data/packs --manifest content/content_manifest.json
+
 if command -v godot >/dev/null 2>&1; then
   godot --headless --audio-driver Dummy --path . --editor --quit
   godot --headless --audio-driver Dummy --path . --script res://tests/test_keep_state.gd
@@ -16,6 +18,7 @@ if command -v godot >/dev/null 2>&1; then
   godot --headless --audio-driver Dummy --path . --script res://tests/test_multi_wave.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_multi_wave_ui.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p5_recovery_ui.gd
+  godot --headless --audio-driver Dummy --path . --script res://tests/test_pack_catalog.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_initial_combat.gd
 elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --editor --quit
@@ -29,6 +32,7 @@ elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_multi_wave.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_multi_wave_ui.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p5_recovery_ui.gd
+  godot4 --headless --audio-driver Dummy --path . --script res://tests/test_pack_catalog.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_initial_combat.gd
 else
   echo "Godot 4.x is not installed or not on PATH."
