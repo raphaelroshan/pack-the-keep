@@ -56,6 +56,9 @@ func _initialize() -> void:
 		failures.append("Castellan intervention was not armed through the authoritative core")
 
 	ui.queue_free()
+	# Let the SceneTree process queued UI cleanup before quitting. Without this
+	# boundary, Windows Godot can occasionally segfault after a successful smoke test.
+	await process_frame
 	if failures.is_empty():
 		print("P3 UI smoke: PASS")
 		quit(0)

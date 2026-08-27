@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.8.0-topdown-board` — map-first top-down board refinement
+**Current build identity:** `0.8.1-topdown-board` — map-first top-down board refinement with stabilized Windows smoke-test cleanup
 
 ## Purpose
 
