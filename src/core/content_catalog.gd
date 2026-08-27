@@ -57,6 +57,10 @@ const EVENT_PATHS: Array[String] = [
 	"res://data/events/relief_road_report.json"
 ]
 
+const MODIFIER_PATHS: Array[String] = [
+	"res://data/modifiers/roadside_intelligence.json"
+]
+
 const REQUIRED_PACK_FIELDS: Array[String] = [
 	"id",
 	"content_version",
@@ -161,7 +165,9 @@ const REQUIRED_EVENT_FIELDS: Array[String] = ["id", "content_version", "status",
 const SUPPORTED_EVENT_TYPES: Array[String] = ["forecast", "recovery", "scenario_conclusion"]
 const SUPPORTED_EVENT_PHASES: Array[String] = ["preparation", "recovery", "results"]
 const SUPPORTED_EVENT_REQUIREMENTS: Array[String] = ["command_points", "recovery_actions", "morale"]
-const SUPPORTED_EVENT_EFFECTS: Array[String] = ["spend_command_points", "spend_recovery_action", "add_materials", "add_morale", "set_flag", "record_outcome"]
+const SUPPORTED_EVENT_EFFECTS: Array[String] = ["spend_command_points", "spend_recovery_action", "add_materials", "add_morale", "set_flag", "record_outcome", "unlock_modifier"]
+const REQUIRED_MODIFIER_FIELDS: Array[String] = ["id", "content_version", "status", "name", "short_role", "question", "unlock_event", "effect", "starting_morale_cost", "limitation"]
+const SUPPORTED_MODIFIER_EFFECTS: Array[String] = ["reveal_wave_composition"]
 
 var _packs: Dictionary = {}
 var _commanders: Dictionary = {}
@@ -170,6 +176,7 @@ var _enemies: Dictionary = {}
 var _doctrines: Dictionary = {}
 var _scenarios: Dictionary = {}
 var _events: Dictionary = {}
+var _modifiers: Dictionary = {}
 var errors: Array[String] = []
 
 func load_default(known_room_ids: Array = []) -> Dictionary:
@@ -180,6 +187,7 @@ func load_default(known_room_ids: Array = []) -> Dictionary:
 	_doctrines.clear()
 	_scenarios.clear()
 	_events.clear()
+	_modifiers.clear()
 	errors.clear()
 	for path in DOCTRINE_PATHS:
 		_load_doctrine(path)
@@ -193,13 +201,16 @@ func load_default(known_room_ids: Array = []) -> Dictionary:
 		_load_enemy(path, known_room_ids, doctrine_ids())
 	for path in SCENARIO_PATHS:
 		_load_scenario(path, known_room_ids)
+	for path in MODIFIER_PATHS:
+		_load_modifier(path)
 	for path in EVENT_PATHS:
 		_load_event(path)
 	_validate_piece_availability()
 	_validate_doctrine_enemy_references()
 	_validate_event_follow_ups()
 	_validate_scenario_event_references()
-	return {"ok": errors.is_empty(), "commanders": _commanders.duplicate(true), "pieces": _pieces.duplicate(true), "packs": _packs.duplicate(true), "enemies": _enemies.duplicate(true), "doctrines": _doctrines.duplicate(true), "scenarios": _scenarios.duplicate(true), "events": _events.duplicate(true), "errors": errors.duplicate()}
+	_validate_modifier_unlock_events()
+	return {"ok": errors.is_empty(), "commanders": _commanders.duplicate(true), "pieces": _pieces.duplicate(true), "packs": _packs.duplicate(true), "enemies": _enemies.duplicate(true), "doctrines": _doctrines.duplicate(true), "scenarios": _scenarios.duplicate(true), "events": _events.duplicate(true), "modifiers": _modifiers.duplicate(true), "errors": errors.duplicate()}
 
 func commander_ids() -> Array[String]:
 	var result: Array[String] = []
@@ -266,6 +277,17 @@ func event_ids() -> Array[String]:
 
 func event_definition(event_id: String) -> Dictionary:
 	return _events.get(event_id, {}).duplicate(true)
+
+func modifier_ids() -> Array[String]:
+	var result: Array[String] = []
+	for path in MODIFIER_PATHS:
+		var expected_id: String = path.get_file().get_basename()
+		if _modifiers.has(expected_id):
+			result.append(expected_id)
+	return result
+
+func modifier_definition(modifier_id: String) -> Dictionary:
+	return _modifiers.get(modifier_id, {}).duplicate(true)
 
 func pack_ids() -> Array[String]:
 	var result: Array[String] = []
@@ -595,6 +617,31 @@ func _validate_event_effects(event_id: String, choice_id: String, effects: Varia
 				validation_errors.append("event %s choice %s set_flag needs a snake_case flag and boolean value" % [event_id, choice_id])
 		elif operation == "record_outcome" and not _is_snake_case_id(String(effect.get("tag", ""))):
 			validation_errors.append("event %s choice %s record_outcome needs a snake_case tag" % [event_id, choice_id])
+		elif operation == "unlock_modifier" and not _known_modifier_ids().has(String(effect.get("modifier", ""))):
+			validation_errors.append("event %s choice %s references unknown modifier" % [event_id, choice_id])
+
+func validate_modifier_definition(modifier: Dictionary, expected_id: String) -> Array[String]:
+	var validation_errors: Array[String] = []
+	for field in REQUIRED_MODIFIER_FIELDS:
+		if not modifier.has(field):
+			validation_errors.append("%s is missing required field: %s" % [expected_id, field])
+	var modifier_id: String = String(modifier.get("id", ""))
+	if modifier_id != expected_id:
+		validation_errors.append("modifier id %s does not match filename %s" % [modifier_id, expected_id])
+	if not _is_snake_case_id(modifier_id):
+		validation_errors.append("modifier id %s must be snake_case" % modifier_id)
+	if String(modifier.get("status", "")) != "active":
+		validation_errors.append("modifier %s must have active status" % modifier_id)
+	_validate_integer_minimum(modifier, "content_version", modifier_id, "modifier", 1, validation_errors)
+	_validate_integer_minimum(modifier, "starting_morale_cost", modifier_id, "modifier", 0, validation_errors)
+	for field in ["name", "short_role", "question", "unlock_event", "effect", "limitation"]:
+		if not modifier.get(field) is String or String(modifier.get(field, "")).strip_edges().is_empty():
+			validation_errors.append("modifier %s must have non-empty text for %s" % [modifier_id, field])
+	if not _known_event_ids().has(String(modifier.get("unlock_event", ""))):
+		validation_errors.append("modifier %s references unknown unlock event" % modifier_id)
+	if not SUPPORTED_MODIFIER_EFFECTS.has(String(modifier.get("effect", ""))):
+		validation_errors.append("modifier %s has unsupported effect" % modifier_id)
+	return validation_errors
 
 func validate_commander_definition(commander: Dictionary, expected_id: String) -> Array[String]:
 	var validation_errors: Array[String] = []
@@ -780,6 +827,28 @@ func _load_event(path: String) -> void:
 	if validation_errors.is_empty():
 		_events[event_id] = event.duplicate(true)
 
+func _load_modifier(path: String) -> void:
+	if not FileAccess.file_exists(path):
+		errors.append("missing modifier file: %s" % path)
+		return
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		errors.append("could not open modifier file: %s" % path)
+		return
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		errors.append("modifier file must contain one JSON object: %s" % path)
+		return
+	var modifier: Dictionary = parsed
+	var modifier_id: String = String(modifier.get("id", ""))
+	var validation_errors: Array[String] = validate_modifier_definition(modifier, path.get_file().get_basename())
+	if _modifiers.has(modifier_id):
+		validation_errors.append("duplicate modifier id: %s" % modifier_id)
+	for validation_error in validation_errors:
+		errors.append("%s: %s" % [path, validation_error])
+	if validation_errors.is_empty():
+		_modifiers[modifier_id] = modifier.duplicate(true)
+
 func _load_pack(path: String, known_piece_ids: Array) -> void:
 	if not FileAccess.file_exists(path):
 		errors.append("missing pack file: %s" % path)
@@ -845,6 +914,12 @@ func _validate_scenario_event_references() -> void:
 				var expected_follow_up: String = String(chain[index + 1]) if index + 1 < chain.size() else ""
 				if String(_events[event_id].get("follow_up", "")) != expected_follow_up:
 					errors.append("scenario %s event %s follow_up does not match chain order" % [scenario_id, event_id])
+
+func _validate_modifier_unlock_events() -> void:
+	for modifier_id in modifier_ids():
+		var unlock_event: String = String(_modifiers[modifier_id].get("unlock_event", ""))
+		if not _events.has(unlock_event):
+			errors.append("modifier %s references unavailable unlock event: %s" % [modifier_id, unlock_event])
 
 func _validate_positive_integer(definition: Dictionary, field: String, definition_id: String, validation_errors: Array[String]) -> void:
 	var value: Variant = definition.get(field)
@@ -924,6 +999,18 @@ func _known_enemy_ids() -> Array[String]:
 func _known_scenario_ids() -> Array[String]:
 	var result: Array[String] = []
 	for path in SCENARIO_PATHS:
+		result.append(path.get_file().get_basename())
+	return result
+
+func _known_event_ids() -> Array[String]:
+	var result: Array[String] = []
+	for path in EVENT_PATHS:
+		result.append(path.get_file().get_basename())
+	return result
+
+func _known_modifier_ids() -> Array[String]:
+	var result: Array[String] = []
+	for path in MODIFIER_PATHS:
 		result.append(path.get_file().get_basename())
 	return result
 

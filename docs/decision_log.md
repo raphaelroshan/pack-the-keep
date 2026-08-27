@@ -215,3 +215,11 @@
 **Reason:** Events need to change resources and battle preparation without becoming arbitrary scripts or a second simulation authority. Preflighting the complete choice before mutation makes rejection atomic, deterministic, saveable, and testable.
 
 **Trade-off:** The first event vocabulary is deliberately narrow and the first chain is linear. New operations require validator, simulation, migration, and regression coverage before authored content can use them.
+
+## ADR-028: First progression unlock trades morale for information
+
+**Decision:** Completing The Relief Road unlocks an optional `roadside_intelligence` run modifier. Equipping it reveals authored wave composition in forecasts and reduces starting morale by one; it does not increase combat output.
+
+**Reason:** The first progression reward should add a planning decision and demonstrate persistent unlock state without introducing grind or making old content obsolete. Information has value across scenarios while the morale cost keeps the choice situational.
+
+**Trade-off:** This is a ledger-style prototype rather than a regional map. It proves unlock, equip, reset, save migration, and forecast integration before a larger campaign surface is justified.

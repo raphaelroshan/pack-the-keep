@@ -71,9 +71,18 @@
     "scenario": "relief_road",
     "chain": ["relief_road_warning", "relief_road_recovery", "relief_road_report"],
     "command_boundary": "choose_event_option validates the complete choice before applying typed effects",
-    "supported_effects": ["spend_command_points", "spend_recovery_action", "add_materials", "add_morale", "set_flag", "record_outcome"],
-    "persistence": "active event, resolved IDs, flags, and event history are authoritative schema-3 state",
+    "supported_effects": ["spend_command_points", "spend_recovery_action", "add_materials", "add_morale", "set_flag", "record_outcome", "unlock_modifier"],
+    "persistence": "active event, resolved IDs, flags, and event history remain authoritative in schema-4 state",
     "non_goals": ["arbitrary_scripts", "random_event_selection", "branching_campaign_graph"]
+  },
+  "p9_run_progression": {
+    "status": "implemented",
+    "modifier": "roadside_intelligence",
+    "unlock_source": "relief_road_report",
+    "effect": "reveal_wave_composition",
+    "cost": "one_starting_morale",
+    "persistence": "unlocked_and_equipped_modifier_ids_survive_new_run_and_save_load",
+    "non_goals": ["experience_grind", "permanent_damage_bonus", "regional_map"]
   },
   "v090_multi_wave": {
     "status": "implemented",

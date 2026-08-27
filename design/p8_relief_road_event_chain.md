@@ -35,12 +35,13 @@ Supported effects in this slice:
 - `add_morale`
 - `set_flag`
 - `record_outcome`
+- `unlock_modifier` (added by the following P9 progression slice)
 
 The event catalog validates operation names and payloads. `PackKeepState.choose_event_option()` preflights every requirement and effect before applying any mutation.
 
 ## Authoritative state
 
-`PackKeepState` owns `active_event_id`, `resolved_event_ids`, `event_flags`, and `event_history`. These fields serialize in save schema 3. Older saves default to empty event state and deterministically activate the event appropriate to their current Relief Road phase.
+`PackKeepState` owns `active_event_id`, `resolved_event_ids`, `event_flags`, and `event_history`. These fields were introduced in save schema 3 and remain authoritative in later schemas. Older saves default to empty event state and deterministically activate the event appropriate to their current Relief Road phase.
 
 The `support_lane_marked` flag is consumed on the first Sapper attack and reduces that attack by one damage. Event UI reads `current_event()` and `event_choice_preview()` and never mutates resources, flags, or history directly.
 

@@ -38,6 +38,9 @@ var authored_event_title: Label
 var authored_event_setup: Label
 var authored_event_choice_buttons: Array[Button] = []
 var authored_event_choice_details: Array[Label] = []
+var campaign_ledger_panel: VBoxContainer
+var campaign_ledger_label: Label
+var campaign_modifier_button: Button
 var pack_option: OptionButton
 var piece_option: OptionButton
 var floor_option: OptionButton
@@ -449,6 +452,16 @@ func _build_ui() -> void:
 		choice_button.pressed.connect(_on_authored_event_choice.bind(choice_index))
 		authored_event_panel.add_child(choice_button)
 		authored_event_choice_buttons.append(choice_button)
+	campaign_ledger_panel = VBoxContainer.new()
+	campaign_ledger_panel.add_theme_constant_override("separation", 4)
+	controls.add_child(campaign_ledger_panel)
+	campaign_ledger_label = Label.new()
+	campaign_ledger_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	campaign_ledger_label.add_theme_color_override("font_color", Color("#bfe8cf"))
+	campaign_ledger_panel.add_child(campaign_ledger_label)
+	campaign_modifier_button = Button.new()
+	campaign_modifier_button.pressed.connect(_on_toggle_campaign_modifier)
+	campaign_ledger_panel.add_child(campaign_modifier_button)
 
 	pack_option = OptionButton.new()
 	pack_option.item_selected.connect(func(_index: int) -> void: _refresh_pack_preview())
@@ -582,6 +595,7 @@ func _build_ui() -> void:
 	recovery_actions_panel.add_child(finish_interval_button)
 	controls.move_child(recovery_actions_panel, 2)
 	controls.move_child(authored_event_panel, 2)
+	controls.move_child(campaign_ledger_panel, 4)
 
 	var start_button: Button = Button.new()
 	start_button.text = "Start invasion"
@@ -859,6 +873,25 @@ func _on_authored_event_choice(index: int) -> void:
 		return
 	var choice_id: String = String(authored_event_choice_buttons[index].get_meta("choice_id", ""))
 	_run_result(keep.choose_event_option(choice_id), "Event")
+
+func _refresh_campaign_ledger() -> void:
+	if campaign_ledger_panel == null:
+		return
+	var modifier_id: String = "roadside_intelligence"
+	var definition: Dictionary = keep.modifier_definition(modifier_id)
+	var unlocked: bool = keep.unlocked_modifier_ids.has(modifier_id)
+	var equipped: bool = keep.equipped_modifier_id == modifier_id
+	var status: String = "EQUIPPED" if equipped else "UNLOCKED" if unlocked else "LOCKED"
+	campaign_ledger_label.text = "CAMPAIGN LEDGER — %s\n%s\nTrade-off: reveal the next wave composition for %d less starting morale.\n%s" % [status, String(definition.get("name", modifier_id)), int(definition.get("starting_morale_cost", 0)), String(definition.get("limitation", ""))]
+	var target_id: String = "" if equipped else modifier_id
+	var preview: Dictionary = keep.modifier_equip_preview(target_id)
+	campaign_modifier_button.text = "Unequip for next run" if equipped else "Equip for next run" if unlocked else "Complete The Relief Road to unlock"
+	campaign_modifier_button.disabled = not bool(preview.get("ok", false))
+	campaign_modifier_button.tooltip_text = String(preview.get("message", preview.get("reason", "")))
+
+func _on_toggle_campaign_modifier() -> void:
+	var modifier_id: String = "" if keep.equipped_modifier_id == "roadside_intelligence" else "roadside_intelligence"
+	_run_result(keep.equip_modifier(modifier_id), "Campaign")
 
 func _refresh_pack_preview() -> void:
 	if pack_preview_label == null:
@@ -1412,6 +1445,7 @@ func _refresh_ui() -> void:
 	_refresh_pack_preview()
 	_refresh_scenario_preview()
 	_refresh_authored_event()
+	_refresh_campaign_ledger()
 	var interval_text: String = "closed"
 	if keep.repair_interval_active:
 		interval_text = "%d action(s): %s" % [keep.repair_actions_remaining, keep.repair_interval_reason]
@@ -1424,6 +1458,11 @@ func _refresh_ui() -> void:
 	commander_ability_button.tooltip_text = String(commander.get("ability_text", "Use once per wave."))
 	var forecast: Dictionary = keep.forecast()
 	forecast_label.text = "FORECAST — %s | Likely target: %s | Uncertainty: %s | Scout: %s" % [String(forecast.get("doctrine", "")).replace("_", " "), String(forecast.get("likely_target", "")), String(forecast.get("uncertainty", "")), "revealed" if bool(forecast.get("scout_bonus", false)) else "not revealed"]
+	if bool(forecast.get("composition_revealed", false)):
+		var actor_names: Array[String] = []
+		for enemy_id in forecast.get("composition", []):
+			actor_names.append(String(keep.enemy_definition(String(enemy_id)).get("name", enemy_id)))
+		forecast_label.text += " | Actors: %s" % ", ".join(actor_names)
 	var enemy_lines: Array[String] = []
 	for enemy in keep.enemies:
 		var enemy_id: String = String(enemy.get("enemy_id", ""))
