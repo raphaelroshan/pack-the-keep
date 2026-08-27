@@ -1604,7 +1604,8 @@ func _format_inspection(data: Dictionary) -> String:
 		return "INSPECTOR — ROOM %s\n%s floor | %s | %d%% condition | %s\n%s" % [String(data.name), String(data.floor).capitalize(), "critical" if bool(data.critical) else "support", int(data.condition), String(data.state), String(data.role)]
 	if String(data.get("kind", "")) == "enemy":
 		var armor_text: String = " | armor %d" % int(data.get("armor", 0)) if int(data.get("armor", 0)) > 0 else ""
-		return "INSPECTOR — ENEMY %s\n%s via %s | %d/%d hp | damage %d%s\nCounter: %s | Target: %s" % [String(data.name), String(data.doctrine).replace("_", " "), String(data.route).replace("_", " "), int(data.health), int(data.max_health), int(data.damage), armor_text, String(data.counter), String(data.target if not String(data.target).is_empty() else "approaching")]
+		var signal_text: String = " | signal DISRUPTED" if bool(data.get("signal_disrupted", false)) else " | signal RELAYED" if bool(data.get("has_signal_disruption", false)) else ""
+		return "INSPECTOR — ENEMY %s\n%s via %s | %d/%d hp | damage %d%s%s | contact step %d\nCounter: %s | Target: %s" % [String(data.name), String(data.doctrine).replace("_", " "), String(data.route).replace("_", " "), int(data.health), int(data.max_health), int(data.damage), armor_text, signal_text, int(data.get("arrival_step", 0)), String(data.counter), String(data.target if not String(data.target).is_empty() else "approaching")]
 	var special_state: String = ""
 	if String(data.get("piece_id", "")) == "supply_cache":
 		special_state = "\nReserve: %s" % ("SPENT" if bool(data.get("supply_spent", false)) else "READY")
@@ -2043,6 +2044,10 @@ func _refresh_ui() -> void:
 	commander_ability_button.tooltip_text = String(commander.get("ability_text", "Use once per wave."))
 	var forecast: Dictionary = keep.forecast()
 	forecast_label.text = "FORECAST — %s | Likely target: %s | Uncertainty: %s | Scout: %s" % [String(forecast.get("doctrine", "")).replace("_", " "), String(forecast.get("likely_target", "")), String(forecast.get("uncertainty", "")), "revealed" if bool(forecast.get("scout_bonus", false)) else "not revealed"]
+	if bool(forecast.get("signal_disrupted", false)):
+		forecast_label.text += " | Signal: DISRUPTED"
+	elif bool(forecast.get("signal_network_active", false)):
+		forecast_label.text += " | Signal: REDUNDANT"
 	if bool(forecast.get("composition_revealed", false)):
 		var actor_names: Array[String] = []
 		for enemy_id in forecast.get("composition", []):
@@ -2053,12 +2058,13 @@ func _refresh_ui() -> void:
 		var enemy_id: String = String(enemy.get("enemy_id", ""))
 		var enemy_definition: Dictionary = keep.enemy_definition(enemy_id)
 		var enemy_state: String = "defeated" if bool(enemy.get("defeated", false)) else "%d/%d hp" % [int(enemy.get("hp", 0)), int(enemy.get("max_health", enemy_definition.get("health", 0)))]
-		var phase: String = "contact" if keep.battle_step >= int(enemy_definition.get("arrival_step", 0)) else "approach"
+		var phase: String = "contact" if keep.battle_step >= int(enemy.get("arrival_step", enemy_definition.get("arrival_step", 0))) else "approach"
 		var target: String = String(enemy.get("target", ""))
 		if target.is_empty():
 			target = "approach"
 		var armor_text: String = " — armor %d" % int(enemy_definition.get("armor", 0)) if int(enemy_definition.get("armor", 0)) > 0 else ""
-		enemy_lines.append("%s [%s] — %s/%s%s — route %s — target %s" % [String(enemy_definition.get("name", enemy_id)), enemy_id, phase, enemy_state, armor_text, String(enemy_definition.get("route", "")), target])
+		var signal_text: String = " — signal DISRUPTED" if bool(enemy.get("signal_disrupted", false)) else " — signal RELAYED" if enemy_definition.get("disruption_profile") is Dictionary else ""
+		enemy_lines.append("%s [%s] — %s/%s%s%s — route %s — target %s" % [String(enemy_definition.get("name", enemy_id)), enemy_id, phase, enemy_state, armor_text, signal_text, String(enemy_definition.get("route", "")), target])
 	enemy_label.text = "ENEMIES — " + (" | ".join(enemy_lines) if not enemy_lines.is_empty() else "No active enemies. Start an invasion to see doctrine-driven actors.")
 	var metrics: Dictionary = keep.combat_metrics
 	metrics_label.text = "METRICS — steps %d | unit attacks %d | damage dealt %d | ammo spent %d | enemy attacks %d | room damage %d | piece damage %d | repairs %d | disabled %d | defeated %d" % [int(metrics.get("battle_steps", 0)), int(metrics.get("unit_attacks", 0)), int(metrics.get("damage_dealt", 0)), int(metrics.get("ammo_spent", 0)), int(metrics.get("enemy_attacks", 0)), int(metrics.get("room_damage", 0)), int(metrics.get("piece_damage", 0)), int(metrics.get("repairs", 0)), int(metrics.get("disabled_units", 0)), int(metrics.get("defeated_enemies", 0))]
@@ -2386,6 +2392,8 @@ class KeepCanvas extends Control:
 				color = Color("#c88c5a")
 			elif ["crossbow_patrol", "watch_banner"].has(piece_id):
 				color = Color("#9272b8")
+			elif piece_id == "bellkeepers":
+				color = Color("#d3b65f")
 			draw_rect(piece_rect.grow(-2), color, true)
 			draw_rect(piece_rect.grow(-2), Color("#f1dfb8"), false, 1.5)
 			_draw_piece_glyph(piece_rect, piece_id, color)
@@ -2450,6 +2458,10 @@ class KeepCanvas extends Control:
 		elif piece_id == "watch_banner":
 			draw_line(center + Vector2(-4, 7), center + Vector2(-4, -7), Color("#f7e3b7"), 2.0)
 			draw_colored_polygon(PackedVector2Array([center + Vector2(-3, -7), center + Vector2(6, -4), center + Vector2(-3, 0)]), Color("#f7e3b7"))
+		elif piece_id == "bellkeepers":
+			draw_arc(center + Vector2(0, 1), 6.0, PI, TAU, 12, Color("#fff4df"), 2.0)
+			draw_line(center + Vector2(-6, 1), center + Vector2(6, 1), Color("#f7e3b7"), 1.5)
+			draw_circle(center + Vector2(0, 6), 1.8, Color("#fff4df"))
 		else:
 			draw_circle(center + Vector2(0, -2), 4.0, Color("#f7e3b7"))
 			draw_line(center + Vector2(-5, 5), center + Vector2(0, -7), Color("#f7e3b7"), 2.0)
@@ -2473,7 +2485,7 @@ class KeepCanvas extends Control:
 			var enemy_id: String = String(enemy.get("enemy_id", ""))
 			var enemy_def: Dictionary = keep.enemy_definition(enemy_id)
 			var enemy_origin: Vector2 = _enemy_origin(index)
-			var enemy_color: Color = Color("#d26155") if enemy_id == "raider" else Color("#d7a35b") if enemy_id == "sapper" else Color("#a77bd1") if enemy_id == "climber" else Color("#9e3f48") if enemy_id == "shield_guard" else Color("#b36c45")
+			var enemy_color: Color = Color("#d26155") if enemy_id == "raider" else Color("#d7a35b") if enemy_id == "sapper" else Color("#a77bd1") if enemy_id == "climber" else Color("#9e3f48") if enemy_id == "shield_guard" else Color("#77727b") if enemy_id == "ash_slinger" else Color("#b36c45")
 			var marker_radius: float = 12.0 if enemy_id == "siege_beast" else 9.0 if enemy_id == "shield_guard" else 8.0
 			draw_circle(enemy_origin, marker_radius, enemy_color)
 			draw_circle(enemy_origin, marker_radius, Color("#f1dfb8"), false, 1.5)
@@ -2488,6 +2500,10 @@ class KeepCanvas extends Control:
 			elif enemy_id == "shield_guard":
 				draw_arc(enemy_origin, marker_radius + 3.0, -PI * 0.75, PI * 0.75, 10, Color("#fff4df"), 2.0)
 				draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(-17, -16), "ARMOR 2", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#fff4df"))
+			elif enemy_id == "ash_slinger":
+				draw_circle(enemy_origin + Vector2(-5, -4), 5.0, Color(0.75, 0.72, 0.76, 0.35))
+				draw_circle(enemy_origin + Vector2(4, -5), 6.0, Color(0.75, 0.72, 0.76, 0.35))
+				draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(-16, -17), "SMOKE", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#fff4df"))
 			var target_id: String = String(enemy.get("target", ""))
 			if not target_id.is_empty() and PackKeepState.ROOMS.has(target_id):
 				var target_room: Dictionary = PackKeepState.ROOMS[target_id]
@@ -2497,7 +2513,7 @@ class KeepCanvas extends Control:
 				draw_circle(target_rect.get_center(), 8.0, Color("#fff4df") if index == focused_enemy_index else Color("#ffb0a6"), false, 2.0)
 				if index == focused_enemy_index:
 					draw_string(ThemeDB.fallback_font, target_rect.position + Vector2(2, -4), "TARGET", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#fff4df"))
-			var doctrine_initial: String = "R" if enemy_id == "raider" else "S" if enemy_id == "sapper" else "C" if enemy_id == "climber" else "G" if enemy_id == "shield_guard" else "B"
+			var doctrine_initial: String = "R" if enemy_id == "raider" else "S" if enemy_id == "sapper" else "C" if enemy_id == "climber" else "G" if enemy_id == "shield_guard" else "A" if enemy_id == "ash_slinger" else "B"
 			draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(-3, 4), doctrine_initial, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#271b22"))
 
 	func _draw() -> void:

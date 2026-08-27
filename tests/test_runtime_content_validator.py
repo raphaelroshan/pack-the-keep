@@ -44,7 +44,7 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         enemy["counter"] = "missing_piece"
         enemy["counter_families"] = ["support"]
         errors: list[str] = []
-        validator.validate_enemy(Path("sapper.json"), enemy, {"gate"}, {"pike_squad"}, {"gate_assault"}, {}, set(), errors)
+        validator.validate_enemy(Path("sapper.json"), enemy, {"gate"}, {"pike_squad"}, {"gate_assault"}, set(), {}, set(), errors)
         joined = "\n".join(errors)
         for expected in ("health", "unknown target room", "doctrine", "unknown piece", "at least three"):
             self.assertIn(expected, joined)
@@ -53,14 +53,24 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         enemy = copy.deepcopy(load("data/enemies/shield_guard.json"))
         enemy["armor"] = -1
         errors: list[str] = []
-        validator.validate_enemy(Path("shield_guard.json"), enemy, {"gate", "barracks", "inner_yard"}, {"crossbow_patrol"}, {"shielded_advance"}, {}, set(), errors)
+        validator.validate_enemy(Path("shield_guard.json"), enemy, {"gate", "barracks", "inner_yard"}, {"crossbow_patrol"}, {"shielded_advance"}, set(), {}, set(), errors)
         self.assertIn("armor must be a non-negative integer", "\n".join(errors))
 
         enemy["armor"] = 2
         enemy["armor_counter_tag"] = ""
         errors = []
-        validator.validate_enemy(Path("shield_guard.json"), enemy, {"gate", "barracks", "inner_yard"}, {"crossbow_patrol"}, {"shielded_advance"}, {}, set(), errors)
+        validator.validate_enemy(Path("shield_guard.json"), enemy, {"gate", "barracks", "inner_yard"}, {"crossbow_patrol"}, {"shielded_advance"}, set(), {}, set(), errors)
         self.assertIn("armor_counter_tag", "\n".join(errors))
+
+    def test_signal_disruption_profile_requires_bounded_complete_fields(self) -> None:
+        enemy = copy.deepcopy(load("data/enemies/ash_slinger.json"))
+        enemy["disruption_profile"]["arrival_step_delta"] = -4
+        enemy["disruption_profile"]["relay_modifier"] = ""
+        errors: list[str] = []
+        validator.validate_enemy(Path("ash_slinger.json"), enemy, {"gate", "barracks", "north_tower"}, {"bellkeepers"}, {"smoke_and_signal"}, {"signal_redundancy", "warden_signal_coverage"}, {}, set(), errors)
+        joined = "\n".join(errors)
+        self.assertIn("arrival_step_delta", joined)
+        self.assertIn("relay_modifier", joined)
 
     def test_doctrine_allows_repeated_actors_but_rejects_unknown_ones(self) -> None:
         doctrine = copy.deepcopy(load("data/doctrines/gate_assault.json"))

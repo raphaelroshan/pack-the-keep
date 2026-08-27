@@ -21,6 +21,8 @@ The Greywatch kit is an original, first-pass 2D illustrated asset set generated 
 | Siege Beast marker | N/A | P2 area-pressure identity and impact-radius telegraph | Integrated as an enlarged ember procedural marker with an `AREA` label and radius ring; dedicated icon deferred until the next image-generation window |
 | Crossbow Watch treatment | N/A | P11 precision doctrine identity | Integrated as violet procedural Crossbow Patrol and Watch Banner glyphs; portrait references guide palette and silhouette only |
 | Shield Guard marker | N/A | P11 armored-advance identity and armor telegraph | Integrated as a red procedural marker with a shield arc, `ARMOR 2` label, and numeric inspector value |
+| Bell Guard treatment | N/A | P11 redundant-signal doctrine identity | Integrated as gold Bellkeepers and relay glyphs with explicit redundant/disrupted state text |
+| Ash Slinger marker | N/A | P11 smoke-and-signal identity | Integrated as a gray procedural smoke marker with a `SMOKE` label and effective contact step |
 | P2 feedback treatment | N/A | Functional readability and game-feel cues | Procedural room/piece bars, state labels, declared target lines, target outlines, and transient impact/recovery frame; no fabricated replacement art asset |
 | `P2 feedback tones` | N/A | Optional battle/UI confirmation | Code-generated local tones through `AudioStreamGenerator`; no authored sound-effect files claimed |
 | Generated pixel-art fort map | N/A | Future replacement for the functional square fort renderer | Attempted for the visual-fort slice, but image-generation quota was unavailable; no generated map file is claimed |

@@ -1,0 +1,9 @@
+{
+  "id": "smoke_and_signal", "content_version": 1, "status": "active", "name": "Smoke and Signal",
+  "short_role": "Hide the pressure route and accelerate contact while the warning chain is broken.",
+  "question": "Can the keep maintain useful information when sightlines are deliberately degraded?",
+  "composition": ["ash_slinger", "ash_slinger"], "route_pattern": "gate_road_under_signal_smoke",
+  "target_priority": "lowest_condition_gate_barracks_or_north_tower", "principal_pressure": "Warning network and response timing",
+  "likely_target": "gate, barracks, or north tower", "uncertainty": "which signal-dependent function the smoke masks",
+  "counter_families": ["morale", "recon", "mobile_response", "commander_intervention"]
+}

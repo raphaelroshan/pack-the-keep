@@ -1,0 +1,15 @@
+{
+  "id": "ash_at_the_bell", "content_version": 1, "status": "active", "name": "Ash at the Bell",
+  "short_role": "Teach redundant signals against smoke-driven early contact.",
+  "question": "Can a connected warning chain preserve enough time for the keep to respond?",
+  "objective": "Preserve Gate and Barracks while Ash Slingers obscure the warning route.",
+  "lesson": "A lone information piece is fragile; a short Bellkeeper-to-Beacon link preserves timing.",
+  "starting_doctrine": "smoke_and_signal",
+  "doctrines": ["smoke_and_signal", "feint_and_flank", "smoke_and_signal"],
+  "wave_plans": [["ash_slinger"], ["ash_slinger", "climber"], ["ash_slinger", "sapper", "raider"]],
+  "variations": [
+    {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
+    {"id": "thin_rope", "materials": -2, "morale": 1, "target_room": ""},
+    {"id": "clear_air", "materials": 2, "morale": -1, "target_room": ""}
+  ]
+}

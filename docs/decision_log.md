@@ -272,10 +272,10 @@
 
 **Trade-off:** Armor is flat and binary in this first slice. It does not degrade, change facing, or interact with projectile physics.
 
-## ADR-034: Armor reduces each non-piercing response
+## ADR-035: Signal disruption changes forecast and arrival timing
 
-**Decision:** Author armor on enemy definitions and an armor-counter tag on the same record. During stable per-piece response resolution, subtract armor from each contribution that lacks the named tag. Nearby ranged-support bonuses apply before armor and do not stack.
+**Decision:** Author optional enemy disruption profiles with a counter support modifier and bounded arrival-step delta. A disruption counter is active only when a living redundancy piece is linked on the same floor and within range of a living signal-coverage piece. Uncountered disruption obscures forecast target detail and applies the authored arrival delta; it never changes accessibility pause preferences.
 
-**Reason:** Per-contribution armor creates a legible question—many unfocused attacks can fail against formation protection while one specialized high-ground unit remains useful. Data fields keep the rule reusable for later enemies and counters.
+**Reason:** Smoke should create a visible operational problem rather than an accuracy penalty or hidden randomness. Requiring a short signal chain makes shared pack infrastructure and placement matter while keeping the rule deterministic and reusable.
 
-**Trade-off:** Armor is flat and binary in this first slice. It does not degrade, change facing, or interact with projectile physics.
+**Trade-off:** The first version models signal integrity as a binary link and does not simulate sight lines, wind, relay direction, or partial coverage.
