@@ -15,6 +15,27 @@ SPEC.loader.exec_module(validator)
 
 
 class P12AlphaValidatorTests(unittest.TestCase):
+    def test_accepts_complete_initial_and_reinstall_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "report.json"
+            initial = {
+                "phase": "initial", "ok": True, "build_version": "v", "main_scene_freed": True,
+                "offline_proxy_guard": True, "controller_navigation_ready": True,
+                "controller_defaults_ready": True, "controller_remap_ready": True,
+                "ui_scale_ready": True, "settings_scale_ready": True, "settings_remap_ready": True,
+                "initial_pause_ready": True, "paused_state_frozen": True,
+                "remapped_pause_ready": True, "manual_step_ready": True,
+            }
+            reinstall = {
+                "phase": "reinstall", "ok": True, "build_version": "v", "main_scene_freed": True,
+                "profile_files_present": True, "restored_run_ready": True,
+                "restored_scale_ready": True, "restored_remap_ready": True,
+            }
+            path.write_text(json.dumps({"schema_version": 1, "initial": initial, "reinstall": reinstall}), encoding="utf-8")
+            errors: list[str] = []
+            validator.validate_report(path, "v", errors)
+            self.assertEqual(errors, [])
+
     def test_rejects_incomplete_packaged_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "report.json"
