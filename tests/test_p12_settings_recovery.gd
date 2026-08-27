@@ -43,10 +43,10 @@ func _settings(speed: int, muted: bool, scale: int) -> Dictionary:
 			"battle_pause": [{"type": "joypad_button", "button_index": 10}],
 			"placement_arm": [{"type": "key", "physical_keycode": 82}]
 		},
-		"window_size_index": 0,
-		"fullscreen_enabled": false,
-		"effects_volume_index": 3,
-		"event_feed_retention_index": 0,
+		"window_size_index": 2,
+		"fullscreen_enabled": true,
+		"effects_volume_index": 1,
+		"event_feed_retention_index": 3,
 		"auto_pause_on_threat": muted
 	}
 
@@ -61,11 +61,13 @@ func _initialize() -> void:
 	ui.settings_backup_path = TEST_BACKUP
 	ui.preferences_persistence_enabled = true
 	ui.display_application_enabled = false
+	var authoritative_state_before: String = JSON.stringify(ui.keep.serialize())
 
 	_write(TEST_SETTINGS, "{malformed")
 	_write(TEST_BACKUP, _settings(2, true, 2))
 	ui._load_preferences()
 	_check(ui.battle_speed_index == 2 and ui.audio_muted and ui.high_contrast and ui.reduced_motion and ui.ui_scale_index == 2 and ui.auto_pause_on_threat, "malformed primary settings should recover the valid backup")
+	_check(ui.window_size_index == 2 and ui.fullscreen_enabled and ui.effects_volume_index == 1 and ui.event_feed_retention_index == 3, "backup recovery should restore display, volume, and feed preferences")
 	_check(_has_joypad_binding("battle_pause", 10) and not _has_joypad_binding("placement_arm", 10), "backup recovery should restore the conflict-resolved controller remap")
 
 	_remove_test_files()
@@ -82,7 +84,7 @@ func _initialize() -> void:
 	_remove_test_files()
 	_write(TEST_TEMP, _settings(0, true, 0))
 	ui._load_preferences()
-	_check(ui.battle_speed_index == 1 and not ui.audio_muted and ui.ui_scale_index == 1, "temporary settings alone should fall back to documented defaults")
+	_check(ui.battle_speed_index == 1 and not ui.audio_muted and ui.ui_scale_index == 1 and ui.window_size_index == 0 and not ui.fullscreen_enabled and ui.effects_volume_index == 3 and ui.event_feed_retention_index == 0 and not ui.auto_pause_on_threat, "temporary settings alone should fall back to documented defaults")
 	_check(_has_joypad_binding("battle_pause", 6) and _has_joypad_binding("placement_arm", 10), "temporary-only settings should restore default controller bindings")
 
 	_remove_test_files()
@@ -90,6 +92,7 @@ func _initialize() -> void:
 	_write(TEST_BACKUP, "{bad")
 	ui._load_preferences()
 	_check(ui.battle_speed_index == 1 and not ui.audio_muted and ui.ui_scale_index == 1, "two invalid settings candidates should preserve documented defaults")
+	_check(JSON.stringify(ui.keep.serialize()) == authoritative_state_before, "settings recovery should never mutate authoritative keep state")
 
 	root.content_scale_factor = 1.0
 	ui.queue_free()
