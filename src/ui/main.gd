@@ -172,9 +172,12 @@ func _ready() -> void:
 	_build_ui()
 	_set_screen("title")
 	if OS.get_cmdline_user_args().has("--packaged-smoke") and OS.get_environment("PACK_THE_KEEP_PACKAGED_SMOKE") == "1":
-		var smoke_harness: Node = PackagedSmoke.new()
-		get_tree().root.add_child(smoke_harness)
-		smoke_harness.call_deferred("run", self)
+		call_deferred("_start_packaged_smoke")
+
+func _start_packaged_smoke() -> void:
+	var smoke_harness: Node = PackagedSmoke.new()
+	get_tree().root.add_child(smoke_harness)
+	smoke_harness.call_deferred("run", self)
 
 func _process(delta: float) -> void:
 	if battle_paused or not keep.wave_active:
