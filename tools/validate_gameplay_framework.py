@@ -93,7 +93,7 @@ def main() -> int:
     for index, doctrine in enumerate(data.get("enemy_doctrines", [])):
         if not isinstance(doctrine, dict):
             continue
-        references(doctrine.get("response_families", []), {"frontline", "support", "control", "recon", "mobile_response", "morale", "specialist", "precision", "controlled_sacrifice", "open_space", "commander_ability", "refuge_plan", "pause", "alternate_lanes", "reserve"}, f"enemy_doctrines[{index}].response_families", errors)
+        references(doctrine.get("response_families", []), {"frontline", "support", "control", "recon", "mobile_response", "morale", "specialist", "precision", "direct_damage", "controlled_sacrifice", "open_space", "commander_ability", "refuge_plan", "pause", "alternate_lanes", "reserve"}, f"enemy_doctrines[{index}].response_families", errors)
         for key in ("question", "telegraph", "pressure_pattern"):
             if not doctrine.get(key):
                 errors.append(f"doctrine {doctrine.get('id')} missing {key}")

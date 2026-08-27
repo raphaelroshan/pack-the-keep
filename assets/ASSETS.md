@@ -23,6 +23,8 @@ The Greywatch kit is an original, first-pass 2D illustrated asset set generated 
 | Shield Guard marker | N/A | P11 armored-advance identity and armor telegraph | Integrated as a red procedural marker with a shield arc, `ARMOR 2` label, and numeric inspector value |
 | Bell Guard treatment | N/A | P11 redundant-signal doctrine identity | Integrated as gold Bellkeepers and relay glyphs with explicit redundant/disrupted state text |
 | Ash Slinger marker | N/A | P11 smoke-and-signal identity | Integrated as a gray procedural smoke marker with a `SMOKE` label and effective contact step |
+| Shieldwall treatment | N/A | P11 anchored-defense identity | Integrated as steel-blue shield and shutter glyphs with adjacency-driven protection |
+| Shieldbreaker marker | N/A | P11 protection-piercing identity | Integrated as a dark red hammer marker with `BREAK` and explicit protection-piercing text |
 | P2 feedback treatment | N/A | Functional readability and game-feel cues | Procedural room/piece bars, state labels, declared target lines, target outlines, and transient impact/recovery frame; no fabricated replacement art asset |
 | `P2 feedback tones` | N/A | Optional battle/UI confirmation | Code-generated local tones through `AudioStreamGenerator`; no authored sound-effect files claimed |
 | Generated pixel-art fort map | N/A | Future replacement for the functional square fort renderer | Attempted for the visual-fort slice, but image-generation quota was unavailable; no generated map file is claimed |

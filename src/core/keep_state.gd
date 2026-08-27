@@ -686,7 +686,7 @@ func inspect_enemy(index: int) -> Dictionary:
 	if not _enemy_definitions.has(enemy_id):
 		return {"ok": false, "reason": "enemy definition is unavailable"}
 	var definition: Dictionary = _enemy_definitions[enemy_id]
-	return {"ok": true, "kind": "enemy", "id": enemy_id, "index": index, "name": String(definition.name), "doctrine": String(definition.doctrine), "route": String(definition.route), "counter": String(definition.counter), "health": int(enemy.get("hp", 0)), "max_health": int(enemy.get("max_health", definition.health)), "damage": int(definition.damage), "armor": int(definition.get("armor", 0)), "armor_counter_tag": String(definition.get("armor_counter_tag", "")), "arrival_step": int(enemy.get("arrival_step", definition.arrival_step)), "base_arrival_step": int(definition.arrival_step), "has_signal_disruption": definition.get("disruption_profile") is Dictionary, "signal_disrupted": bool(enemy.get("signal_disrupted", false)), "target": String(enemy.get("target", "")), "defeated": bool(enemy.get("defeated", false))}
+	return {"ok": true, "kind": "enemy", "id": enemy_id, "index": index, "name": String(definition.name), "doctrine": String(definition.doctrine), "route": String(definition.route), "counter": String(definition.counter), "health": int(enemy.get("hp", 0)), "max_health": int(enemy.get("max_health", definition.health)), "damage": int(definition.damage), "armor": int(definition.get("armor", 0)), "armor_counter_tag": String(definition.get("armor_counter_tag", "")), "arrival_step": int(enemy.get("arrival_step", definition.arrival_step)), "base_arrival_step": int(definition.arrival_step), "has_signal_disruption": definition.get("disruption_profile") is Dictionary, "signal_disrupted": bool(enemy.get("signal_disrupted", false)), "ignores_protection": bool(definition.get("ignores_protection", false)), "target_piece_categories": definition.get("target_piece_categories", []).duplicate(), "target": String(enemy.get("target", "")), "defeated": bool(enemy.get("defeated", false))}
 
 func remove_piece(instance_id: String) -> Dictionary:
 	if wave_active or repair_interval_active:
@@ -867,6 +867,42 @@ func _piece_is_adjacent_to_room(instance: Dictionary, room_id: String) -> bool:
 	var piece_rect: Rect2i = Rect2i(instance.get("origin", Vector2i.ZERO), _piece_definitions[piece_id].size)
 	var room_rect: Rect2i = Rect2i(ROOMS[room_id].origin, ROOMS[room_id].size)
 	return piece_rect.grow(1).intersects(room_rect)
+
+func _pieces_are_adjacent(first: Dictionary, second: Dictionary) -> bool:
+	if String(first.get("floor", "ground")) != String(second.get("floor", "ground")):
+		return false
+	var first_id: String = String(first.get("piece_id", ""))
+	var second_id: String = String(second.get("piece_id", ""))
+	if not _piece_definitions.has(first_id) or not _piece_definitions.has(second_id):
+		return false
+	var first_rect := Rect2i(first.get("origin", Vector2i.ZERO), _piece_definitions[first_id].size)
+	var second_rect := Rect2i(second.get("origin", Vector2i.ZERO), _piece_definitions[second_id].size)
+	return first_rect.grow(1).intersects(second_rect)
+
+func _room_protection(room_id: String) -> int:
+	var reduction: int = 0
+	for instance in pieces.values():
+		if bool(instance.get("disabled", false)) or float(instance.get("condition", 0.0)) <= 0.0 or not _piece_is_adjacent_to_room(instance, room_id):
+			continue
+		var profile: Variant = _piece_definitions[String(instance.get("piece_id", ""))].get("support_profile")
+		if profile is Dictionary:
+			reduction += int(profile.get("room_damage_reduction", 0))
+	return reduction
+
+func _piece_protection(target_id: String) -> int:
+	if not pieces.has(target_id):
+		return 0
+	var reduction: int = 0
+	for instance_id in pieces.keys():
+		if String(instance_id) == target_id:
+			continue
+		var instance: Dictionary = pieces[instance_id]
+		if bool(instance.get("disabled", false)) or float(instance.get("condition", 0.0)) <= 0.0 or not _pieces_are_adjacent(instance, pieces[target_id]):
+			continue
+		var profile: Variant = _piece_definitions[String(instance.get("piece_id", ""))].get("support_profile")
+		if profile is Dictionary:
+			reduction = maxi(reduction, int(profile.get("piece_damage_reduction", 0)))
+	return reduction
 
 func _castellan_adjacent(instance: Dictionary, room_id: String) -> bool:
 	if commander_id != "castellan":
@@ -1128,6 +1164,23 @@ func _defender_damage(enemy_id: String) -> int:
 
 func _choose_target(enemy_id: String) -> String:
 	var enemy: Dictionary = _enemy_definitions[enemy_id]
+	var target_categories: Variant = enemy.get("target_piece_categories")
+	if target_categories is Array and not target_categories.is_empty():
+		var selected_piece: String = ""
+		var selected_max_health: int = -1
+		for instance_id in pieces.keys():
+			var instance: Dictionary = pieces[instance_id]
+			if bool(instance.get("disabled", false)) or float(instance.get("condition", 0.0)) <= 0.0:
+				continue
+			var piece: Dictionary = _piece_definitions[String(instance.get("piece_id", ""))]
+			if not target_categories.has(String(piece.get("category", ""))):
+				continue
+			var max_health: int = int(instance.get("max_health", piece.get("max_health", 0)))
+			if max_health > selected_max_health or (max_health == selected_max_health and (selected_piece.is_empty() or String(instance_id) < selected_piece)):
+				selected_piece = String(instance_id)
+				selected_max_health = max_health
+		if not selected_piece.is_empty():
+			return selected_piece
 	var candidates: Array[String] = []
 	var target_rooms: Array = enemy.target_rooms.duplicate()
 	if enemy_id == "siege_beast" and not variation_target_room.is_empty() and target_rooms.has(variation_target_room):
@@ -1169,6 +1222,7 @@ func _apply_enemy_damage(enemy_id: String, target_id: String) -> void:
 		_battle_log("%s found no valid target; the keep’s empty response space mattered." % _enemy_definitions[enemy_id].name)
 		return
 	var damage: int = int(_enemy_definitions[enemy_id].damage)
+	var ignores_protection: bool = bool(_enemy_definitions[enemy_id].get("ignores_protection", false))
 	combat_metrics["enemy_attacks"] = int(combat_metrics.get("enemy_attacks", 0)) + 1
 	var reduced: bool = lockdown_pending or rally_pending
 	if reduced:
@@ -1193,6 +1247,12 @@ func _apply_enemy_damage(enemy_id: String, target_id: String) -> void:
 	if rooms.has(target_id):
 		_apply_room_damage(enemy_id, target_id, damage, reduced, false)
 	elif pieces.has(target_id):
+		var piece_protection: int = _piece_protection(target_id)
+		if piece_protection > 0:
+			if ignores_protection:
+				_battle_log("%s ignored %d adjacent guard protecting %s." % [_enemy_definitions[enemy_id].name, piece_protection, _piece_definitions[String(pieces[target_id].piece_id)].name])
+			else:
+				damage = maxi(0, damage - piece_protection)
 		combat_metrics["piece_damage"] = int(combat_metrics.get("piece_damage", 0)) + damage
 		var instance: Dictionary = pieces[target_id]
 		var piece_id: String = String(instance.get("piece_id", ""))
@@ -1204,18 +1264,21 @@ func _apply_enemy_damage(enemy_id: String, target_id: String) -> void:
 func _apply_room_damage(enemy_id: String, room_id: String, damage: int, reduced: bool, area_impact: bool) -> void:
 	if not rooms.has(room_id):
 		return
-	var brace_bonus: int = 0
-	for instance in pieces.values():
-		if String(instance.get("piece_id", "")) == "brace" and _piece_is_adjacent_to_room(instance, room_id) and float(instance.get("condition", 0.0)) > 0.0:
-			brace_bonus += 1
-	damage = maxi(0, damage - brace_bonus)
-	for instance_id in pieces.keys():
-		var instance: Dictionary = pieces[instance_id]
-		if String(instance.get("piece_id", "")) == "breakaway_barricade" and not bool(instance.get("disabled", false)) and _piece_is_adjacent_to_room(instance, room_id):
-			damage = maxi(0, damage - 2)
-			_set_piece_health(String(instance_id), 0)
-			_battle_log("Breakaway Barricade absorbed 2 contact damage for %s and broke as planned." % ROOMS[room_id].name)
-			break
+	var ignores_protection: bool = bool(_enemy_definitions[enemy_id].get("ignores_protection", false))
+	var room_protection: int = _room_protection(room_id)
+	if room_protection > 0:
+		if ignores_protection:
+			_battle_log("%s ignored %d static protection at %s." % [_enemy_definitions[enemy_id].name, room_protection, ROOMS[room_id].name])
+		else:
+			damage = maxi(0, damage - room_protection)
+	if not ignores_protection:
+		for instance_id in pieces.keys():
+			var instance: Dictionary = pieces[instance_id]
+			if String(instance.get("piece_id", "")) == "breakaway_barricade" and not bool(instance.get("disabled", false)) and _piece_is_adjacent_to_room(instance, room_id):
+				damage = maxi(0, damage - 2)
+				_set_piece_health(String(instance_id), 0)
+				_battle_log("Breakaway Barricade absorbed 2 contact damage for %s and broke as planned." % ROOMS[room_id].name)
+				break
 	var was_breached: bool = rooms[room_id].state == "breached"
 	combat_metrics["room_damage"] = int(combat_metrics.get("room_damage", 0)) + damage * 15
 	rooms[room_id].condition = maxi(0, int(rooms[room_id].condition) - damage * 15)

@@ -1,0 +1,15 @@
+{
+  "id": "the_splintered_gate", "content_version": 1, "status": "active", "name": "The Splintered Gate",
+  "short_role": "Teach the strength and limit of an adjacent defensive anchor.",
+  "question": "Can the keep absorb ordinary pressure without trusting protection against every threat?",
+  "objective": "Preserve a secondary response after Shieldbreakers strike the strongest frontline piece.",
+  "lesson": "Protection is valuable against ordinary pressure, but a visible breaker demands direct damage or another line.",
+  "starting_doctrine": "break_the_line",
+  "doctrines": ["break_the_line", "gate_assault", "break_the_line"],
+  "wave_plans": [["shieldbreaker"], ["shieldbreaker", "raider"], ["shieldbreaker", "shield_guard", "sapper"]],
+  "variations": [
+    {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
+    {"id": "spare_timber", "materials": 3, "morale": -1, "target_room": ""},
+    {"id": "shaken_watch", "materials": -2, "morale": 1, "target_room": ""}
+  ]
+}

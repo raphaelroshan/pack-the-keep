@@ -1,0 +1,9 @@
+{
+  "id": "break_the_line", "content_version": 1, "status": "active", "name": "Break the Line",
+  "short_role": "Commit heavy pressure against the keep's strongest visible anchor.",
+  "question": "Can the keep survive when static protection is explicitly bypassed?",
+  "composition": ["shieldbreaker"], "route_pattern": "gate_road_to_strongest_frontline",
+  "target_priority": "highest_max_health_frontline_then_lowest_condition_room", "principal_pressure": "Frontline concentration and protected room edges",
+  "likely_target": "strongest frontline or fortification", "uncertainty": "which secondary line remains after the anchor is struck",
+  "counter_families": ["frontline", "precision", "mobile_response", "commander_intervention"]
+}
