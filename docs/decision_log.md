@@ -239,3 +239,11 @@
 **Reason:** Named actions already separate input intent from simulation commands. Preserving the other device family prevents a controller change from silently removing keyboard access, and project defaults remain the single recovery baseline.
 
 **Trade-off:** The first remapping UI supports keys and controller buttons, not mouse buttons, chords, or analog-axis tuning. Those can be added without changing the command boundary.
+
+## ADR-031: Display preferences retain a windowed fallback
+
+**Decision:** Persist fullscreen separately from a bounded windowed-resolution preset. Entering fullscreen does not discard the preferred windowed size; returning to windowed mode reapplies it. Effects volume is stored as a presentation gain independent of mute.
+
+**Reason:** A fullscreen toggle should be reversible and predictable, while a bounded preset list avoids invalid desktop dimensions. Separating mute from gain preserves a player's chosen listening level when sound is re-enabled.
+
+**Trade-off:** The first pass does not expose monitor selection, VSync, music, or voice buses. It establishes a migration-safe settings shape for those later additions.

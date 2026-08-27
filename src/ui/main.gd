@@ -14,11 +14,13 @@ const CLIMBER_ICON = preload("res://assets/climber_icon.png")
 const SAVE_PATH := "user://pack_the_keep_prototype.save"
 const SAVE_TEMP_PATH := "user://pack_the_keep_prototype.save.tmp"
 const SAVE_BACKUP_PATH := "user://pack_the_keep_prototype.save.bak"
-const SETTINGS_SCHEMA_VERSION := 2
+const SETTINGS_SCHEMA_VERSION := 3
 const SETTINGS_PATH := "user://pack_the_keep_settings.json"
 const SETTINGS_TEMP_PATH := "user://pack_the_keep_settings.json.tmp"
 const SETTINGS_BACKUP_PATH := "user://pack_the_keep_settings.json.bak"
 const UI_SCALE_PRESETS := [0.8, 1.0, 1.25, 1.5]
+const WINDOW_SIZE_PRESETS := [Vector2i(1280, 720), Vector2i(1600, 900), Vector2i(1920, 1080)]
+const EFFECTS_VOLUME_PRESETS := [0.25, 0.5, 0.75, 1.0]
 const RESERVED_CONTROLLER_NAVIGATION_BUTTONS := [0, 11, 12, 13, 14]
 const REMAPPABLE_ACTIONS := [
 	"battle_pause", "battle_manual_step", "commander_ability", "placement_arm", "placement_cancel",
@@ -89,6 +91,9 @@ var mute_button: Button
 var contrast_button: Button
 var reduced_motion_button: Button
 var ui_scale_button: Button
+var window_mode_button: Button
+var resolution_button: Button
+var effects_volume_button: Button
 var rebind_action_option: OptionButton
 var rebind_button: Button
 var reset_bindings_button: Button
@@ -102,10 +107,14 @@ var audio_muted: bool = false
 var high_contrast: bool = false
 var reduced_motion: bool = false
 var ui_scale_index: int = 1
+var window_size_index: int = 0
+var fullscreen_enabled: bool = false
+var effects_volume_index: int = 3
 var settings_path: String = SETTINGS_PATH
 var settings_temp_path: String = SETTINGS_TEMP_PATH
 var settings_backup_path: String = SETTINGS_BACKUP_PATH
 var preferences_persistence_enabled: bool = true
+var display_application_enabled: bool = true
 var rebind_waiting_action: String = ""
 var menu_buttons: Dictionary = {}
 var audio_player: AudioStreamPlayer
@@ -141,6 +150,7 @@ func _ready() -> void:
 	_restore_default_input_bindings()
 	_ensure_controller_navigation_bindings()
 	preferences_persistence_enabled = DisplayServer.get_name() != "headless"
+	display_application_enabled = DisplayServer.get_name() != "headless"
 	if preferences_persistence_enabled:
 		_load_preferences()
 	else:
@@ -242,8 +252,11 @@ func _play_tone(frequency: float) -> void:
 	var frame_count: int = int(audio_stream.mix_rate * 0.09)
 	for frame in range(frame_count):
 		var envelope: float = 1.0 - float(frame) / float(frame_count)
-		var sample: float = sin(TAU * frequency * float(frame) / audio_stream.mix_rate) * 0.08 * envelope
+		var sample: float = sin(TAU * frequency * float(frame) / audio_stream.mix_rate) * 0.08 * _effects_gain() * envelope
 		playback.push_frame(Vector2(sample, sample))
+
+func _effects_gain() -> float:
+	return float(EFFECTS_VOLUME_PRESETS[effects_volume_index])
 
 func _toggle_battle_pause() -> void:
 	if not keep.wave_active:
@@ -294,6 +307,45 @@ func _set_ui_scale(index: int) -> void:
 
 func _cycle_ui_scale() -> void:
 	_set_ui_scale((ui_scale_index + 1) % UI_SCALE_PRESETS.size())
+
+func _toggle_fullscreen() -> void:
+	fullscreen_enabled = not fullscreen_enabled
+	_apply_display_settings()
+	_save_preferences()
+	_set_event("Fullscreen enabled." if fullscreen_enabled else "Windowed mode restored at %s." % _window_size_text())
+	_refresh_ui()
+
+func _set_window_size(index: int) -> void:
+	window_size_index = clampi(index, 0, WINDOW_SIZE_PRESETS.size() - 1)
+	_apply_display_settings()
+	_save_preferences()
+	_set_event("Windowed resolution set to %s%s." % [_window_size_text(), " for the next windowed session" if fullscreen_enabled else ""])
+	_refresh_ui()
+
+func _cycle_window_size() -> void:
+	_set_window_size((window_size_index + 1) % WINDOW_SIZE_PRESETS.size())
+
+func _set_effects_volume(index: int) -> void:
+	effects_volume_index = clampi(index, 0, EFFECTS_VOLUME_PRESETS.size() - 1)
+	_save_preferences()
+	_set_event("Effects volume set to %d%%." % int(_effects_gain() * 100.0))
+	_refresh_ui()
+
+func _cycle_effects_volume() -> void:
+	_set_effects_volume((effects_volume_index + 1) % EFFECTS_VOLUME_PRESETS.size())
+
+func _window_size_text() -> String:
+	var size: Vector2i = WINDOW_SIZE_PRESETS[window_size_index]
+	return "%d×%d" % [size.x, size.y]
+
+func _apply_display_settings() -> void:
+	if not display_application_enabled:
+		return
+	if fullscreen_enabled:
+		get_window().mode = Window.MODE_FULLSCREEN
+	else:
+		get_window().mode = Window.MODE_WINDOWED
+		get_window().size = WINDOW_SIZE_PRESETS[window_size_index]
 
 func _apply_ui_scale() -> void:
 	get_window().content_scale_factor = float(UI_SCALE_PRESETS[ui_scale_index])
@@ -487,9 +539,13 @@ func _load_preferences() -> void:
 	high_contrast = false
 	reduced_motion = false
 	ui_scale_index = 1
+	window_size_index = 0
+	fullscreen_enabled = false
+	effects_volume_index = 3
 	_restore_default_input_bindings()
 	if not FileAccess.file_exists(settings_path):
 		_apply_ui_scale()
+		_apply_display_settings()
 		return
 	var parser: JSON = JSON.new()
 	if parser.parse(FileAccess.get_file_as_string(settings_path)) != OK:
@@ -498,14 +554,17 @@ func _load_preferences() -> void:
 	var payload: Variant = parser.data
 	if not payload is Dictionary:
 		_apply_ui_scale()
+		_apply_display_settings()
 		return
 	var schema_value: Variant = payload.get("schema_version")
 	if not (schema_value is int or schema_value is float) or float(schema_value) != floor(float(schema_value)):
 		_apply_ui_scale()
+		_apply_display_settings()
 		return
 	var schema_version: int = int(schema_value)
 	if schema_version < 1 or schema_version > SETTINGS_SCHEMA_VERSION:
 		_apply_ui_scale()
+		_apply_display_settings()
 		return
 	var saved_speed: Variant = payload.get("battle_speed_index")
 	if (saved_speed is int or saved_speed is float) and float(saved_speed) == floor(float(saved_speed)) and int(saved_speed) >= 0 and int(saved_speed) <= 2:
@@ -521,7 +580,17 @@ func _load_preferences() -> void:
 		if (saved_scale is int or saved_scale is float) and float(saved_scale) == floor(float(saved_scale)) and int(saved_scale) >= 0 and int(saved_scale) < UI_SCALE_PRESETS.size():
 			ui_scale_index = int(saved_scale)
 		_apply_saved_input_bindings(payload.get("input_bindings", {}))
+	if schema_version >= 3:
+		var saved_window_size: Variant = payload.get("window_size_index")
+		if (saved_window_size is int or saved_window_size is float) and float(saved_window_size) == floor(float(saved_window_size)) and int(saved_window_size) >= 0 and int(saved_window_size) < WINDOW_SIZE_PRESETS.size():
+			window_size_index = int(saved_window_size)
+		if payload.get("fullscreen_enabled") is bool:
+			fullscreen_enabled = bool(payload.fullscreen_enabled)
+		var saved_effects_volume: Variant = payload.get("effects_volume_index")
+		if (saved_effects_volume is int or saved_effects_volume is float) and float(saved_effects_volume) == floor(float(saved_effects_volume)) and int(saved_effects_volume) >= 0 and int(saved_effects_volume) < EFFECTS_VOLUME_PRESETS.size():
+			effects_volume_index = int(saved_effects_volume)
 	_apply_ui_scale()
+	_apply_display_settings()
 
 func _save_preferences() -> bool:
 	if not preferences_persistence_enabled:
@@ -529,7 +598,7 @@ func _save_preferences() -> bool:
 	var file: FileAccess = FileAccess.open(settings_temp_path, FileAccess.WRITE)
 	if file == null:
 		return false
-	file.store_string(JSON.stringify({"schema_version": SETTINGS_SCHEMA_VERSION, "battle_speed_index": battle_speed_index, "audio_muted": audio_muted, "high_contrast": high_contrast, "reduced_motion": reduced_motion, "ui_scale_index": ui_scale_index, "input_bindings": _serialize_input_bindings()}))
+	file.store_string(JSON.stringify({"schema_version": SETTINGS_SCHEMA_VERSION, "battle_speed_index": battle_speed_index, "audio_muted": audio_muted, "high_contrast": high_contrast, "reduced_motion": reduced_motion, "ui_scale_index": ui_scale_index, "input_bindings": _serialize_input_bindings(), "window_size_index": window_size_index, "fullscreen_enabled": fullscreen_enabled, "effects_volume_index": effects_volume_index}))
 	file.flush()
 	file.close()
 	var directory: DirAccess = DirAccess.open("user://")
@@ -1033,6 +1102,21 @@ func _build_ui() -> void:
 	ui_scale_button.tooltip_text = "Cycle 80%, 100%, 125%, and 150% interface scaling; the command rail remains scrollable."
 	ui_scale_button.pressed.connect(_cycle_ui_scale)
 	controls.add_child(ui_scale_button)
+	window_mode_button = Button.new()
+	window_mode_button.text = "Window mode: Windowed"
+	window_mode_button.tooltip_text = "Toggle fullscreen without forgetting the selected windowed resolution."
+	window_mode_button.pressed.connect(_toggle_fullscreen)
+	controls.add_child(window_mode_button)
+	resolution_button = Button.new()
+	resolution_button.text = "Window size: 1280×720"
+	resolution_button.tooltip_text = "Cycle the windowed resolution; fullscreen keeps this value for later restoration."
+	resolution_button.pressed.connect(_cycle_window_size)
+	controls.add_child(resolution_button)
+	effects_volume_button = Button.new()
+	effects_volume_button.text = "Effects volume: 100%"
+	effects_volume_button.tooltip_text = "Adjust generated feedback tones independently from the mute preference."
+	effects_volume_button.pressed.connect(_cycle_effects_volume)
+	controls.add_child(effects_volume_button)
 	rebind_action_option = OptionButton.new()
 	for action in REMAPPABLE_ACTIONS:
 		rebind_action_option.add_item(String(ACTION_LABELS.get(action, action)))
@@ -1939,6 +2023,9 @@ func _refresh_ui() -> void:
 	contrast_button.text = "High-contrast cues: ON" if high_contrast else "High-contrast cues: OFF"
 	reduced_motion_button.text = "Reduced motion: ON" if reduced_motion else "Reduced motion: OFF"
 	ui_scale_button.text = "UI scale: %d%%" % int(UI_SCALE_PRESETS[ui_scale_index] * 100.0)
+	window_mode_button.text = "Window mode: Fullscreen" if fullscreen_enabled else "Window mode: Windowed"
+	resolution_button.text = "Window size: %s%s" % [_window_size_text(), " (saved)" if fullscreen_enabled else ""]
+	effects_volume_button.text = "Effects volume: %d%%" % int(_effects_gain() * 100.0)
 	_refresh_binding_controls()
 	_refresh_response_preview()
 	_refresh_layout_lens()

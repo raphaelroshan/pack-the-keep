@@ -96,6 +96,12 @@
     "scale_rule": "80_100_125_150_percent_presets_with_stacked_scroll_safe_large_scale_layout",
     "determinism_rule": "focus_navigation_remapping_and_scaling_do_not_mutate_authoritative_state"
   },
+  "p10_display_and_audio_settings": {
+    "status": "implemented",
+    "window_rule": "fullscreen_retains_and_restores_the_selected_windowed_resolution",
+    "effects_rule": "bounded_gain_presets_are_independent_from_mute_and_change_presentation_only",
+    "persistence": "settings_schema_3_migrates_schema_1_and_2_with_safe_defaults"
+  },
   "v090_multi_wave": {
     "status": "implemented",
     "authored_sequence": "scenario_wave_plans_and_doctrines_define_three_escalating_waves",

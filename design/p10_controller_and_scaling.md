@@ -12,7 +12,7 @@ The complete Greywatch loop should remain operable without a mouse and readable 
 - Rebinding one device type preserves the other device type, so adding a controller preference does not remove keyboard access.
 - Controller Accept and D-pad directions remain reserved for menu navigation and cannot be captured as global command shortcuts.
 - UI scale cycles through 80%, 100%, 125%, and 150%, applies immediately through the root window content scale, and persists.
-- Settings schema 2 loads schema-1 accessibility files with default scale and project-default bindings.
+- This slice introduced settings schema 2, which loads schema-1 accessibility files with default scale and project-default bindings; the later display/audio slice migrates it to schema 3.
 - Scaling, focus movement, and binding changes do not mutate `PackKeepState` or alter deterministic outcomes.
 
 ## Supported remappable actions
