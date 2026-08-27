@@ -655,9 +655,7 @@ func _castellan_adjacent(instance: Dictionary, room_id: String) -> bool:
 				return true
 	return false
 
-func _warden_open_lane(instance: Dictionary) -> bool:
-	if commander_id != "warden":
-		return false
+func _piece_has_open_lane(instance: Dictionary) -> bool:
 	var floor_name: String = String(instance.get("floor", "ground"))
 	var origin: Vector2i = instance.get("origin", Vector2i.ZERO)
 	var piece_id: String = String(instance.get("piece_id", ""))
@@ -669,6 +667,80 @@ func _warden_open_lane(instance: Dictionary) -> bool:
 		if cell.x >= 0 and cell.y >= 0 and cell.x < GRID_SIZE.x and cell.y < GRID_SIZE.y and piece_at_cell(floor_name, cell).is_empty():
 			return true
 	return false
+
+func _warden_open_lane(instance: Dictionary) -> bool:
+	return commander_id == "warden" and _piece_has_open_lane(instance)
+
+func layout_summary() -> Dictionary:
+	var counts: Dictionary = {"ground": 0, "upper": 0, "wall": 0, "courtyard": 0, "keep": 0}
+	var role_counts: Dictionary = {}
+	var open_lane_count: int = 0
+	var room_edge_count: int = 0
+	var support_piece_count: int = 0
+	var signal_piece_count: int = 0
+	var assigned_specialist_count: int = 0
+	for instance in pieces.values():
+		var piece_id: String = String(instance.get("piece_id", ""))
+		if not PIECES.has(piece_id):
+			continue
+		var floor_name: String = String(instance.get("floor", "ground"))
+		counts[floor_name] = int(counts.get(floor_name, 0)) + 1
+		var zone: String = String(instance.get("placement_zone", placement_zone(instance.get("origin", Vector2i.ZERO), floor_name, PIECES[piece_id].size)))
+		counts[zone] = int(counts.get(zone, 0)) + 1
+		var role: String = String(PIECES[piece_id].get("combat_style", "support"))
+		role_counts[role] = int(role_counts.get(role, 0)) + 1
+		if role == "support":
+			support_piece_count += 1
+		if piece_id == "scout_post" or piece_id == "signal_beacon":
+			signal_piece_count += 1
+		if not String(instance.get("assignment", "")).is_empty():
+			assigned_specialist_count += 1
+		if _piece_has_open_lane(instance):
+			open_lane_count += 1
+		for room_id in ROOMS.keys():
+			if _piece_is_adjacent_to_room(instance, String(room_id)):
+				room_edge_count += 1
+				break
+	var warnings: Array[String] = []
+	if int(counts.ground) == 0:
+		warnings.append("No ground-floor defender covers the Gate or courtyard.")
+	if int(counts.upper) == 0:
+		warnings.append("No upper-floor piece covers climber or signal pressure.")
+	if support_piece_count == 0:
+		warnings.append("No support piece protects recovery or information.")
+	if not pieces.is_empty() and open_lane_count == 0:
+		warnings.append("No placed piece has an open adjacent response cell.")
+	var role_ids: Array = role_counts.keys()
+	role_ids.sort()
+	for role_id in role_ids:
+		var role_count: int = int(role_counts[role_id])
+		if role_count > 1:
+			warnings.append("%d %s pieces overlap in role; confirm they answer different routes." % [role_count, String(role_id)])
+	if warnings.is_empty():
+		warnings.append("No immediate coverage warning; the forecast still determines whether the layout fits.")
+	var total: int = pieces.size()
+	var castellan_summary: String = "%d/%d pieces reinforce a room edge; %d specialist assignment(s) are active." % [room_edge_count, total, assigned_specialist_count]
+	var castellan_risk: String = "Disconnected pieces receive less value from compact defense."
+	if total > 0 and room_edge_count == total:
+		castellan_risk = "The layout is compact; verify that concentration does not abandon an upper route."
+	var warden_summary: String = "%d/%d pieces retain an open response cell; %d signal piece(s) cover %d floor(s)." % [open_lane_count, total, signal_piece_count, (1 if int(counts.ground) > 0 else 0) + (1 if int(counts.upper) > 0 else 0)]
+	var warden_risk: String = "Blocked lanes or single-floor coverage reduce mobile response."
+	if total > 0 and open_lane_count == total and int(counts.ground) > 0 and int(counts.upper) > 0:
+		warden_risk = "Movement is preserved; verify that the lighter formation can absorb direct pressure."
+	return {
+		"counts": counts,
+		"open_lane_count": open_lane_count,
+		"room_edge_count": room_edge_count,
+		"support_piece_count": support_piece_count,
+		"signal_piece_count": signal_piece_count,
+		"assigned_specialist_count": assigned_specialist_count,
+		"duplicate_role_warnings": warnings,
+		"active_commander": commander_id,
+		"commander_comparison": {
+			"castellan": {"name": String(COMMANDERS.castellan.name), "summary": castellan_summary, "risk": castellan_risk},
+			"warden": {"name": String(COMMANDERS.warden.name), "summary": warden_summary, "risk": warden_risk}
+		}
+	}
 
 func _warden_signal_bonus() -> bool:
 	return commander_id == "warden" and (_has_unit("scout_post") or _has_unit("signal_beacon"))

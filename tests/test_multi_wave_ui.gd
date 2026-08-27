@@ -37,8 +37,10 @@ func _initialize() -> void:
 	await process_frame
 	ui._on_start_quick_playtest()
 	await process_frame
-	if not String(ui.layout_lens_label.text).contains("LAYOUT LENS"):
-		failures.append("preparation did not expose the commander layout lens")
+	if not String(ui.layout_lens_label.text).contains("LAYOUT SUMMARY"):
+		failures.append("preparation did not expose the layout summary")
+	if not String(ui.layout_lens_label.text).contains("CASTELLAN") or not String(ui.layout_lens_label.text).contains("WARDEN") or not String(ui.layout_lens_label.text).contains("WARNINGS"):
+		failures.append("layout summary did not compare both commander lenses and surface warnings")
 	if _find_button(ui, "Remove selected piece") == null:
 		failures.append("preparation did not expose selected-piece removal")
 	ui._on_quick_test_action()

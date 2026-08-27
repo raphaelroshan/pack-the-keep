@@ -17,6 +17,7 @@ func _init() -> void:
 	_test_assignment_rules_and_action_budget()
 	_test_recovery_action_previews()
 	_test_causal_scenario_reports()
+	_test_layout_summary_and_commander_comparison()
 	_test_deterministic_battle_report()
 	_test_save_round_trip()
 	_test_p0_pack_preview_and_reserve()
@@ -255,6 +256,25 @@ func _test_causal_scenario_reports() -> void:
 	_expect(collapsed.last_outcome == "collapse", "collapse-report fixture should produce collapse")
 	_expect(String(collapsed_report.get("what_failed", [""])[0]).contains("collapsed"), "collapse report should identify the terminal failure threshold")
 	_expect(String(collapsed_report.get("suggested_experiment", "")).contains("same seed"), "collapse report should preserve a deterministic replay experiment")
+
+func _test_layout_summary_and_commander_comparison() -> void:
+	var keep: PackKeepState = PackKeepState.new(3307)
+	var empty_before: String = JSON.stringify(keep.serialize())
+	var empty_summary: Dictionary = keep.layout_summary()
+	_expect(JSON.stringify(keep.serialize()) == empty_before, "layout comparison must not mutate authoritative state")
+	_expect(empty_summary.get("commander_comparison", {}).has("castellan") and empty_summary.get("commander_comparison", {}).has("warden"), "layout summary should compare both commanders")
+	_expect(String(" | ".join(empty_summary.get("duplicate_role_warnings", []))).contains("No ground-floor"), "empty layout should expose missing ground coverage")
+	keep.place_piece("pike_squad", Vector2i(3, 3), "ground")
+	keep.place_piece("pike_squad", Vector2i(5, 3), "ground")
+	keep.open_pack("scouts")
+	keep.place_piece("scout_post", Vector2i(8, 1), "upper")
+	var summary_before: String = JSON.stringify(keep.serialize())
+	var summary: Dictionary = keep.layout_summary()
+	_expect(JSON.stringify(keep.serialize()) == summary_before, "populated layout comparison must remain read-only")
+	_expect(int(summary.get("counts", {}).get("ground", 0)) == 2 and int(summary.get("counts", {}).get("upper", 0)) == 1, "layout summary should count both floors")
+	_expect(int(summary.get("open_lane_count", 0)) == 3, "layout summary should count open response cells independent of commander")
+	_expect(int(summary.get("support_piece_count", 0)) == 1 and int(summary.get("signal_piece_count", 0)) == 1, "layout summary should expose support and signal coverage")
+	_expect(String(" | ".join(summary.get("duplicate_role_warnings", []))).contains("2 melee"), "layout summary should warn about duplicate combat roles")
 
 func _test_deterministic_battle_report() -> void:
 	var first: PackKeepState = PackKeepState.new(17)

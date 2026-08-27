@@ -13,7 +13,8 @@
     "status": "in_progress",
     "recovery_action_cards": "implemented_with_authoritative_preview_cost_benefit_tradeoff_and_blocking_reason",
     "causal_final_report": "implemented_from_wave_history_final_keep_state_and_deterministic_replay_experiment",
-    "next_slice": "layout_summary_and_commander_comparison"
+    "layout_summary": "implemented_with_shared_spatial_facts_commander_comparison_and_deterministic_warnings",
+    "next_slice": "p6_data_contract"
   },
   "campaign": {
     "title": "The Bell at Dusk",

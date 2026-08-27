@@ -397,7 +397,7 @@ func _build_ui() -> void:
 	controls.add_child(commander_profile_label)
 	layout_lens_label = Label.new()
 	layout_lens_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	layout_lens_label.custom_minimum_size = Vector2(292, 72)
+	layout_lens_label.custom_minimum_size = Vector2(292, 142)
 	layout_lens_label.add_theme_color_override("font_color", Color("#d8c389"))
 	controls.add_child(layout_lens_label)
 
@@ -999,24 +999,17 @@ func _refresh_response_preview() -> void:
 func _refresh_layout_lens() -> void:
 	if layout_lens_label == null:
 		return
-	var ground_count: int = 0
-	var upper_count: int = 0
-	var wall_count: int = 0
-	var courtyard_count: int = 0
-	for instance in keep.pieces.values():
-		if String(instance.get("floor", "ground")) == "upper":
-			upper_count += 1
-		else:
-			ground_count += 1
-		var zone: String = String(instance.get("placement_zone", "keep"))
-		if zone == "wall":
-			wall_count += 1
-		elif zone == "courtyard":
-			courtyard_count += 1
-	var lens: String = "Castellan lens: compact adjacent positions strengthen hold and repair reach."
-	if keep.commander_id == "warden":
-		lens = "Warden lens: leave open adjacent cells and cover both floors so response damage and signals travel."
-	layout_lens_label.text = "LAYOUT LENS — %s\nGround %d | Upper %d | Wall %d | Courtyard %d\nRemove and re-place a selected piece to compare layouts." % [lens, ground_count, upper_count, wall_count, courtyard_count]
+	var summary: Dictionary = keep.layout_summary()
+	var counts: Dictionary = summary.get("counts", {})
+	var comparison: Dictionary = summary.get("commander_comparison", {})
+	var castellan: Dictionary = comparison.get("castellan", {})
+	var warden: Dictionary = comparison.get("warden", {})
+	var warnings: Array[String] = []
+	for warning in summary.get("duplicate_role_warnings", []):
+		warnings.append(String(warning))
+	var castellan_marker: String = "CURRENT" if keep.commander_id == "castellan" else "COMPARE"
+	var warden_marker: String = "CURRENT" if keep.commander_id == "warden" else "COMPARE"
+	layout_lens_label.text = "LAYOUT SUMMARY — Ground %d | Upper %d | Wall %d | Courtyard %d | Keep %d\nCoverage — room edge %d | open lane %d | support %d | assigned %d\nCASTELLAN [%s] — %s Risk: %s\nWARDEN [%s] — %s Risk: %s\nWARNINGS — %s" % [int(counts.get("ground", 0)), int(counts.get("upper", 0)), int(counts.get("wall", 0)), int(counts.get("courtyard", 0)), int(counts.get("keep", 0)), int(summary.get("room_edge_count", 0)), int(summary.get("open_lane_count", 0)), int(summary.get("support_piece_count", 0)), int(summary.get("assigned_specialist_count", 0)), castellan_marker, String(castellan.get("summary", "")), String(castellan.get("risk", "")), warden_marker, String(warden.get("summary", "")), String(warden.get("risk", "")), " | ".join(warnings)]
 
 func _refresh_recovery_priorities() -> void:
 	if recovery_priority_label == null:

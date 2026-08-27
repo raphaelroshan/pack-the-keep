@@ -151,3 +151,11 @@
 **Reason:** The final screen should teach why a defense worked or failed while remaining deterministic, testable, and independent from wording in the event feed.
 
 **Trade-off:** The first report uses compact rule-based observations rather than authored narrative variants. Richer prose can be added later as data, but it must continue to resolve from stable state and identifiers.
+
+## ADR-020: Compare commander lenses over one immutable layout
+
+**Decision:** Derive a shared layout summary and show Castellan and Warden interpretations over the same placed pieces. Comparison is read-only and does not switch the active commander or simulate alternate outcomes.
+
+**Reason:** Commander differentiation is easier to understand when the player can see how one fort creates different opportunities and risks under each doctrine.
+
+**Trade-off:** The comparison reports spatial evidence rather than a numeric power score. It deliberately avoids promising a winner before the authored wave actually tests the layout.
