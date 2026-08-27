@@ -70,6 +70,8 @@ var response_preview_label: Label
 var recovery_priority_label: Label
 var guidance_label: Label
 var result_explain_label: Label
+var scorecard_label: Label
+var layout_lens_label: Label
 var playtest_button: Button
 var playtest_status_label: Label
 
@@ -313,6 +315,11 @@ func _build_ui() -> void:
 	result_explain_label.custom_minimum_size = Vector2(800, 72)
 	result_explain_label.add_theme_color_override("font_color", Color("#f0dca8"))
 	left.add_child(result_explain_label)
+	scorecard_label = Label.new()
+	scorecard_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	scorecard_label.custom_minimum_size = Vector2(800, 82)
+	scorecard_label.add_theme_color_override("font_color", Color("#c9bfd0"))
+	left.add_child(scorecard_label)
 	combat_explain_label = Label.new()
 	combat_explain_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	combat_explain_label.custom_minimum_size = Vector2(800, 36)
@@ -372,6 +379,11 @@ func _build_ui() -> void:
 	commander_profile_label.custom_minimum_size = Vector2(292, 78)
 	commander_profile_label.add_theme_color_override("font_color", Color("#c9bfd0"))
 	controls.add_child(commander_profile_label)
+	layout_lens_label = Label.new()
+	layout_lens_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	layout_lens_label.custom_minimum_size = Vector2(292, 72)
+	layout_lens_label.add_theme_color_override("font_color", Color("#d8c389"))
+	controls.add_child(layout_lens_label)
 
 	commander_option = OptionButton.new()
 	for commander_id in PackKeepState.COMMANDERS.keys():
@@ -463,6 +475,11 @@ func _build_ui() -> void:
 	recommended_layout_button.tooltip_text = "Places Pike Squad and Narrow Gate in a readable first-battle arrangement; each placement remains authoritative."
 	recommended_layout_button.pressed.connect(_on_recommended_layout)
 	controls.add_child(recommended_layout_button)
+	var remove_piece_button: Button = Button.new()
+	remove_piece_button.text = "Remove selected piece"
+	remove_piece_button.tooltip_text = "Preparation-only: remove the inspected piece so you can test a different layout. Materials are not refunded."
+	remove_piece_button.pressed.connect(_on_remove_piece)
+	controls.add_child(remove_piece_button)
 	var cancel_place_button: Button = Button.new()
 	cancel_place_button.text = "Cancel map placement"
 	cancel_place_button.pressed.connect(_on_cancel_placement)
@@ -626,6 +643,8 @@ func _set_screen(next_screen: String) -> void:
 		metrics_label.visible = screen != "title"
 	if result_explain_label:
 		result_explain_label.visible = screen == "results"
+	if scorecard_label:
+		scorecard_label.visible = screen == "results"
 	if combat_explain_label:
 		combat_explain_label.visible = screen != "results"
 	if placement_label:
@@ -890,6 +909,28 @@ func _refresh_response_preview() -> void:
 		target_text = "APPROACHING"
 	response_preview_label.text = "RESPONSE — FOCUSED %d: %s\n%s\nTHREAT: %s | TARGET: %s\nCOUNTERS: %s\n%s: %s (%d command)" % [focused_enemy_index + 1, String(inspection.get("name", "enemy")), timing_text, String(inspection.get("doctrine", "approaching")).replace("_", " ").to_upper(), target_text, String(inspection.get("counter", "read the forecast")), ability_name, ability_state, keep.command_points]
 
+func _refresh_layout_lens() -> void:
+	if layout_lens_label == null:
+		return
+	var ground_count: int = 0
+	var upper_count: int = 0
+	var wall_count: int = 0
+	var courtyard_count: int = 0
+	for instance in keep.pieces.values():
+		if String(instance.get("floor", "ground")) == "upper":
+			upper_count += 1
+		else:
+			ground_count += 1
+		var zone: String = String(instance.get("placement_zone", "keep"))
+		if zone == "wall":
+			wall_count += 1
+		elif zone == "courtyard":
+			courtyard_count += 1
+	var lens: String = "Castellan lens: compact adjacent positions strengthen hold and repair reach."
+	if keep.commander_id == "warden":
+		lens = "Warden lens: leave open adjacent cells and cover both floors so response damage and signals travel."
+	layout_lens_label.text = "LAYOUT LENS — %s\nGround %d | Upper %d | Wall %d | Courtyard %d\nRemove and re-place a selected piece to compare layouts." % [lens, ground_count, upper_count, wall_count, courtyard_count]
+
 func _refresh_recovery_priorities() -> void:
 	if recovery_priority_label == null:
 		return
@@ -922,7 +963,25 @@ func _refresh_recovery_priorities() -> void:
 	for index in range(mini(3, priorities.size())):
 		var row: Dictionary = priorities[index]
 		rows.append("%s — %s %d%%" % [String(row.get("name", "room")), String(row.get("state", "STABLE")), int(row.get("condition", 0))])
-	recovery_priority_label.text = "RECOVERY PRIORITIES — %s\n%s" % ["advisory order", " | ".join(rows)]
+	var advice: Dictionary = keep.recovery_advice()
+	if bool(advice.get("ok", false)):
+		recovery_priority_label.text = "RECOVERY PRIORITIES — %s\n%s\nNEXT: %s | %s\nTRADE-OFF: %s" % ["advisory order", " | ".join(rows), String(advice.get("next_doctrine", "next doctrine")).replace("_", " "), String(advice.get("target", "preserve the most important function")), String(advice.get("tradeoff", "choose deliberately"))]
+	else:
+		recovery_priority_label.text = "RECOVERY PRIORITIES — %s\n%s" % ["advisory order", " | ".join(rows)]
+
+func _on_remove_piece() -> void:
+	if keep.wave_active or keep.repair_interval_active:
+		_set_event("Piece removal is preparation-only; finish the active wave or recovery interval first.")
+		return
+	var instance_id: String = _selected_piece_instance()
+	if instance_id.is_empty():
+		_set_event("Select a placed piece on the fort before removing it.")
+		return
+	var removed: Dictionary = keep.remove_piece(instance_id)
+	if bool(removed.get("ok", false)):
+		selected_instance_id = ""
+		inspected_text = "Piece removed. Use the placement preview to test a different layout."
+	_run_result(removed, "Layout")
 
 func _on_place_piece() -> void:
 	var piece_id: String = _selected_id(piece_option)
@@ -1132,6 +1191,13 @@ func _first_battle_guidance() -> String:
 		return "FIRST BATTLE GUIDE — Read the causal result below, repair the highest-priority room, then finish the interval before the next doctrine. Change one placement at a time to learn the counter."
 	return ""
 
+func _scorecard_compact_text() -> String:
+	var rows: Array[String] = []
+	for index in range(keep.wave_history.size()):
+		var wave: Dictionary = keep.wave_history[index]
+		rows.append("W%d %s/%s" % [int(wave.get("wave", index + 1)), String(wave.get("doctrine", "")).replace("_", " "), String(wave.get("outcome", "")).replace("_", " ")])
+	return " | ".join(rows) if not rows.is_empty() else "No resolved waves yet"
+
 func _refresh_result_explanation() -> void:
 	if result_explain_label == null:
 		return
@@ -1150,6 +1216,14 @@ func _refresh_result_explanation() -> void:
 		_:
 			outcome_text = "OUTCOME — review the event feed and recovery state before changing the layout."
 	result_explain_label.text = "CAUSAL RESULT — %s\nBreach %d | Morale %d | Defeated %d | Room damage %d | Piece damage %d\n%s\n%s" % [keep.last_outcome.replace("_", " ").to_upper(), keep.breach_level, keep.morale, int(metrics.get("defeated_enemies", 0)), int(metrics.get("room_damage", 0)), int(metrics.get("piece_damage", 0)), outcome_text, "Recovery: %s" % keep.repair_interval_reason if keep.repair_interval_active else "Recovery: start a new run to replay the lesson."]
+	var scorecard: Dictionary = keep.scenario_scorecard()
+	var score_rows: Array[String] = []
+	for index in range(keep.wave_history.size()):
+		var wave: Dictionary = keep.wave_history[index]
+		score_rows.append("W%d %s/%s D%d R%d A%d" % [int(wave.get("wave", index + 1)), String(wave.get("doctrine", "")).replace("_", " "), String(wave.get("outcome", "")).replace("_", " "), int(wave.get("defeated_enemies", 0)), int(wave.get("room_damage", 0)), int(wave.get("recovery_actions_used", 0))])
+	var score_rows_text: String = " | ".join(score_rows) if not score_rows.is_empty() else "No resolved waves yet."
+	var score_outcome_text: String = String(scorecard.get("final_outcome", "in progress")).replace("_", " ").to_upper()
+	scorecard_label.text = "SCENARIO SCORECARD — %d/%d waves | %s\n%s\nTOTALS — defeated %d | room damage %d | piece damage %d | recovery actions %d\nREPLAY KEY — %s" % [int(scorecard.get("completed_waves", 0)), int(scorecard.get("wave_count", 0)), score_outcome_text, score_rows_text, int(scorecard.get("total_defeated", 0)), int(scorecard.get("total_room_damage", 0)), int(scorecard.get("total_piece_damage", 0)), int(scorecard.get("recovery_actions_used", 0)), String(scorecard.get("replay_key", ""))]
 
 func _refresh_ui() -> void:
 	_refresh_pack_preview()
@@ -1218,12 +1292,12 @@ func _refresh_ui() -> void:
 				playtest_button.text = "CONTINUE — START WAVE %d/%d" % [keep.wave_index + 1, keep.authored_wave_count()]
 				playtest_button.disabled = false
 				playtest_button.tooltip_text = "Close recovery and automatically start the next authored wave."
-				playtest_status_label.text = "RECOVERY — %d action(s) remain. Repair or assign, then continue into the next wave." % keep.repair_actions_remaining
+				playtest_status_label.text = "RECOVERY — %d action(s) remain. Repair or assign, then continue. %s" % [keep.repair_actions_remaining, _scorecard_compact_text()]
 			else:
 				playtest_button.text = "RESTART QUICK PLAYTEST"
 				playtest_button.disabled = false
 				playtest_button.tooltip_text = "Reset seed 3307 and replay the preset Gatehouse Lock test."
-				playtest_status_label.text = "FINAL RESULTS — Review the causal result, then restart the same deterministic test."
+				playtest_status_label.text = "FINAL RESULTS — %s | Replay %s" % [_scorecard_compact_text(), String(keep.scenario_scorecard().get("replay_key", ""))]
 	var recent: Array[String] = []
 	var start: int = maxi(0, keep.battle_report.size() - 4)
 	for index in range(start, keep.battle_report.size()):
@@ -1236,6 +1310,7 @@ func _refresh_ui() -> void:
 	mute_button.text = "Feedback tones: OFF" if audio_muted else "Feedback tones: ON"
 	contrast_button.text = "High-contrast cues: ON" if high_contrast else "High-contrast cues: OFF"
 	_refresh_response_preview()
+	_refresh_layout_lens()
 	_refresh_recovery_priorities()
 	_refresh_result_explanation()
 	keep_canvas.keep = keep

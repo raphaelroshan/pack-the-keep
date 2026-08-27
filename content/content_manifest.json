@@ -1,7 +1,14 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.9.0",
+  "content_version": "0.10.0",
+  "p4_vertical_slice": {
+    "status": "implemented",
+    "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
+    "recovery_advice": "next_doctrine_and_tradeoff_target_are_advisory; repair_and_assignment_commands_remain_authoritative",
+    "layout_comparison": "commander_layout_lens_counts_floors_and_zones; preparation_only_piece_removal_has_no_refund",
+    "replay_identity": "scenario_commander_seed_replay_key"
+  },
   "campaign": {
     "title": "The Bell at Dusk",
     "premise": "A small keep is granted one season to become a refuge before a coalition of raiders, sappers, climbers, and siege beasts tests every defensive doctrine at once.",

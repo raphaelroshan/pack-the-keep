@@ -160,6 +160,7 @@ var repair_actions_remaining: int = 0
 var repair_interval_reason: String = ""
 var assigned_rooms: Dictionary = {}
 var combat_metrics: Dictionary = {}
+var wave_history: Array[Dictionary] = []
 var _last_attackers: Array[String] = []
 var _last_attack_damage: Dictionary = {}
 
@@ -210,6 +211,7 @@ func reset_run(new_seed: int = 3307) -> void:
 	repair_interval_reason = ""
 	assigned_rooms.clear()
 	_reset_combat_metrics()
+	wave_history.clear()
 	_log("Greywatch Keep is quiet. The Castellan waits for a first doctrine.")
 
 func _reset_combat_metrics() -> void:
@@ -464,6 +466,8 @@ func inspect_enemy(index: int) -> Dictionary:
 	return {"ok": true, "kind": "enemy", "id": enemy_id, "index": index, "name": String(definition.name), "doctrine": String(definition.doctrine), "route": String(definition.route), "counter": String(definition.counter), "health": int(enemy.get("hp", 0)), "max_health": int(enemy.get("max_health", definition.health)), "damage": int(definition.damage), "arrival_step": int(definition.arrival_step), "target": String(enemy.get("target", "")), "defeated": bool(enemy.get("defeated", false))}
 
 func remove_piece(instance_id: String) -> Dictionary:
+	if wave_active or repair_interval_active:
+		return {"ok": false, "reason": "piece removal is only available during Preparation"}
 	if not pieces.has(instance_id):
 		return {"ok": false, "reason": "unknown defensive piece"}
 	var assignment: String = String(pieces[instance_id].get("assignment", ""))
@@ -849,6 +853,21 @@ func _critical_breach_count() -> int:
 			count += 1
 	return count
 
+func _append_wave_history() -> void:
+	wave_history.append({
+		"wave": wave_index,
+		"doctrine": enemy_doctrine,
+		"outcome": last_outcome,
+		"breach_level": breach_level,
+		"morale_after": morale,
+		"defeated_enemies": int(combat_metrics.get("defeated_enemies", 0)),
+		"room_damage": int(combat_metrics.get("room_damage", 0)),
+		"piece_damage": int(combat_metrics.get("piece_damage", 0)),
+		"ammo_spent": int(combat_metrics.get("ammo_spent", 0)),
+		"enemy_attacks": int(combat_metrics.get("enemy_attacks", 0)),
+		"recovery_actions_used": 0
+	})
+
 func _open_repair_interval(outcome: String) -> void:
 	repair_interval_active = true
 	repair_actions_remaining = 2
@@ -858,11 +877,14 @@ func _open_repair_interval(outcome: String) -> void:
 	else:
 		repair_interval_reason = "The bells stop. Assign the crew before the next warning."
 	_log("Greywatch repair interval opened: %s" % repair_interval_reason)
+	_append_wave_history()
 
 func finish_repair_interval() -> Dictionary:
 	if not repair_interval_active:
 		return {"ok": false, "reason": "no Greywatch repair interval is open"}
 	var unused: int = repair_actions_remaining
+	if not wave_history.is_empty():
+		wave_history[wave_history.size() - 1].recovery_actions_used = 2 - unused
 	repair_interval_active = false
 	repair_actions_remaining = 0
 	repair_interval_reason = ""
@@ -885,6 +907,7 @@ func _finish_wave() -> Dictionary:
 		repair_interval_reason = ""
 		_reload_ammunition()
 		_battle_log("Outcome: collapse. Three critical functions or morale failed; the report identifies the chain; surviving ranged defenders reload for the next attempt.")
+		_append_wave_history()
 	elif breach_level > 0:
 		last_outcome = "partial_breach"
 		morale = maxi(0, morale - 1)
@@ -1012,6 +1035,40 @@ func repair_room(room_id: String) -> Dictionary:
 	repair_actions_remaining -= 1
 	return {"ok": true, "actions_remaining": repair_actions_remaining, "message": "Repaired %s to %s." % [ROOMS[room_id].name, rooms[room_id].state]}
 
+func recovery_advice() -> Dictionary:
+	if not repair_interval_active:
+		return {"ok": false, "reason": "no recovery interval is open"}
+	var next_doctrine: String = ""
+	if has_next_wave() and SCENARIOS.has(scenario_id):
+		var doctrines: Array = SCENARIOS[scenario_id].get("doctrines", [])
+		next_doctrine = String(doctrines[mini(wave_index, doctrines.size() - 1)]) if not doctrines.is_empty() else enemy_doctrine
+	var target: String = "the most damaged critical room"
+	var action: String = "repair_room"
+	if next_doctrine == "distributed_sabotage":
+		target = "Workshop or Supply Room; preserve support coverage"
+		action = "repair_room_or_assign_support"
+	elif next_doctrine == "feint_and_flank":
+		target = "North Tower or Old Chapel; preserve an upper response lane"
+		action = "assign_upper_response_or_repair"
+	elif next_doctrine == "area_pressure":
+		target = "Inner Yard and adjacent support rooms"
+		action = "brace_or_repair_area"
+	return {"ok": true, "next_doctrine": next_doctrine, "target": target, "recommended_action": action, "actions_remaining": repair_actions_remaining, "tradeoff": "Each action repairs or reassigns one priority; unused actions do not silently reset damage."}
+
+func scenario_scorecard() -> Dictionary:
+	var outcomes: Array[String] = []
+	var total_defeated: int = 0
+	var total_room_damage: int = 0
+	var total_piece_damage: int = 0
+	var total_recovery_actions: int = 0
+	for row in wave_history:
+		outcomes.append(String(row.get("outcome", "")))
+		total_defeated += int(row.get("defeated_enemies", 0))
+		total_room_damage += int(row.get("room_damage", 0))
+		total_piece_damage += int(row.get("piece_damage", 0))
+		total_recovery_actions += int(row.get("recovery_actions_used", 0))
+	return {"scenario_id": scenario_id, "scenario_name": String(SCENARIOS.get(scenario_id, {}).get("name", scenario_id)), "completed_waves": wave_history.size(), "wave_count": authored_wave_count(), "outcomes": outcomes, "total_defeated": total_defeated, "total_room_damage": total_room_damage, "total_piece_damage": total_piece_damage, "recovery_actions_used": total_recovery_actions, "final_outcome": last_outcome, "replay_key": "%s/%s/%d" % [scenario_id, commander_id, seed]}
+
 func forecast() -> Dictionary:
 	var likely_target: String = "gate"
 	var uncertainty: String = "secondary timing"
@@ -1066,7 +1123,10 @@ func summary() -> Dictionary:
 		"forecast": forecast(),
 		"rooms": rooms.duplicate(true),
 		"pieces": pieces.duplicate(true),
-		"enemies": enemies.duplicate(true)
+		"enemies": enemies.duplicate(true),
+		"wave_history": wave_history.duplicate(true),
+		"recovery_advice": recovery_advice(),
+		"scenario_scorecard": scenario_scorecard()
 	}
 
 func serialize() -> Dictionary:
@@ -1109,6 +1169,7 @@ func serialize() -> Dictionary:
 		"pack_openings_this_preparation": pack_openings_this_preparation,
 		"reserved_pack_id": reserved_pack_id,
 		"combat_metrics": combat_metrics.duplicate(),
+		"wave_history": wave_history.duplicate(true),
 		"schema_version": SAVE_SCHEMA_VERSION,
 		"game_id": GAME_ID
 	}
@@ -1199,6 +1260,10 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	rally_used = bool(data.get("rally_used", rally_used))
 	last_outcome = String(data.get("last_outcome", last_outcome))
 	combat_metrics = data.get("combat_metrics", combat_metrics).duplicate()
+	wave_history.clear()
+	for history_entry in data.get("wave_history", []):
+		if history_entry is Dictionary:
+			wave_history.append(history_entry.duplicate(true))
 	if combat_metrics.is_empty():
 		_reset_combat_metrics()
 	repair_interval_active = bool(data.get("repair_interval_active", repair_interval_active))

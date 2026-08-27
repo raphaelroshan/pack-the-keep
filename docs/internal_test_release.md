@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.9.0-multi-wave` — three-wave authored sequence with automatic recovery transitions
+**Current build identity:** `0.10.0-greywatch-vertical-slice` — three-wave authored sequence with recovery choices, scorecard feedback, and commander layout lenses
 
 ## Purpose
 
@@ -9,6 +9,12 @@ This package is an internal pre-alpha test release, not a commercial demo or sto
 ## v0.8.2 testability additions
 
 Preparation now displays a numbered first-battle guide that recommends the authoritative starter arrangement and explains what to read before starting. The command table includes **Use recommended starter layout**, which places Pike Squad and Narrow Gate at fixed, readable ground-floor origins through the same validated placement API used by direct map placement; it is a recommendation, not a forced opening build. During battle, the left panel presents the latest four authoritative battle-report lines in a newest-first **Combat Event Feed**. Results present a **Causal Result** panel with outcome, breach, morale, defeated enemies, room damage, piece damage, and a plain-language interpretation of what to test next. Guidance changes between preparation, battle, and results while the fort remains visible.
+
+## v0.10.0 Greywatch vertical-slice additions
+
+P4 turns the three-wave combat loop into a replayable vertical slice. Each resolved wave is recorded in a compact scenario scorecard with doctrine, outcome, defeated enemies, room damage, piece damage, and recovery actions used. Results also name the next doctrine and provide an advisory recovery target; the advice never performs authoritative actions for the player.
+
+Preparation now shows a commander-specific layout lens with ground, upper, wall, and courtyard counts. A selected piece may be removed during Preparation without refund so testers can re-place it and compare compact Castellan layouts with open-lane Warden layouts. Removal remains blocked during Battle and recovery.
 
 ## v0.9.0 multi-wave additions
 
@@ -67,6 +73,12 @@ A tester should begin Preparation, compare The Castellan and The Warden profiles
 ## v0.8.2 acceptance checks
 
 On a fresh run, enter Preparation and confirm the first-battle guide names the recommended starter layout. Use the recommendation and verify that Pike Squad appears in the courtyard and Narrow Gate is placed near the gate, then modify the arrangement if desired. Start the invasion and confirm the guide explains that the fort remains visible, the event feed shows the deterministic forecast, and a manual step adds newer causal lines above older ones. Let the wave resolve, confirm the screen switches to Results, and verify that the causal panel names outcome, breach, morale, defeated enemies, room damage, piece damage, and recovery advice. Refresh the guide and result panel without commands and confirm the serialized keep state remains unchanged.
+
+## v0.10.0 acceptance checks
+
+Start the quick playtest and confirm the Preparation panel exposes the current commander’s layout lens and a **Remove selected piece** action. Resolve wave 1. In Results, confirm the scorecard contains a W1 row, recovery advice names Distributed Sabotage and support-room coverage, and the primary action remains **CONTINUE — START WAVE 2/3**.
+
+Use one repair or assignment action, then continue. Confirm wave 2 starts paused and the scorecard eventually records the recovery action count for wave 1. Resolve wave 2, continue into wave 3, and confirm the final Results screen contains W1, W2, and W3 rows, total defeated/room/piece damage, recovery actions used, and a deterministic replay key. Compare the Castellan’s compact layout lens with the Warden’s open-lane guidance in a fresh run. Remove and re-place a selected piece only during Preparation.
 
 ## v0.9.0 acceptance checks
 

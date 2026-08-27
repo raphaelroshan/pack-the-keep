@@ -63,5 +63,10 @@ func _run_case(commander_id: String, scenario_id: String, layout_name: String, r
 			return
 		if keep.last_outcome == "collapse":
 			break
+	var scorecard: Dictionary = keep.scenario_scorecard()
+	if int(scorecard.get("completed_waves", 0)) != keep.wave_history.size() or keep.wave_history.size() > 3:
+		failures.append("%s/%s/%s/%d: scorecard history is inconsistent" % [commander_id, scenario_id, layout_name, run_seed])
+	if keep.last_outcome != "collapse" and int(scorecard.get("completed_waves", 0)) != 3:
+		failures.append("%s/%s/%s/%d: non-collapse run did not complete all three waves" % [commander_id, scenario_id, layout_name, run_seed])
 	completed_runs += 1
 	outcome_counts[keep.last_outcome] = int(outcome_counts.get(keep.last_outcome, 0)) + 1

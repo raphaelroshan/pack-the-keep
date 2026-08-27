@@ -37,11 +37,17 @@ func _initialize() -> void:
 	await process_frame
 	ui._on_start_quick_playtest()
 	await process_frame
+	if not String(ui.layout_lens_label.text).contains("LAYOUT LENS"):
+		failures.append("preparation did not expose the commander layout lens")
+	if _find_button(ui, "Remove selected piece") == null:
+		failures.append("preparation did not expose selected-piece removal")
 	ui._on_quick_test_action()
 	await process_frame
 	await _resolve_current_wave(ui)
 	if ui.screen != "results" or not ui.keep.repair_interval_active:
 		failures.append("wave one did not end in inter-wave recovery Results")
+	if not String(ui.scorecard_label.text).contains("W1"):
+		failures.append("inter-wave Results did not expose the wave-one scorecard row")
 	if not ui.keep.has_next_wave():
 		failures.append("wave one Results did not expose a next wave")
 	await _continue_wave(ui, 2)
@@ -56,6 +62,8 @@ func _initialize() -> void:
 		failures.append("final wave did not produce terminal Results recovery")
 	if _find_button(ui, "RESTART QUICK PLAYTEST") == null:
 		failures.append("terminal Results did not expose restart action")
+	if not String(ui.scorecard_label.text).contains("W1") or not String(ui.scorecard_label.text).contains("W2") or not String(ui.scorecard_label.text).contains("W3") or not String(ui.scorecard_label.text).contains("recovery actions"):
+		failures.append("terminal Results did not expose the complete three-wave scorecard")
 	ui.queue_free()
 	await process_frame
 	if failures.is_empty():

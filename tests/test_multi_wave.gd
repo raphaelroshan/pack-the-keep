@@ -14,6 +14,19 @@ func _run_wave(keep: PackKeepState) -> Dictionary:
 		result = keep.advance_wave(1.0)
 	return result
 
+func _run_replay(seed_value: int) -> PackKeepState:
+	var replay: PackKeepState = PackKeepState.new(seed_value)
+	replay.select_scenario("gatehouse_lock")
+	replay.place_piece("pike_squad", Vector2i(0, 3), "ground")
+	replay.start_wave("gate_assault")
+	while replay.wave_index < 3:
+		_run_wave(replay)
+		if replay.wave_index < 3 and replay.repair_interval_active:
+			replay.finish_repair_interval()
+	if replay.repair_interval_active:
+		replay.finish_repair_interval()
+	return replay
+
 func _initialize() -> void:
 	var keep: PackKeepState = PackKeepState.new(3307)
 	_expect(bool(keep.select_scenario("gatehouse_lock").get("ok", false)), "Gatehouse Lock should be selectable")
@@ -25,6 +38,8 @@ func _initialize() -> void:
 	_run_wave(keep)
 	_expect(not keep.wave_active and keep.repair_interval_active, "wave one should resolve into recovery")
 	_expect(keep.has_next_wave(), "recovery after wave one should expose wave two")
+	_expect(keep.wave_history.size() == 1 and String(keep.wave_history[0].get("outcome", "")).length() > 0, "wave one should be recorded in the scorecard history")
+	_expect(String(keep.recovery_advice().get("next_doctrine", "")) == "distributed_sabotage", "recovery advice should identify the next doctrine")
 	var recovery_snapshot: Dictionary = keep.serialize()
 	var recovery_restored: PackKeepState = PackKeepState.new(0)
 	var recovery_loaded: Dictionary = recovery_restored.load_serialized(recovery_snapshot)
@@ -53,8 +68,12 @@ func _initialize() -> void:
 	_expect(keep.enemies.size() == 3 and String(keep.enemies[1].get("enemy_id", "")) == "climber", "wave three should include a Climber")
 	_run_wave(keep)
 	_expect(keep.repair_interval_active and not keep.has_next_wave(), "final wave should open terminal recovery without another wave")
+	_expect(not bool(keep.remove_piece("pike_squad_0").get("ok", false)), "layout removal should remain blocked during terminal recovery")
 	var finished_three: Dictionary = keep.finish_repair_interval()
 	_expect(bool(finished_three.get("ok", false)) and not bool(finished_three.get("next_wave_started", false)), "terminal recovery should close without a fourth wave")
+	var scorecard: Dictionary = keep.scenario_scorecard()
+	_expect(int(scorecard.get("completed_waves", 0)) == 3 and int(scorecard.get("wave_count", 0)) == 3, "terminal scorecard should contain all three waves")
+	_expect(int(scorecard.get("recovery_actions_used", 0)) == 0, "unused recovery actions should be visible in the scorecard")
 	_expect(not bool(keep.start_wave("gate_assault").get("ok", false)), "authored scenario should reject a fourth wave")
 
 	var collapsed: PackKeepState = PackKeepState.new(3307)
@@ -66,6 +85,12 @@ func _initialize() -> void:
 	_expect(collapsed.last_outcome == "collapse" and not collapsed.wave_active, "morale-zero resolution should collapse the scenario")
 	_expect(not collapsed.has_next_wave(), "collapse should terminate authored wave continuation")
 	_expect(not bool(collapsed.start_wave("gate_assault").get("ok", false)), "collapsed authored scenario should reject a follow-up wave")
+	_expect(collapsed.wave_history.size() == 1 and String(collapsed.wave_history[0].get("outcome", "")) == "collapse", "collapse should be recorded in the scorecard history")
+
+	var replay_a: PackKeepState = _run_replay(3311)
+	var replay_b: PackKeepState = _run_replay(3311)
+	_expect(replay_a.scenario_scorecard() == replay_b.scenario_scorecard(), "same seed and commands should reproduce the full P4 scorecard")
+	_expect(replay_a.wave_history == replay_b.wave_history, "same seed and commands should reproduce every wave history row")
 	if failures.is_empty():
 		print("Multi-wave simulation: PASS")
 	else:
