@@ -48,7 +48,7 @@ func _test_castellan_and_basic_roster() -> void:
 	_expect(not keep.piece_definition("repair_station").is_empty(), "Repair Station should be in the basic roster")
 	_expect(not keep.piece_definition("fire_team").is_empty(), "Fire Team should be in the basic roster")
 	_expect(not keep.piece_definition("scout_post").is_empty(), "Scout Post should be in the basic roster")
-	_expect(keep.enemy_ids().size() == 4, "P1 should expose the three baseline enemies plus Siege Beast")
+	_expect(keep.enemy_ids().size() == 5, "P11 should expose the baseline enemies, Siege Beast, and Shield Guard")
 	_expect(keep.open_pack("pike_line").get("ok", false), "Pike Line pack should open")
 	_expect(not bool(keep.open_pack("pike_line").get("ok", false)), "the same pack should not open twice")
 

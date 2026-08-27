@@ -1,0 +1,8 @@
+{
+  "id": "crossbow_watch", "content_version": 1, "status": "active", "name": "Crossbow Watch",
+  "short_role": "Break protected advances with patient high-ground fire.", "question": "Where should precision replace raw volume?",
+  "family": "precision", "contents": ["crossbow_patrol", "watch_banner"], "doctrine": "layered_crossfire", "cost": 5,
+  "strength": "Armor-piercing upper-wall response with one nearby support bonus.", "weakness": "Narrow targets, finite ammunition, and little value if the firing line is isolated.",
+  "choice": "Spend an upper post and support footprint to dismantle a protected front rank.", "commander_affinity": ["warden", "castellan"],
+  "spatial_demand": {"preferred_floors": ["upper"], "preferred_zones": ["wall"], "needs_open_lane": true, "needs_adjacency": true}
+}

@@ -1,0 +1,13 @@
+{
+  "id": "watch_banner", "content_version": 1, "status": "active", "name": "Watch Banner",
+  "short_role": "Coordinate one nearby ranged firing line.", "role": "supports nearby ranged response",
+  "question": "Which firing line is worth a dedicated signal?", "kind": "equipment", "category": "precision",
+  "footprint": [1, 1], "allowed_floors": ["ground", "upper"], "allowed_zones": ["wall", "courtyard", "keep"],
+  "cost": 6, "max_health": 10, "placement_question": "Where can the banner remain close to a ranged defender?",
+  "skill": "Marked Volley: one nearby ranged defender on the same floor gains +1 response; multiple banners do not stack.",
+  "strength_tags": ["ranged_support", "coordination", "armor_piercing_support"], "weakness_tags": ["no_direct_stop", "adjacency", "fragile_support"],
+  "attack_profile": {"style": "support", "range": 3, "cooldown_steps": 1, "damage": 0, "defense": 0, "ammo_capacity": 0, "targets": ["all"]},
+  "support_profile": {"kind": "coordination", "target_rooms": [], "condition_restore": 0, "response_modifier": "nearby_ranged_plus_one"},
+  "assignment_rule": null, "availability": "crossbow_watch",
+  "presentation": {"icon": "", "marker_color_role": "precision", "radius_scale": 1.0}
+}

@@ -71,6 +71,7 @@ var unlocked_modifier_ids: Array[String] = []
 var equipped_modifier_id: String = ""
 var _last_attackers: Array[String] = []
 var _last_attack_damage: Dictionary = {}
+var _last_armor_blocked: int = 0
 var content_catalog: RefCounted
 var _commander_definitions: Dictionary = {}
 var _piece_definitions: Dictionary = {}
@@ -685,7 +686,7 @@ func inspect_enemy(index: int) -> Dictionary:
 	if not _enemy_definitions.has(enemy_id):
 		return {"ok": false, "reason": "enemy definition is unavailable"}
 	var definition: Dictionary = _enemy_definitions[enemy_id]
-	return {"ok": true, "kind": "enemy", "id": enemy_id, "index": index, "name": String(definition.name), "doctrine": String(definition.doctrine), "route": String(definition.route), "counter": String(definition.counter), "health": int(enemy.get("hp", 0)), "max_health": int(enemy.get("max_health", definition.health)), "damage": int(definition.damage), "arrival_step": int(definition.arrival_step), "target": String(enemy.get("target", "")), "defeated": bool(enemy.get("defeated", false))}
+	return {"ok": true, "kind": "enemy", "id": enemy_id, "index": index, "name": String(definition.name), "doctrine": String(definition.doctrine), "route": String(definition.route), "counter": String(definition.counter), "health": int(enemy.get("hp", 0)), "max_health": int(enemy.get("max_health", definition.health)), "damage": int(definition.damage), "armor": int(definition.get("armor", 0)), "armor_counter_tag": String(definition.get("armor_counter_tag", "")), "arrival_step": int(definition.arrival_step), "target": String(enemy.get("target", "")), "defeated": bool(enemy.get("defeated", false))}
 
 func remove_piece(instance_id: String) -> Dictionary:
 	if wave_active or repair_interval_active:
@@ -979,6 +980,24 @@ func _living_piece_count(piece_id: String, floor: String = "") -> int:
 func _has_unit(piece_id: String, floor: String = "") -> bool:
 	return _living_piece_count(piece_id, floor) > 0
 
+func _has_nearby_ranged_support(instance: Dictionary) -> bool:
+	var floor_name: String = String(instance.get("floor", "ground"))
+	var origin: Vector2i = instance.get("origin", Vector2i.ZERO)
+	for support in pieces.values():
+		if bool(support.get("disabled", false)) or float(support.get("condition", 0.0)) <= 0.0 or String(support.get("floor", "ground")) != floor_name:
+			continue
+		var support_id: String = String(support.get("piece_id", ""))
+		if not _piece_definitions.has(support_id):
+			continue
+		var support_profile: Variant = _piece_definitions[support_id].get("support_profile")
+		if not support_profile is Dictionary or String(support_profile.get("response_modifier", "")) != "nearby_ranged_plus_one":
+			continue
+		var support_origin: Vector2i = support.get("origin", Vector2i.ZERO)
+		var support_range: int = int(_piece_definitions[support_id].get("range", 0))
+		if absi(support_origin.x - origin.x) + absi(support_origin.y - origin.y) <= support_range:
+			return true
+	return false
+
 func _has_assignment(piece_id: String, room_id: String) -> bool:
 	if not assigned_rooms.has(room_id):
 		return false
@@ -1000,6 +1019,7 @@ func _defender_damage(enemy_id: String) -> int:
 	var damage: int = 0
 	_last_attackers.clear()
 	_last_attack_damage.clear()
+	_last_armor_blocked = 0
 	for instance_id in pieces.keys():
 		var instance: Dictionary = pieces[instance_id]
 		if float(instance.get("condition", 0.0)) <= 0.0 or bool(instance.get("disabled", false)):
@@ -1051,6 +1071,14 @@ func _defender_damage(enemy_id: String) -> int:
 			contribution += 1
 		if rally_pending and commander_id == "warden" and piece.attack > 0:
 			contribution += 1
+		if combat_style == "ranged" and _has_nearby_ranged_support(instance):
+			contribution += 1
+		var armor: int = int(enemy.get("armor", 0))
+		var armor_counter_tag: String = String(enemy.get("armor_counter_tag", ""))
+		if armor > 0 and (armor_counter_tag.is_empty() or not piece.get("strength_tags", []).has(armor_counter_tag)):
+			var unarmored_contribution: int = contribution
+			contribution = maxi(0, contribution - armor)
+			_last_armor_blocked += unarmored_contribution - contribution
 		if contribution > 0:
 			_last_attackers.append(String(instance_id))
 			_last_attack_damage[String(instance_id)] = contribution
@@ -1195,6 +1223,8 @@ func _battle_step() -> Dictionary:
 			continue
 		var enemy_id: String = String(enemy.get("enemy_id", ""))
 		var damage: int = _defender_damage(enemy_id)
+		if _last_armor_blocked > 0:
+			_battle_log("%s armor absorbed %d damage from non-piercing defenders." % [_enemy_definitions[enemy_id].name, _last_armor_blocked])
 		if damage > 0:
 			enemy.hp = maxi(0, int(enemy.get("hp", 0)) - damage)
 			combat_metrics["unit_attacks"] = int(combat_metrics.get("unit_attacks", 0)) + _last_attackers.size()

@@ -65,7 +65,7 @@ MODIFIER_FIELDS = {
 SUPPORTED_FLOORS = {"ground", "upper"}
 SUPPORTED_ZONES = {"wall", "courtyard", "keep"}
 SUPPORTED_ATTACK_STYLES = {"melee", "ranged", "support", "fortification"}
-SUPPORTED_DOCTRINES = {"gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach"}
+SUPPORTED_DOCTRINES = {"gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach", "shielded_advance"}
 SUPPORTED_NON_ENEMY_TARGETS = {"all"} | SUPPORTED_DOCTRINES
 SUPPORTED_EVENT_TYPES = {"forecast", "recovery", "scenario_conclusion"}
 SUPPORTED_EVENT_PHASES = {"preparation", "recovery", "results"}
@@ -260,6 +260,12 @@ def validate_enemy(
         errors.append(f"{path}: damage must be a non-negative integer")
     if not is_integer(enemy.get("arrival_step")) or enemy["arrival_step"] < 1:
         errors.append(f"{path}: arrival_step must be a positive integer")
+    if "armor" in enemy:
+        armor = enemy.get("armor")
+        if not is_integer(armor) or armor < 0:
+            errors.append(f"{path}: armor must be a non-negative integer")
+        elif armor > 0 and (not isinstance(enemy.get("armor_counter_tag"), str) or not enemy["armor_counter_tag"].strip()):
+            errors.append(f"{path}: armored enemies must name a non-empty armor_counter_tag")
     for field in sorted(ENEMY_TEXT_FIELDS):
         value = enemy.get(field)
         if not isinstance(value, str) or not value.strip():

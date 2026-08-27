@@ -1,0 +1,9 @@
+{
+  "id": "shielded_advance", "content_version": 1, "status": "active", "name": "Shielded Advance",
+  "short_role": "Use formation armor to turn scattered attacks into wasted effort.",
+  "question": "Can the keep concentrate an armor-piercing firing line before the shields reach Barracks?",
+  "composition": ["shield_guard", "shield_guard"], "route_pattern": "gate_road_to_barracks_under_formation_armor",
+  "target_priority": "lowest_condition_barracks_gate_or_inner_yard", "principal_pressure": "Barracks and Gate response organization",
+  "likely_target": "barracks or gate", "uncertainty": "which weakened response room the formation selects",
+  "counter_families": ["precision", "control", "commander_intervention"]
+}

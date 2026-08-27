@@ -1,0 +1,15 @@
+{
+  "id": "red_banner_road", "content_version": 1, "status": "active", "name": "Red Banner Road",
+  "short_role": "Teach high-ground precision against a protected front rank.",
+  "question": "Can one deliberate firing line break armor before mixed pressure reaches the keep?",
+  "objective": "Preserve Barracks and Gate while the Shield Guard advances under a red banner.",
+  "lesson": "Armor punishes scattered low-damage responses; protected high-ground fire creates a clean answer.",
+  "starting_doctrine": "shielded_advance",
+  "doctrines": ["shielded_advance", "gate_assault", "shielded_advance"],
+  "wave_plans": [["shield_guard"], ["shield_guard", "raider"], ["shield_guard", "sapper", "climber"]],
+  "variations": [
+    {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
+    {"id": "thin_quiver", "materials": -3, "morale": 1, "target_room": "barracks"},
+    {"id": "open_parapet", "materials": 2, "morale": -1, "target_room": "gate"}
+  ]
+}

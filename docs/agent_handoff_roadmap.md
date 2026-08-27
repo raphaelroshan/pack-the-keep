@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
 **Document status:** Active planning contract for post-v0.10.0 development
-**Current release baseline:** `v0.10.0-greywatch-vertical-slice`
+**Current release baseline:** `v0.11.0-greywatch-crossbow-watch`
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
 **Primary keep:** Greywatch Keep
@@ -17,7 +17,9 @@ This document is intended to be handed to a GPT coding agent together with `AGEN
 
 Pack the Keep currently has a playable Greywatch vertical slice. The authoritative simulation is in `src/core/keep_state.gd`; the runtime-built presentation and fort renderer are in `src/ui/main.gd`; the main scene is `scenes/Main.tscn`; machine-readable capability declarations are in `content/content_manifest.json` and `content/gameplay_framework.json`.
 
-The current slice supports two commanders, four active defender pieces, four packs, four enemy types, four invasion doctrines, three authored scenarios, a two-floor square fort, deterministic six-step combat waves, repair and assignment intervals, finite ranged ammunition, commander abilities, pause/speed/manual-step controls, map-first enemy focus, placement previews, save/load, a quick-playtest flow, and a three-wave authored sequence that automatically advances only after explicit recovery completion.
+The current slice supports two commanders, fourteen active defender pieces/equipment, seven packs, five enemy types, six invasion doctrines, five authored scenarios, a two-floor square fort, deterministic six-step combat waves, repair and assignment intervals, finite ranged ammunition, authored armor and armor-piercing counters, nearby ranged support, commander abilities, pause/speed/manual-step controls, controller navigation/remapping, persistent presentation settings, map-first enemy focus, placement previews, save/load, a quick-playtest flow, and three-wave authored sequences that advance only after explicit recovery completion.
+
+P11 content breadth is in progress. Its first teaching pair is implemented: Crossbow Watch versus Shielded Advance in Red Banner Road. The next bounded objective is a second friendly-doctrine/enemy-question pair, not a broad roster expansion.
 
 The next objective is not to add a large roster. The next objective is to make Greywatch feel like a complete, legible, replayable game loop and to establish safe extension points so new content can be added without turning the core simulation into an opaque collection of special cases.
 

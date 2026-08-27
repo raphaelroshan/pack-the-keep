@@ -1,0 +1,12 @@
+{
+  "id": "shield_guard", "content_version": 1, "status": "active", "name": "Shield Guard",
+  "short_role": "Advance behind formation armor that blunts unfocused attacks.",
+  "question": "Can the keep bring armor-piercing fire to the protected front rank?",
+  "health": 12, "damage": 2, "armor": 2, "armor_counter_tag": "armor_piercing", "arrival_step": 3,
+  "route": "gate_road", "target_rooms": ["barracks", "gate", "inner_yard"], "doctrine": "shielded_advance",
+  "counter": "crossbow_patrol", "telegraph": "A broad red shield marker announces flat armor before contact.",
+  "counter_families": ["precision", "control", "commander_intervention"],
+  "failure_mode": "Low-damage defenders exhaust their response against the shield line before it reaches Barracks.",
+  "report_phrase": "Formation armor reduced each non-piercing response.",
+  "presentation": {"icon": "", "marker_color_role": "armored_advance", "radius_scale": 1.15}
+}

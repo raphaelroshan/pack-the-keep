@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.10.0-greywatch-vertical-slice",
+  "framework_version": "0.11.0-greywatch-crossbow-watch",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -114,6 +114,14 @@
     "accessibility_rule": "latest_cue_is_visible_in_text_and_mute_suppresses_samples_only",
     "replacement_rule": "authored_audio_can_replace_profiles_without_changing_gameplay_callers"
   },
+  "p11_crossbow_watch": {
+    "status": "implemented",
+    "teaching_pair": ["crossbow_watch", "shielded_advance"],
+    "combat_rules": ["per_contributor_enemy_armor", "matching_armor_piercing_tag", "non_stacking_nearby_ranged_plus_one"],
+    "scenario": "red_banner_road",
+    "presentation": ["violet_watch_glyphs", "shield_guard_armor_ring", "numeric_armor_inspection"],
+    "determinism_rule": "armor_and_support_resolution_depend_only_on_catalog_data_and_stable_piece_positions"
+  },
   "v090_multi_wave": {
     "status": "implemented",
     "authored_sequence": "scenario_wave_plans_and_doctrines_define_three_escalating_waves",
@@ -174,7 +182,8 @@
       "firekeepers",
       "scouts",
       "runner_network",
-      "fallback_convoy"
+      "fallback_convoy",
+      "crossbow_watch"
     ],
     "units": [
       "pike_squad",
@@ -182,7 +191,8 @@
       "fire_team",
       "scout_post",
       "runner_pair",
-      "rear_guard"
+      "rear_guard",
+      "crossbow_patrol"
     ],
     "equipment": [
       "narrow_gate",
@@ -190,13 +200,15 @@
       "fire_brazier",
       "signal_beacon",
       "supply_cache",
-      "breakaway_barricade"
+      "breakaway_barricade",
+      "watch_banner"
     ],
     "enemies": [
       "raider",
       "sapper",
       "climber",
-      "siege_beast"
+      "siege_beast",
+      "shield_guard"
     ],
     "waves": 3,
     "keep_grid": [
@@ -470,6 +482,19 @@
       "cost_profile": {"materials": 8, "command_points": 0, "space": "small"}
     },
     {
+      "id": "crossbow_patrol",
+      "name": "Crossbow Patrol",
+      "status": "active",
+      "category": "precision",
+      "footprint": [2, 1],
+      "purpose": "Turns scarce upper-wall space into a readable answer to armored enemies.",
+      "strengths": ["armor_piercing", "wall_range", "focused_fire"],
+      "weaknesses": ["finite_ammunition", "upper_wall_only", "limited_targets"],
+      "player_readability": "A violet crossbow glyph and bolt trail distinguish the patrol from ordinary ranged defenders.",
+      "counter_families": ["shielded_advance", "feint_and_flank"],
+      "cost_profile": {"materials": 9, "command_points": 0, "space": "small"}
+    },
+    {
       "id": "bellkeepers",
       "name": "Bellkeepers",
       "status": "future",
@@ -580,6 +605,13 @@
       "status": "active",
       "purpose": "Absorbs one dangerous room contact and breaks in the process.",
       "tradeoff": "Consumes space and cannot protect a second impact."
+    },
+    {
+      "id": "watch_banner",
+      "name": "Watch Banner",
+      "status": "active",
+      "purpose": "Adds one damage to a nearby ranged defender without attacking itself.",
+      "tradeoff": "Uses upper-wall space and materials for a non-stacking support effect."
     }
   ],
   "pack_families": [
@@ -713,6 +745,20 @@
       "does_not_guarantee": "A fallback cannot rescue every damaged room."
     },
     {
+      "id": "crossbow_watch",
+      "name": "Crossbow Watch",
+      "purpose": "Build an elevated precision line against armored pressure.",
+      "status": "active",
+      "family": "precision",
+      "contents": ["crossbow_patrol", "watch_banner"],
+      "doctrine": "layered_crossfire",
+      "player_question": "Which upper-wall lane deserves a scarce armor-piercing response?",
+      "strength": "Ignores armor and rewards a compact, readable ranged formation.",
+      "weakness": "Finite ammunition and wall-only placement make it poor at broad or prolonged defense.",
+      "commander_affinity": ["castellan", "warden"],
+      "does_not_guarantee": "Armor piercing answers Shield Guards but does not replace a complete keep layout."
+    },
+    {
       "id": "bell_guard",
       "name": "Bell Guard",
       "purpose": "Turn signals and morale into coordinated response.",
@@ -819,6 +865,14 @@
       ]
     },
     {
+      "id": "shielded_advance",
+      "status": "active",
+      "question": "Did the player reserve a precise answer for armor instead of relying on generic damage?",
+      "telegraph": "A red shield marker and visible armor value appear on the gate road.",
+      "pressure_pattern": "Shield Guards absorb ordinary contributors while mixed threats punish an overly narrow firing line.",
+      "response_families": ["precision", "control", "mobile_response", "commander_ability"]
+    },
+    {
       "id": "smoke_and_signal",
       "status": "future",
       "question": "Can the player maintain useful information when sightlines are deliberately degraded?",
@@ -897,6 +951,14 @@
         "reserve_specialist",
         "evacuate_refuge"
       ]
+    },
+    {
+      "id": "shield_guard",
+      "status": "active",
+      "role": "armored gate-road pressure",
+      "doctrine": "shielded_advance",
+      "readable_behavior": "Advances behind a red shield, displays armor 2, and absorbs damage from every contributor without armor piercing.",
+      "counterplay": ["crossbow_patrol", "watch_banner_support", "armor_piercing", "mixed_target_coverage"]
     },
     {
       "id": "ash_slinger",
@@ -1077,6 +1139,7 @@
         "firekeepers",
         "shieldwall",
         "runner_network",
+        "crossbow_watch",
         "bell_guard",
         "counter_siege"
       ],
