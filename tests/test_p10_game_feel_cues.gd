@@ -13,6 +13,7 @@ func _initialize() -> void:
 	await process_frame
 	ui.preferences_persistence_enabled = false
 	ui.display_application_enabled = false
+	_check(ui.audio_player == null, "headless validation should not initialize an audio playback device")
 	var state_before: String = JSON.stringify(ui.keep.serialize())
 
 	var required_cues: Array[String] = ["warning", "contact", "confirm", "repair", "ability", "error", "pause", "resume", "hold", "partial_breach", "collapse"]
