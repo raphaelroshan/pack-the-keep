@@ -14,6 +14,10 @@ const CLIMBER_ICON = preload("res://assets/climber_icon.png")
 const SAVE_PATH := "user://pack_the_keep_prototype.save"
 const SAVE_TEMP_PATH := "user://pack_the_keep_prototype.save.tmp"
 const SAVE_BACKUP_PATH := "user://pack_the_keep_prototype.save.bak"
+const SETTINGS_SCHEMA_VERSION := 1
+const SETTINGS_PATH := "user://pack_the_keep_settings.json"
+const SETTINGS_TEMP_PATH := "user://pack_the_keep_settings.json.tmp"
+const SETTINGS_BACKUP_PATH := "user://pack_the_keep_settings.json.bak"
 
 var keep: PackKeepState
 var status_label: Label
@@ -64,6 +68,7 @@ var pause_button: Button
 var speed_button: Button
 var mute_button: Button
 var contrast_button: Button
+var reduced_motion_button: Button
 var input_help_label: Label
 var quick_test_button: Button
 var screen: String = "title"
@@ -71,6 +76,11 @@ var battle_paused: bool = true
 var battle_speed_index: int = 1
 var audio_muted: bool = false
 var high_contrast: bool = false
+var reduced_motion: bool = false
+var settings_path: String = SETTINGS_PATH
+var settings_temp_path: String = SETTINGS_TEMP_PATH
+var settings_backup_path: String = SETTINGS_BACKUP_PATH
+var preferences_persistence_enabled: bool = true
 var audio_player: AudioStreamPlayer
 var audio_stream: AudioStreamGenerator
 var last_log_size: int = 0
@@ -101,6 +111,9 @@ var playtest_status_label: Label
 
 func _ready() -> void:
 	keep = PackKeepState.new(3307)
+	preferences_persistence_enabled = DisplayServer.get_name() != "headless"
+	if preferences_persistence_enabled:
+		_load_preferences()
 	_setup_audio()
 	_build_ui()
 	_set_screen("title")
@@ -193,6 +206,7 @@ func _toggle_battle_pause() -> void:
 
 func _set_battle_speed(index: int) -> void:
 	battle_speed_index = clampi(index, 0, 2)
+	_save_preferences()
 	_set_event("Battle speed set to %.1fx. Space pauses; N advances one manual step." % _battle_speed())
 	_refresh_ui()
 
@@ -201,6 +215,7 @@ func _cycle_battle_speed() -> void:
 
 func _toggle_mute() -> void:
 	audio_muted = not audio_muted
+	_save_preferences()
 	_set_event("Feedback tones muted." if audio_muted else "Feedback tones enabled.")
 	_refresh_ui()
 
@@ -208,8 +223,64 @@ func _toggle_contrast() -> void:
 	high_contrast = not high_contrast
 	if keep_canvas != null:
 		keep_canvas.call("set_accessibility", high_contrast)
+	_save_preferences()
 	_set_event("High-contrast cues enabled." if high_contrast else "Standard color cues restored.")
 	_refresh_ui()
+
+func _toggle_reduced_motion() -> void:
+	reduced_motion = not reduced_motion
+	if keep_canvas != null:
+		keep_canvas.call("set_reduced_motion", reduced_motion)
+	_save_preferences()
+	_set_event("Reduced motion enabled; transient board flashes are suppressed." if reduced_motion else "Standard motion feedback restored.")
+	_refresh_ui()
+
+func _load_preferences() -> void:
+	battle_speed_index = 1
+	audio_muted = false
+	high_contrast = false
+	reduced_motion = false
+	if not FileAccess.file_exists(settings_path):
+		return
+	var payload: Variant = JSON.parse_string(FileAccess.get_file_as_string(settings_path))
+	if not payload is Dictionary or int(payload.get("schema_version", 0)) != SETTINGS_SCHEMA_VERSION:
+		return
+	var saved_speed: Variant = payload.get("battle_speed_index")
+	if (saved_speed is int or saved_speed is float) and float(saved_speed) == floor(float(saved_speed)) and int(saved_speed) >= 0 and int(saved_speed) <= 2:
+		battle_speed_index = int(saved_speed)
+	if payload.get("audio_muted") is bool:
+		audio_muted = bool(payload.audio_muted)
+	if payload.get("high_contrast") is bool:
+		high_contrast = bool(payload.high_contrast)
+	if payload.get("reduced_motion") is bool:
+		reduced_motion = bool(payload.reduced_motion)
+
+func _save_preferences() -> bool:
+	if not preferences_persistence_enabled:
+		return true
+	var file: FileAccess = FileAccess.open(settings_temp_path, FileAccess.WRITE)
+	if file == null:
+		return false
+	file.store_string(JSON.stringify({"schema_version": SETTINGS_SCHEMA_VERSION, "battle_speed_index": battle_speed_index, "audio_muted": audio_muted, "high_contrast": high_contrast, "reduced_motion": reduced_motion}))
+	file.flush()
+	file.close()
+	var directory: DirAccess = DirAccess.open("user://")
+	if directory == null:
+		return false
+	if FileAccess.file_exists(settings_backup_path):
+		directory.remove(settings_backup_path.get_file())
+	if FileAccess.file_exists(settings_path):
+		var backup_error: Error = directory.rename(settings_path.get_file(), settings_backup_path.get_file())
+		if backup_error != OK:
+			return false
+	var rename_error: Error = directory.rename(settings_temp_path.get_file(), settings_path.get_file())
+	if rename_error != OK:
+		if FileAccess.file_exists(settings_backup_path):
+			directory.rename(settings_backup_path.get_file(), settings_path.get_file())
+		return false
+	if FileAccess.file_exists(settings_backup_path):
+		directory.remove(settings_backup_path.get_file())
+	return true
 
 func _focus_report() -> void:
 	if log_label != null:
@@ -672,6 +743,11 @@ func _build_ui() -> void:
 	contrast_button.pressed.connect(_toggle_contrast)
 	contrast_button.tooltip_text = "Adds shape/text cues so doctrine and damage are not color-dependent."
 	controls.add_child(contrast_button)
+	reduced_motion_button = Button.new()
+	reduced_motion_button.text = "Reduced motion: OFF"
+	reduced_motion_button.tooltip_text = "Suppress transient board flashes without changing simulation timing or outcomes."
+	reduced_motion_button.pressed.connect(_toggle_reduced_motion)
+	controls.add_child(reduced_motion_button)
 
 func _build_title_card() -> PanelContainer:
 	var card: PanelContainer = PanelContainer.new()
@@ -1338,7 +1414,6 @@ func _on_start_quick_playtest() -> void:
 	keep.reset_run(3307)
 	focused_enemy_index = -1
 	battle_paused = true
-	battle_speed_index = 1
 	last_log_size = 0
 	_clear_placement_mode()
 	selected_instance_id = ""
@@ -1378,7 +1453,6 @@ func _on_reset_run() -> void:
 	keep.reset_run(3307)
 	focused_enemy_index = -1
 	battle_paused = true
-	battle_speed_index = 1
 	last_log_size = 0
 	_clear_placement_mode()
 	selected_instance_id = ""
@@ -1537,6 +1611,7 @@ func _refresh_ui() -> void:
 	speed_button.text = "Speed: %.1fx (1/2/3)" % _battle_speed()
 	mute_button.text = "Feedback tones: OFF" if audio_muted else "Feedback tones: ON"
 	contrast_button.text = "High-contrast cues: ON" if high_contrast else "High-contrast cues: OFF"
+	reduced_motion_button.text = "Reduced motion: ON" if reduced_motion else "Reduced motion: OFF"
 	_refresh_response_preview()
 	_refresh_layout_lens()
 	_refresh_recovery_priorities()
@@ -1544,6 +1619,8 @@ func _refresh_ui() -> void:
 	_refresh_result_explanation()
 	keep_canvas.keep = keep
 	keep_canvas.call("set_focus", focused_enemy_index)
+	keep_canvas.call("set_accessibility", high_contrast)
+	keep_canvas.call("set_reduced_motion", reduced_motion)
 	keep_canvas.queue_redraw()
 
 class KeepCanvas extends Control:
@@ -1564,6 +1641,7 @@ class KeepCanvas extends Control:
 	var feedback_color: Color = Color.TRANSPARENT
 	var feedback_ttl: float = 0.0
 	var high_contrast_mode: bool = false
+	var reduced_motion_mode: bool = false
 	var focused_enemy_index: int = -1
 
 	func set_focus(index: int) -> void:
@@ -1580,11 +1658,17 @@ class KeepCanvas extends Control:
 
 	func set_feedback(color: Color) -> void:
 		feedback_color = color
-		feedback_ttl = 0.38 if not high_contrast_mode else 0.18
+		feedback_ttl = 0.0 if reduced_motion_mode else 0.38 if not high_contrast_mode else 0.18
 		queue_redraw()
 
 	func set_accessibility(enabled: bool) -> void:
 		high_contrast_mode = enabled
+		queue_redraw()
+
+	func set_reduced_motion(enabled: bool) -> void:
+		reduced_motion_mode = enabled
+		if enabled:
+			feedback_ttl = 0.0
 		queue_redraw()
 
 	func _process(delta: float) -> void:

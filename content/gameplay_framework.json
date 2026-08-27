@@ -84,6 +84,12 @@
     "persistence": "unlocked_and_equipped_modifier_ids_survive_new_run_and_save_load",
     "non_goals": ["experience_grind", "permanent_damage_bonus", "regional_map"]
   },
+  "p10_accessibility_preferences": {
+    "status": "implemented",
+    "preferences": ["feedback_audio", "battle_speed", "high_contrast", "reduced_motion"],
+    "determinism_rule": "preferences remain outside PackKeepState serialization and never change battle outcomes",
+    "persistence": "versioned atomic user settings with safe defaults for malformed or future files"
+  },
   "v090_multi_wave": {
     "status": "implemented",
     "authored_sequence": "scenario_wave_plans_and_doctrines_define_three_escalating_waves",
