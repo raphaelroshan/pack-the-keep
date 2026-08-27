@@ -19,3 +19,9 @@ The action is a presentation convenience. It does not add a second simulation pa
 ## Acceptance criteria
 
 A fresh run begins at the title screen. `Start Game — Quick Playtest` opens Preparation with exactly two starter pieces, an active Gatehouse Lock scenario, and a readable fort. The quick action opens Battle, starts the invasion, advances one step, and leaves the battle active and paused. Existing deterministic tests, placement-box behavior, focus selection, pause/speed controls, health/ammo overlays, results, and save behavior remain unchanged.
+
+## Refinement: one primary action beside the fort
+
+The playtest now exposes one prominent primary action directly above the fort instead of requiring the tester to find the action in the scrolling command table. Its label changes with the state: `RUN QUICK TEST — ONE BATTLE STEP` in Preparation, `ADVANCE ONE STEP — INSPECT` in Battle, and `RESTART QUICK PLAYTEST` in Results. A compact status line explains the current step, pause state, and the available keyboard alternatives.
+
+This reduces first-run search cost while preserving access to the full command table. Empty preparation disables the quick action until a defender is placed; active Battle keeps the action paused and inspectable; Results restarts the same deterministic preset rather than silently continuing a completed run.

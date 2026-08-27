@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.8.4-quick-playtest",
+  "framework_version": "0.8.6-playtest-polish",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -57,6 +57,23 @@
     "recommended_layout": "fixed_explainable_starter_placements_through_authoritative_place_piece_api",
     "combat_readability": ["newest_first_event_feed", "causal_result_metrics", "outcome_interpretation"],
     "determinism_rule": "guidance_event_feed_and_result_explanation_read_state_without_mutating_authoritative_outcomes"
+  },
+  "v086_playtest_refinement": {
+    "status": "implemented",
+    "primary_control": "single_left_column_action_above_fort",
+    "preparation_action": "run_quick_test_one_battle_step",
+    "battle_action": "advance_one_step_inspect",
+    "results_action": "restart_quick_playtest",
+    "state_prompt": "primary_control_and_status_line_are_screen_aware",
+    "empty_preparation_guard": "disabled_until_a_defender_is_present"
+  },
+  "v085_playtest_polish": {
+    "status": "implemented",
+    "primary_control": "single_left_column_action_above_fort",
+    "preparation_action": "run_quick_test_one_battle_step",
+    "battle_action": "advance_one_step_inspect",
+    "results_action": "restart_quick_playtest",
+    "pause_explanation": "step_count_and_pause_state_are_shown_beside_the_fort"
   },
   "v084_quick_playtest": {
     "status": "implemented",

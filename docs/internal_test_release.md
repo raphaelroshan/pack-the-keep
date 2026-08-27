@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.8.4-quick-playtest` — one-click preset entry and one-step battle validation
+**Current build identity:** `0.8.6-playtest-polish` — focused primary action, guarded states, and step-aware guidance
 
 ## Purpose
 
@@ -9,6 +9,14 @@ This package is an internal pre-alpha test release, not a commercial demo or sto
 ## v0.8.2 testability additions
 
 Preparation now displays a numbered first-battle guide that recommends the authoritative starter arrangement and explains what to read before starting. The command table includes **Use recommended starter layout**, which places Pike Squad and Narrow Gate at fixed, readable ground-floor origins through the same validated placement API used by direct map placement; it is a recommendation, not a forced opening build. During battle, the left panel presents the latest four authoritative battle-report lines in a newest-first **Combat Event Feed**. Results present a **Causal Result** panel with outcome, breach, morale, defeated enemies, room damage, piece damage, and a plain-language interpretation of what to test next. Guidance changes between preparation, battle, and results while the fort remains visible.
+
+## v0.8.6 playtest-refinement additions
+
+The quick-playtest flow now has one authoritative primary action beside the fort. In Preparation it reads **RUN QUICK TEST — ONE BATTLE STEP**; in Battle it becomes **ADVANCE ONE STEP — INSPECT** and resolves exactly one additional paused step; in Results it becomes **RESTART QUICK PLAYTEST**. A status line gives the current step, pause state, and keyboard alternatives. The action is disabled in empty Preparation until a defender is available.
+
+## v0.8.5 playtest-polish additions
+
+The playtest now has one prominent primary action directly above the fort rather than requiring a tester to find the test command in the scrolling command table. The label changes with the current screen: **RUN QUICK TEST — ONE BATTLE STEP** in Preparation, **ADVANCE ONE STEP — INSPECT** in Battle, and **RESTART QUICK PLAYTEST** in Results. A compact status line reports the current step, pause state, and keyboard alternatives. Empty Preparation disables the action until at least one defender is present.
 
 ## v0.8.4 quick-playtest additions
 
@@ -53,6 +61,16 @@ A tester should begin Preparation, compare The Castellan and The Warden profiles
 ## v0.8.2 acceptance checks
 
 On a fresh run, enter Preparation and confirm the first-battle guide names the recommended starter layout. Use the recommendation and verify that Pike Squad appears in the courtyard and Narrow Gate is placed near the gate, then modify the arrangement if desired. Start the invasion and confirm the guide explains that the fort remains visible, the event feed shows the deterministic forecast, and a manual step adds newer causal lines above older ones. Let the wave resolve, confirm the screen switches to Results, and verify that the causal panel names outcome, breach, morale, defeated enemies, room damage, piece damage, and recovery advice. Refresh the guide and result panel without commands and confirm the serialized keep state remains unchanged.
+
+## v0.8.6 acceptance checks
+
+From the quick-playtest Preparation screen, confirm that the primary action is directly above the fort and reads **RUN QUICK TEST — ONE BATTLE STEP**. Click it and verify Battle opens at Step 1, remains paused, and changes the action to **ADVANCE ONE STEP — INSPECT**. Click that action again and verify the step increments by one without starting real-time motion. Resolve the invasion and confirm the Results state presents **RESTART QUICK PLAYTEST**, which restores the deterministic preset. Open Empty Preparation and confirm the primary action is disabled until a defender is placed.
+
+## v0.8.5 acceptance checks
+
+From a fresh launch, confirm the Title screen remains sparse and presents **Start Game — Quick Playtest** as the main entry. Click it and verify that the single wide primary action appears directly above the fort in Preparation as **RUN QUICK TEST — ONE BATTLE STEP**, with a status line explaining that two starter pieces are placed.
+
+Click the primary action. Verify that Battle opens at Step 1, the action changes to **ADVANCE ONE STEP — INSPECT**, and the status line confirms the battle is paused while naming the N and Space alternatives. Click the action once more and verify that the step increments without starting real-time motion. Resolve the wave and confirm the Results action becomes **RESTART QUICK PLAYTEST**.
 
 ## v0.8.4 acceptance checks
 

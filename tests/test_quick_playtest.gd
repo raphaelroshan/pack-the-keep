@@ -33,7 +33,7 @@ func _initialize() -> void:
 		failures.append("quick-playtest preset did not place exactly two starter pieces")
 	if not ui.keep.pieces.has("pike_squad_0") or not ui.keep.pieces.has("narrow_gate_1"):
 		failures.append("quick-playtest preset is missing Pike Squad or Narrow Gate")
-	var quick_action: Button = _find_button(ui, "Quick test: advance one battle step")
+	var quick_action: Button = _find_button(ui, "RUN QUICK TEST — ONE BATTLE STEP")
 	if quick_action == null:
 		failures.append("quick test action button is missing")
 	else:
@@ -47,6 +47,32 @@ func _initialize() -> void:
 		failures.append("quick test action did not advance one readable step")
 	if not String(ui.event_label.text).contains("Battle step"):
 		failures.append("quick test action did not leave a battle-step event")
+	var battle_step_before: int = ui.keep.battle_step
+	var advance_button: Button = _find_button(ui, "ADVANCE ONE STEP — INSPECT")
+	if advance_button == null:
+		failures.append("battle primary action did not change to advance-step state")
+	else:
+		advance_button.pressed.emit()
+		await process_frame
+	if ui.keep.battle_step != battle_step_before + 1:
+		failures.append("battle primary action did not advance exactly one additional step")
+	if not ui.battle_paused:
+		failures.append("primary battle action unexpectedly started real-time motion")
+	var safety: int = 0
+	while ui.keep.wave_active and safety < 20:
+		ui._on_advance_wave()
+		await process_frame
+		safety += 1
+	if ui.screen != "results":
+		failures.append("quick-playtest did not reach Results after deterministic completion")
+	var restart_button: Button = _find_button(ui, "RESTART QUICK PLAYTEST")
+	if restart_button == null:
+		failures.append("Results primary action did not change to restart")
+	else:
+		restart_button.pressed.emit()
+		await process_frame
+	if ui.screen != "preparation" or ui.keep.pieces.size() != 2:
+		failures.append("restart quick-playtest did not restore the preset preparation state")
 	ui.queue_free()
 	await process_frame
 	if failures.is_empty():

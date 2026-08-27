@@ -56,6 +56,7 @@ var speed_button: Button
 var mute_button: Button
 var contrast_button: Button
 var input_help_label: Label
+var quick_test_button: Button
 var screen: String = "title"
 var battle_paused: bool = true
 var battle_speed_index: int = 1
@@ -69,12 +70,14 @@ var response_preview_label: Label
 var recovery_priority_label: Label
 var guidance_label: Label
 var result_explain_label: Label
+var playtest_button: Button
+var playtest_status_label: Label
 
 func _ready() -> void:
 	keep = PackKeepState.new(3307)
 	_setup_audio()
 	_build_ui()
-	_refresh_ui()
+	_set_screen("title")
 
 func _process(delta: float) -> void:
 	if battle_paused or not keep.wave_active:
@@ -270,6 +273,15 @@ func _build_ui() -> void:
 	guidance_label.custom_minimum_size = Vector2(800, 64)
 	guidance_label.add_theme_color_override("font_color", Color("#f0dca8"))
 	left.add_child(guidance_label)
+	playtest_button = Button.new()
+	playtest_button.custom_minimum_size = Vector2(800, 36)
+	playtest_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	playtest_button.pressed.connect(_on_playtest_primary_action)
+	left.add_child(playtest_button)
+	playtest_status_label = Label.new()
+	playtest_status_label.custom_minimum_size = Vector2(800, 24)
+	playtest_status_label.add_theme_color_override("font_color", Color("#8bd1b4"))
+	left.add_child(playtest_status_label)
 
 	keep_canvas = KeepCanvas.new()
 	keep_canvas.custom_minimum_size = Vector2(810, 292)
@@ -451,11 +463,6 @@ func _build_ui() -> void:
 	recommended_layout_button.tooltip_text = "Places Pike Squad and Narrow Gate in a readable first-battle arrangement; each placement remains authoritative."
 	recommended_layout_button.pressed.connect(_on_recommended_layout)
 	controls.add_child(recommended_layout_button)
-	var quick_test_button: Button = Button.new()
-	quick_test_button.text = "Quick test: advance one battle step"
-	quick_test_button.tooltip_text = "Start the preset Gatehouse Lock invasion and advance one readable combat step, leaving the battle paused for inspection."
-	quick_test_button.pressed.connect(_on_quick_test_action)
-	controls.add_child(quick_test_button)
 	var cancel_place_button: Button = Button.new()
 	cancel_place_button.text = "Cancel map placement"
 	cancel_place_button.pressed.connect(_on_cancel_placement)
@@ -1029,6 +1036,12 @@ func _on_load() -> void:
 	_set_event("Keep state loaded%s." % (" from a legacy save" if bool(result.get("legacy", false)) else ""))
 	_refresh_ui()
 
+func _on_playtest_primary_action() -> void:
+	if screen == "results":
+		_on_start_quick_playtest()
+	else:
+		_on_quick_test_action()
+
 func _on_start_quick_playtest() -> void:
 	keep.reset_run(3307)
 	focused_enemy_index = -1
@@ -1054,8 +1067,15 @@ func _on_start_quick_playtest() -> void:
 func _on_quick_test_action() -> void:
 	if screen == "title":
 		_on_start_quick_playtest()
+	if screen == "battle":
+		if keep.wave_active:
+			_on_advance_wave()
+		else:
+			_set_event("Battle is complete. Review Results or restart the quick playtest.")
+			_refresh_ui()
+		return
 	if keep.wave_active:
-		_set_event("Quick test already active. Press Space to run or N to advance the staged invasion.")
+		_set_event("Quick test already active. Press Space to run or use the primary action to advance one step.")
 		_refresh_ui()
 		return
 	_on_start_wave()
@@ -1161,6 +1181,22 @@ func _refresh_ui() -> void:
 	if event_label.text.is_empty():
 		event_label.text = "Open Pike Line or Field Engineers, place a defense on either floor, start First Bell, and advance one step at a time."
 	guidance_label.text = _first_battle_guidance()
+	if playtest_button:
+		if screen == "preparation":
+			playtest_button.text = "RUN QUICK TEST — ONE BATTLE STEP"
+			playtest_button.disabled = keep.pieces.is_empty() or keep.repair_interval_active
+			playtest_button.tooltip_text = "Start the preset invasion and leave Battle paused after one deterministic step."
+			playtest_status_label.text = "TEST READY — %d starter piece(s) placed. One click starts the gate attack and leaves it paused." % keep.pieces.size() if not keep.pieces.is_empty() else "TEST WAITING — use the recommended layout or place at least one defender first."
+		elif screen == "battle":
+			playtest_button.text = "ADVANCE ONE STEP — INSPECT"
+			playtest_button.disabled = not keep.wave_active
+			playtest_button.tooltip_text = "Resolve one deterministic battle step and remain paused for inspection."
+			playtest_status_label.text = "STEP %d — Battle is %s. Use this button or N for one step; use Space for real-time play." % [keep.battle_step, "paused" if battle_paused else "running"]
+		elif screen == "results":
+			playtest_button.text = "RESTART QUICK PLAYTEST"
+			playtest_button.disabled = false
+			playtest_button.tooltip_text = "Reset seed 3307 and replay the preset Gatehouse Lock test."
+			playtest_status_label.text = "RESULTS — Review the causal result, then restart the same deterministic test or return to preparation."
 	var recent: Array[String] = []
 	var start: int = maxi(0, keep.battle_report.size() - 4)
 	for index in range(start, keep.battle_report.size()):
