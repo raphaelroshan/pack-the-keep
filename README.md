@@ -4,7 +4,7 @@ Pack the Keep is an agent-first Godot 4.x prototype for a premium single-player 
 
 ## Current state
 
-The repository contains a playable vertical-slice shell and deterministic keep-state foundation. The main scene demonstrates commander selection, scenario selection, pack opening, top-down piece placement, invasion doctrines, wave progress, commander abilities, authored event choices, and saving prototype state. P7 adds the Runner Network and Fallback Convoy, four mobile-response pieces, Rolling Breach, and The Relief Road. P8 adds a validated three-event Relief Road chain whose typed effects are owned by `PackKeepState`, persist through save schema 3, and appear in Preparation, Recovery, and Results. The battle remains a real-time presentation over deterministic one-second steps, and the procedural square-fort renderer keeps placement, routes, targets, condition, and event consequences readable without claiming final art.
+The repository contains a playable vertical-slice shell and deterministic keep-state foundation. The main scene demonstrates commander selection, scenario selection, pack opening, top-down piece placement, invasion doctrines, wave progress, commander abilities, authored event choices, and saving prototype state. P7 adds the Runner Network and Fallback Convoy, four mobile-response pieces, Rolling Breach, and The Relief Road. P8 adds a validated three-event Relief Road chain whose typed effects are owned by `PackKeepState`. P9 adds a persistent Campaign Ledger unlock: Roadside Intelligence reveals the next authored wave composition but costs one starting morale. Event and progression state persist through save schema 4. The battle remains a real-time presentation over deterministic one-second steps, and the procedural square-fort renderer keeps placement, routes, targets, condition, and event consequences readable without claiming final art.
 
 ## Run the prototype
 
@@ -44,6 +44,7 @@ A successful run prints `PASS: Pack the Keep battle-state tests` and exits with 
 | `data/doctrines/` | Runtime invasion compositions, forecast questions, pressure summaries, and counter families. |
 | `data/scenarios/` | Runtime Greywatch objectives, three-wave plans, lessons, and bounded seed variations. |
 | `data/events/` | Runtime authored-event triggers, choices, requirements, typed effects, and follow-up links. |
+| `data/modifiers/` | Runtime progression modifiers, unlock sources, information effects, and starting trade-offs. |
 | `src/core/content_catalog.gd` | Deterministic loader and validator for externalized runtime content. |
 | `src/core/keep_state.gd` | Deterministic commander, pack, grid, piece, invasion, ability, recovery, and save logic. |
 | `src/ui/main.gd` | Prototype keep display, procedural square-fort map, gate-entry presentation, and command UI. |

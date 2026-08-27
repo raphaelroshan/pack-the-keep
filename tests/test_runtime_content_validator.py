@@ -82,9 +82,20 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         event["choices"].append(copy.deepcopy(event["choices"][0]))
         event["follow_up"] = "relief_road_warning"
         errors: list[str] = []
-        validator.validate_event(Path("wrong_filename.json"), event, {"relief_road"}, set(), errors)
+        validator.validate_event(Path("wrong_filename.json"), event, {"relief_road"}, {"roadside_intelligence"}, set(), errors)
         joined = "\n".join(errors)
         for expected in ("does not match filename", "unsupported trigger phase", "trigger wave", "unsupported effect", "duplicate choice", "follow itself"):
+            self.assertIn(expected, joined)
+
+    def test_modifier_rejects_unknown_unlock_effect_and_cost(self) -> None:
+        modifier = copy.deepcopy(load("data/modifiers/roadside_intelligence.json"))
+        modifier["unlock_event"] = "missing_event"
+        modifier["effect"] = "raw_power"
+        modifier["starting_morale_cost"] = -1
+        errors: list[str] = []
+        validator.validate_modifier(Path("wrong_filename.json"), modifier, {"relief_road_report"}, set(), errors)
+        joined = "\n".join(errors)
+        for expected in ("does not match filename", "unknown unlock_event", "unsupported modifier effect", "starting_morale_cost"):
             self.assertIn(expected, joined)
 
 

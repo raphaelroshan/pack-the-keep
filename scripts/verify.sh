@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-python3 tools/validate_runtime_content.py --pieces data/pieces --packs data/packs --commanders data/commanders --enemies data/enemies --doctrines data/doctrines --scenarios data/scenarios --events data/events --manifest content/content_manifest.json
+python3 tools/validate_runtime_content.py --pieces data/pieces --packs data/packs --commanders data/commanders --enemies data/enemies --doctrines data/doctrines --scenarios data/scenarios --events data/events --modifiers data/modifiers --manifest content/content_manifest.json
 python3 tests/test_runtime_content_validator.py
 
 if command -v godot >/dev/null 2>&1; then
@@ -24,6 +24,8 @@ if command -v godot >/dev/null 2>&1; then
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p7_ui.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p8_events.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p8_event_ui.gd
+  godot --headless --audio-driver Dummy --path . --script res://tests/test_p9_progression.gd
+  godot --headless --audio-driver Dummy --path . --script res://tests/test_p9_progression_ui.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_initial_combat.gd
 elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --editor --quit
@@ -42,6 +44,8 @@ elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p7_ui.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p8_events.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p8_event_ui.gd
+  godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p9_progression.gd
+  godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p9_progression_ui.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_initial_combat.gd
 else
   echo "Godot 4.x is not installed or not on PATH."

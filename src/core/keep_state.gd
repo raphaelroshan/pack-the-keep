@@ -9,7 +9,7 @@ const GRID_SIZE := Vector2i(12, 8)
 const FLOORS := ["ground", "upper"]
 const ACTIVE_COMMANDER := "castellan"
 const STARTER_PIECES := ["pike_squad", "narrow_gate"]
-const SAVE_SCHEMA_VERSION := 3
+const SAVE_SCHEMA_VERSION := 4
 const GAME_ID := "pack-the-keep"
 
 const ROOMS: Dictionary = {
@@ -67,6 +67,8 @@ var active_event_id: String = ""
 var resolved_event_ids: Array[String] = []
 var event_flags: Dictionary = {}
 var event_history: Array[Dictionary] = []
+var unlocked_modifier_ids: Array[String] = []
+var equipped_modifier_id: String = ""
 var _last_attackers: Array[String] = []
 var _last_attack_damage: Dictionary = {}
 var content_catalog: RefCounted
@@ -77,6 +79,7 @@ var _enemy_definitions: Dictionary = {}
 var _doctrine_definitions: Dictionary = {}
 var _scenario_definitions: Dictionary = {}
 var _event_definitions: Dictionary = {}
+var _modifier_definitions: Dictionary = {}
 var content_catalog_errors: Array[String] = []
 
 func _init(keep_seed: int = 3307) -> void:
@@ -89,6 +92,7 @@ func _init(keep_seed: int = 3307) -> void:
 	_doctrine_definitions = catalog_result.get("doctrines", {}).duplicate(true)
 	_scenario_definitions = catalog_result.get("scenarios", {}).duplicate(true)
 	_event_definitions = catalog_result.get("events", {}).duplicate(true)
+	_modifier_definitions = catalog_result.get("modifiers", {}).duplicate(true)
 	for error in catalog_result.get("errors", []):
 		content_catalog_errors.append(String(error))
 	if not content_catalog_errors.is_empty():
@@ -101,11 +105,15 @@ func _reset_rooms() -> void:
 		rooms[room_id] = {"condition": 100, "state": "stable"}
 
 func reset_run(new_seed: int = 3307) -> void:
+	var preserved_unlocks: Array[String] = unlocked_modifier_ids.duplicate()
+	var preserved_equipped: String = equipped_modifier_id
 	seed = new_seed
 	commander_id = ACTIVE_COMMANDER
 	materials = int(_commander_definitions[ACTIVE_COMMANDER].starting_materials)
 	command_points = 3
-	morale = int(_commander_definitions[ACTIVE_COMMANDER].starting_morale)
+	unlocked_modifier_ids = preserved_unlocks
+	equipped_modifier_id = preserved_equipped if preserved_unlocks.has(preserved_equipped) and _modifier_definitions.has(preserved_equipped) else ""
+	morale = _starting_morale()
 	scenario_id = "gatehouse_lock"
 	scenario_active = false
 	scenario_variation_id = "standard_bell"
@@ -160,6 +168,12 @@ func _reset_combat_metrics() -> void:
 		"ammo_spent": 0
 	}
 
+func _starting_morale() -> int:
+	var base: int = int(_commander_definitions[commander_id].starting_morale)
+	if not equipped_modifier_id.is_empty() and _modifier_definitions.has(equipped_modifier_id):
+		base -= int(_modifier_definitions[equipped_modifier_id].get("starting_morale_cost", 0))
+	return clampi(base, 0, 10)
+
 func _preparation_pack_limit() -> int:
 	return 2 if wave_index == 0 else 1
 
@@ -190,7 +204,7 @@ func select_commander(id: String) -> Dictionary:
 		return {"ok": false, "reason": "commander cannot change after scenario events begin"}
 	commander_id = id
 	materials = int(_commander_definitions[id].starting_materials)
-	morale = int(_commander_definitions[id].starting_morale)
+	morale = _starting_morale()
 	command_points = 3
 	return {"ok": true, "message": "%s takes command. %s Limitation: %s" % [_commander_definitions[id].name, _commander_definitions[id].passive, _commander_definitions[id].limitation], "ability_name": _commander_definitions[id].ability_name, "ability_text": _commander_definitions[id].ability_text}
 
@@ -224,7 +238,7 @@ func select_scenario(id: String) -> Dictionary:
 	variation_materials = int(variation.get("materials", 0))
 	variation_morale = int(variation.get("morale", 0))
 	materials = int(_commander_definitions[commander_id].starting_materials) + variation_materials
-	morale = clampi(int(_commander_definitions[commander_id].starting_morale) + variation_morale, 0, 10)
+	morale = clampi(_starting_morale() + variation_morale, 0, 10)
 	_log("Scenario selected: %s / variation %s. %s" % [_scenario_definitions[id].name, scenario_variation_id, _scenario_definitions[id].lesson])
 	_refresh_active_event()
 	return {"ok": true, "message": "%s selected: %s Variation: %s." % [_scenario_definitions[id].name, _scenario_definitions[id].objective, scenario_variation_id], "scenario": scenario_preview(id)}
@@ -332,8 +346,10 @@ func _event_effect_failure(effects: Variant) -> String:
 			remaining_actions -= amount
 			if remaining_actions < 0:
 				return "event_requirement_recovery_actions"
-		elif not ["add_materials", "add_morale", "set_flag", "record_outcome"].has(operation):
+		elif not ["add_materials", "add_morale", "set_flag", "record_outcome", "unlock_modifier"].has(operation):
 			return "unsupported_event_effect"
+		elif operation == "unlock_modifier" and not _modifier_definitions.has(String(effect.get("modifier", ""))):
+			return "unknown_modifier"
 	return ""
 
 func _apply_event_effect(effect: Dictionary) -> Dictionary:
@@ -358,6 +374,9 @@ func _apply_event_effect(effect: Dictionary) -> Dictionary:
 		return {"op": operation, "flag": flag_id, "value": event_flags[flag_id]}
 	if operation == "record_outcome":
 		return {"op": operation, "tag": String(effect.get("tag", "")), "outcome": last_outcome, "materials": materials, "morale": morale, "breach_level": breach_level, "surviving_pieces": _surviving_piece_count()}
+	if operation == "unlock_modifier":
+		var result: Dictionary = unlock_modifier(String(effect.get("modifier", "")), active_event_id)
+		return result.get("state_changes", [])[0] if not result.get("state_changes", []).is_empty() else {"op": operation, "modifier": String(effect.get("modifier", "")), "already_unlocked": true}
 	return {"op": operation}
 
 func _current_event_phase() -> String:
@@ -453,13 +472,56 @@ func event_definition(id: String) -> Dictionary:
 		return {}
 	return _event_definitions[id].duplicate(true)
 
+func modifier_ids() -> Array[String]:
+	return content_catalog.modifier_ids()
+
+func modifier_definition(id: String) -> Dictionary:
+	if not _modifier_definitions.has(id):
+		return {}
+	return _modifier_definitions[id].duplicate(true)
+
+func unlock_modifier(modifier_id: String, source_event_id: String = "") -> Dictionary:
+	if not _modifier_definitions.has(modifier_id):
+		return {"ok": false, "reason": "unknown_modifier", "message": "That run modifier does not exist.", "state_changes": []}
+	var required_event: String = String(_modifier_definitions[modifier_id].get("unlock_event", ""))
+	if source_event_id != required_event or (active_event_id != source_event_id and not resolved_event_ids.has(source_event_id)):
+		return {"ok": false, "reason": "modifier_unlock_requirement", "message": "Complete the required scenario event before unlocking this modifier.", "state_changes": []}
+	if unlocked_modifier_ids.has(modifier_id):
+		return {"ok": true, "reason": "", "message": "%s is already unlocked." % String(_modifier_definitions[modifier_id].name), "state_changes": []}
+	unlocked_modifier_ids.append(modifier_id)
+	return {"ok": true, "reason": "", "message": "%s unlocked for future runs." % String(_modifier_definitions[modifier_id].name), "state_changes": [{"op": "unlock_modifier", "modifier": modifier_id}]}
+
+func modifier_equip_preview(modifier_id: String) -> Dictionary:
+	if not modifier_id.is_empty() and not _modifier_definitions.has(modifier_id):
+		return {"ok": false, "reason": "unknown_modifier", "message": "That run modifier does not exist.", "state_changes": []}
+	if not modifier_id.is_empty() and not unlocked_modifier_ids.has(modifier_id):
+		return {"ok": false, "reason": "modifier_locked", "message": "Complete its unlock objective first.", "state_changes": []}
+	var terminal_run: bool = scenario_active and authored_wave_count() > 0 and wave_index >= authored_wave_count() and not wave_active and not has_next_wave() and active_event_id.is_empty() and not last_outcome.is_empty()
+	var fresh_run: bool = wave_index == 0 and not wave_active and not repair_interval_active and pieces.is_empty() and event_history.is_empty()
+	if not terminal_run and not fresh_run:
+		return {"ok": false, "reason": "modifier_change_requires_between_runs", "message": "Change run modifiers before setup or after a completed scenario.", "state_changes": []}
+	if equipped_modifier_id == modifier_id:
+		return {"ok": false, "reason": "modifier_already_equipped", "message": "That run modifier is already equipped.", "state_changes": []}
+	return {"ok": true, "reason": "", "message": "Modifier selection is available.", "state_changes": []}
+
+func equip_modifier(modifier_id: String) -> Dictionary:
+	var preview: Dictionary = modifier_equip_preview(modifier_id)
+	if not bool(preview.get("ok", false)):
+		return preview
+	var fresh_run: bool = wave_index == 0 and not wave_active and not repair_interval_active and pieces.is_empty() and event_history.is_empty()
+	equipped_modifier_id = modifier_id
+	if fresh_run:
+		morale = clampi(_starting_morale() + (variation_morale if scenario_active else 0), 0, 10)
+	var modifier_name: String = "No modifier" if modifier_id.is_empty() else String(_modifier_definitions[modifier_id].name)
+	return {"ok": true, "reason": "", "message": "%s will apply to the next run." % modifier_name, "state_changes": [{"op": "equip_modifier", "modifier": modifier_id, "starting_morale": morale}]}
+
 func pack_definition(pack_id: String) -> Dictionary:
 	if not _pack_definitions.has(pack_id):
 		return {}
 	return _pack_definitions[pack_id].duplicate(true)
 
 func content_catalog_status() -> Dictionary:
-	return {"ok": content_catalog_errors.is_empty(), "commander_count": _commander_definitions.size(), "piece_count": _piece_definitions.size(), "pack_count": _pack_definitions.size(), "enemy_count": _enemy_definitions.size(), "doctrine_count": _doctrine_definitions.size(), "scenario_count": _scenario_definitions.size(), "event_count": _event_definitions.size(), "errors": content_catalog_errors.duplicate()}
+	return {"ok": content_catalog_errors.is_empty(), "commander_count": _commander_definitions.size(), "piece_count": _piece_definitions.size(), "pack_count": _pack_definitions.size(), "enemy_count": _enemy_definitions.size(), "doctrine_count": _doctrine_definitions.size(), "scenario_count": _scenario_definitions.size(), "event_count": _event_definitions.size(), "modifier_count": _modifier_definitions.size(), "errors": content_catalog_errors.duplicate()}
 
 func pack_preview(pack_id: String) -> Dictionary:
 	if not _pack_definitions.has(pack_id):
@@ -1525,7 +1587,19 @@ func forecast() -> Dictionary:
 	var scout_bonus: bool = _has_unit("scout_post", "upper") or _warden_signal_bonus()
 	if _has_assignment("scout_post", "north_tower"):
 		uncertainty = "none: North Tower assignment reveals the landing room"
-	return {"doctrine": enemy_doctrine, "question": doctrine.get("question", ""), "likely_target": likely_target, "uncertainty": uncertainty, "scout_bonus": scout_bonus, "exact_target_revealed": _has_assignment("scout_post", "north_tower")}
+	var composition_revealed: bool = not equipped_modifier_id.is_empty() and String(_modifier_definitions.get(equipped_modifier_id, {}).get("effect", "")) == "reveal_wave_composition"
+	var composition: Array[String] = []
+	if composition_revealed:
+		if wave_active:
+			for enemy in enemies:
+				composition.append(String(enemy.get("enemy_id", "")))
+		elif scenario_active and _scenario_definitions.has(scenario_id):
+			var plans: Array = _scenario_definitions[scenario_id].get("wave_plans", [])
+			if wave_index < plans.size():
+				for enemy_id in plans[wave_index]:
+					composition.append(String(enemy_id))
+		uncertainty = "composition revealed by Roadside Intelligence; targets still respond to keep condition"
+	return {"doctrine": enemy_doctrine, "question": doctrine.get("question", ""), "likely_target": likely_target, "uncertainty": uncertainty, "scout_bonus": scout_bonus, "exact_target_revealed": _has_assignment("scout_post", "north_tower"), "composition_revealed": composition_revealed, "composition": composition}
 
 func summary() -> Dictionary:
 	return {
@@ -1569,6 +1643,8 @@ func summary() -> Dictionary:
 		"active_event": current_event(),
 		"resolved_event_ids": resolved_event_ids.duplicate(),
 		"event_history": event_history.duplicate(true),
+		"unlocked_modifier_ids": unlocked_modifier_ids.duplicate(),
+		"equipped_modifier_id": equipped_modifier_id,
 		"recovery_advice": recovery_advice(),
 		"scenario_scorecard": scenario_scorecard()
 	}
@@ -1618,6 +1694,8 @@ func serialize() -> Dictionary:
 		"resolved_event_ids": resolved_event_ids.duplicate(),
 		"event_flags": event_flags.duplicate(true),
 		"event_history": event_history.duplicate(true),
+		"unlocked_modifier_ids": unlocked_modifier_ids.duplicate(),
+		"equipped_modifier_id": equipped_modifier_id,
 		"schema_version": SAVE_SCHEMA_VERSION,
 		"game_id": GAME_ID
 	}
@@ -1682,6 +1760,20 @@ func load_serialized(data: Dictionary) -> Dictionary:
 			return {"ok": false, "reason": "save event history reference is malformed"}
 	if not saved_active_event.is_empty() and saved_resolved_events.has(saved_active_event):
 		return {"ok": false, "reason": "save event cannot be active and resolved"}
+	if data.has("unlocked_modifier_ids") and not data.get("unlocked_modifier_ids") is Array:
+		return {"ok": false, "reason": "save unlocked modifier list is malformed"}
+	var saved_unlocked_modifiers: Array[String] = []
+	for modifier_id_value in data.get("unlocked_modifier_ids", []):
+		if not modifier_id_value is String or not _modifier_definitions.has(String(modifier_id_value)):
+			return {"ok": false, "reason": "save contains an unknown unlocked modifier"}
+		if saved_unlocked_modifiers.has(String(modifier_id_value)):
+			return {"ok": false, "reason": "save unlocked modifier list contains duplicates"}
+		saved_unlocked_modifiers.append(String(modifier_id_value))
+	if data.has("equipped_modifier_id") and not data.get("equipped_modifier_id") is String:
+		return {"ok": false, "reason": "save equipped modifier id is malformed"}
+	var saved_equipped_modifier: String = String(data.get("equipped_modifier_id", ""))
+	if not saved_equipped_modifier.is_empty() and (not _modifier_definitions.has(saved_equipped_modifier) or not saved_unlocked_modifiers.has(saved_equipped_modifier)):
+		return {"ok": false, "reason": "save equipped modifier is not unlocked"}
 	seed = int(data.get("seed", seed))
 	commander_id = String(data.get("commander_id", ACTIVE_COMMANDER))
 	if not _commander_definitions.has(commander_id):
@@ -1754,6 +1846,8 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	for history_entry in data.get("event_history", []):
 		if history_entry is Dictionary:
 			event_history.append(history_entry.duplicate(true))
+	unlocked_modifier_ids = saved_unlocked_modifiers
+	equipped_modifier_id = saved_equipped_modifier
 	if combat_metrics.is_empty():
 		_reset_combat_metrics()
 	repair_interval_active = bool(data.get("repair_interval_active", repair_interval_active))
@@ -1780,6 +1874,9 @@ func load_serialized(data: Dictionary) -> Dictionary:
 				assigned_rooms[assignment] = instance_id
 	if schema_version < 3:
 		_migrate_legacy_event_state()
+	if schema_version < 4:
+		unlocked_modifier_ids.clear()
+		equipped_modifier_id = ""
 	_refresh_active_event()
 	return {"ok": true, "message": "Save loaded.", "schema_version": schema_version, "legacy": not data.has("schema_version"), "migrated": schema_version < SAVE_SCHEMA_VERSION}
 

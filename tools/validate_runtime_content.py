@@ -58,6 +58,10 @@ EVENT_FIELDS = {
     "id", "content_version", "status", "title", "short_role", "type", "scenario",
     "trigger", "setup", "choices", "follow_up",
 }
+MODIFIER_FIELDS = {
+    "id", "content_version", "status", "name", "short_role", "question",
+    "unlock_event", "effect", "starting_morale_cost", "limitation",
+}
 SUPPORTED_FLOORS = {"ground", "upper"}
 SUPPORTED_ZONES = {"wall", "courtyard", "keep"}
 SUPPORTED_ATTACK_STYLES = {"melee", "ranged", "support", "fortification"}
@@ -68,8 +72,9 @@ SUPPORTED_EVENT_PHASES = {"preparation", "recovery", "results"}
 SUPPORTED_EVENT_REQUIREMENTS = {"command_points", "recovery_actions", "morale"}
 SUPPORTED_EVENT_EFFECTS = {
     "spend_command_points", "spend_recovery_action", "add_materials", "add_morale",
-    "set_flag", "record_outcome",
+    "set_flag", "record_outcome", "unlock_modifier",
 }
+SUPPORTED_MODIFIER_EFFECTS = {"reveal_wave_composition"}
 SNAKE_CASE = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
 
 
@@ -406,6 +411,7 @@ def validate_event(
     path: Path,
     event: dict[str, Any],
     scenario_ids: set[str],
+    modifier_ids: set[str],
     seen: set[str],
     errors: list[str],
 ) -> tuple[str | None, str, str]:
@@ -498,6 +504,9 @@ def validate_event(
             elif operation == "record_outcome":
                 if not isinstance(effect.get("tag"), str) or not SNAKE_CASE.fullmatch(effect["tag"]):
                     errors.append(f"{path}: choice {choice_id} record_outcome needs a snake_case tag")
+            elif operation == "unlock_modifier":
+                if not isinstance(effect.get("modifier"), str) or effect["modifier"] not in modifier_ids:
+                    errors.append(f"{path}: choice {choice_id} references unknown modifier")
     follow_up = event.get("follow_up")
     if not isinstance(follow_up, str) or (follow_up and not SNAKE_CASE.fullmatch(follow_up)):
         errors.append(f"{path}: follow_up must be empty or snake_case")
@@ -505,6 +514,41 @@ def validate_event(
     if follow_up == event_id:
         errors.append(f"{path}: event cannot follow itself")
     return event_id, scenario_id, follow_up
+
+
+def validate_modifier(
+    path: Path,
+    modifier: dict[str, Any],
+    event_ids: set[str],
+    seen: set[str],
+    errors: list[str],
+) -> str | None:
+    for field in sorted(MODIFIER_FIELDS - modifier.keys()):
+        errors.append(f"{path}: missing required field: {field}")
+    modifier_id = modifier.get("id")
+    if not isinstance(modifier_id, str) or not SNAKE_CASE.fullmatch(modifier_id):
+        errors.append(f"{path}: id must be non-empty snake_case")
+        return None
+    if modifier_id != path.stem:
+        errors.append(f"{path}: id {modifier_id} does not match filename")
+    if modifier_id in seen:
+        errors.append(f"duplicate runtime modifier id: {modifier_id}")
+    seen.add(modifier_id)
+    if modifier.get("status") != "active":
+        errors.append(f"{path}: runtime modifier status must be active")
+    if not is_integer(modifier.get("content_version")) or modifier["content_version"] < 1:
+        errors.append(f"{path}: content_version must be a positive integer")
+    cost = modifier.get("starting_morale_cost")
+    if not is_integer(cost) or cost < 0:
+        errors.append(f"{path}: starting_morale_cost must be a non-negative integer")
+    for field in ("name", "short_role", "question", "unlock_event", "effect", "limitation"):
+        if not isinstance(modifier.get(field), str) or not modifier[field].strip():
+            errors.append(f"{path}: {field} must be non-empty text")
+    if modifier.get("unlock_event") not in event_ids:
+        errors.append(f"{path}: unknown unlock_event reference")
+    if modifier.get("effect") not in SUPPORTED_MODIFIER_EFFECTS:
+        errors.append(f"{path}: unsupported modifier effect")
+    return modifier_id
 
 
 def validate_pack(
@@ -652,6 +696,7 @@ def main() -> int:
     parser.add_argument("--doctrines", required=True)
     parser.add_argument("--scenarios", required=True)
     parser.add_argument("--events", required=True)
+    parser.add_argument("--modifiers", required=True)
     parser.add_argument("--manifest", required=True)
     args = parser.parse_args()
 
@@ -758,6 +803,25 @@ def main() -> int:
         value for value in manifest.get("p8_authored_events", {}).get("event_chain", [])
         if isinstance(value, str)
     }
+    manifest_modifier_ids = {
+        value for value in manifest.get("p9_run_progression", {}).get("modifiers", [])
+        if isinstance(value, str)
+    }
+    seen_modifiers: set[str] = set()
+    runtime_modifiers: dict[str, dict[str, Any]] = {}
+    for path in json_files(Path(args.modifiers), "modifier", errors):
+        modifier = load_json(path, errors)
+        if not isinstance(modifier, dict):
+            errors.append(f"{path}: root must be an object")
+            continue
+        modifier_id = validate_modifier(path, modifier, manifest_event_ids, seen_modifiers, errors)
+        if modifier_id is not None:
+            runtime_modifiers[modifier_id] = modifier
+    for modifier_id in sorted(manifest_modifier_ids - seen_modifiers):
+        errors.append(f"runtime modifier file missing for active modifier: {modifier_id}")
+    for modifier_id in sorted(seen_modifiers - manifest_modifier_ids):
+        errors.append(f"runtime modifier is missing from P9 manifest: {modifier_id}")
+
     seen_events: set[str] = set()
     runtime_events: dict[str, tuple[str, str]] = {}
     for path in json_files(Path(args.events), "event", errors):
@@ -765,7 +829,7 @@ def main() -> int:
         if not isinstance(event, dict):
             errors.append(f"{path}: root must be an object")
             continue
-        event_id, event_scenario, follow_up = validate_event(path, event, seen_scenarios, seen_events, errors)
+        event_id, event_scenario, follow_up = validate_event(path, event, seen_scenarios, seen_modifiers, seen_events, errors)
         if event_id is not None:
             runtime_events[event_id] = (event_scenario, follow_up)
     for event_id in sorted(manifest_event_ids - seen_events):
@@ -846,7 +910,7 @@ def main() -> int:
         f"({len(seen_pieces)} pieces, {len(seen_packs)} packs, "
         f"{len(seen_commanders)} commanders, {len(seen_enemies)} enemies, "
         f"{len(seen_doctrines)} doctrines, {len(seen_scenarios)} scenarios, "
-        f"{len(seen_events)} events)"
+        f"{len(seen_events)} events, {len(seen_modifiers)} modifiers)"
     )
     return 0
 
