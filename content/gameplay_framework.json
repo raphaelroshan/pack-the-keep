@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.4.0-p2",
+  "framework_version": "0.5.0-p3",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -29,6 +29,16 @@
     "audio": "optional_code_generated_feedback_tones_only",
     "determinism_rule": "pause_speed_input_and_presentation_feedback_do_not mutate authoritative keep outcomes",
     "deferred": ["controller_remapping", "final_animation_sheets", "authored_soundscape", "dedicated_warden_and_siege_beast_art"]
+  },
+  "p3_focus_and_response": {
+    "status": "implemented",
+    "focus_inputs": ["map_enemy_click", "focus_cycle_forward", "focus_cycle_backward", "focus_enemy"],
+    "selection_rules": ["active_enemies_only", "marker_radius_plus_fixed_padding", "nearest_center_then_stable_index"],
+    "focus_feedback": ["double_outline", "FOCUSED_label", "stronger_target_line", "synchronized_dropdown_inspection"],
+    "response_preview": ["threat", "target_or_approaching", "counter_family", "commander_ability_state", "paused_preview_timing"],
+    "recovery_priorities": "deterministic criticality_then_condition_then_stable_room_id ranking; advisory only",
+    "determinism_rule": "focus, hit-testing, preview, and selection order do not mutate authoritative battle outcomes",
+    "deferred": ["direct_enemy_retargeting", "controller_remapping", "new_enemy_types", "new_commanders"]
   },
   "vertical_slice": {
     "commanders": [
@@ -1081,7 +1091,7 @@
     }
   ],
   "enemy_presentation": {
-    "status": "p2_enhanced",
+    "status": "p3_focus_enhanced",
     "actors": [
       {
         "id": "raider",
@@ -1109,6 +1119,8 @@
       "causal target report",
       "declared target line",
       "siege beast area radius and AREA label",
+      "focused enemy double outline and FOCUSED label",
+      "focused target line and TARGET label",
       "defeated state disappears from active map"
     ]
   },

@@ -63,6 +63,9 @@ var high_contrast: bool = false
 var audio_player: AudioStreamPlayer
 var audio_stream: AudioStreamGenerator
 var last_log_size: int = 0
+var focused_enemy_index: int = -1
+var response_preview_label: Label
+var recovery_priority_label: Label
 
 func _ready() -> void:
 	keep = PackKeepState.new(3307)
@@ -110,6 +113,12 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_toggle_mute()
 	elif event.is_action_pressed("contrast_toggle"):
 		_toggle_contrast()
+	elif event.is_action_pressed("focus_cycle_backward"):
+		_cycle_enemy_focus(-1)
+	elif event.is_action_pressed("focus_cycle_forward"):
+		_cycle_enemy_focus(1)
+	elif event.is_action_pressed("focus_enemy"):
+		_focus_selected_enemy()
 
 func _setup_audio() -> void:
 	audio_player = AudioStreamPlayer.new()
@@ -282,6 +291,7 @@ func _build_ui() -> void:
 	keep_canvas.keep = keep
 	keep_canvas.connect("map_hovered", Callable(self, "_on_map_hovered"))
 	keep_canvas.connect("map_clicked", Callable(self, "_on_map_clicked"))
+	keep_canvas.connect("enemy_clicked", Callable(self, "_on_enemy_clicked"))
 	left.add_child(keep_canvas)
 
 	event_label = Label.new()
@@ -315,7 +325,7 @@ func _build_ui() -> void:
 	panel_title.add_theme_color_override("font_color", Color("#e2bd84"))
 	controls.add_child(panel_title)
 	input_help_label = Label.new()
-	input_help_label.text = "P2 INPUT — Space pause | 1/2/3 speed | N step | R place | Esc cancel | M mute | C contrast"
+	input_help_label.text = "P3 INPUT — Space pause | 1/2/3 speed | N step | R place | Esc cancel | Tab focus | E enemy | M mute | C contrast"
 	input_help_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	input_help_label.add_theme_font_size_override("font_size", 10)
 	input_help_label.add_theme_color_override("font_color", Color("#aab1b2"))
@@ -499,6 +509,16 @@ func _build_ui() -> void:
 	inspector_label.custom_minimum_size = Vector2(292, 92)
 	inspector_label.add_theme_color_override("font_color", Color("#c9bfd0"))
 	controls.add_child(inspector_label)
+	response_preview_label = Label.new()
+	response_preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	response_preview_label.custom_minimum_size = Vector2(292, 90)
+	response_preview_label.add_theme_color_override("font_color", Color("#d8c389"))
+	controls.add_child(response_preview_label)
+	recovery_priority_label = Label.new()
+	recovery_priority_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	recovery_priority_label.custom_minimum_size = Vector2(292, 80)
+	recovery_priority_label.add_theme_color_override("font_color", Color("#bfe8cf"))
+	controls.add_child(recovery_priority_label)
 
 	var save_button: Button = Button.new()
 	save_button.text = "Save keep state"
@@ -714,10 +734,98 @@ func _format_inspection(data: Dictionary) -> String:
 func _on_inspect_enemy() -> void:
 	if enemy_option.selected < 0:
 		return
-	var inspection: Dictionary = keep.inspect_enemy(int(enemy_option.get_item_metadata(enemy_option.selected)))
+	_select_enemy_focus(int(enemy_option.get_item_metadata(enemy_option.selected)), "Dropdown inspection")
+
+func _active_enemy_indices() -> Array[int]:
+	var indices: Array[int] = []
+	for index in range(keep.enemies.size()):
+		if not bool(keep.enemies[index].get("defeated", false)):
+			indices.append(index)
+	return indices
+
+func _select_enemy_focus(index: int, source: String) -> void:
+	if index < 0 or index >= keep.enemies.size() or bool(keep.enemies[index].get("defeated", false)):
+		return
+	focused_enemy_index = index
+	var inspection: Dictionary = keep.inspect_enemy(index)
 	inspected_text = _format_inspection(inspection)
-	_set_event("Enemy inspection updated.")
+	for option_index in range(enemy_option.item_count):
+		if int(enemy_option.get_item_metadata(option_index)) == index:
+			enemy_option.select(option_index)
+			break
+	_set_event("Enemy %d focused via %s. Pause and choose the response." % [index + 1, source])
+	keep_canvas.call("set_focus", focused_enemy_index)
 	_refresh_ui()
+
+func _on_enemy_clicked(index: int) -> void:
+	_select_enemy_focus(index, "map click")
+
+func _cycle_enemy_focus(direction: int) -> void:
+	var active: Array[int] = _active_enemy_indices()
+	if active.is_empty():
+		_set_event("No active enemy can be focused yet. Start an invasion first.")
+		return
+	var current: int = active.find(focused_enemy_index)
+	if current < 0:
+		current = 0 if direction >= 0 else active.size() - 1
+	else:
+		current = posmod(current + direction, active.size())
+	_select_enemy_focus(active[current], "focus cycle")
+
+func _focus_selected_enemy() -> void:
+	if focused_enemy_index >= 0 and focused_enemy_index in _active_enemy_indices():
+		_select_enemy_focus(focused_enemy_index, "keyboard focus")
+	else:
+		_cycle_enemy_focus(1)
+
+func _refresh_response_preview() -> void:
+	if response_preview_label == null:
+		return
+	if focused_enemy_index < 0 or focused_enemy_index >= keep.enemies.size() or bool(keep.enemies[focused_enemy_index].get("defeated", false)):
+		response_preview_label.text = "RESPONSE — Select an active enemy on the map or press Tab. The dropdown remains a fallback."
+		return
+	var inspection: Dictionary = keep.inspect_enemy(focused_enemy_index)
+	var ability_name: String = String(PackKeepState.COMMANDERS[keep.commander_id].get("ability_name", "Ability"))
+	var ability_state: String = "available" if keep.command_points > 0 and not bool(keep.lockdown_used if keep.commander_id == "castellan" else keep.rally_used) else "spent or unavailable"
+	var timing_text: String = "PAUSED PREVIEW — commit when ready" if battle_paused else "RUNNING — pause to inspect before committing"
+	var target_text: String = String(inspection.get("target", ""))
+	if target_text.is_empty():
+		target_text = "APPROACHING"
+	response_preview_label.text = "RESPONSE — FOCUSED %d: %s\n%s\nTHREAT: %s | TARGET: %s\nCOUNTERS: %s\n%s: %s (%d command)" % [focused_enemy_index + 1, String(inspection.get("name", "enemy")), timing_text, String(inspection.get("doctrine", "approaching")).replace("_", " ").to_upper(), target_text, String(inspection.get("counter", "read the forecast")), ability_name, ability_state, keep.command_points]
+
+func _refresh_recovery_priorities() -> void:
+	if recovery_priority_label == null:
+		return
+	if not keep.repair_interval_active and keep.last_outcome.is_empty():
+		recovery_priority_label.text = "RECOVERY PRIORITIES — Appear after a Hold or Partial Breach. The ranking is advisory; repair commands remain authoritative."
+		return
+	var priorities: Array[Dictionary] = []
+	for room_id in keep.rooms.keys():
+		var id: String = String(room_id)
+		var state: String = keep.room_state(id)
+		var condition: int = keep.room_condition(id)
+		var critical: bool = bool(PackKeepState.ROOMS[id].get("critical", false))
+		var score: int = 0
+		if state == "breached":
+			score = 400 if critical else 300
+		elif state == "damaged":
+			score = 200 if critical else 100
+		elif state == "strained":
+			score = 50
+		score += 100 - condition
+		priorities.append({"id": id, "name": String(PackKeepState.ROOMS[id].get("name", id)), "state": state.to_upper(), "condition": condition, "score": score})
+	for outer in range(priorities.size()):
+		for inner in range(outer + 1, priorities.size()):
+			var left: Dictionary = priorities[outer]
+			var right: Dictionary = priorities[inner]
+			if int(right.get("score", 0)) > int(left.get("score", 0)) or (int(right.get("score", 0)) == int(left.get("score", 0)) and String(right.get("id", "")) < String(left.get("id", ""))):
+				priorities[outer] = right
+				priorities[inner] = left
+	var rows: Array[String] = []
+	for index in range(mini(3, priorities.size())):
+		var row: Dictionary = priorities[index]
+		rows.append("%s — %s %d%%" % [String(row.get("name", "room")), String(row.get("state", "STABLE")), int(row.get("condition", 0))])
+	recovery_priority_label.text = "RECOVERY PRIORITIES — %s\n%s" % ["advisory order", " | ".join(rows)]
 
 func _on_place_piece() -> void:
 	var piece_id: String = _selected_id(piece_option)
@@ -726,6 +834,7 @@ func _on_place_piece() -> void:
 
 func _on_start_wave() -> void:
 	_clear_placement_mode()
+	focused_enemy_index = -1
 	var result: Dictionary = keep.start_wave(_selected_id(doctrine_option))
 	_run_result(result, "Invasion")
 	if bool(result.get("ok", false)):
@@ -835,6 +944,7 @@ func _on_load() -> void:
 
 func _on_reset_run() -> void:
 	keep.reset_run(3307)
+	focused_enemy_index = -1
 	battle_paused = true
 	battle_speed_index = 1
 	last_log_size = 0
@@ -905,12 +1015,16 @@ func _refresh_ui() -> void:
 	speed_button.text = "Speed: %.1fx (1/2/3)" % _battle_speed()
 	mute_button.text = "Feedback tones: OFF" if audio_muted else "Feedback tones: ON"
 	contrast_button.text = "High-contrast cues: ON" if high_contrast else "High-contrast cues: OFF"
+	_refresh_response_preview()
+	_refresh_recovery_priorities()
 	keep_canvas.keep = keep
+	keep_canvas.call("set_focus", focused_enemy_index)
 	keep_canvas.queue_redraw()
 
 class KeepCanvas extends Control:
 	signal map_hovered(floor: String, cell: Vector2i)
 	signal map_clicked(floor: String, cell: Vector2i)
+	signal enemy_clicked(index: int)
 	var keep: PackKeepState
 	const CELL := 22.0
 	const MAP_ORIGIN := Vector2(12, 42)
@@ -924,6 +1038,11 @@ class KeepCanvas extends Control:
 	var feedback_color: Color = Color.TRANSPARENT
 	var feedback_ttl: float = 0.0
 	var high_contrast_mode: bool = false
+	var focused_enemy_index: int = -1
+
+	func set_focus(index: int) -> void:
+		focused_enemy_index = index
+		queue_redraw()
 
 	func set_preview(active: bool, floor: String, origin: Vector2i, piece_id: String, valid: bool) -> void:
 		preview_active = active
@@ -947,6 +1066,33 @@ class KeepCanvas extends Control:
 			feedback_ttl = maxf(0.0, feedback_ttl - delta)
 			queue_redraw()
 
+	func _enemy_origin(index: int) -> Vector2:
+		var enemy: Dictionary = keep.enemies[index]
+		var enemy_id: String = String(enemy.get("enemy_id", ""))
+		var origin: Vector2 = MAP_ORIGIN + Vector2(20 + keep.wave_progress * 220.0, MAP_SIZE.y + 54 + index * 18)
+		if enemy_id == "climber":
+			origin = UPPER_ORIGIN + Vector2(20 + keep.wave_progress * 220.0, -10 + index * 18)
+		elif enemy_id == "siege_beast":
+			origin = MAP_ORIGIN + Vector2(100 + keep.wave_progress * 170.0, MAP_SIZE.y + 46)
+		return origin
+
+	func _enemy_hit(position: Vector2) -> int:
+		if keep == null or not keep.wave_active:
+			return -1
+		var best_index: int = -1
+		var best_distance: float = INF
+		for index in range(keep.enemies.size()):
+			var enemy: Dictionary = keep.enemies[index]
+			if bool(enemy.get("defeated", false)):
+				continue
+			var enemy_id: String = String(enemy.get("enemy_id", ""))
+			var radius: float = 12.0 if enemy_id == "siege_beast" else 8.0
+			var distance: float = position.distance_to(_enemy_origin(index))
+			if distance <= radius + 8.0 and (distance < best_distance or (is_equal_approx(distance, best_distance) and index < best_index)):
+				best_index = index
+				best_distance = distance
+		return best_index
+
 	func _map_hit(position: Vector2) -> Dictionary:
 		var hit_floor: String = ""
 		var origin: Vector2 = MAP_ORIGIN
@@ -966,6 +1112,10 @@ class KeepCanvas extends Control:
 			if not String(hit.get("floor", "")).is_empty():
 				emit_signal("map_hovered", String(hit.get("floor", "")), hit.get("cell", Vector2i.ZERO))
 		elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			var enemy_index: int = _enemy_hit(event.position)
+			if enemy_index >= 0:
+				emit_signal("enemy_clicked", enemy_index)
+				return
 			var hit: Dictionary = _map_hit(event.position)
 			if not String(hit.get("floor", "")).is_empty():
 				emit_signal("map_clicked", String(hit.get("floor", "")), hit.get("cell", Vector2i.ZERO))
@@ -1047,15 +1197,15 @@ class KeepCanvas extends Control:
 				continue
 			var enemy_id: String = String(enemy.get("enemy_id", ""))
 			var enemy_def: Dictionary = PackKeepState.ENEMIES[enemy_id]
-			var enemy_origin: Vector2 = MAP_ORIGIN + Vector2(20 + keep.wave_progress * 220.0, MAP_SIZE.y + 54 + index * 18)
-			if enemy_id == "climber":
-				enemy_origin = UPPER_ORIGIN + Vector2(20 + keep.wave_progress * 220.0, -10 + index * 18)
-			elif enemy_id == "siege_beast":
-				enemy_origin = MAP_ORIGIN + Vector2(100 + keep.wave_progress * 170.0, MAP_SIZE.y + 46)
+			var enemy_origin: Vector2 = _enemy_origin(index)
 			var enemy_color: Color = Color("#d26155") if enemy_id == "raider" else Color("#d7a35b") if enemy_id == "sapper" else Color("#a77bd1") if enemy_id == "climber" else Color("#b36c45")
 			var marker_radius: float = 12.0 if enemy_id == "siege_beast" else 8.0
 			draw_circle(enemy_origin, marker_radius, enemy_color)
 			draw_circle(enemy_origin, marker_radius, Color("#f1dfb8"), false, 1.5)
+			if index == focused_enemy_index:
+				draw_circle(enemy_origin, marker_radius + 5.0, Color("#fff4df"), false, 2.5)
+				draw_circle(enemy_origin, marker_radius + 9.0, Color("#e2bd84"), false, 1.5)
+				draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(-18, 28), "FOCUSED", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#fff4df"))
 			if enemy_id == "siege_beast":
 				draw_circle(enemy_origin, marker_radius + 5.0, Color(0.7, 0.3, 0.15, 0.35), false, 2.0)
 				draw_circle(enemy_origin, marker_radius + 18.0, Color(0.86, 0.35, 0.18, 0.22), false, 2.0)
@@ -1065,8 +1215,10 @@ class KeepCanvas extends Control:
 				var target_room: Dictionary = PackKeepState.ROOMS[target_id]
 				var target_origin: Vector2 = UPPER_ORIGIN if String(target_room.get("floor", "ground")) == "upper" else MAP_ORIGIN
 				var target_rect: Rect2 = _room_rect(target_id, target_origin)
-				draw_line(enemy_origin, target_rect.get_center(), Color(0.95, 0.38, 0.28, 0.7), 1.5)
-				draw_circle(target_rect.get_center(), 8.0, Color("#ffb0a6"), false, 2.0)
+				draw_line(enemy_origin, target_rect.get_center(), Color("#fff4df") if index == focused_enemy_index else Color(0.95, 0.38, 0.28, 0.7), 2.5 if index == focused_enemy_index else 1.5)
+				draw_circle(target_rect.get_center(), 8.0, Color("#fff4df") if index == focused_enemy_index else Color("#ffb0a6"), false, 2.0)
+				if index == focused_enemy_index:
+					draw_string(ThemeDB.fallback_font, target_rect.position + Vector2(2, -4), "TARGET", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#fff4df"))
 			draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(16, 4), "%s %dhp | %s" % [String(enemy_def.get("name", enemy_id)), int(enemy.get("hp", 0)), String(enemy_def.get("doctrine", enemy_id)).to_upper()], HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#f2e5d1"))
 
 	func _draw() -> void:

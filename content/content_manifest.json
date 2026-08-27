@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.4.0",
+  "content_version": "0.5.0",
   "campaign": {
     "title": "The Bell at Dusk",
     "premise": "A small keep is granted one season to become a refuge before a coalition of raiders, sappers, climbers, and siege beasts tests every defensive doctrine at once.",
@@ -847,6 +847,14 @@
       "health_and_condition_bars",
       "siege_beast_area_radius"
     ],
+    "focus_response_contract": {
+      "status": "implemented",
+      "focus_inputs": ["map_enemy_click", "focus_cycle_forward", "focus_cycle_backward", "focus_enemy"],
+      "selection": "active marker radius plus fixed padding; nearest center then stable index",
+      "response_preview": ["focused threat", "declared target or approaching", "counter family", "commander ability state", "paused timing"],
+      "recovery_priority": "criticality then condition then stable room ID; advisory only",
+      "deferred": ["direct_enemy_retargeting", "controller_remapping"]
+    },
     "presentation_input_contract": {
       "status": "implemented",
       "keyboard_actions": ["battle_pause", "battle_advance", "battle_speed_half", "battle_speed_normal", "battle_speed_double", "battle_manual_step", "placement_arm", "placement_cancel", "report_focus", "feedback_mute", "contrast_toggle"],
