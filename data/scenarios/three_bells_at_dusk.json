@@ -1,0 +1,15 @@
+{
+  "id": "three_bells_at_dusk", "content_version": 1, "status": "active", "name": "Three Bells at Dusk",
+  "short_role": "Combine all three P11 questions in one advanced Greywatch defense.",
+  "question": "Can the keep preserve distinct answers as armored, obscured, and protection-piercing pressure overlap?",
+  "objective": "Complete three mixed waves without collapsing the keep's response network.",
+  "lesson": "A resilient plan layers direct counters, reliable warning, and a secondary line instead of overinvesting in one answer.",
+  "starting_doctrine": "shielded_advance",
+  "doctrines": ["shielded_advance", "smoke_and_signal", "break_the_line"],
+  "wave_plans": [["shield_guard", "ash_slinger"], ["ash_slinger", "shieldbreaker"], ["shield_guard", "ash_slinger", "shieldbreaker"]],
+  "variations": [
+    {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
+    {"id": "short_evening", "materials": -2, "morale": 1, "target_room": ""},
+    {"id": "heavy_stores", "materials": 3, "morale": -1, "target_room": ""}
+  ]
+}
