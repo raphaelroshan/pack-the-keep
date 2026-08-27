@@ -3,7 +3,7 @@
   "build_version": "0.12.5-alpha-readiness-audit",
   "status": "candidate",
   "checks": [
-    {"id": "windows_launch", "status": "implemented", "evidence": ["tools/run_packaged_smoke.py", ".github/workflows/ci.yml"]},
+    {"id": "windows_launch", "status": "implemented", "evidence": ["tests/test_release_identity.py", "tools/run_packaged_smoke.py", ".github/workflows/ci.yml"]},
     {"id": "offline_play", "status": "implemented", "evidence": ["tools/validate_offline_boundary.py", "src/platform/packaged_smoke.gd"]},
     {"id": "save_location", "status": "implemented", "evidence": ["tests/test_p12_save_path_isolation.gd", "tools/run_packaged_smoke.py"]},
     {"id": "malformed_save", "status": "implemented", "evidence": ["tests/test_p12_save_recovery.gd"]},

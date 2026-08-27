@@ -22,6 +22,14 @@ class ReleaseIdentityTests(unittest.TestCase):
         self.assertEqual(framework.get("framework_version"), project_version)
         self.assertTrue(project_version.startswith(f"{content.get('content_version')}-"))
 
+    def test_windows_release_preset_supports_single_file_relocation(self) -> None:
+        presets = (ROOT / "export_presets.cfg").read_text(encoding="utf-8")
+        self.assertIn('name="Windows Desktop"', presets)
+        self.assertIn('platform="Windows Desktop"', presets)
+        self.assertIn('export_filter="all_resources"', presets)
+        self.assertIn('binary_format/embed_pck=true', presets)
+        self.assertIn('binary_format/architecture="x86_64"', presets)
+
 
 if __name__ == "__main__":
     unittest.main()
