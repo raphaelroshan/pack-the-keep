@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.6.0",
+  "content_version": "0.8.0",
   "campaign": {
     "title": "The Bell at Dusk",
     "premise": "A small keep is granted one season to become a refuge before a coalition of raiders, sappers, climbers, and siege beasts tests every defensive doctrine at once.",
@@ -863,6 +863,14 @@
       "ammunition": "finite ranged rounds; reload at recovery; melee uses none",
       "skills": ["piece_role_skills", "commander_skills"],
       "determinism": "presentation timing and ammunition transitions are authoritative and replayable"
+    },
+    "visual_fort_initial_run": {
+      "status": "implemented_procedural_fallback",
+      "map": ["square_keep", "open_courtyard", "open_gate", "wall_walk", "gate_approach"],
+      "placement_zones": ["wall", "courtyard", "keep"],
+      "enemy_flow": "placeholder_attackers_interpolate_from_open_gate_to_courtyard_while_authoritative_contact_remains_step_based",
+      "defender_read": "piece_zone_and_combat_style_visible_in_preview_inspector_and_map_label",
+      "asset_boundary": "generated_pixel_map_deferred_due_to_image_generation_quota; procedural_fort_renderer_is_functional", "art_direction": "readable_handcrafted_pixel_board_aesthetic_with_map_first_overlays_and_no_copied_assets"
     },
     "presentation_input_contract": {
       "status": "implemented",

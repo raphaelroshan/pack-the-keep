@@ -45,6 +45,18 @@ func _run() -> void:
 	melee.advance_wave(1.0)
 	_check(int(melee.combat_metrics.get("ammo_spent", 0)) == 0, "melee response incorrectly spent ammunition")
 
+	var courtyard_state: PackKeepState = PackKeepState.new(813)
+	var courtyard_piece: Dictionary = courtyard_state.place_piece("pike_squad", Vector2i(3, 2), "ground")
+	_check(String(courtyard_piece.get("placement_zone", "")) == "courtyard", "courtyard placement zone was not classified")
+	courtyard_state.start_wave("gate_assault")
+	courtyard_state.advance_wave(1.0)
+	var keep_state: PackKeepState = PackKeepState.new(814)
+	var keep_piece: Dictionary = keep_state.place_piece("pike_squad", Vector2i(2, 2), "ground")
+	_check(String(keep_piece.get("placement_zone", "")) == "keep", "interior placement zone was not classified")
+	keep_state.start_wave("gate_assault")
+	keep_state.advance_wave(1.0)
+	_check(int(courtyard_state.combat_metrics.get("damage_dealt", 0)) > int(keep_state.combat_metrics.get("damage_dealt", 0)), "courtyard Pike Squad did not receive its close-defense response bonus")
+
 	var replay_a: PackKeepState = PackKeepState.new(901)
 	var replay_b: PackKeepState = PackKeepState.new(901)
 	_prepare_area_pressure(replay_a)

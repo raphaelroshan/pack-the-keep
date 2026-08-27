@@ -264,6 +264,14 @@ func _build_ui() -> void:
 	status_label.add_theme_color_override("font_color", Color("#f2e5d1"))
 	left.add_child(status_label)
 
+	keep_canvas = KeepCanvas.new()
+	keep_canvas.custom_minimum_size = Vector2(810, 292)
+	keep_canvas.keep = keep
+	keep_canvas.connect("map_hovered", Callable(self, "_on_map_hovered"))
+	keep_canvas.connect("map_clicked", Callable(self, "_on_map_clicked"))
+	keep_canvas.connect("enemy_clicked", Callable(self, "_on_enemy_clicked"))
+	left.add_child(keep_canvas)
+
 	forecast_label = Label.new()
 	forecast_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	forecast_label.custom_minimum_size = Vector2(800, 48)
@@ -291,14 +299,6 @@ func _build_ui() -> void:
 	placement_label.custom_minimum_size = Vector2(800, 42)
 	placement_label.add_theme_color_override("font_color", Color("#8bd1b4"))
 	left.add_child(placement_label)
-
-	keep_canvas = KeepCanvas.new()
-	keep_canvas.custom_minimum_size = Vector2(810, 292)
-	keep_canvas.keep = keep
-	keep_canvas.connect("map_hovered", Callable(self, "_on_map_hovered"))
-	keep_canvas.connect("map_clicked", Callable(self, "_on_map_clicked"))
-	keep_canvas.connect("enemy_clicked", Callable(self, "_on_enemy_clicked"))
-	left.add_child(keep_canvas)
 
 	event_label = Label.new()
 	event_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -680,7 +680,7 @@ func _arm_selected_piece() -> void:
 	if placement_mode and PackKeepState.PIECES.has(piece_id):
 		var preview: Dictionary = keep.piece_preview(piece_id, preview_origin, preview_floor)
 		preview_valid = bool(preview.get("valid", false))
-		placement_label.text = "PLACEMENT ARMED — %s | %s footprint | %d materials | click the %s floor grid" % [String(preview.get("name", piece_id)), str(preview.get("size", Vector2i.ONE)), int(preview.get("cost", 0)), preview_floor]
+		placement_label.text = "PLACEMENT ARMED — %s | %s zone | %s footprint | %d materials | click the %s floor grid" % [String(preview.get("name", piece_id)), String(preview.get("placement_zone", "keep")).to_upper(), str(preview.get("size", Vector2i.ONE)), int(preview.get("cost", 0)), preview_floor]
 	keep_canvas.queue_redraw()
 
 func _clear_placement_mode() -> void:
@@ -701,7 +701,7 @@ func _on_map_hovered(floor: String, cell: Vector2i) -> void:
 	preview_origin = cell
 	var preview: Dictionary = keep.piece_preview(_selected_id(piece_option), cell, floor)
 	preview_valid = bool(preview.get("valid", false))
-	placement_label.text = "PLACEMENT PREVIEW — %s at %s / %s: %s | cost %d | remaining %d" % [String(preview.get("name", "piece")), floor, str(cell), "VALID" if preview_valid else String(preview.get("reason", "invalid")), int(preview.get("cost", 0)), int(preview.get("remaining_materials", keep.materials))]
+	placement_label.text = "PLACEMENT PREVIEW — %s | %s zone | %s / %s: %s | cost %d | remaining %d" % [String(preview.get("name", "piece")), String(preview.get("placement_zone", "keep")).to_upper(), floor, str(cell), "VALID" if preview_valid else String(preview.get("reason", "invalid")), int(preview.get("cost", 0)), int(preview.get("remaining_materials", keep.materials))]
 	keep_canvas.queue_redraw()
 
 func _on_map_clicked(floor: String, cell: Vector2i) -> void:
@@ -735,7 +735,7 @@ func _format_inspection(data: Dictionary) -> String:
 		return "INSPECTOR — ROOM %s\n%s floor | %s | %d%% condition | %s\n%s" % [String(data.name), String(data.floor).capitalize(), "critical" if bool(data.critical) else "support", int(data.condition), String(data.state), String(data.role)]
 	if String(data.get("kind", "")) == "enemy":
 		return "INSPECTOR — ENEMY %s\n%s via %s | %d/%d hp | damage %d\nCounter: %s | Target: %s" % [String(data.name), String(data.doctrine).replace("_", " "), String(data.route).replace("_", " "), int(data.health), int(data.max_health), int(data.damage), String(data.counter), String(data.target if not String(data.target).is_empty() else "approaching")]
-	return "INSPECTOR — %s\n%s floor | %d/%d hp | %s\n%s %d attack | Defense %d | Range %d | Ammo %d/%d\nSkill: %s\nAssignment %s" % [String(data.name), String(data.floor).capitalize(), int(data.health), int(data.max_health), String(data.role), String(data.combat_style).to_upper(), int(data.attack), int(data.defense), int(data.range), int(data.ammo), int(data.max_ammo), String(data.skill), String(data.assignment if not String(data.assignment).is_empty() else "none")]
+	return "INSPECTOR — %s\n%s floor | %s zone | %d/%d hp | %s\n%s %d attack | Defense %d | Range %d | Ammo %d/%d\nSkill: %s\nAssignment %s" % [String(data.name), String(data.floor).capitalize(), String(data.placement_zone).to_upper(), int(data.health), int(data.max_health), String(data.role), String(data.combat_style).to_upper(), int(data.attack), int(data.defense), int(data.range), int(data.ammo), int(data.max_ammo), String(data.skill), String(data.assignment if not String(data.assignment).is_empty() else "none")]
 
 func _on_inspect_enemy() -> void:
 	if enemy_option.selected < 0:
@@ -1008,7 +1008,7 @@ func _refresh_ui() -> void:
 		var selected_id: String = _selected_id(piece_option)
 		var preview: Dictionary = keep.piece_preview(selected_id, preview_origin, preview_floor)
 		preview_valid = bool(preview.get("valid", false))
-		placement_label.text = "PLACEMENT PREVIEW — %s at %s / %s: %s | cost %d | remaining %d" % [String(preview.get("name", selected_id)), preview_floor, str(preview_origin), "VALID" if preview_valid else String(preview.get("reason", "invalid")), int(preview.get("cost", 0)), int(preview.get("remaining_materials", keep.materials))]
+		placement_label.text = "PLACEMENT PREVIEW — %s | %s zone | %s / %s: %s | cost %d | remaining %d" % [String(preview.get("name", selected_id)), String(preview.get("placement_zone", "keep")).to_upper(), preview_floor, str(preview_origin), "VALID" if preview_valid else String(preview.get("reason", "invalid")), int(preview.get("cost", 0)), int(preview.get("remaining_materials", keep.materials))]
 	else:
 		placement_label.text = "MAP READY — click a room or placed piece to inspect it; arm a piece to preview a direct placement."
 	keep_canvas.call("set_preview", placement_mode, preview_floor, preview_origin, _selected_id(piece_option), preview_valid)
@@ -1034,10 +1034,11 @@ class KeepCanvas extends Control:
 	signal map_clicked(floor: String, cell: Vector2i)
 	signal enemy_clicked(index: int)
 	var keep: PackKeepState
-	const CELL := 22.0
-	const MAP_ORIGIN := Vector2(12, 42)
-	const UPPER_ORIGIN := Vector2(436, 42)
-	const MAP_SIZE := Vector2(12 * CELL, 8 * CELL)
+	const CELL_X := 18.0
+	const CELL_Y := 28.0
+	const MAP_ORIGIN := Vector2(12, 28)
+	const UPPER_ORIGIN := Vector2(436, 28)
+	const MAP_SIZE := Vector2(12 * CELL_X, 8 * CELL_Y)
 	var preview_active: bool = false
 	var preview_floor: String = "ground"
 	var preview_origin: Vector2i = Vector2i.ZERO
@@ -1077,11 +1078,16 @@ class KeepCanvas extends Control:
 	func _enemy_origin(index: int) -> Vector2:
 		var enemy: Dictionary = keep.enemies[index]
 		var enemy_id: String = String(enemy.get("enemy_id", ""))
-		var origin: Vector2 = MAP_ORIGIN + Vector2(20 + keep.wave_progress * 220.0, MAP_SIZE.y + 54 + index * 18)
+		var entry_offset: Vector2 = Vector2(-16.0 + float(index % 2) * 32.0, float(index) * 5.0)
+		var gate_start: Vector2 = MAP_ORIGIN + Vector2(MAP_SIZE.x * 0.5, MAP_SIZE.y - 10) + entry_offset
+		var courtyard_target: Vector2 = MAP_ORIGIN + Vector2(MAP_SIZE.x * 0.5, MAP_SIZE.y * 0.55) + entry_offset * 0.35
+		var origin: Vector2 = gate_start.lerp(courtyard_target, clampf(keep.wave_progress, 0.0, 1.0))
 		if enemy_id == "climber":
-			origin = UPPER_ORIGIN + Vector2(20 + keep.wave_progress * 220.0, -10 + index * 18)
+			var wall_start: Vector2 = UPPER_ORIGIN + Vector2(MAP_SIZE.x + 30, MAP_SIZE.y * 0.35 + index * 18)
+			var wall_target: Vector2 = UPPER_ORIGIN + Vector2(MAP_SIZE.x * 0.45, 18 + index * 18)
+			origin = wall_start.lerp(wall_target, clampf(keep.wave_progress, 0.0, 1.0))
 		elif enemy_id == "siege_beast":
-			origin = MAP_ORIGIN + Vector2(100 + keep.wave_progress * 170.0, MAP_SIZE.y + 46)
+			origin = gate_start.lerp(courtyard_target + Vector2(0, 18), clampf(keep.wave_progress, 0.0, 1.0))
 		return origin
 
 	func _enemy_hit(position: Vector2) -> int:
@@ -1112,7 +1118,7 @@ class KeepCanvas extends Control:
 		if hit_floor.is_empty():
 			return {"floor": "", "cell": Vector2i.ZERO}
 		var local: Vector2 = position - origin
-		return {"floor": hit_floor, "cell": Vector2i(floor(local.x / CELL), floor(local.y / CELL))}
+		return {"floor": hit_floor, "cell": Vector2i(floor(local.x / CELL_X), floor(local.y / CELL_Y))}
 
 	func _gui_input(event: InputEvent) -> void:
 		if event is InputEventMouseMotion:
@@ -1130,7 +1136,7 @@ class KeepCanvas extends Control:
 
 	func _room_rect(room_id: String, origin: Vector2) -> Rect2:
 		var room: Dictionary = PackKeepState.ROOMS[room_id]
-		return Rect2(origin + Vector2(room.origin.x * CELL, room.origin.y * CELL), Vector2(room.size.x * CELL, room.size.y * CELL))
+		return Rect2(origin + Vector2(room.origin.x * CELL_X, room.origin.y * CELL_Y), Vector2(room.size.x * CELL_X, room.size.y * CELL_Y))
 
 	func _room_color(room_id: String) -> Color:
 		if keep == null:
@@ -1152,14 +1158,51 @@ class KeepCanvas extends Control:
 			return Color("#6f6544")
 		return Color("#3d4b55")
 
+	func _draw_fort_backdrop(origin: Vector2) -> void:
+		var outer: Rect2 = Rect2(origin + Vector2(CELL_X, CELL_Y), MAP_SIZE - Vector2(CELL_X * 2.0, CELL_Y * 2.0))
+		var courtyard: Rect2 = Rect2(origin + Vector2(CELL_X * 3.0, CELL_Y * 2.0), Vector2(CELL_X * 6.0, CELL_Y * 4.0))
+		draw_rect(outer, Color("#514451"), true)
+		draw_rect(outer, Color("#d4a66f"), false, 4.0)
+		draw_rect(courtyard, Color("#332c38"), true)
+		for y in range(4):
+			draw_line(courtyard.position + Vector2(0, (y + 1) * CELL_Y), courtyard.position + Vector2(courtyard.size.x, (y + 1) * CELL_Y), Color(0.66, 0.55, 0.48, 0.2), 1.0)
+		for x in range(6):
+			draw_line(courtyard.position + Vector2((x + 1) * CELL_X, 0), courtyard.position + Vector2((x + 1) * CELL_X, courtyard.size.y), Color(0.66, 0.55, 0.48, 0.2), 1.0)
+		for x in range(2, 10, 2):
+			var top_block: Rect2 = Rect2(origin + Vector2(x * CELL_X + 2, CELL_Y + 2), Vector2(CELL_X - 4, 6))
+			var bottom_block: Rect2 = Rect2(origin + Vector2(x * CELL_X + 2, MAP_SIZE.y - CELL_Y - 8), Vector2(CELL_X - 4, 6))
+			draw_rect(top_block, Color("#d4a66f"), true)
+			draw_rect(bottom_block, Color("#d4a66f"), true)
+		for y in range(2, 6, 2):
+			var left_block: Rect2 = Rect2(origin + Vector2(CELL_X + 2, y * CELL_Y + 2), Vector2(6, CELL_Y - 4))
+			var right_block: Rect2 = Rect2(origin + Vector2(MAP_SIZE.x - CELL_X - 8, y * CELL_Y + 2), Vector2(6, CELL_Y - 4))
+			draw_rect(left_block, Color("#d4a66f"), true)
+			draw_rect(right_block, Color("#d4a66f"), true)
+		var tower_size: Vector2 = Vector2(CELL_X * 1.6, CELL_Y * 1.35)
+		for tower_position in [origin + Vector2(CELL_X, CELL_Y), origin + Vector2(MAP_SIZE.x - CELL_X - tower_size.x, CELL_Y), origin + Vector2(CELL_X, MAP_SIZE.y - CELL_Y - tower_size.y), origin + Vector2(MAP_SIZE.x - CELL_X - tower_size.x, MAP_SIZE.y - CELL_Y - tower_size.y)]:
+			draw_rect(Rect2(tower_position, tower_size), Color("#665562"), true)
+			draw_rect(Rect2(tower_position, tower_size), Color("#edbd79"), false, 2.0)
+			draw_circle(tower_position + tower_size * 0.5, 4.0, Color("#f3bf6b"))
+		draw_string(ThemeDB.fallback_font, courtyard.position + Vector2(8, courtyard.size.y - 8), "KEEP ROOMS / DEFENSE BOARD", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#a68f9e"))
+		var gate: Rect2 = Rect2(origin + Vector2(CELL_X * 5.0, MAP_SIZE.y - CELL_Y + 4.0), Vector2(CELL_X * 2.0, CELL_Y - 8.0))
+		draw_rect(gate, Color("#211b27"), true)
+		draw_line(gate.position + Vector2(0, 5), gate.position + Vector2(gate.size.x, 5), Color("#e89270"), 3.0)
+		draw_string(ThemeDB.fallback_font, origin + Vector2(MAP_SIZE.x * 0.5 - 22, MAP_SIZE.y - 8), "OPEN GATE", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#ffd19d"))
+		draw_string(ThemeDB.fallback_font, courtyard.position + Vector2(12, courtyard.size.y * 0.5), "OPEN COURTYARD", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#8bd1b4"))
+
 	func _draw_floor(label_text: String, floor_name: String, origin: Vector2) -> void:
 		draw_string(ThemeDB.fallback_font, origin + Vector2(0, -10), label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#e2bd84"))
 		draw_rect(Rect2(origin, MAP_SIZE), Color("#27212e"), true)
+		if floor_name == "ground":
+			_draw_fort_backdrop(origin)
+		else:
+			draw_rect(Rect2(origin + Vector2(CELL_X, CELL_Y), MAP_SIZE - Vector2(CELL_X * 2.0, CELL_Y * 2.0)), Color("#3d5260"), true)
+			draw_string(ThemeDB.fallback_font, origin + Vector2(14, 18), "WALL WALK / UPPER POSTS", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#c8e0d1"))
 		draw_rect(Rect2(origin, MAP_SIZE), Color("#ae896d"), false, 3.0)
 		for x in range(PackKeepState.GRID_SIZE.x + 1):
-			draw_line(origin + Vector2(x * CELL, 0), origin + Vector2(x * CELL, MAP_SIZE.y), Color(0.4, 0.32, 0.42, 0.35), 1.0)
+			draw_line(origin + Vector2(x * CELL_X, 0), origin + Vector2(x * CELL_X, MAP_SIZE.y), Color(0.4, 0.32, 0.42, 0.35), 1.0)
 		for y in range(PackKeepState.GRID_SIZE.y + 1):
-			draw_line(origin + Vector2(0, y * CELL), origin + Vector2(MAP_SIZE.x, y * CELL), Color(0.4, 0.32, 0.42, 0.35), 1.0)
+			draw_line(origin + Vector2(0, y * CELL_Y), origin + Vector2(MAP_SIZE.x, y * CELL_Y), Color(0.4, 0.32, 0.42, 0.35), 1.0)
 		for room_id in PackKeepState.ROOMS.keys():
 			var room: Dictionary = PackKeepState.ROOMS[room_id]
 			if String(room.get("floor", "ground")) != floor_name:
@@ -1178,11 +1221,12 @@ class KeepCanvas extends Control:
 			var piece_id: String = String(instance.get("piece_id", ""))
 			var piece: Dictionary = PackKeepState.PIECES[piece_id]
 			var piece_origin: Vector2i = instance.get("origin", Vector2i.ZERO)
-			var piece_rect: Rect2 = Rect2(origin + Vector2(piece_origin.x * CELL, piece_origin.y * CELL), Vector2(piece.size.x * CELL, piece.size.y * CELL))
+			var piece_rect: Rect2 = Rect2(origin + Vector2(piece_origin.x * CELL_X, piece_origin.y * CELL_Y), Vector2(piece.size.x * CELL_X, piece.size.y * CELL_Y))
 			var color: Color = Color("#7598aa") if piece_id == "pike_squad" else Color("#83a47d") if piece_id == "repair_station" else Color("#ba6f55") if piece_id == "fire_team" else Color("#cbb56f")
 			draw_rect(piece_rect.grow(-2), color, true)
 			draw_rect(piece_rect.grow(-2), Color("#f1dfb8"), false, 1.5)
-			draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(2, 11), String(piece.name), HORIZONTAL_ALIGNMENT_LEFT, piece_rect.size.x - 4, 8, Color("#201a25"))
+			_draw_piece_glyph(piece_rect, piece_id, color)
+			draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(2, 11), String(piece.name), HORIZONTAL_ALIGNMENT_LEFT, piece_rect.size.x - 12, 8, Color("#201a25"))
 			var piece_status: String = "%d/%d hp" % [int(instance.get("health", 0)), int(instance.get("max_health", piece.get("max_health", 0)))]
 			var max_ammo: int = int(instance.get("max_ammo", piece.get("max_ammo", 0)))
 			if max_ammo > 0:
@@ -1190,18 +1234,48 @@ class KeepCanvas extends Control:
 			if bool(instance.get("disabled", false)):
 				piece_status += " DISABLED"
 			var assignment: String = String(instance.get("assignment", ""))
+			var zone: String = String(instance.get("placement_zone", "keep"))
+			piece_status += " " + zone.to_upper()
 			if not assignment.is_empty():
 				piece_status += " " + assignment
 			var piece_health: int = int(instance.get("health", 0))
 			var piece_max_health: int = int(instance.get("max_health", piece.get("max_health", 0)))
 			var health_ratio: float = float(piece_health) / float(maxi(1, piece_max_health))
 			draw_rect(Rect2(piece_rect.position + Vector2(2, 14), Vector2(maxf(3.0, (piece_rect.size.x - 4.0) * health_ratio), 3)), Color("#bfe8cf") if health_ratio >= 0.7 else Color("#d7a35b") if health_ratio >= 0.35 else Color("#d26155"), true)
+			draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(2, piece_rect.size.y - 3), zone.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, piece_rect.size.x - 4, 7, Color("#201a25"))
 			if float(instance.get("condition", 0.0)) < 1.0 or not assignment.is_empty() or high_contrast_mode:
-				draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(2, piece_rect.size.y - 3), piece_status, HORIZONTAL_ALIGNMENT_LEFT, piece_rect.size.x - 4, 8, Color("#201a25"))
+				draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(2, piece_rect.size.y - 11), piece_status, HORIZONTAL_ALIGNMENT_LEFT, piece_rect.size.x - 4, 7, Color("#201a25"))
+
+	func _draw_piece_glyph(rect: Rect2, piece_id: String, color: Color) -> void:
+		var center: Vector2 = rect.position + Vector2(rect.size.x - 9.0, rect.size.y * 0.5 + 2.0)
+		if piece_id == "pike_squad":
+			for offset in [-4.0, 0.0, 4.0]:
+				draw_line(center + Vector2(offset, 6), center + Vector2(offset, -6), Color("#f7e3b7"), 1.5)
+		elif piece_id == "fire_team":
+			draw_circle(center, 5.0, Color("#f7e3b7"), false, 1.5)
+			draw_line(center + Vector2(-6, 2), center + Vector2(6, -4), Color("#f7e3b7"), 2.0)
+		elif piece_id == "repair_station":
+			draw_line(center + Vector2(-6, 0), center + Vector2(6, 0), Color("#f7e3b7"), 2.0)
+			draw_line(center + Vector2(0, -6), center + Vector2(0, 6), Color("#f7e3b7"), 2.0)
+		elif piece_id == "scout_post":
+			draw_circle(center, 5.0, Color("#f7e3b7"), false, 1.5)
+			draw_circle(center, 1.5, Color("#f7e3b7"))
+		else:
+			draw_circle(center + Vector2(0, -2), 4.0, Color("#f7e3b7"))
+			draw_line(center + Vector2(-5, 5), center + Vector2(0, -7), Color("#f7e3b7"), 2.0)
+			draw_line(center + Vector2(5, 5), center + Vector2(0, -7), Color("#f7e3b7"), 2.0)
+
+	func _draw_gate_entry_path() -> void:
+		var gate_point: Vector2 = MAP_ORIGIN + Vector2(MAP_SIZE.x * 0.5, MAP_SIZE.y - 4.0)
+		var courtyard_point: Vector2 = MAP_ORIGIN + Vector2(MAP_SIZE.x * 0.5, MAP_SIZE.y * 0.55)
+		draw_line(gate_point, courtyard_point, Color(0.95, 0.58, 0.38, 0.55), 3.0)
+		draw_circle(gate_point, 5.0, Color("#ffd19d"), false, 2.0)
+		draw_string(ThemeDB.fallback_font, gate_point + Vector2(8, -4), "GATE ENTRY", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#ffd19d"))
 
 	func _draw_enemies() -> void:
 		if keep == null or not keep.wave_active:
 			return
+		_draw_gate_entry_path()
 		for index in range(keep.enemies.size()):
 			var enemy: Dictionary = keep.enemies[index]
 			if bool(enemy.get("defeated", false)):
@@ -1230,7 +1304,8 @@ class KeepCanvas extends Control:
 				draw_circle(target_rect.get_center(), 8.0, Color("#fff4df") if index == focused_enemy_index else Color("#ffb0a6"), false, 2.0)
 				if index == focused_enemy_index:
 					draw_string(ThemeDB.fallback_font, target_rect.position + Vector2(2, -4), "TARGET", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#fff4df"))
-			draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(16, 4), "%s %dhp | %s" % [String(enemy_def.get("name", enemy_id)), int(enemy.get("hp", 0)), String(enemy_def.get("doctrine", enemy_id)).to_upper()], HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#f2e5d1"))
+			var doctrine_initial: String = "R" if enemy_id == "raider" else "S" if enemy_id == "sapper" else "C" if enemy_id == "climber" else "B"
+			draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(-3, 4), doctrine_initial, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#271b22"))
 
 	func _draw() -> void:
 		if keep == null:
@@ -1240,7 +1315,7 @@ class KeepCanvas extends Control:
 		if preview_active and PackKeepState.PIECES.has(preview_piece_id):
 			var preview_size: Vector2i = PackKeepState.PIECES[preview_piece_id].size
 			var preview_origin_pixel: Vector2 = MAP_ORIGIN if preview_floor == "ground" else UPPER_ORIGIN
-			var rect: Rect2 = Rect2(preview_origin_pixel + Vector2(preview_origin.x * CELL, preview_origin.y * CELL), Vector2(preview_size.x * CELL, preview_size.y * CELL)).grow(-2)
+			var rect: Rect2 = Rect2(preview_origin_pixel + Vector2(preview_origin.x * CELL_X, preview_origin.y * CELL_Y), Vector2(preview_size.x * CELL_X, preview_size.y * CELL_Y)).grow(-2)
 			var preview_color: Color = Color(0.27, 0.82, 0.55, 0.42) if preview_valid else Color(0.86, 0.28, 0.32, 0.42)
 			draw_rect(rect, preview_color, true)
 			draw_rect(rect, Color("#bff0cc") if preview_valid else Color("#ffb0a6"), false, 2.0)

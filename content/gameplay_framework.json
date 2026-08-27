@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.6.0-initial-combat",
+  "framework_version": "0.8.0-topdown-board",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -50,6 +50,16 @@
     "metrics": ["ammo_spent", "unit_attacks", "damage_dealt", "enemy_attacks", "room_damage", "piece_damage"],
     "determinism_rule": "presentation_clock_and_focus_do_not alter authoritative step outcomes",
     "deferred": ["projectile_physics", "ammo_resupply_buildings", "direct_target_commands", "controller_remapping"]
+  },
+  "visual_fort_initial_run": {
+    "status": "implemented_procedural_fallback",
+    "map_presentation": ["square_keep", "thick_outer_walls", "open_courtyard", "open_gate", "gate_approach", "upper_wall_walk"],
+    "placement_zones": ["wall", "courtyard", "keep"],
+    "zone_feedback": ["preview_label", "piece_inspector", "map_label", "hatch_like_geometry"],
+    "enemy_presentation": ["visible_gate_entry_path", "approach_to_courtyard_interpolation", "placeholder_markers", "route_and_target_labels"],
+    "defender_behavior": ["pike_melee", "fire_team_ranged", "support_pieces", "zone_sensitive_response"],
+    "asset_boundary": "generated_pixel_fort_deferred_while_image_generation_quota_is_unavailable; procedural_map_is_functional_not_final_art",
+    "art_direction": "readable_handcrafted_pixel_board_aesthetic_with_map_first_overlays_and_no_copied_assets"
   },
   "vertical_slice": {
     "commanders": [

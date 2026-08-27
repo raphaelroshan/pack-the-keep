@@ -356,6 +356,15 @@ func piece_fits(piece_id: String, origin: Vector2i, floor: String = "ground") ->
 			return false
 	return true
 
+func placement_zone(origin: Vector2i, floor: String = "ground", size: Vector2i = Vector2i.ONE) -> String:
+	if floor == "upper":
+		return "wall"
+	if origin.x <= 1 or origin.y <= 1 or origin.x + size.x >= GRID_SIZE.x - 1 or origin.y + size.y >= GRID_SIZE.y - 1:
+		return "wall"
+	if origin.x >= 3 and origin.y >= 2 and origin.x + size.x <= 9 and origin.y + size.y <= 6:
+		return "courtyard"
+	return "keep"
+
 func piece_preview(piece_id: String, origin: Vector2i, floor: String = "ground") -> Dictionary:
 	if not PIECES.has(piece_id):
 		return {"ok": false, "valid": false, "reason": "unknown defensive piece"}
@@ -371,7 +380,7 @@ func piece_preview(piece_id: String, origin: Vector2i, floor: String = "ground")
 		reason = "piece does not fit on this floor of the keep"
 	elif materials < int(piece.cost):
 		reason = "not enough materials"
-	return {"ok": reason.is_empty(), "valid": reason.is_empty(), "reason": reason, "piece_id": piece_id, "name": String(piece.name), "origin": origin, "floor": floor, "size": piece.size, "cost": int(piece.cost), "role": String(piece.role), "remaining_materials": materials - int(piece.cost)}
+	return {"ok": reason.is_empty(), "valid": reason.is_empty(), "reason": reason, "piece_id": piece_id, "name": String(piece.name), "origin": origin, "floor": floor, "placement_zone": placement_zone(origin, floor, piece.size), "size": piece.size, "cost": int(piece.cost), "role": String(piece.role), "remaining_materials": materials - int(piece.cost)}
 
 func place_piece(piece_id: String, origin: Vector2i, floor: String = "ground") -> Dictionary:
 	var preview: Dictionary = piece_preview(piece_id, origin, floor)
@@ -383,7 +392,9 @@ func place_piece(piece_id: String, origin: Vector2i, floor: String = "ground") -
 	var max_health: int = int(PIECES[piece_id].get("max_health", 10))
 	var max_ammo: int = int(PIECES[piece_id].get("max_ammo", 0))
 	pieces[instance_id] = {"piece_id": piece_id, "origin": origin, "floor": floor, "max_health": max_health, "health": max_health, "condition": 1.0, "assignment": "", "attack_cooldown": 0, "attacks": 0, "damage_dealt": 0, "targets_stopped": 0, "disabled": false, "last_target": "", "max_ammo": max_ammo, "ammo": max_ammo}
-	return {"ok": true, "piece_instance": instance_id, "message": "Placed %s on the %s floor: %s." % [PIECES[piece_id].name, floor, PIECES[piece_id].role]}
+	var zone: String = placement_zone(origin, floor, PIECES[piece_id].size)
+	pieces[instance_id].placement_zone = zone
+	return {"ok": true, "piece_instance": instance_id, "placement_zone": zone, "message": "Placed %s in the %s zone on the %s floor: %s." % [PIECES[piece_id].name, zone, floor, PIECES[piece_id].role]}
 
 func _set_piece_health(instance_id: String, value: int) -> void:
 	if not pieces.has(instance_id):
@@ -430,7 +441,7 @@ func inspect_piece(instance_id: String) -> Dictionary:
 	if not PIECES.has(piece_id):
 		return {"ok": false, "reason": "piece definition is unavailable"}
 	var piece: Dictionary = PIECES[piece_id]
-	return {"ok": true, "kind": "piece", "id": instance_id, "piece_id": piece_id, "name": String(piece.name), "floor": String(instance.get("floor", "ground")), "origin": instance.get("origin", Vector2i.ZERO), "role": String(piece.role), "health": int(instance.get("health", 0)), "max_health": int(instance.get("max_health", piece.max_health)), "condition": float(instance.get("condition", 0.0)), "assignment": String(instance.get("assignment", "")), "disabled": bool(instance.get("disabled", false)), "attack": int(piece.attack), "defense": int(piece.defense), "range": int(piece.range), "combat_style": String(piece.get("combat_style", "support")), "skill": String(piece.get("skill", "")), "ammo": int(instance.get("ammo", piece.get("max_ammo", 0))), "max_ammo": int(instance.get("max_ammo", piece.get("max_ammo", 0))), "availability": String(piece.availability)}
+	return {"ok": true, "kind": "piece", "id": instance_id, "piece_id": piece_id, "name": String(piece.name), "floor": String(instance.get("floor", "ground")), "origin": instance.get("origin", Vector2i.ZERO), "role": String(piece.role), "health": int(instance.get("health", 0)), "max_health": int(instance.get("max_health", piece.max_health)), "condition": float(instance.get("condition", 0.0)), "assignment": String(instance.get("assignment", "")), "placement_zone": String(instance.get("placement_zone", placement_zone(instance.get("origin", Vector2i.ZERO), String(instance.get("floor", "ground")), piece.get("size", Vector2i.ONE)))), "disabled": bool(instance.get("disabled", false)), "attack": int(piece.attack), "defense": int(piece.defense), "range": int(piece.range), "combat_style": String(piece.get("combat_style", "support")), "skill": String(piece.get("skill", "")), "ammo": int(instance.get("ammo", piece.get("max_ammo", 0))), "max_ammo": int(instance.get("max_ammo", piece.get("max_ammo", 0))), "availability": String(piece.availability)}
 
 func inspect_enemy(index: int) -> Dictionary:
 	if index < 0 or index >= enemies.size():
@@ -595,6 +606,7 @@ func _defender_damage(enemy_id: String) -> int:
 		var piece_id: String = String(instance.get("piece_id", ""))
 		var piece: Dictionary = PIECES[piece_id]
 		var combat_style: String = String(piece.get("combat_style", "support"))
+		var zone: String = String(instance.get("placement_zone", placement_zone(instance.get("origin", Vector2i.ZERO), String(instance.get("floor", "ground")), piece.get("size", Vector2i.ONE))))
 		var ammo: int = int(instance.get("ammo", piece.get("max_ammo", 0)))
 		if combat_style == "ranged" and ammo <= 0:
 			continue
@@ -614,6 +626,14 @@ func _defender_damage(enemy_id: String) -> int:
 			contribution = 1
 		if piece_id == "fire_brazier" and String(instance.get("floor", "ground")) != "upper":
 			contribution = 0
+		if piece_id == "pike_squad" and zone == "keep":
+			contribution = 1
+		elif piece_id == "pike_squad" and zone == "courtyard":
+			contribution += 1
+		if piece_id == "fire_team" and zone == "keep":
+			contribution = 0
+		elif piece_id == "fire_team" and zone == "courtyard":
+			contribution = mini(contribution, 2)
 		if piece_id == "pike_squad" and String(instance.get("assignment", "")) == "gate" and enemy_id == "raider":
 			contribution += 2
 		if piece_id == "fire_team" and String(instance.get("assignment", "")) == "inner_yard" and enemy_id == "climber":
@@ -1175,6 +1195,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		pieces[instance_id].health = int(pieces[instance_id].get("health", roundf(float(pieces[instance_id].get("condition", 1.0)) * float(pieces[instance_id].max_health))))
 		pieces[instance_id].condition = float(pieces[instance_id].health) / float(pieces[instance_id].max_health)
 		pieces[instance_id].disabled = bool(pieces[instance_id].get("disabled", pieces[instance_id].health <= 0))
+		pieces[instance_id].placement_zone = String(pieces[instance_id].get("placement_zone", placement_zone(pieces[instance_id].get("origin", Vector2i.ZERO), String(pieces[instance_id].get("floor", "ground")), PIECES[piece_id].get("size", Vector2i.ONE))))
 		var max_ammo: int = int(PIECES[piece_id].get("max_ammo", 0))
 		pieces[instance_id].max_ammo = max_ammo
 		pieces[instance_id].ammo = clampi(int(pieces[instance_id].get("ammo", max_ammo)), 0, max_ammo)
