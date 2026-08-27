@@ -1933,24 +1933,45 @@ func _on_save() -> void:
 	_set_event("Keep state saved safely with schema %d." % PackKeepState.SAVE_SCHEMA_VERSION)
 
 func _on_load() -> void:
-	if not FileAccess.file_exists(save_path):
-		_set_event("Load unavailable: no local keep save exists yet.")
-		return
-	var text: String = FileAccess.get_file_as_string(save_path)
-	var payload: Variant = JSON.parse_string(text)
-	if not (payload is Dictionary):
-		_set_event("Load rejected: the save is not valid JSON state. The current run is unchanged.")
-		return
-	var result: Dictionary = keep.load_serialized(payload)
-	if not bool(result.get("ok", false)):
-		_set_event("Load rejected: %s. The current run is unchanged." % String(result.get("reason", "unknown")))
-		return
+	var primary: Dictionary = _load_save_candidate(save_path)
+	var loaded_from_backup: bool = false
+	var selected: Dictionary = primary
+	if not bool(primary.get("ok", false)):
+		var backup: Dictionary = _load_save_candidate(save_backup_path)
+		if bool(backup.get("ok", false)):
+			selected = backup
+			loaded_from_backup = true
+		else:
+			var primary_reason: String = String(primary.get("reason", "unknown primary failure"))
+			var backup_reason: String = String(backup.get("reason", "unknown backup failure"))
+			_set_event("Load rejected: primary %s; backup %s. The current run is unchanged." % [primary_reason, backup_reason])
+			return
+	keep = selected.state
+	var result: Dictionary = selected.result
 	_clear_placement_mode()
 	selected_instance_id = ""
 	inspected_text = "Save loaded. Click a room or piece to inspect the restored run."
 	_select_option_metadata(campaign_modifier_option, keep.equipped_modifier_id)
-	_set_event("Keep state loaded%s." % (" from a legacy save" if bool(result.get("legacy", false)) else ""))
+	var source_text: String = " from backup" if loaded_from_backup else ""
+	var migration_text: String = " with legacy migration" if bool(result.get("migrated", false)) else ""
+	_set_event("Keep state loaded%s%s." % [source_text, migration_text])
 	_refresh_ui()
+
+func _load_save_candidate(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {"ok": false, "reason": "is missing"}
+	var text: String = FileAccess.get_file_as_string(path)
+	var parser: JSON = JSON.new()
+	if parser.parse(text) != OK:
+		return {"ok": false, "reason": "is not valid JSON state"}
+	var payload: Variant = parser.data
+	if not (payload is Dictionary):
+		return {"ok": false, "reason": "is not valid JSON state"}
+	var candidate: PackKeepState = PackKeepState.new(0)
+	var result: Dictionary = candidate.load_serialized(payload)
+	if not bool(result.get("ok", false)):
+		return {"ok": false, "reason": String(result.get("reason", "failed validation"))}
+	return {"ok": true, "state": candidate, "result": result}
 
 func _on_playtest_primary_action() -> void:
 	if screen == "results":

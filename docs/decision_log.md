@@ -303,3 +303,11 @@
 **Reason:** Source tests and a successful export do not prove that an embedded project launches, resolves its writable data directory, includes required resources, or exits cleanly. Testing the artifact catches packaging failures at the boundary users receive.
 
 **Trade-off:** The first packaged smoke is headless and does not validate GPU presentation, installer behavior, or storefront launchers. Those remain explicit later alpha gates.
+
+## ADR-039: Save candidates load outside live state
+
+**Decision:** Parse and validate primary and backup saves into fresh `PackKeepState` candidates. Replace the UI's live state only after a candidate succeeds, preferring primary and falling back to backup.
+
+**Reason:** A malformed or future save must not partially mutate an active run, and an interrupted atomic replacement may leave the last valid state only in the backup slot. Candidate loading makes both guarantees explicit.
+
+**Trade-off:** A recovered backup is not promoted automatically. It remains recoverable until the player performs the next explicit save.

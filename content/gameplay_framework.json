@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.12.0-alpha-packaged-smoke",
+  "framework_version": "0.12.1-alpha-save-recovery",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -160,6 +160,13 @@
     "offline_rule": "startup_and_gameplay_smoke_run_with_unreachable_http_https_and_all_proxy_endpoints",
     "shutdown_rule": "main_scene_is_freed_before_the_exported_process_returns_zero",
     "ci": "same_smoke_runner_for_pull_request_and_tagged_windows_artifacts"
+  },
+  "p12_malformed_save_recovery": {
+    "status": "implemented",
+    "candidate_rule": "primary_and_backup_load_into_fresh_keep_state_instances_before_live_replacement",
+    "fallback_rule": "missing_malformed_future_or_invalid_primary_may_recover_a_valid_backup",
+    "mutation_rule": "two_rejected_candidates_leave_the_current_run_unchanged",
+    "migration_rule": "schema_migration_remains_owned_by_keep_state_load_serialized"
   },
   "v090_multi_wave": {
     "status": "implemented",
