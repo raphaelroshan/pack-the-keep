@@ -31,6 +31,7 @@ A successful run prints `PASS: Pack the Keep battle-state tests` and exits with 
 | `design/design_prompt.md` | Full product, systems, art, scope, and implementation prompt. |
 | `AGENTS.md` | Persistent operating rules for coding agents. |
 | `docs/agent_feeding_guide.md` | Staged prompts for building the game one risk slice at a time. |
+| `docs/agent_handoff_roadmap.md` | Detailed post-v0.10.0 roadmap, content schemas, UX plan, testing framework, and GPT-agent handoff contract. |
 | `docs/decision_log.md` | Architecture and scope decisions. |
 | `docs/setup.md` | Local Godot, Git, platform, and release setup. |
 | `src/core/keep_state.gd` | Deterministic commander, pack, grid, piece, invasion, ability, recovery, and save logic. |

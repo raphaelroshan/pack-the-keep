@@ -4,7 +4,7 @@
 
 The repository separates product intent, keep simulation, invasion simulation, presentation, and verification. `design/design_prompt.md` is the persistent product brief. `AGENTS.md` is the coding contract. `src/core/keep_state.gd` owns deterministic commanders, packs, grid placement, pieces, waves, abilities, recovery, and serialization. `src/ui/main.gd` displays the keep and emits prototype actions. `tests/test_keep_state.gd` protects the simulation without rendering.
 
-Give the coding agent the persistent prompt once, then feed it one risk slice at a time. Do not ask it to “build the whole tower-defense game.” Give it one player-facing behavior, a small set of files, acceptance criteria, and the exact verification command.
+Give the coding agent the persistent prompt once, then feed it one risk slice at a time. Do not ask it to “build the whole tower-defense game.” Give it one player-facing behavior, a small set of files, acceptance criteria, and the exact verification command. For the post-v0.10.0 sequence, use [`agent_handoff_roadmap.md`](agent_handoff_roadmap.md) as the long-horizon roadmap, content-schema reference, UX plan, testing framework, and ordered backlog.
 
 ## Persistent context prompt
 
