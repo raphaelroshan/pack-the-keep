@@ -37,6 +37,8 @@ jobs:
         run: python tools/validate_vertical_layers.py --layers content/vertical_layers.json
       - name: Validate runtime content catalog
         run: python tools/validate_runtime_content.py --pieces data/pieces --packs data/packs --commanders data/commanders --enemies data/enemies --doctrines data/doctrines --scenarios data/scenarios --events data/events --modifiers data/modifiers --manifest content/content_manifest.json
+      - name: Validate offline gameplay boundary
+        run: python tools/validate_offline_boundary.py
 
   tests:
     name: Godot headless tests (${{ matrix.os }})
@@ -146,6 +148,13 @@ jobs:
           else
             echo "No export_presets.cfg yet; packaging source and test evidence only."
           fi
+      - name: Smoke packaged Windows build
+        run: |
+          slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
+          python tools/run_packaged_smoke.py \
+            --executable "build/${slug}.exe" \
+            --profile-root "${RUNNER_TEMP}/pack-the-keep-smoke" \
+            --report-copy artifacts/packaged-smoke.json
       - name: Package source snapshot
         run: |
           mkdir -p artifacts

@@ -38,6 +38,13 @@ jobs:
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
           godot --headless --path . --editor --quit
           godot --headless --path . --export-release "Windows Desktop" "build/${slug}.exe"
+      - name: Smoke packaged Windows build
+        run: |
+          slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
+          python tools/run_packaged_smoke.py \
+            --executable "build/${slug}.exe" \
+            --profile-root "${RUNNER_TEMP}/pack-the-keep-smoke" \
+            --report-copy artifacts/packaged-smoke.json
       - name: Create release manifest
         run: |
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")

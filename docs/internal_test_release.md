@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.11.4-greywatch-challenge-ledger` — completed P11 breadth plus a selectable durability challenge
+**Current build identity:** `0.12.0-alpha-packaged-smoke` — completed P11 breadth plus packaged Windows smoke validation
 
 ## Purpose
 
@@ -29,6 +29,10 @@ Three Bells at Dusk combines Shield Guards, Ash Slingers, and Shieldbreakers ove
 ## v0.11.4 Challenge Ledger additions
 
 The Campaign Ledger now selects one authored modifier or none. The existing Roadside Intelligence trade-off is unchanged. Hardened Vanguard adds two current and maximum health when each enemy wave instance is created, grants no reward, and persists naturally through active-wave saves. Completing The Relief Road unlocks both choices.
+
+## v0.12.0 Packaged smoke additions
+
+Pull-request and tagged-release Windows exports now launch under an isolated profile with unreachable network proxies. The artifact runs the real main scene, loads the runtime catalog, reaches deterministic battle step one, writes and validates run/settings files beneath that profile, frees the scene, and emits a structured smoke report before returning success.
 
 ## v0.8.2 testability additions
 
