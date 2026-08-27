@@ -44,8 +44,13 @@ func _run_case(commander_id: String, scenario_id: String, layout_name: String, r
 		keep.place_piece("fire_team", Vector2i(4, 3), "ground")
 	for wave_number in range(3):
 		if keep.repair_interval_active:
-			keep.finish_repair_interval()
-		var started: Dictionary = keep.start_wave("gate_assault")
+			var continued: Dictionary = keep.finish_repair_interval()
+			if not bool(continued.get("next_wave_started", false)) and wave_number < 2:
+				failures.append("%s/%s/%s/%d: recovery did not start wave %d automatically" % [commander_id, scenario_id, layout_name, run_seed, wave_number + 1])
+				return
+		var started: Dictionary = {"ok": keep.wave_active}
+		if wave_number == 0 and not keep.wave_active:
+			started = keep.start_wave("gate_assault")
 		if not bool(started.get("ok", false)):
 			failures.append("%s/%s/%s/%d: wave %d failed to start" % [commander_id, scenario_id, layout_name, run_seed, wave_number + 1])
 			return

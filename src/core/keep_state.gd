@@ -295,6 +295,16 @@ func scenario_preview(id: String = "") -> Dictionary:
 	var scenario: Dictionary = SCENARIOS[selected_id]
 	return {"ok": true, "scenario_id": selected_id, "name": String(scenario.name), "objective": String(scenario.objective), "lesson": String(scenario.lesson), "starting_doctrine": String(scenario.starting_doctrine), "wave_count": scenario.wave_plans.size(), "variation_id": scenario_variation_id if selected_id == scenario_id else String(_variation_for_scenario(selected_id).get("id", "standard_bell"))}
 
+func authored_wave_count() -> int:
+	if scenario_active and SCENARIOS.has(scenario_id):
+		return SCENARIOS[scenario_id].get("wave_plans", []).size()
+	return 0
+
+func has_next_wave() -> bool:
+	if not scenario_active or last_outcome == "collapse":
+		return false
+	return authored_wave_count() > wave_index
+
 func pack_preview(pack_id: String) -> Dictionary:
 	if not PACKS.has(pack_id):
 		return {"ok": false, "reason": "unknown pack"}
@@ -857,8 +867,13 @@ func finish_repair_interval() -> Dictionary:
 	repair_actions_remaining = 0
 	repair_interval_reason = ""
 	_reload_ammunition()
-	_log("Repair interval closed with %d unused action(s). The next doctrine can begin; surviving ranged defenders reload." % unused)
-	return {"ok": true, "message": "Repair interval closed. Greywatch is ready for the next forecast.", "unused_actions": unused}
+	_log("Repair interval closed with %d unused action(s). Surviving ranged defenders reload." % unused)
+	if has_next_wave():
+		var next_wave: Dictionary = start_wave(enemy_doctrine)
+		if bool(next_wave.get("ok", false)):
+			_log("Automatic scenario sequence advanced to wave %d/%d." % [wave_index, authored_wave_count()])
+			return {"ok": true, "message": "Recovery closed. Wave %d/%d begins automatically." % [wave_index, authored_wave_count()], "unused_actions": unused, "next_wave_started": true, "next_wave": next_wave}
+	return {"ok": true, "message": "Repair interval closed. Greywatch is ready for the next forecast.", "unused_actions": unused, "next_wave_started": false, "next_wave": {}}
 
 func _finish_wave() -> Dictionary:
 	wave_active = false
@@ -893,6 +908,8 @@ func start_wave(doctrine: String) -> Dictionary:
 		return {"ok": false, "reason": "an invasion is already active"}
 	if pieces.is_empty():
 		return {"ok": false, "reason": "place at least one defensive piece first"}
+	if scenario_active and last_outcome == "collapse":
+		return {"ok": false, "reason": "this authored sequence ended in collapse; start a new run to replay it"}
 	if scenario_active and SCENARIOS.has(scenario_id) and wave_index >= SCENARIOS[scenario_id].get("wave_plans", []).size():
 		return {"ok": false, "reason": "this authored scenario has no further waves; start a new run to replay it"}
 	wave_index += 1
@@ -1023,6 +1040,8 @@ func summary() -> Dictionary:
 		"scenario_id": scenario_id,
 		"scenario_active": scenario_active,
 		"scenario": scenario_preview(),
+		"authored_wave_count": authored_wave_count(),
+		"has_next_wave": has_next_wave(),
 		"scenario_variation_id": scenario_variation_id,
 		"variation_target_room": variation_target_room,
 		"variation_materials": variation_materials,

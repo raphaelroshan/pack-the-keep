@@ -642,7 +642,10 @@ func _set_screen(next_screen: String) -> void:
 		elif screen == "battle":
 			screen_hint.text = "Advance one step; inspect enemies before spending Lockdown."
 		elif screen == "results":
-			screen_hint.text = "Read the report, repair what matters, then return to preparation."
+			if keep and keep.repair_interval_active and keep.has_next_wave():
+				screen_hint.text = "Repair or assign, then finish the interval to start the next wave automatically."
+			else:
+				screen_hint.text = "Read the report, repair what matters, then return to preparation."
 		else:
 			screen_hint.text = "A compact two-floor defense about pressure and recovery."
 	_refresh_ui()
@@ -960,7 +963,15 @@ func _on_finish_interval() -> void:
 	var result: Dictionary = keep.finish_repair_interval()
 	_run_result(result, "Interval")
 	if bool(result.get("ok", false)):
-		_set_screen("preparation")
+		if bool(result.get("next_wave_started", false)):
+			battle_paused = true
+			focused_enemy_index = -1
+			last_log_size = 0
+			_set_screen("battle")
+			_set_event("Next wave staged automatically. Battle is paused for inspection; press Space to run or N to step.")
+			_refresh_ui()
+		else:
+			_set_screen("preparation")
 
 func _on_advance_wave() -> void:
 	var result: Dictionary = keep.advance_wave(1.0)
@@ -968,7 +979,10 @@ func _on_advance_wave() -> void:
 		_set_event("Battle blocked: %s." % String(result.get("reason", "unknown")))
 	elif bool(result.get("resolved", false)):
 		_set_feedback(Color("#bfe8cf"))
-		_set_event("Wave resolved: %s. Read the report before rebuilding." % String(result.get("outcome", "unknown")).replace("_", " "))
+		if keep.has_next_wave() and keep.repair_interval_active:
+			_set_event("Wave %d resolved: %s. Recovery is open; finish the interval to start wave %d automatically." % [keep.wave_index, String(result.get("outcome", "unknown")).replace("_", " "), keep.wave_index + 1])
+		else:
+			_set_event("Wave %d resolved: %s. Read the final report." % [keep.wave_index, String(result.get("outcome", "unknown")).replace("_", " ")])
 		_set_screen("results")
 	else:
 		_set_feedback(Color("#d7a35b"))
@@ -1038,7 +1052,10 @@ func _on_load() -> void:
 
 func _on_playtest_primary_action() -> void:
 	if screen == "results":
-		_on_start_quick_playtest()
+		if keep.repair_interval_active and keep.has_next_wave():
+			_on_finish_interval()
+		else:
+			_on_start_quick_playtest()
 	else:
 		_on_quick_test_action()
 
@@ -1108,6 +1125,10 @@ func _first_battle_guidance() -> String:
 	if screen == "battle":
 		return "FIRST BATTLE GUIDE — The fort stays visible while enemies enter through the gate. Read the event feed after each step; use the focused enemy and response preview before spending the commander ability."
 	if screen == "results":
+		if keep.repair_interval_active and keep.has_next_wave():
+			return "INTER-WAVE RECOVERY — Read the causal result, spend up to two repair or assignment actions, then finish the interval to start wave %d/%d automatically." % [keep.wave_index + 1, keep.authored_wave_count()]
+		if keep.authored_wave_count() > 0 and keep.wave_index >= keep.authored_wave_count():
+			return "SCENARIO COMPLETE — Read the final causal result, then restart the quick playtest to test a different doctrine response."
 		return "FIRST BATTLE GUIDE — Read the causal result below, repair the highest-priority room, then finish the interval before the next doctrine. Change one placement at a time to learn the counter."
 	return ""
 
@@ -1193,10 +1214,16 @@ func _refresh_ui() -> void:
 			playtest_button.tooltip_text = "Resolve one deterministic battle step and remain paused for inspection."
 			playtest_status_label.text = "STEP %d — Battle is %s. Use this button or N for one step; use Space for real-time play." % [keep.battle_step, "paused" if battle_paused else "running"]
 		elif screen == "results":
-			playtest_button.text = "RESTART QUICK PLAYTEST"
-			playtest_button.disabled = false
-			playtest_button.tooltip_text = "Reset seed 3307 and replay the preset Gatehouse Lock test."
-			playtest_status_label.text = "RESULTS — Review the causal result, then restart the same deterministic test or return to preparation."
+			if keep.repair_interval_active and keep.has_next_wave():
+				playtest_button.text = "CONTINUE — START WAVE %d/%d" % [keep.wave_index + 1, keep.authored_wave_count()]
+				playtest_button.disabled = false
+				playtest_button.tooltip_text = "Close recovery and automatically start the next authored wave."
+				playtest_status_label.text = "RECOVERY — %d action(s) remain. Repair or assign, then continue into the next wave." % keep.repair_actions_remaining
+			else:
+				playtest_button.text = "RESTART QUICK PLAYTEST"
+				playtest_button.disabled = false
+				playtest_button.tooltip_text = "Reset seed 3307 and replay the preset Gatehouse Lock test."
+				playtest_status_label.text = "FINAL RESULTS — Review the causal result, then restart the same deterministic test."
 	var recent: Array[String] = []
 	var start: int = maxi(0, keep.battle_report.size() - 4)
 	for index in range(start, keep.battle_report.size()):

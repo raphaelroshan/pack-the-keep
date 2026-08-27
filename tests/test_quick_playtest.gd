@@ -64,10 +64,38 @@ func _initialize() -> void:
 		await process_frame
 		safety += 1
 	if ui.screen != "results":
-		failures.append("quick-playtest did not reach Results after deterministic completion")
+		failures.append("quick-playtest did not reach inter-wave Results after wave one")
+	var continue_two: Button = _find_button(ui, "CONTINUE — START WAVE 2/3")
+	if continue_two == null:
+		failures.append("inter-wave Results did not offer Continue for wave two")
+	else:
+		continue_two.pressed.emit()
+		await process_frame
+	if ui.screen != "battle" or not ui.keep.wave_active or ui.keep.wave_index != 2 or ui.battle_paused != true:
+		failures.append("Continue did not stage paused wave two")
+	safety = 0
+	while ui.keep.wave_active and safety < 20:
+		ui._on_advance_wave()
+		await process_frame
+		safety += 1
+	var continue_three: Button = _find_button(ui, "CONTINUE — START WAVE 3/3")
+	if continue_three == null:
+		failures.append("inter-wave Results did not offer Continue for wave three")
+	else:
+		continue_three.pressed.emit()
+		await process_frame
+	if ui.screen != "battle" or not ui.keep.wave_active or ui.keep.wave_index != 3 or ui.battle_paused != true:
+		failures.append("Continue did not stage paused wave three")
+	safety = 0
+	while ui.keep.wave_active and safety < 20:
+		ui._on_advance_wave()
+		await process_frame
+		safety += 1
+	if ui.screen != "results":
+		failures.append("quick-playtest did not reach terminal Results after wave three")
 	var restart_button: Button = _find_button(ui, "RESTART QUICK PLAYTEST")
 	if restart_button == null:
-		failures.append("Results primary action did not change to restart")
+		failures.append("terminal Results primary action did not change to restart")
 	else:
 		restart_button.pressed.emit()
 		await process_frame

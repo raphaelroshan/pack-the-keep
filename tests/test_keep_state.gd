@@ -152,6 +152,7 @@ func _test_partial_breach_is_recoverable() -> void:
 
 func _test_repair_interval_and_assignments() -> void:
 	var keep: PackKeepState = PackKeepState.new(3307)
+	keep.select_scenario("gatehouse_lock")
 	keep.open_pack("scouts")
 	keep.place_piece("scout_post", Vector2i(8, 1), "upper")
 	keep.start_wave("gate_assault")
@@ -171,7 +172,8 @@ func _test_repair_interval_and_assignments() -> void:
 	var finished: Dictionary = keep.finish_repair_interval()
 	_expect(bool(finished.get("ok", false)), "the repair interval should close explicitly")
 	_expect(not keep.repair_interval_active, "closed interval should no longer block a wave")
-	_expect(bool(keep.start_wave("gate_assault").get("ok", false)), "a new wave should start after interval closure")
+	_expect(bool(finished.get("next_wave_started", false)), "closing an authored interval should start the next wave automatically")
+	_expect(keep.wave_active and keep.wave_index == 2, "automatic recovery should leave wave two active")
 
 func _test_assignment_rules_and_action_budget() -> void:
 	var keep: PackKeepState = PackKeepState.new(3307)
@@ -302,15 +304,18 @@ func _test_p1_scenario_escalation() -> void:
 	var first: Dictionary = keep.start_wave("gate_assault")
 	_expect(bool(first.get("ok", false)) and keep.enemy_doctrine == "gate_assault", "scenario wave one should preserve its teaching doctrine")
 	keep.advance_wave(6.0)
-	keep.finish_repair_interval()
-	var second: Dictionary = keep.start_wave("gate_assault")
+	var finished_one: Dictionary = keep.finish_repair_interval()
+	_expect(bool(finished_one.get("next_wave_started", false)), "finishing wave one recovery should auto-start wave two")
+	var second: Dictionary = {"ok": keep.wave_active, "composition": keep.enemies.map(func(enemy: Dictionary) -> String: return String(enemy.get("enemy_id", "")))}
 	_expect(bool(second.get("ok", false)) and keep.enemy_doctrine == "distributed_sabotage", "scenario wave two should escalate to a different doctrine")
 	_expect(second.get("composition", []).has("sapper"), "scenario wave two should introduce a Sapper")
 	keep.advance_wave(6.0)
-	keep.finish_repair_interval()
-	_expect(bool(keep.start_wave("gate_assault").get("ok", false)), "scenario wave three should remain available")
+	var finished_two: Dictionary = keep.finish_repair_interval()
+	_expect(bool(finished_two.get("next_wave_started", false)), "finishing wave two recovery should auto-start wave three")
+	_expect(keep.wave_active and keep.wave_index == 3 and keep.enemy_doctrine == "feint_and_flank", "scenario wave three should remain available and escalate")
 	keep.advance_wave(6.0)
-	keep.finish_repair_interval()
+	var finished_three: Dictionary = keep.finish_repair_interval()
+	_expect(bool(finished_three.get("ok", false)) and not bool(finished_three.get("next_wave_started", false)), "final wave recovery should close without starting a fourth wave")
 	_expect(not bool(keep.start_wave("gate_assault").get("ok", false)), "authored scenario should stop after three waves")
 
 func _test_p1_seeded_variation() -> void:
