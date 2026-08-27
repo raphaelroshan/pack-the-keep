@@ -255,3 +255,11 @@
 **Reason:** Players gain time to inspect meaningful changes without introducing a partial tick, alternate combat path, or truncated replay history.
 
 **Trade-off:** Auto-pause reacts after the triggering step, not before it, and the first-threat trigger fires once per wave. More granular categories can be added later without changing simulation authority.
+
+## ADR-033: Prototype audio uses semantic cue IDs
+
+**Decision:** Route UI feedback through stable semantic cue IDs backed by short procedural tone profiles. Display the latest cue in text and apply mute/volume only when generating samples.
+
+**Reason:** Named cues make warning, contact, repair, ability, and outcomes distinguishable and testable before authored audio exists, while keeping the simulation independent from sound playback.
+
+**Trade-off:** The tones are functional placeholders rather than final sound design. Authored assets can replace profiles later without changing gameplay callers or tests.

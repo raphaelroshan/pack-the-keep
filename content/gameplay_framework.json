@@ -108,6 +108,12 @@
     "auto_pause_rule": "pause_presentation_after_an_atomic_step_reveals_the_first_wave_threat_or_a_new_breach",
     "determinism_rule": "auto_pause_never_rolls_back_skips_or_partially_resolves_a_simulation_step"
   },
+  "p10_game_feel_feedback": {
+    "status": "implemented",
+    "cue_rule": "stable_semantic_ids_map_to_short_procedural_frequency_profiles",
+    "accessibility_rule": "latest_cue_is_visible_in_text_and_mute_suppresses_samples_only",
+    "replacement_rule": "authored_audio_can_replace_profiles_without_changing_gameplay_callers"
+  },
   "v090_multi_wave": {
     "status": "implemented",
     "authored_sequence": "scenario_wave_plans_and_doctrines_define_three_escalating_waves",
