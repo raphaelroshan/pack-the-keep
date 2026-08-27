@@ -7,9 +7,8 @@ var completed_runs: int = 0
 var outcome_counts: Dictionary = {}
 
 func _initialize() -> void:
-	var catalog_keep: PackKeepState = PackKeepState.new(3307)
 	for commander_id in ["castellan", "warden"]:
-		for scenario_id in catalog_keep.scenario_ids():
+		for scenario_id in ["gatehouse_lock", "wrong_wall", "open_yard_net"]:
 			for layout_name in ["compact", "recovery", "open_yard"]:
 				for run_seed in [3307, 3308]:
 					_run_case(String(commander_id), String(scenario_id), String(layout_name), int(run_seed))

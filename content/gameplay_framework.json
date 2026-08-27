@@ -124,19 +124,25 @@
       "pike_line",
       "field_engineers",
       "firekeepers",
-      "scouts"
+      "scouts",
+      "runner_network",
+      "fallback_convoy"
     ],
     "units": [
       "pike_squad",
       "repair_station",
       "fire_team",
-      "scout_post"
+      "scout_post",
+      "runner_pair",
+      "rear_guard"
     ],
     "equipment": [
       "narrow_gate",
       "brace",
       "fire_brazier",
-      "signal_beacon"
+      "signal_beacon",
+      "supply_cache",
+      "breakaway_barricade"
     ],
     "enemies": [
       "raider",
@@ -374,7 +380,7 @@
     {
       "id": "runner_pair",
       "name": "Runner Pair",
-      "status": "future",
+      "status": "active",
       "category": "mobile_response",
       "footprint": [
         1,
@@ -401,6 +407,19 @@
         "command_points": 1,
         "space": "small"
       }
+    },
+    {
+      "id": "rear_guard",
+      "name": "Rear Guard",
+      "status": "active",
+      "category": "mobile_response",
+      "footprint": [1, 1],
+      "purpose": "Turns visible room damage into a stronger second-line response.",
+      "strengths": ["fallback", "mixed_pressure", "barracks_assignment"],
+      "weaknesses": ["first_contact", "isolated_position", "blocked_lanes"],
+      "player_readability": "A reserve shield marker changes from RESERVE to ENGAGED after a room is strained.",
+      "counter_families": ["gate_assault", "distributed_sabotage", "area_pressure"],
+      "cost_profile": {"materials": 8, "command_points": 0, "space": "small"}
     },
     {
       "id": "bellkeepers",
@@ -503,9 +522,16 @@
     {
       "id": "supply_cache",
       "name": "Supply Cache",
-      "status": "future",
+      "status": "active",
       "purpose": "Stores a small reserve for repair or evacuation.",
       "tradeoff": "Adds recovery capacity but creates a valuable sabotage target."
+    },
+    {
+      "id": "breakaway_barricade",
+      "name": "Breakaway Barricade",
+      "status": "active",
+      "purpose": "Absorbs one dangerous room contact and breaks in the process.",
+      "tradeoff": "Consumes space and cannot protect a second impact."
     }
   ],
   "pack_families": [
@@ -609,7 +635,7 @@
       "id": "runner_network",
       "name": "Runner Network",
       "purpose": "Make open layouts and rapid redeployment viable.",
-      "status": "future",
+      "status": "active",
       "family": "mobile_response",
       "contents": [
         "runner_pair",
@@ -623,6 +649,20 @@
         "warden"
       ],
       "does_not_guarantee": "Movement is not free and cannot save every front simultaneously."
+    },
+    {
+      "id": "fallback_convoy",
+      "name": "Fallback Convoy",
+      "purpose": "Hold a second line and spend one structure to save another.",
+      "status": "active",
+      "family": "mobile_response",
+      "contents": ["rear_guard", "breakaway_barricade"],
+      "doctrine": "controlled_fallback",
+      "player_question": "What should remain ready after the first line bends?",
+      "strength": "Reactive defense after visible damage and one controlled sacrifice.",
+      "weakness": "Provides less value before contact and consumes reserve space.",
+      "commander_affinity": ["castellan", "warden"],
+      "does_not_guarantee": "A fallback cannot rescue every damaged room."
     },
     {
       "id": "bell_guard",
@@ -715,6 +755,19 @@
         "support",
         "specialist",
         "refuge_plan"
+      ]
+    },
+    {
+      "id": "rolling_breach",
+      "status": "active",
+      "question": "Did the keep preserve a reserve after answering the first threat?",
+      "telegraph": "Gate, support, and area-impact markers appear in their expected contact order.",
+      "pressure_pattern": "Raiders and a Sapper draw out the first response before a Siege Beast reaches the fallback space.",
+      "response_families": [
+        "mobile_response",
+        "support",
+        "control",
+        "commander_ability"
       ]
     },
     {

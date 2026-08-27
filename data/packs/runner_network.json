@@ -1,0 +1,8 @@
+{
+  "id": "runner_network", "content_version": 1, "status": "active", "name": "Runner Network",
+  "short_role": "Make open layouts and rapid relief viable.", "question": "Where must a reserve arrive before the next failure?",
+  "family": "mobile_response", "contents": ["runner_pair", "supply_cache"], "doctrine": "rapid_redeployment", "cost": 4,
+  "strength": "Open-lane interception and one bounded recovery reserve.", "weakness": "Fragile pieces lose value when lanes close or support is exposed.",
+  "choice": "Spend space on movement and a reserve instead of immediate stopping power.", "commander_affinity": ["warden"],
+  "spatial_demand": {"preferred_floors": ["ground", "upper"], "preferred_zones": ["courtyard", "keep"], "needs_open_lane": true, "needs_adjacency": false}
+}

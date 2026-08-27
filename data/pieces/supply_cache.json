@@ -1,0 +1,13 @@
+{
+  "id": "supply_cache", "content_version": 1, "status": "active", "name": "Supply Cache",
+  "short_role": "Hold one protected reserve for the first recovery interval.", "role": "stores a recovery reserve",
+  "question": "Where can supplies survive until they are actually needed?", "kind": "equipment", "category": "mobile_response",
+  "footprint": [1, 1], "allowed_floors": ["ground", "upper"], "allowed_zones": ["wall", "courtyard", "keep"],
+  "cost": 5, "max_health": 10, "placement_question": "Which protected route keeps this reserve reachable?",
+  "skill": "Field Reserve: the first surviving cache entering recovery grants 5 materials, then becomes spent.",
+  "strength_tags": ["recovery", "materials", "reserve"], "weakness_tags": ["sapper_target", "no_direct_stop"],
+  "attack_profile": {"style": "support", "range": 1, "cooldown_steps": 1, "damage": 0, "defense": 1, "ammo_capacity": 0, "targets": ["all"]},
+  "support_profile": {"kind": "supply", "target_rooms": ["supply_room"], "condition_restore": 0, "response_modifier": "first_recovery_materials"},
+  "assignment_rule": null, "availability": "runner_network",
+  "presentation": {"icon": "", "marker_color_role": "mobile_response", "radius_scale": 1.0}
+}

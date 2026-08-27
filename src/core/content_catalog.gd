@@ -4,7 +4,9 @@ const PACK_PATHS: Array[String] = [
 	"res://data/packs/pike_line.json",
 	"res://data/packs/field_engineers.json",
 	"res://data/packs/firekeepers.json",
-	"res://data/packs/scouts.json"
+	"res://data/packs/scouts.json",
+	"res://data/packs/runner_network.json",
+	"res://data/packs/fallback_convoy.json"
 ]
 
 const COMMANDER_PATHS: Array[String] = [
@@ -20,7 +22,11 @@ const PIECE_PATHS: Array[String] = [
 	"res://data/pieces/narrow_gate.json",
 	"res://data/pieces/brace.json",
 	"res://data/pieces/fire_brazier.json",
-	"res://data/pieces/signal_beacon.json"
+	"res://data/pieces/signal_beacon.json",
+	"res://data/pieces/runner_pair.json",
+	"res://data/pieces/supply_cache.json",
+	"res://data/pieces/rear_guard.json",
+	"res://data/pieces/breakaway_barricade.json"
 ]
 
 const ENEMY_PATHS: Array[String] = [
@@ -34,13 +40,15 @@ const DOCTRINE_PATHS: Array[String] = [
 	"res://data/doctrines/gate_assault.json",
 	"res://data/doctrines/distributed_sabotage.json",
 	"res://data/doctrines/feint_and_flank.json",
-	"res://data/doctrines/area_pressure.json"
+	"res://data/doctrines/area_pressure.json",
+	"res://data/doctrines/rolling_breach.json"
 ]
 
 const SCENARIO_PATHS: Array[String] = [
 	"res://data/scenarios/gatehouse_lock.json",
 	"res://data/scenarios/wrong_wall.json",
-	"res://data/scenarios/open_yard_net.json"
+	"res://data/scenarios/open_yard_net.json",
+	"res://data/scenarios/relief_road.json"
 ]
 
 const REQUIRED_PACK_FIELDS: Array[String] = [

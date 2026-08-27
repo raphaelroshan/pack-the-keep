@@ -932,7 +932,12 @@ func _format_inspection(data: Dictionary) -> String:
 		return "INSPECTOR — ROOM %s\n%s floor | %s | %d%% condition | %s\n%s" % [String(data.name), String(data.floor).capitalize(), "critical" if bool(data.critical) else "support", int(data.condition), String(data.state), String(data.role)]
 	if String(data.get("kind", "")) == "enemy":
 		return "INSPECTOR — ENEMY %s\n%s via %s | %d/%d hp | damage %d\nCounter: %s | Target: %s" % [String(data.name), String(data.doctrine).replace("_", " "), String(data.route).replace("_", " "), int(data.health), int(data.max_health), int(data.damage), String(data.counter), String(data.target if not String(data.target).is_empty() else "approaching")]
-	return "INSPECTOR — %s\n%s floor | %s zone | %d/%d hp | %s\n%s %d attack | Defense %d | Range %d | Ammo %d/%d\nSkill: %s\nAssignment %s" % [String(data.name), String(data.floor).capitalize(), String(data.placement_zone).to_upper(), int(data.health), int(data.max_health), String(data.role), String(data.combat_style).to_upper(), int(data.attack), int(data.defense), int(data.range), int(data.ammo), int(data.max_ammo), String(data.skill), String(data.assignment if not String(data.assignment).is_empty() else "none")]
+	var special_state: String = ""
+	if String(data.get("piece_id", "")) == "supply_cache":
+		special_state = "\nReserve: %s" % ("SPENT" if bool(data.get("supply_spent", false)) else "READY")
+	elif String(data.get("piece_id", "")) == "rear_guard":
+		special_state = "\nFallback: %s" % ("ENGAGED" if bool(data.get("fallback_active", false)) else "RESERVE")
+	return "INSPECTOR — %s\n%s floor | %s zone | %d/%d hp | %s\n%s %d attack | Defense %d | Range %d | Ammo %d/%d\nSkill: %s\nAssignment %s%s" % [String(data.name), String(data.floor).capitalize(), String(data.placement_zone).to_upper(), int(data.health), int(data.max_health), String(data.role), String(data.combat_style).to_upper(), int(data.attack), int(data.defense), int(data.range), int(data.ammo), int(data.max_ammo), String(data.skill), String(data.assignment if not String(data.assignment).is_empty() else "none"), special_state]
 
 func _on_inspect_enemy() -> void:
 	if enemy_option.selected < 0:
@@ -1662,6 +1667,10 @@ class KeepCanvas extends Control:
 			var piece_origin: Vector2i = instance.get("origin", Vector2i.ZERO)
 			var piece_rect: Rect2 = Rect2(origin + Vector2(piece_origin.x * CELL_X, piece_origin.y * CELL_Y), Vector2(piece.size.x * CELL_X, piece.size.y * CELL_Y))
 			var color: Color = Color("#7598aa") if piece_id == "pike_squad" else Color("#83a47d") if piece_id == "repair_station" else Color("#ba6f55") if piece_id == "fire_team" else Color("#cbb56f")
+			if ["runner_pair", "supply_cache"].has(piece_id):
+				color = Color("#61aeb5")
+			elif ["rear_guard", "breakaway_barricade"].has(piece_id):
+				color = Color("#c88c5a")
 			draw_rect(piece_rect.grow(-2), color, true)
 			draw_rect(piece_rect.grow(-2), Color("#f1dfb8"), false, 1.5)
 			_draw_piece_glyph(piece_rect, piece_id, color)
@@ -1672,6 +1681,10 @@ class KeepCanvas extends Control:
 				piece_status += " AMMO %d/%d" % [int(instance.get("ammo", max_ammo)), max_ammo]
 			if bool(instance.get("disabled", false)):
 				piece_status += " DISABLED"
+			elif piece_id == "supply_cache":
+				piece_status += " " + ("SPENT" if bool(instance.get("supply_spent", false)) else "READY")
+			elif piece_id == "rear_guard":
+				piece_status += " " + ("ENGAGED" if keep.fallback_active() else "RESERVE")
 			var assignment: String = String(instance.get("assignment", ""))
 			var zone: String = String(instance.get("placement_zone", "keep"))
 			piece_status += " " + zone.to_upper()
@@ -1682,7 +1695,7 @@ class KeepCanvas extends Control:
 			var health_ratio: float = float(piece_health) / float(maxi(1, piece_max_health))
 			draw_rect(Rect2(piece_rect.position + Vector2(2, 14), Vector2(maxf(3.0, (piece_rect.size.x - 4.0) * health_ratio), 3)), Color("#bfe8cf") if health_ratio >= 0.7 else Color("#d7a35b") if health_ratio >= 0.35 else Color("#d26155"), true)
 			draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(2, piece_rect.size.y - 3), zone.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, piece_rect.size.x - 4, 7, Color("#201a25"))
-			if float(instance.get("condition", 0.0)) < 1.0 or not assignment.is_empty() or high_contrast_mode:
+			if float(instance.get("condition", 0.0)) < 1.0 or not assignment.is_empty() or high_contrast_mode or ["supply_cache", "rear_guard"].has(piece_id):
 				draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(2, piece_rect.size.y - 11), piece_status, HORIZONTAL_ALIGNMENT_LEFT, piece_rect.size.x - 4, 7, Color("#201a25"))
 		_draw_placement_boxes(floor_name, origin, true)
 
@@ -1700,6 +1713,21 @@ class KeepCanvas extends Control:
 		elif piece_id == "scout_post":
 			draw_circle(center, 5.0, Color("#f7e3b7"), false, 1.5)
 			draw_circle(center, 1.5, Color("#f7e3b7"))
+		elif piece_id == "runner_pair":
+			draw_circle(center + Vector2(-4, 0), 3.0, Color("#f7e3b7"), false, 1.5)
+			draw_circle(center + Vector2(4, 0), 3.0, Color("#f7e3b7"), false, 1.5)
+			draw_line(center + Vector2(-1, 0), center + Vector2(1, 0), Color("#fff4df"), 2.0)
+		elif piece_id == "supply_cache":
+			draw_rect(Rect2(center - Vector2(6, 5), Vector2(12, 10)), Color("#f7e3b7"), false, 1.5)
+			draw_line(center + Vector2(-3, 0), center + Vector2(3, 0), Color("#fff4df"), 1.5)
+			draw_line(center + Vector2(0, -3), center + Vector2(0, 3), Color("#fff4df"), 1.5)
+		elif piece_id == "rear_guard":
+			draw_polyline(PackedVector2Array([center + Vector2(0, -6), center + Vector2(5, -3), center + Vector2(4, 4), center + Vector2(0, 7), center + Vector2(-4, 4), center + Vector2(-5, -3), center + Vector2(0, -6)]), Color("#f7e3b7"), 1.5)
+			draw_line(center + Vector2(7, -6), center + Vector2(7, 7), Color("#fff4df"), 1.5)
+		elif piece_id == "breakaway_barricade":
+			draw_line(center + Vector2(-6, 6), center + Vector2(6, -6), Color("#f7e3b7"), 2.0)
+			draw_line(center + Vector2(-6, -6), center + Vector2(6, 6), Color("#f7e3b7"), 2.0)
+			draw_line(center + Vector2(-7, 0), center + Vector2(7, 0), Color("#fff4df"), 1.5)
 		else:
 			draw_circle(center + Vector2(0, -2), 4.0, Color("#f7e3b7"))
 			draw_line(center + Vector2(-5, 5), center + Vector2(0, -7), Color("#f7e3b7"), 2.0)
