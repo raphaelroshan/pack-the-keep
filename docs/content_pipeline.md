@@ -26,6 +26,7 @@ The content layer is deliberately separate from simulation code. Events describe
 | `tools/validate_gameplay_framework.py` | Pack-specific validator for gameplay-framework references and design minimums. |
 | `tools/validate_vertical_layers.py` | Validator for floor roles, unit registration, vertical connections, pack relationships, and slice scope. |
 | `tools/validate_runtime_content.py` | Validator for runtime commander, piece, pack, enemy, doctrine, and scenario schemas, stable filenames/IDs, references, and manifest parity. |
+| `tests/test_runtime_content_validator.py` | Negative-path tests proving malformed runtime definitions fail with actionable diagnostics. |
 | `ci/quality_contract.md` | Game-specific review criteria used by the multi-agent reviewer. |
 
 ## Authoring contract

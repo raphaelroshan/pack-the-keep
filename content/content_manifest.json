@@ -17,10 +17,11 @@
     "next_slice": "p6_data_contract"
   },
   "p6_data_contract": {
-    "status": "in_progress",
+    "status": "implemented",
     "externalized": ["packs", "commanders", "pieces", "enemies", "doctrines", "scenarios"],
     "runtime_catalog": "src/core/content_catalog.gd",
-    "next_slice": "catalog_validator_hardening"
+    "validation": "positive catalog load plus malformed piece, enemy, doctrine, and scenario regression coverage",
+    "next_slice": "p7_second_doctrines"
   },
   "campaign": {
     "title": "The Bell at Dusk",
