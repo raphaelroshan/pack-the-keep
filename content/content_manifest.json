@@ -18,9 +18,9 @@
   },
   "p6_data_contract": {
     "status": "in_progress",
-    "externalized": ["packs", "commanders"],
+    "externalized": ["packs", "commanders", "pieces"],
     "runtime_catalog": "src/core/content_catalog.gd",
-    "next_slice": "piece_definitions"
+    "next_slice": "enemy_definitions"
   },
   "campaign": {
     "title": "The Bell at Dusk",

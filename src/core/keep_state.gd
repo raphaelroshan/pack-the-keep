@@ -24,17 +24,6 @@ const ROOMS: Dictionary = {
 	"old_chapel": {"name": "Old Chapel", "floor": "upper", "origin": Vector2i(8, 5), "size": Vector2i(3, 2), "critical": false, "role": "refuge and evacuation"}
 }
 
-const PIECES: Dictionary = {
-	"pike_squad": {"name": "Pike Squad", "size": Vector2i(2, 1), "cost": 8, "role": "holds Gate Road", "skill": "Brace the Gate: melee contact control gains +2 against Gate Road Raiders when assigned to Gate.", "combat_style": "melee", "attack": 4, "defense": 2, "max_health": 14, "max_ammo": 0, "attack_interval": 1, "range": 1, "availability": "starter", "targets": ["raider"]},
-	"repair_station": {"name": "Repair Station", "size": Vector2i(2, 1), "cost": 10, "role": "restores nearby structures", "skill": "Field Repair: restores the lowest-condition room after defender attacks.", "combat_style": "support", "attack": 0, "defense": 1, "max_health": 10, "max_ammo": 0, "attack_interval": 1, "range": 1, "availability": "field_engineers", "targets": ["sapper", "area_pressure"]},
-	"fire_team": {"name": "Fire Team", "size": Vector2i(2, 1), "cost": 9, "role": "controls an approach zone", "skill": "Denial Zone: ranged counter fire is strongest from the upper floor or Inner Yard assignment.", "combat_style": "ranged", "attack": 3, "defense": 1, "max_health": 12, "max_ammo": 4, "attack_interval": 1, "range": 2, "availability": "firekeepers", "targets": ["climber", "raider", "siege_beast"]},
-	"scout_post": {"name": "Scout Post", "size": Vector2i(1, 1), "cost": 6, "role": "reveals target and arrival", "skill": "Early Warning: reveals target timing and improves the keeper’s read of the next contact.", "combat_style": "support", "attack": 0, "defense": 0, "max_health": 8, "max_ammo": 0, "attack_interval": 1, "range": 3, "availability": "scouts", "targets": ["all"]},
-	"narrow_gate": {"name": "Narrow Gate", "size": Vector2i(1, 2), "cost": 7, "role": "concentrates Gate pressure", "skill": "Choke Point: increases the Gate’s defensive hold without dealing direct damage.", "combat_style": "fortification", "attack": 0, "defense": 3, "max_health": 18, "max_ammo": 0, "attack_interval": 1, "range": 1, "availability": "starter", "targets": ["raider"]},
-	"brace": {"name": "Wall Brace", "size": Vector2i(1, 1), "cost": 5, "role": "reduces adjacent room damage", "skill": "Bracework: reduces damage to an adjacent room by one.", "combat_style": "fortification", "attack": 0, "defense": 2, "max_health": 16, "max_ammo": 0, "attack_interval": 1, "range": 1, "availability": "field_engineers", "targets": ["all"]},
-	"fire_brazier": {"name": "Fire Brazier", "size": Vector2i(1, 1), "cost": 6, "role": "extends Fire Team denial", "skill": "Signal Flame: extends the Fire Team denial lane on the upper floor.", "combat_style": "ranged", "attack": 1, "defense": 0, "max_health": 12, "max_ammo": 3, "attack_interval": 1, "range": 2, "availability": "firekeepers", "targets": ["climber"]},
-	"signal_beacon": {"name": "Signal Beacon", "size": Vector2i(1, 1), "cost": 5, "role": "improves warning time", "skill": "Signal Relay: expands Warden signal coverage without direct damage.", "combat_style": "support", "attack": 0, "defense": 0, "max_health": 8, "max_ammo": 0, "attack_interval": 1, "range": 3, "availability": "scouts", "targets": ["all"]}
-}
-
 const ENEMIES: Dictionary = {
 	"raider": {"name": "Raider", "health": 8, "damage": 2, "arrival_step": 2, "route": "gate_road", "target_rooms": ["gate"], "doctrine": "gate_assault", "counter": "pike_squad"},
 	"sapper": {"name": "Sapper", "health": 5, "damage": 3, "arrival_step": 3, "route": "service_lane", "target_rooms": ["workshop", "supply_room", "armory"], "doctrine": "distributed_sabotage", "counter": "scout_post"},
@@ -87,13 +76,6 @@ const DOCTRINE_PRESSURES: Dictionary = {
 	"area_pressure": "Inner Yard and adjacent support rooms"
 }
 
-const ASSIGNMENT_RULES: Dictionary = {
-	"pike_squad": {"room": "gate", "effect": "Gate Road hold bonus +2"},
-	"repair_station": {"room": "workshop", "effect": "repair amount +4 and Workshop priority"},
-	"fire_team": {"room": "inner_yard", "effect": "denial zone reaches the response space"},
-	"scout_post": {"room": "north_tower", "effect": "secondary target revealed before contact"}
-}
-
 var seed: int = 3307
 var commander_id: String = ACTIVE_COMMANDER
 var materials: int = 60
@@ -137,18 +119,25 @@ var _last_attackers: Array[String] = []
 var _last_attack_damage: Dictionary = {}
 var content_catalog: RefCounted
 var _commander_definitions: Dictionary = {}
+var _piece_definitions: Dictionary = {}
 var _pack_definitions: Dictionary = {}
 var content_catalog_errors: Array[String] = []
 
 func _init(keep_seed: int = 3307) -> void:
 	content_catalog = ContentCatalog.new()
-	var catalog_result: Dictionary = content_catalog.load_default(PIECES.keys())
+	var known_piece_targets: Array = ENEMIES.keys()
+	for enemy in ENEMIES.values():
+		var doctrine: String = String(enemy.get("doctrine", ""))
+		if not doctrine.is_empty() and not known_piece_targets.has(doctrine):
+			known_piece_targets.append(doctrine)
+	var catalog_result: Dictionary = content_catalog.load_default(ROOMS.keys(), known_piece_targets)
 	_commander_definitions = catalog_result.get("commanders", {}).duplicate(true)
+	_piece_definitions = catalog_result.get("pieces", {}).duplicate(true)
 	_pack_definitions = catalog_result.get("packs", {}).duplicate(true)
 	for error in catalog_result.get("errors", []):
 		content_catalog_errors.append(String(error))
 	if not content_catalog_errors.is_empty():
-		push_error("Pack content catalog failed validation: %s" % "; ".join(content_catalog_errors))
+		push_error("Runtime content catalog failed validation: %s" % "; ".join(content_catalog_errors))
 	reset_run(keep_seed)
 
 func _reset_rooms() -> void:
@@ -302,13 +291,21 @@ func commander_definition(id: String) -> Dictionary:
 		return {}
 	return _commander_definitions[id].duplicate(true)
 
+func piece_ids() -> Array[String]:
+	return content_catalog.piece_ids()
+
+func piece_definition(id: String) -> Dictionary:
+	if not _piece_definitions.has(id):
+		return {}
+	return _piece_definitions[id].duplicate(true)
+
 func pack_definition(pack_id: String) -> Dictionary:
 	if not _pack_definitions.has(pack_id):
 		return {}
 	return _pack_definitions[pack_id].duplicate(true)
 
 func content_catalog_status() -> Dictionary:
-	return {"ok": content_catalog_errors.is_empty(), "commander_count": _commander_definitions.size(), "pack_count": _pack_definitions.size(), "errors": content_catalog_errors.duplicate()}
+	return {"ok": content_catalog_errors.is_empty(), "commander_count": _commander_definitions.size(), "piece_count": _piece_definitions.size(), "pack_count": _pack_definitions.size(), "errors": content_catalog_errors.duplicate()}
 
 func pack_preview(pack_id: String) -> Dictionary:
 	if not _pack_definitions.has(pack_id):
@@ -316,7 +313,7 @@ func pack_preview(pack_id: String) -> Dictionary:
 	var pack: Dictionary = _pack_definitions[pack_id]
 	var piece_previews: Array[Dictionary] = []
 	for piece_id in pack.contents:
-		var piece: Dictionary = PIECES[String(piece_id)]
+		var piece: Dictionary = _piece_definitions[String(piece_id)]
 		piece_previews.append({"id": String(piece_id), "name": String(piece.name), "cost": int(piece.cost), "size": piece.size, "role": String(piece.role), "availability": String(piece.availability)})
 	return {"ok": true, "pack_id": pack_id, "name": String(pack.name), "doctrine": String(pack.doctrine), "cost": int(pack.cost), "pieces": piece_previews, "solves": String(pack.get("strength", "")), "asks": String(pack.get("weakness", "")), "preview": String(pack.get("choice", "")), "question": String(pack.get("question", "")), "owned": owned_packs.has(pack_id), "reserved": reserved_pack_id == pack_id, "openings_remaining": _preparation_pack_limit() - pack_openings_this_preparation, "materials": materials}
 
@@ -356,16 +353,16 @@ func open_pack(pack_id: String) -> Dictionary:
 	return {"ok": true, "message": "Opened %s for %d materials: %s. Available units updated." % [_pack_definitions[pack_id].name, pack_cost, _pack_definitions[pack_id].doctrine.replace("_", " ")], "available_pieces": available_pieces.duplicate(), "openings_remaining": _preparation_pack_limit() - pack_openings_this_preparation, "materials": materials}
 
 func piece_fits(piece_id: String, origin: Vector2i, floor: String = "ground") -> bool:
-	if not PIECES.has(piece_id) or not FLOORS.has(floor):
+	if not _piece_definitions.has(piece_id) or not FLOORS.has(floor):
 		return false
-	var size: Vector2i = PIECES[piece_id].size
+	var size: Vector2i = _piece_definitions[piece_id].size
 	if origin.x < 0 or origin.y < 0 or origin.x + size.x > GRID_SIZE.x or origin.y + size.y > GRID_SIZE.y:
 		return false
 	for existing in pieces.values():
 		if String(existing.get("floor", "ground")) != floor:
 			continue
 		var existing_origin: Vector2i = existing.get("origin", Vector2i.ZERO)
-		var existing_size: Vector2i = PIECES[String(existing.get("piece_id", ""))].size
+		var existing_size: Vector2i = _piece_definitions[String(existing.get("piece_id", ""))].size
 		if Rect2i(origin, size).intersects(Rect2i(existing_origin, existing_size)):
 			return false
 	return true
@@ -380,18 +377,22 @@ func placement_zone(origin: Vector2i, floor: String = "ground", size: Vector2i =
 	return "keep"
 
 func piece_preview(piece_id: String, origin: Vector2i, floor: String = "ground") -> Dictionary:
-	if not PIECES.has(piece_id):
+	if not _piece_definitions.has(piece_id):
 		return {"ok": false, "valid": false, "reason": "unknown defensive piece"}
-	var piece: Dictionary = PIECES[piece_id]
+	var piece: Dictionary = _piece_definitions[piece_id]
 	var reason: String = ""
 	if wave_active or repair_interval_active:
 		reason = "placement is only available during Preparation"
 	elif not FLOORS.has(floor):
 		reason = "unknown keep floor"
+	elif not piece.get("allowed_floors", FLOORS).has(floor):
+		reason = "%s cannot be placed on the %s floor" % [piece.name, floor]
 	elif not available_pieces.has(piece_id):
 		reason = "%s is not available; open its pack during Preparation" % piece.name
 	elif not piece_fits(piece_id, origin, floor):
 		reason = "piece does not fit on this floor of the keep"
+	elif not piece.get("allowed_zones", ["wall", "courtyard", "keep"]).has(placement_zone(origin, floor, piece.size)):
+		reason = "%s cannot be placed in the %s zone" % [piece.name, placement_zone(origin, floor, piece.size)]
 	elif materials < int(piece.cost):
 		reason = "not enough materials"
 	return {"ok": reason.is_empty(), "valid": reason.is_empty(), "reason": reason, "piece_id": piece_id, "name": String(piece.name), "origin": origin, "floor": floor, "placement_zone": placement_zone(origin, floor, piece.size), "size": piece.size, "cost": int(piece.cost), "role": String(piece.role), "remaining_materials": materials - int(piece.cost)}
@@ -400,21 +401,21 @@ func place_piece(piece_id: String, origin: Vector2i, floor: String = "ground") -
 	var preview: Dictionary = piece_preview(piece_id, origin, floor)
 	if not bool(preview.get("valid", false)):
 		return {"ok": false, "reason": String(preview.get("reason", "invalid placement"))}
-	var cost: int = int(PIECES[piece_id].cost)
+	var cost: int = int(_piece_definitions[piece_id].cost)
 	materials -= cost
 	var instance_id: String = "%s_%d" % [piece_id, pieces.size()]
-	var max_health: int = int(PIECES[piece_id].get("max_health", 10))
-	var max_ammo: int = int(PIECES[piece_id].get("max_ammo", 0))
+	var max_health: int = int(_piece_definitions[piece_id].get("max_health", 10))
+	var max_ammo: int = int(_piece_definitions[piece_id].get("max_ammo", 0))
 	pieces[instance_id] = {"piece_id": piece_id, "origin": origin, "floor": floor, "max_health": max_health, "health": max_health, "condition": 1.0, "assignment": "", "attack_cooldown": 0, "attacks": 0, "damage_dealt": 0, "targets_stopped": 0, "disabled": false, "last_target": "", "max_ammo": max_ammo, "ammo": max_ammo}
-	var zone: String = placement_zone(origin, floor, PIECES[piece_id].size)
+	var zone: String = placement_zone(origin, floor, _piece_definitions[piece_id].size)
 	pieces[instance_id].placement_zone = zone
-	return {"ok": true, "piece_instance": instance_id, "placement_zone": zone, "message": "Placed %s in the %s zone on the %s floor: %s." % [PIECES[piece_id].name, zone, floor, PIECES[piece_id].role]}
+	return {"ok": true, "piece_instance": instance_id, "placement_zone": zone, "message": "Placed %s in the %s zone on the %s floor: %s." % [_piece_definitions[piece_id].name, zone, floor, _piece_definitions[piece_id].role]}
 
 func _set_piece_health(instance_id: String, value: int) -> void:
 	if not pieces.has(instance_id):
 		return
 	var instance: Dictionary = pieces[instance_id]
-	var max_health: int = int(instance.get("max_health", PIECES[String(instance.get("piece_id", ""))].get("max_health", 10)))
+	var max_health: int = int(instance.get("max_health", _piece_definitions[String(instance.get("piece_id", ""))].get("max_health", 10)))
 	var was_disabled: bool = bool(instance.get("disabled", false))
 	instance.health = clampi(value, 0, max_health)
 	instance.condition = float(instance.health) / float(max_health)
@@ -435,9 +436,9 @@ func piece_at_cell(floor: String, cell: Vector2i) -> String:
 		if String(instance.get("floor", "ground")) != floor:
 			continue
 		var piece_id: String = String(instance.get("piece_id", ""))
-		if piece_id.is_empty() or not PIECES.has(piece_id):
+		if piece_id.is_empty() or not _piece_definitions.has(piece_id):
 			continue
-		if Rect2i(instance.get("origin", Vector2i.ZERO), PIECES[piece_id].size).has_point(cell):
+		if Rect2i(instance.get("origin", Vector2i.ZERO), _piece_definitions[piece_id].size).has_point(cell):
 			return String(instance_id)
 	return ""
 
@@ -452,9 +453,9 @@ func inspect_piece(instance_id: String) -> Dictionary:
 		return {"ok": false, "reason": "unknown defensive piece"}
 	var instance: Dictionary = pieces[instance_id]
 	var piece_id: String = String(instance.get("piece_id", ""))
-	if not PIECES.has(piece_id):
+	if not _piece_definitions.has(piece_id):
 		return {"ok": false, "reason": "piece definition is unavailable"}
-	var piece: Dictionary = PIECES[piece_id]
+	var piece: Dictionary = _piece_definitions[piece_id]
 	return {"ok": true, "kind": "piece", "id": instance_id, "piece_id": piece_id, "name": String(piece.name), "floor": String(instance.get("floor", "ground")), "origin": instance.get("origin", Vector2i.ZERO), "role": String(piece.role), "health": int(instance.get("health", 0)), "max_health": int(instance.get("max_health", piece.max_health)), "condition": float(instance.get("condition", 0.0)), "assignment": String(instance.get("assignment", "")), "placement_zone": String(instance.get("placement_zone", placement_zone(instance.get("origin", Vector2i.ZERO), String(instance.get("floor", "ground")), piece.get("size", Vector2i.ONE)))), "disabled": bool(instance.get("disabled", false)), "attack": int(piece.attack), "defense": int(piece.defense), "range": int(piece.range), "combat_style": String(piece.get("combat_style", "support")), "skill": String(piece.get("skill", "")), "ammo": int(instance.get("ammo", piece.get("max_ammo", 0))), "max_ammo": int(instance.get("max_ammo", piece.get("max_ammo", 0))), "availability": String(piece.availability)}
 
 func inspect_enemy(index: int) -> Dictionary:
@@ -500,21 +501,21 @@ func recovery_action_preview(action_id: String, instance_id: String = "", room_i
 		preview.material_cost = 6
 		preview.target_id = instance_id
 		var repair_piece_id: String = String(pieces.get(instance_id, {}).get("piece_id", ""))
-		preview.target_name = String(PIECES.get(repair_piece_id, {}).get("name", "Select a placed piece"))
+		preview.target_name = String(_piece_definitions.get(repair_piece_id, {}).get("name", "Select a placed piece"))
 		preview.benefit = "Restore 30% of the selected defender's maximum health."
 		preview.tradeoff = "Spend 6 materials and one recovery action instead of restoring a room."
 	elif action_id == "assign_piece":
 		preview.target_id = instance_id
 		var assign_piece_id: String = String(pieces.get(instance_id, {}).get("piece_id", ""))
-		var assign_piece_name: String = String(PIECES.get(assign_piece_id, {}).get("name", "Select a placed piece"))
+		var assign_piece_name: String = String(_piece_definitions.get(assign_piece_id, {}).get("name", "Select a placed piece"))
 		var assign_room_name: String = String(ROOMS.get(room_id, {}).get("name", "Select a room"))
 		preview.target_name = "%s -> %s" % [assign_piece_name, assign_room_name]
-		preview.benefit = String(ASSIGNMENT_RULES.get(assign_piece_id, {}).get("effect", "Activate the piece's specialist room behavior."))
+		preview.benefit = String(_piece_assignment_rule(assign_piece_id).get("effect", "Activate the piece's specialist room behavior."))
 		preview.tradeoff = "Spend one recovery action and commit this piece to one room."
 	elif action_id == "clear_assignment":
 		preview.target_id = instance_id
 		var clear_piece_id: String = String(pieces.get(instance_id, {}).get("piece_id", ""))
-		preview.target_name = String(PIECES.get(clear_piece_id, {}).get("name", "Select an assigned piece"))
+		preview.target_name = String(_piece_definitions.get(clear_piece_id, {}).get("name", "Select an assigned piece"))
 		preview.benefit = "Free the selected piece for a different specialist assignment later."
 		preview.tradeoff = "Spend one recovery action and lose the current room benefit."
 	else:
@@ -553,12 +554,12 @@ func recovery_action_preview(action_id: String, instance_id: String = "", room_i
 				preview.reason = "select a keep room"
 			else:
 				var piece_id: String = String(pieces[instance_id].get("piece_id", ""))
-				if not ASSIGNMENT_RULES.has(piece_id):
-					preview.reason = "%s has no room assignment behavior" % PIECES[piece_id].name
+				var rule: Dictionary = _piece_assignment_rule(piece_id)
+				if rule.is_empty():
+					preview.reason = "%s has no room assignment behavior" % _piece_definitions[piece_id].name
 				else:
-					var rule: Dictionary = ASSIGNMENT_RULES[piece_id]
 					if String(rule.get("room", "")) != room_id:
-						preview.reason = "%s can only be assigned to %s" % [PIECES[piece_id].name, ROOMS[String(rule.get("room", ""))].name]
+						preview.reason = "%s can only be assigned to %s" % [_piece_definitions[piece_id].name, ROOMS[String(rule.get("room", ""))].name]
 					elif String(pieces[instance_id].get("floor", "ground")) != String(ROOMS[room_id].get("floor", "ground")):
 						preview.reason = "piece and assigned room must share a floor"
 					elif not _piece_is_adjacent_to_room(pieces[instance_id], room_id):
@@ -580,7 +581,7 @@ func recovery_action_preview(action_id: String, instance_id: String = "", room_i
 				if assignment.is_empty():
 					preview.reason = "piece has no room assignment"
 				else:
-					preview.target_name = "%s <- %s" % [String(PIECES[String(pieces[instance_id].get("piece_id", ""))].name), String(ROOMS[assignment].name)]
+					preview.target_name = "%s <- %s" % [String(_piece_definitions[String(pieces[instance_id].get("piece_id", ""))].name), String(ROOMS[assignment].name)]
 					preview.ok = true
 					preview.reason = ""
 	return preview
@@ -590,12 +591,12 @@ func assign_piece_to_room(instance_id: String, room_id: String) -> Dictionary:
 	if not bool(preview.get("ok", false)):
 		return {"ok": false, "reason": String(preview.get("reason", "assignment is unavailable")), "state_changes": []}
 	var piece_id: String = String(pieces[instance_id].get("piece_id", ""))
-	var rule: Dictionary = ASSIGNMENT_RULES[piece_id]
+	var rule: Dictionary = _piece_assignment_rule(piece_id)
 	assigned_rooms[room_id] = instance_id
 	pieces[instance_id].assignment = room_id
 	repair_actions_remaining -= 1
-	_log("Assigned %s to %s: %s." % [PIECES[piece_id].name, ROOMS[room_id].name, rule.effect])
-	return {"ok": true, "message": "Assigned %s to %s: %s." % [PIECES[piece_id].name, ROOMS[room_id].name, rule.effect], "actions_remaining": repair_actions_remaining, "state_changes": [{"op": "assign_piece", "piece": instance_id, "room": room_id}]}
+	_log("Assigned %s to %s: %s." % [_piece_definitions[piece_id].name, ROOMS[room_id].name, rule.effect])
+	return {"ok": true, "message": "Assigned %s to %s: %s." % [_piece_definitions[piece_id].name, ROOMS[room_id].name, rule.effect], "actions_remaining": repair_actions_remaining, "state_changes": [{"op": "assign_piece", "piece": instance_id, "room": room_id}]}
 
 func clear_piece_assignment(instance_id: String) -> Dictionary:
 	var preview: Dictionary = recovery_action_preview("clear_assignment", instance_id)
@@ -605,7 +606,13 @@ func clear_piece_assignment(instance_id: String) -> Dictionary:
 	assigned_rooms.erase(assignment)
 	pieces[instance_id].assignment = ""
 	repair_actions_remaining -= 1
-	return {"ok": true, "message": "Cleared %s from %s." % [PIECES[String(pieces[instance_id].get("piece_id", ""))].name, ROOMS[assignment].name], "actions_remaining": repair_actions_remaining, "state_changes": [{"op": "clear_assignment", "piece": instance_id, "room": assignment}]}
+	return {"ok": true, "message": "Cleared %s from %s." % [_piece_definitions[String(pieces[instance_id].get("piece_id", ""))].name, ROOMS[assignment].name], "actions_remaining": repair_actions_remaining, "state_changes": [{"op": "clear_assignment", "piece": instance_id, "room": assignment}]}
+
+func _piece_assignment_rule(piece_id: String) -> Dictionary:
+	if not _piece_definitions.has(piece_id):
+		return {}
+	var rule: Variant = _piece_definitions[piece_id].get("assignment_rule")
+	return rule.duplicate(true) if rule is Dictionary else {}
 
 func room_condition(room_id: String) -> int:
 	if not rooms.has(room_id):
@@ -634,7 +641,7 @@ func _piece_is_adjacent_to_room(instance: Dictionary, room_id: String) -> bool:
 	if not ROOMS.has(room_id) or String(instance.get("floor", "ground")) != String(ROOMS[room_id].floor):
 		return false
 	var piece_id: String = String(instance.get("piece_id", ""))
-	var piece_rect: Rect2i = Rect2i(instance.get("origin", Vector2i.ZERO), PIECES[piece_id].size)
+	var piece_rect: Rect2i = Rect2i(instance.get("origin", Vector2i.ZERO), _piece_definitions[piece_id].size)
 	var room_rect: Rect2i = Rect2i(ROOMS[room_id].origin, ROOMS[room_id].size)
 	return piece_rect.grow(1).intersects(room_rect)
 
@@ -654,9 +661,9 @@ func _piece_has_open_lane(instance: Dictionary) -> bool:
 	var floor_name: String = String(instance.get("floor", "ground"))
 	var origin: Vector2i = instance.get("origin", Vector2i.ZERO)
 	var piece_id: String = String(instance.get("piece_id", ""))
-	if not PIECES.has(piece_id):
+	if not _piece_definitions.has(piece_id):
 		return false
-	var size: Vector2i = PIECES[piece_id].size
+	var size: Vector2i = _piece_definitions[piece_id].size
 	var checks: Array[Vector2i] = [origin + Vector2i(-1, 0), origin + Vector2i(size.x, 0), origin + Vector2i(0, -1), origin + Vector2i(0, size.y)]
 	for cell in checks:
 		if cell.x >= 0 and cell.y >= 0 and cell.x < GRID_SIZE.x and cell.y < GRID_SIZE.y and piece_at_cell(floor_name, cell).is_empty():
@@ -676,13 +683,13 @@ func layout_summary() -> Dictionary:
 	var assigned_specialist_count: int = 0
 	for instance in pieces.values():
 		var piece_id: String = String(instance.get("piece_id", ""))
-		if not PIECES.has(piece_id):
+		if not _piece_definitions.has(piece_id):
 			continue
 		var floor_name: String = String(instance.get("floor", "ground"))
 		counts[floor_name] = int(counts.get(floor_name, 0)) + 1
-		var zone: String = String(instance.get("placement_zone", placement_zone(instance.get("origin", Vector2i.ZERO), floor_name, PIECES[piece_id].size)))
+		var zone: String = String(instance.get("placement_zone", placement_zone(instance.get("origin", Vector2i.ZERO), floor_name, _piece_definitions[piece_id].size)))
 		counts[zone] = int(counts.get(zone, 0)) + 1
-		var role: String = String(PIECES[piece_id].get("combat_style", "support"))
+		var role: String = String(_piece_definitions[piece_id].get("combat_style", "support"))
 		role_counts[role] = int(role_counts.get(role, 0)) + 1
 		if role == "support":
 			support_piece_count += 1
@@ -760,9 +767,9 @@ func _reload_ammunition() -> void:
 	for instance_id in pieces.keys():
 		var instance: Dictionary = pieces[instance_id]
 		var piece_id: String = String(instance.get("piece_id", ""))
-		if not PIECES.has(piece_id):
+		if not _piece_definitions.has(piece_id):
 			continue
-		var max_ammo: int = int(instance.get("max_ammo", PIECES[piece_id].get("max_ammo", 0)))
+		var max_ammo: int = int(instance.get("max_ammo", _piece_definitions[piece_id].get("max_ammo", 0)))
 		instance.max_ammo = max_ammo
 		instance.ammo = max_ammo
 
@@ -776,7 +783,7 @@ func _defender_damage(enemy_id: String) -> int:
 		if float(instance.get("condition", 0.0)) <= 0.0 or bool(instance.get("disabled", false)):
 			continue
 		var piece_id: String = String(instance.get("piece_id", ""))
-		var piece: Dictionary = PIECES[piece_id]
+		var piece: Dictionary = _piece_definitions[piece_id]
 		var combat_style: String = String(piece.get("combat_style", "support"))
 		var zone: String = String(instance.get("placement_zone", placement_zone(instance.get("origin", Vector2i.ZERO), String(instance.get("floor", "ground")), piece.get("size", Vector2i.ONE))))
 		var ammo: int = int(instance.get("ammo", piece.get("max_ammo", 0)))
@@ -888,10 +895,10 @@ func _apply_enemy_damage(enemy_id: String, target_id: String) -> void:
 		combat_metrics["piece_damage"] = int(combat_metrics.get("piece_damage", 0)) + damage
 		var instance: Dictionary = pieces[target_id]
 		var piece_id: String = String(instance.get("piece_id", ""))
-		var max_health: int = int(instance.get("max_health", PIECES[piece_id].get("max_health", 10)))
+		var max_health: int = int(instance.get("max_health", _piece_definitions[piece_id].get("max_health", 10)))
 		var health_loss: int = maxi(1, int(ceil(float(max_health) * float(damage) * 0.25)))
 		_set_piece_health(target_id, int(instance.get("health", max_health)) - health_loss)
-		_battle_log("%s damaged %s by %d; health is %d/%d." % [ENEMIES[enemy_id].name, PIECES[piece_id].name, damage, int(instance.get("health", 0)), max_health])
+		_battle_log("%s damaged %s by %d; health is %d/%d." % [ENEMIES[enemy_id].name, _piece_definitions[piece_id].name, damage, int(instance.get("health", 0)), max_health])
 
 func _apply_room_damage(enemy_id: String, room_id: String, damage: int, reduced: bool, area_impact: bool) -> void:
 	if not rooms.has(room_id):
@@ -971,7 +978,7 @@ func _battle_step() -> Dictionary:
 				if ROOMS.has(enemy.target):
 					target_name = String(ROOMS[enemy.target].name)
 				elif pieces.has(enemy.target):
-					target_name = String(PIECES[String(pieces[enemy.target].piece_id)].name)
+					target_name = String(_piece_definitions[String(pieces[enemy.target].piece_id)].name)
 				_battle_log("%s arrived by %s; target forecast resolves to %s." % [ENEMIES[enemy_id].name, ENEMIES[enemy_id].route, target_name])
 			if lockdown_pending:
 				lockdown_contact = true
@@ -984,7 +991,7 @@ func _battle_step() -> Dictionary:
 	if lockdown_contact:
 		for instance_id in pieces.keys():
 			var instance: Dictionary = pieces[instance_id]
-			var max_health: int = int(instance.get("max_health", PIECES[String(instance.get("piece_id", ""))].get("max_health", 10)))
+			var max_health: int = int(instance.get("max_health", _piece_definitions[String(instance.get("piece_id", ""))].get("max_health", 10)))
 			_set_piece_health(String(instance_id), int(instance.get("health", max_health)) + maxi(1, int(round(float(max_health) * 0.05))))
 		_battle_log("Lockdown restored 5% condition across placed pieces, then released.")
 		lockdown_pending = false
@@ -1163,7 +1170,7 @@ func repair_piece(instance_id: String) -> Dictionary:
 	if not bool(preview.get("ok", false)):
 		return {"ok": false, "reason": String(preview.get("reason", "piece repair is unavailable")), "state_changes": []}
 	materials -= 6
-	var max_health: int = int(pieces[instance_id].get("max_health", PIECES[String(pieces[instance_id].get("piece_id", ""))].get("max_health", 10)))
+	var max_health: int = int(pieces[instance_id].get("max_health", _piece_definitions[String(pieces[instance_id].get("piece_id", ""))].get("max_health", 10)))
 	_set_piece_health(instance_id, int(pieces[instance_id].get("health", max_health)) + maxi(1, int(round(float(max_health) * 0.30))))
 	combat_metrics["repairs"] = int(combat_metrics.get("repairs", 0)) + 30
 	repair_actions_remaining -= 1
@@ -1510,15 +1517,15 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	assigned_rooms = data.get("assigned_rooms", {}).duplicate()
 	for instance_id in pieces.keys():
 		var piece_id: String = String(pieces[instance_id].get("piece_id", ""))
-		if not PIECES.has(piece_id):
+		if not _piece_definitions.has(piece_id):
 			continue
-		var max_health: int = int(PIECES[piece_id].get("max_health", 10))
+		var max_health: int = int(_piece_definitions[piece_id].get("max_health", 10))
 		pieces[instance_id].max_health = int(pieces[instance_id].get("max_health", max_health))
 		pieces[instance_id].health = int(pieces[instance_id].get("health", roundf(float(pieces[instance_id].get("condition", 1.0)) * float(pieces[instance_id].max_health))))
 		pieces[instance_id].condition = float(pieces[instance_id].health) / float(pieces[instance_id].max_health)
 		pieces[instance_id].disabled = bool(pieces[instance_id].get("disabled", pieces[instance_id].health <= 0))
-		pieces[instance_id].placement_zone = String(pieces[instance_id].get("placement_zone", placement_zone(pieces[instance_id].get("origin", Vector2i.ZERO), String(pieces[instance_id].get("floor", "ground")), PIECES[piece_id].get("size", Vector2i.ONE))))
-		var max_ammo: int = int(PIECES[piece_id].get("max_ammo", 0))
+		pieces[instance_id].placement_zone = String(pieces[instance_id].get("placement_zone", placement_zone(pieces[instance_id].get("origin", Vector2i.ZERO), String(pieces[instance_id].get("floor", "ground")), _piece_definitions[piece_id].get("size", Vector2i.ONE))))
+		var max_ammo: int = int(_piece_definitions[piece_id].get("max_ammo", 0))
 		pieces[instance_id].max_ammo = max_ammo
 		pieces[instance_id].ammo = clampi(int(pieces[instance_id].get("ammo", max_ammo)), 0, max_ammo)
 	if assigned_rooms.is_empty():

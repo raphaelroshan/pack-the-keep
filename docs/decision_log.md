@@ -175,3 +175,11 @@
 **Reason:** Commander identity, starting resources, and ability descriptions are authored content. Externalizing them removes another hard-coded content family while preserving the simulation's command boundary.
 
 **Trade-off:** The core now depends on valid local commander data during initialization. Catalog and parity tests must block malformed definitions before release.
+
+## ADR-023: Normalize authored piece records at the catalog boundary
+
+**Decision:** Store each defensive piece as structured JSON, then normalize its footprint, attack profile, support profile, and assignment rule into the compact runtime shape consumed by `PackKeepState`.
+
+**Reason:** Authored data should describe a piece coherently without forcing the simulation and UI to parse arrays or duplicate schema knowledge. A single normalization boundary preserves existing deterministic rules while making future content diffable and independently validatable.
+
+**Trade-off:** The catalog owns a small conversion layer between authored and runtime fields. Tests must lock both the source schema and the normalized behavior so the two representations cannot drift.
