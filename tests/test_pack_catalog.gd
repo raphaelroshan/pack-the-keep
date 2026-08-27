@@ -11,13 +11,38 @@ func _check(condition: bool, message: String) -> void:
 
 func _initialize() -> void:
 	var catalog: RefCounted = ContentCatalog.new()
-	var known_piece_targets: Array = PackKeepState.ENEMIES.keys()
-	for enemy in PackKeepState.ENEMIES.values():
-		var doctrine: String = String(enemy.get("doctrine", ""))
-		if not doctrine.is_empty() and not known_piece_targets.has(doctrine):
-			known_piece_targets.append(doctrine)
-	var loaded: Dictionary = catalog.load_default(PackKeepState.ROOMS.keys(), known_piece_targets)
+	var known_doctrines: Array = PackKeepState.DOCTRINE_QUESTIONS.keys()
+	var loaded: Dictionary = catalog.load_default(PackKeepState.ROOMS.keys(), known_doctrines)
 	_check(bool(loaded.get("ok", false)), "active runtime catalog did not load cleanly: %s" % "; ".join(loaded.get("errors", [])))
+	_check(catalog.enemy_ids() == ["raider", "sapper", "climber", "siege_beast"], "enemy catalog order or active IDs changed")
+	var expected_enemies: Dictionary = {
+		"raider": {"health": 8, "damage": 2, "arrival": 2, "route": "gate_road", "targets": ["gate"], "doctrine": "gate_assault", "counter": "pike_squad"},
+		"sapper": {"health": 5, "damage": 3, "arrival": 3, "route": "service_lane", "targets": ["workshop", "supply_room", "armory"], "doctrine": "distributed_sabotage", "counter": "scout_post"},
+		"climber": {"health": 6, "damage": 2, "arrival": 2, "route": "north_tower_line", "targets": ["north_tower", "old_chapel"], "doctrine": "feint_and_flank", "counter": "fire_team"},
+		"siege_beast": {"health": 16, "damage": 3, "arrival": 3, "route": "outer_approach", "targets": ["inner_yard", "outer_wall", "old_chapel", "workshop"], "doctrine": "area_pressure", "counter": "fire_team"}
+	}
+	for enemy_id in expected_enemies.keys():
+		var enemy: Dictionary = catalog.enemy_definition(String(enemy_id))
+		_check(int(enemy.get("health", -1)) == int(expected_enemies[enemy_id].health) and int(enemy.get("damage", -1)) == int(expected_enemies[enemy_id].damage), "%s health or damage changed during externalization" % enemy_id)
+		_check(int(enemy.get("arrival_step", -1)) == int(expected_enemies[enemy_id].arrival) and String(enemy.get("route", "")) == String(expected_enemies[enemy_id].route), "%s timing or route changed during externalization" % enemy_id)
+		_check(enemy.get("target_rooms", []) == expected_enemies[enemy_id].targets and String(enemy.get("doctrine", "")) == String(expected_enemies[enemy_id].doctrine), "%s targets or doctrine changed during externalization" % enemy_id)
+		_check(String(enemy.get("counter", "")) == String(expected_enemies[enemy_id].counter), "%s counter changed during externalization" % enemy_id)
+	var copied_enemy: Dictionary = catalog.enemy_definition("siege_beast")
+	copied_enemy.health = 1
+	_check(int(catalog.enemy_definition("siege_beast").get("health", -1)) == 16, "callers can mutate the catalog's stored enemy definition")
+	var malformed_enemy: Dictionary = catalog.enemy_definition("sapper")
+	malformed_enemy.erase("telegraph")
+	malformed_enemy.health = 0
+	malformed_enemy.target_rooms = ["missing_room"]
+	malformed_enemy.doctrine = "missing_doctrine"
+	malformed_enemy.counter = "missing_piece"
+	malformed_enemy.counter_families = ["only_one"]
+	var enemy_errors: Array[String] = catalog.validate_enemy_definition(malformed_enemy, "wrong_filename", PackKeepState.ROOMS.keys(), known_doctrines)
+	_check(enemy_errors.size() >= 7, "catalog validator did not reject missing fields, ID mismatch, stats, room, doctrine, counter, and counter-family errors")
+	var known_piece_targets: Array = catalog.enemy_ids()
+	for doctrine in known_doctrines:
+		if not known_piece_targets.has(doctrine):
+			known_piece_targets.append(doctrine)
 	_check(catalog.piece_ids() == ["pike_squad", "repair_station", "fire_team", "scout_post", "narrow_gate", "brace", "fire_brazier", "signal_beacon"], "piece catalog order or active IDs changed")
 	var expected_pieces: Dictionary = {
 		"pike_squad": {"size": Vector2i(2, 1), "cost": 8, "health": 14, "ammo": 0, "attack": 4, "availability": "starter", "assignment": "gate"},
@@ -94,8 +119,9 @@ func _initialize() -> void:
 
 	var first: PackKeepState = PackKeepState.new(3307)
 	var second: PackKeepState = PackKeepState.new(3307)
-	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("pack_count", 0)) == 4 and int(first.content_catalog_status().get("commander_count", 0)) == 2 and int(first.content_catalog_status().get("piece_count", 0)) == 8, "KeepState did not expose a valid four-pack, two-commander, eight-piece catalog")
+	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("pack_count", 0)) == 4 and int(first.content_catalog_status().get("commander_count", 0)) == 2 and int(first.content_catalog_status().get("piece_count", 0)) == 8 and int(first.content_catalog_status().get("enemy_count", 0)) == 4, "KeepState did not expose a valid four-pack, two-commander, eight-piece, four-enemy catalog")
 	_check(first.piece_ids() == catalog.piece_ids(), "KeepState did not preserve stable piece order")
+	_check(first.enemy_ids() == catalog.enemy_ids(), "KeepState did not preserve stable enemy order")
 	_check(first.commander_ids() == ["castellan", "warden"], "KeepState did not preserve stable commander order")
 	var selected_warden: Dictionary = first.select_commander("warden")
 	_check(bool(selected_warden.get("ok", false)) and first.materials == 52 and first.morale == 7, "externalized Warden did not preserve starting resources")

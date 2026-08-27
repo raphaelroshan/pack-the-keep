@@ -24,13 +24,6 @@ const ROOMS: Dictionary = {
 	"old_chapel": {"name": "Old Chapel", "floor": "upper", "origin": Vector2i(8, 5), "size": Vector2i(3, 2), "critical": false, "role": "refuge and evacuation"}
 }
 
-const ENEMIES: Dictionary = {
-	"raider": {"name": "Raider", "health": 8, "damage": 2, "arrival_step": 2, "route": "gate_road", "target_rooms": ["gate"], "doctrine": "gate_assault", "counter": "pike_squad"},
-	"sapper": {"name": "Sapper", "health": 5, "damage": 3, "arrival_step": 3, "route": "service_lane", "target_rooms": ["workshop", "supply_room", "armory"], "doctrine": "distributed_sabotage", "counter": "scout_post"},
-	"climber": {"name": "Climber", "health": 6, "damage": 2, "arrival_step": 2, "route": "north_tower_line", "target_rooms": ["north_tower", "old_chapel"], "doctrine": "feint_and_flank", "counter": "fire_team"},
-	"siege_beast": {"name": "Siege Beast", "health": 16, "damage": 3, "arrival_step": 3, "route": "outer_approach", "target_rooms": ["inner_yard", "outer_wall", "old_chapel", "workshop"], "doctrine": "area_pressure", "counter": "fire_team"}
-}
-
 const WAVE_COMPOSITIONS: Dictionary = {
 	"gate_assault": ["raider", "raider"],
 	"distributed_sabotage": ["raider", "sapper"],
@@ -121,19 +114,16 @@ var content_catalog: RefCounted
 var _commander_definitions: Dictionary = {}
 var _piece_definitions: Dictionary = {}
 var _pack_definitions: Dictionary = {}
+var _enemy_definitions: Dictionary = {}
 var content_catalog_errors: Array[String] = []
 
 func _init(keep_seed: int = 3307) -> void:
 	content_catalog = ContentCatalog.new()
-	var known_piece_targets: Array = ENEMIES.keys()
-	for enemy in ENEMIES.values():
-		var doctrine: String = String(enemy.get("doctrine", ""))
-		if not doctrine.is_empty() and not known_piece_targets.has(doctrine):
-			known_piece_targets.append(doctrine)
-	var catalog_result: Dictionary = content_catalog.load_default(ROOMS.keys(), known_piece_targets)
+	var catalog_result: Dictionary = content_catalog.load_default(ROOMS.keys(), DOCTRINE_QUESTIONS.keys())
 	_commander_definitions = catalog_result.get("commanders", {}).duplicate(true)
 	_piece_definitions = catalog_result.get("pieces", {}).duplicate(true)
 	_pack_definitions = catalog_result.get("packs", {}).duplicate(true)
+	_enemy_definitions = catalog_result.get("enemies", {}).duplicate(true)
 	for error in catalog_result.get("errors", []):
 		content_catalog_errors.append(String(error))
 	if not content_catalog_errors.is_empty():
@@ -299,13 +289,21 @@ func piece_definition(id: String) -> Dictionary:
 		return {}
 	return _piece_definitions[id].duplicate(true)
 
+func enemy_ids() -> Array[String]:
+	return content_catalog.enemy_ids()
+
+func enemy_definition(id: String) -> Dictionary:
+	if not _enemy_definitions.has(id):
+		return {}
+	return _enemy_definitions[id].duplicate(true)
+
 func pack_definition(pack_id: String) -> Dictionary:
 	if not _pack_definitions.has(pack_id):
 		return {}
 	return _pack_definitions[pack_id].duplicate(true)
 
 func content_catalog_status() -> Dictionary:
-	return {"ok": content_catalog_errors.is_empty(), "commander_count": _commander_definitions.size(), "piece_count": _piece_definitions.size(), "pack_count": _pack_definitions.size(), "errors": content_catalog_errors.duplicate()}
+	return {"ok": content_catalog_errors.is_empty(), "commander_count": _commander_definitions.size(), "piece_count": _piece_definitions.size(), "pack_count": _pack_definitions.size(), "enemy_count": _enemy_definitions.size(), "errors": content_catalog_errors.duplicate()}
 
 func pack_preview(pack_id: String) -> Dictionary:
 	if not _pack_definitions.has(pack_id):
@@ -463,9 +461,9 @@ func inspect_enemy(index: int) -> Dictionary:
 		return {"ok": false, "reason": "unknown enemy"}
 	var enemy: Dictionary = enemies[index]
 	var enemy_id: String = String(enemy.get("enemy_id", ""))
-	if not ENEMIES.has(enemy_id):
+	if not _enemy_definitions.has(enemy_id):
 		return {"ok": false, "reason": "enemy definition is unavailable"}
-	var definition: Dictionary = ENEMIES[enemy_id]
+	var definition: Dictionary = _enemy_definitions[enemy_id]
 	return {"ok": true, "kind": "enemy", "id": enemy_id, "index": index, "name": String(definition.name), "doctrine": String(definition.doctrine), "route": String(definition.route), "counter": String(definition.counter), "health": int(enemy.get("hp", 0)), "max_health": int(enemy.get("max_health", definition.health)), "damage": int(definition.damage), "arrival_step": int(definition.arrival_step), "target": String(enemy.get("target", "")), "defeated": bool(enemy.get("defeated", false))}
 
 func remove_piece(instance_id: String) -> Dictionary:
@@ -774,7 +772,7 @@ func _reload_ammunition() -> void:
 		instance.ammo = max_ammo
 
 func _defender_damage(enemy_id: String) -> int:
-	var enemy: Dictionary = ENEMIES[enemy_id]
+	var enemy: Dictionary = _enemy_definitions[enemy_id]
 	var damage: int = 0
 	_last_attackers.clear()
 	_last_attack_damage.clear()
@@ -833,7 +831,7 @@ func _defender_damage(enemy_id: String) -> int:
 	return damage
 
 func _choose_target(enemy_id: String) -> String:
-	var enemy: Dictionary = ENEMIES[enemy_id]
+	var enemy: Dictionary = _enemy_definitions[enemy_id]
 	var candidates: Array[String] = []
 	var target_rooms: Array = enemy.target_rooms.duplicate()
 	if enemy_id == "siege_beast" and not variation_target_room.is_empty() and target_rooms.has(variation_target_room):
@@ -869,16 +867,16 @@ func _target_condition(target_id: String) -> float:
 
 func _apply_enemy_damage(enemy_id: String, target_id: String) -> void:
 	if target_id.is_empty():
-		_battle_log("%s found no valid target; the keep’s empty response space mattered." % ENEMIES[enemy_id].name)
+		_battle_log("%s found no valid target; the keep’s empty response space mattered." % _enemy_definitions[enemy_id].name)
 		return
-	var damage: int = int(ENEMIES[enemy_id].damage)
+	var damage: int = int(_enemy_definitions[enemy_id].damage)
 	combat_metrics["enemy_attacks"] = int(combat_metrics.get("enemy_attacks", 0)) + 1
 	var reduced: bool = lockdown_pending or rally_pending
 	if reduced:
 		damage = maxi(1, int(ceil(float(damage) * 0.5)))
 	if enemy_id == "siege_beast":
 		var area_targets: Array[String] = []
-		for room_id in ENEMIES[enemy_id].target_rooms:
+		for room_id in _enemy_definitions[enemy_id].target_rooms:
 			if rooms.has(room_id) and room_condition(room_id) > 0:
 				area_targets.append(String(room_id))
 		if not area_targets.has(target_id):
@@ -898,7 +896,7 @@ func _apply_enemy_damage(enemy_id: String, target_id: String) -> void:
 		var max_health: int = int(instance.get("max_health", _piece_definitions[piece_id].get("max_health", 10)))
 		var health_loss: int = maxi(1, int(ceil(float(max_health) * float(damage) * 0.25)))
 		_set_piece_health(target_id, int(instance.get("health", max_health)) - health_loss)
-		_battle_log("%s damaged %s by %d; health is %d/%d." % [ENEMIES[enemy_id].name, _piece_definitions[piece_id].name, damage, int(instance.get("health", 0)), max_health])
+		_battle_log("%s damaged %s by %d; health is %d/%d." % [_enemy_definitions[enemy_id].name, _piece_definitions[piece_id].name, damage, int(instance.get("health", 0)), max_health])
 
 func _apply_room_damage(enemy_id: String, room_id: String, damage: int, reduced: bool, area_impact: bool) -> void:
 	if not rooms.has(room_id):
@@ -912,7 +910,7 @@ func _apply_room_damage(enemy_id: String, room_id: String, damage: int, reduced:
 	combat_metrics["room_damage"] = int(combat_metrics.get("room_damage", 0)) + damage * 15
 	rooms[room_id].condition = maxi(0, int(rooms[room_id].condition) - damage * 15)
 	_update_room_state(room_id)
-	_battle_log("%s %s %s and dealt %d room damage%s; room is %s." % [ENEMIES[enemy_id].name, "impacted" if area_impact else "reached", ROOMS[room_id].name, damage, " under response mitigation" if reduced else "", rooms[room_id].state])
+	_battle_log("%s %s %s and dealt %d room damage%s; room is %s." % [_enemy_definitions[enemy_id].name, "impacted" if area_impact else "reached", ROOMS[room_id].name, damage, " under response mitigation" if reduced else "", rooms[room_id].state])
 	if rooms[room_id].state == "breached" and not was_breached:
 		breach_level += 1
 		morale = maxi(0, morale - 1)
@@ -963,15 +961,15 @@ func _battle_step() -> Dictionary:
 				pieces[attacker_id].attacks = int(pieces[attacker_id].get("attacks", 0)) + 1
 				pieces[attacker_id].damage_dealt = int(pieces[attacker_id].get("damage_dealt", 0)) + attacker_damage
 				pieces[attacker_id].last_target = enemy_id
-			_battle_log("Defenders dealt %d to %s using %s counterplay." % [damage, ENEMIES[enemy_id].name, ENEMIES[enemy_id].counter])
+			_battle_log("Defenders dealt %d to %s using %s counterplay." % [damage, _enemy_definitions[enemy_id].name, _enemy_definitions[enemy_id].counter])
 		if int(enemy.get("hp", 0)) <= 0:
 			enemy.defeated = true
 			combat_metrics["defeated_enemies"] = int(combat_metrics.get("defeated_enemies", 0)) + 1
 			for attacker_id in _last_attackers:
 				pieces[attacker_id].targets_stopped = int(pieces[attacker_id].get("targets_stopped", 0)) + 1
-			_battle_log("%s was stopped before its doctrine could complete." % ENEMIES[enemy_id].name)
+			_battle_log("%s was stopped before its doctrine could complete." % _enemy_definitions[enemy_id].name)
 			continue
-		if battle_step >= int(ENEMIES[enemy_id].arrival_step):
+		if battle_step >= int(_enemy_definitions[enemy_id].arrival_step):
 			if String(enemy.get("target", "")).is_empty():
 				enemy.target = _choose_target(enemy_id)
 				var target_name: String = "none"
@@ -979,7 +977,7 @@ func _battle_step() -> Dictionary:
 					target_name = String(ROOMS[enemy.target].name)
 				elif pieces.has(enemy.target):
 					target_name = String(_piece_definitions[String(pieces[enemy.target].piece_id)].name)
-				_battle_log("%s arrived by %s; target forecast resolves to %s." % [ENEMIES[enemy_id].name, ENEMIES[enemy_id].route, target_name])
+				_battle_log("%s arrived by %s; target forecast resolves to %s." % [_enemy_definitions[enemy_id].name, _enemy_definitions[enemy_id].route, target_name])
 			if lockdown_pending:
 				lockdown_contact = true
 			if rally_pending:
@@ -1125,10 +1123,10 @@ func start_wave(doctrine: String) -> Dictionary:
 	_reset_combat_metrics()
 	for index in range(composition.size()):
 		var enemy_id: String = String(composition[index])
-		var enemy_health: int = int(ENEMIES[enemy_id].get("health", 1))
-		enemies.append({"enemy_id": enemy_id, "max_health": enemy_health, "hp": enemy_health, "damage": int(ENEMIES[enemy_id].get("damage", 0)), "target": "", "defeated": false, "slot": index, "attacks_received": 0, "damage_taken": 0})
+		var enemy_health: int = int(_enemy_definitions[enemy_id].get("health", 1))
+		enemies.append({"enemy_id": enemy_id, "max_health": enemy_health, "hp": enemy_health, "damage": int(_enemy_definitions[enemy_id].get("damage", 0)), "target": "", "defeated": false, "slot": index, "attacks_received": 0, "damage_taken": 0})
 	_battle_log("Forecast: %s. Question: %s" % [doctrine.replace("_", " "), DOCTRINE_QUESTIONS[doctrine]])
-	_battle_log("Likely pressure: %s. Scout Post can reveal the exact target before contact." % String(ENEMIES[String(composition[0])].route).replace("_", " "))
+	_battle_log("Likely pressure: %s. Scout Post can reveal the exact target before contact." % String(_enemy_definitions[String(composition[0])].route).replace("_", " "))
 	return {"ok": true, "message": "Wave %d begins. Pause between steps and read the target before using Lockdown." % wave_index, "forecast": forecast(), "composition": composition.duplicate()}
 
 func advance_wave(delta: float) -> Dictionary:

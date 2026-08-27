@@ -1,0 +1,20 @@
+{
+  "id": "climber",
+  "content_version": 1,
+  "status": "active",
+  "name": "Climber",
+  "short_role": "Bypass the Gate and test upper-floor response space.",
+  "question": "Has the keep left an interior route to answer a wall bypass?",
+  "health": 6,
+  "damage": 2,
+  "arrival_step": 2,
+  "route": "north_tower_line",
+  "target_rooms": ["north_tower", "old_chapel"],
+  "doctrine": "feint_and_flank",
+  "counter": "fire_team",
+  "telegraph": "Shows a visible line toward the North Tower and upper refuge rooms.",
+  "counter_families": ["recon", "control", "mobile_response"],
+  "failure_mode": "The upper floor is struck while a compact defense remains committed elsewhere.",
+  "report_phrase": "A wall bypass reached the upper response lane.",
+  "presentation": {"icon": "res://assets/climber_icon.png", "marker_color_role": "wall_bypass", "radius_scale": 1.0}
+}

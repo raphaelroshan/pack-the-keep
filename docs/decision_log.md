@@ -183,3 +183,11 @@
 **Reason:** Authored data should describe a piece coherently without forcing the simulation and UI to parse arrays or duplicate schema knowledge. A single normalization boundary preserves existing deterministic rules while making future content diffable and independently validatable.
 
 **Trade-off:** The catalog owns a small conversion layer between authored and runtime fields. Tests must lock both the source schema and the normalized behavior so the two representations cannot drift.
+
+## ADR-024: Keep enemy actors data-driven and doctrine-neutral
+
+**Decision:** Store base enemy actors in individual JSON files while leaving doctrine composition and scenario sequencing in their existing authoritative structures until their own migrations.
+
+**Reason:** Enemy health, contact damage, routes, targets, and telegraphs are authored content, but moving doctrines at the same time would widen the behavior-preservation risk. The split also allows one enemy definition to participate in several future doctrines.
+
+**Trade-off:** Enemy records temporarily reference doctrine IDs that are still declared in simulation code. Validators enforce that bridge until doctrine files replace it.

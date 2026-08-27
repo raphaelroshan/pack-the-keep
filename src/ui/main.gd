@@ -1355,12 +1355,13 @@ func _refresh_ui() -> void:
 	var enemy_lines: Array[String] = []
 	for enemy in keep.enemies:
 		var enemy_id: String = String(enemy.get("enemy_id", ""))
-		var enemy_state: String = "defeated" if bool(enemy.get("defeated", false)) else "%d/%d hp" % [int(enemy.get("hp", 0)), int(enemy.get("max_health", PackKeepState.ENEMIES[enemy_id].get("health", 0)))]
-		var phase: String = "contact" if keep.battle_step >= int(PackKeepState.ENEMIES[enemy_id].get("arrival_step", 0)) else "approach"
+		var enemy_definition: Dictionary = keep.enemy_definition(enemy_id)
+		var enemy_state: String = "defeated" if bool(enemy.get("defeated", false)) else "%d/%d hp" % [int(enemy.get("hp", 0)), int(enemy.get("max_health", enemy_definition.get("health", 0)))]
+		var phase: String = "contact" if keep.battle_step >= int(enemy_definition.get("arrival_step", 0)) else "approach"
 		var target: String = String(enemy.get("target", ""))
 		if target.is_empty():
 			target = "approach"
-		enemy_lines.append("%s [%s] — %s/%s — route %s — target %s" % [String(PackKeepState.ENEMIES[enemy_id].get("name", enemy_id)), enemy_id, phase, enemy_state, String(PackKeepState.ENEMIES[enemy_id].get("route", "")), target])
+		enemy_lines.append("%s [%s] — %s/%s — route %s — target %s" % [String(enemy_definition.get("name", enemy_id)), enemy_id, phase, enemy_state, String(enemy_definition.get("route", "")), target])
 	enemy_label.text = "ENEMIES — " + (" | ".join(enemy_lines) if not enemy_lines.is_empty() else "No active enemies. Start an invasion to see doctrine-driven actors.")
 	var metrics: Dictionary = keep.combat_metrics
 	metrics_label.text = "METRICS — steps %d | unit attacks %d | damage dealt %d | ammo spent %d | enemy attacks %d | room damage %d | piece damage %d | repairs %d | disabled %d | defeated %d" % [int(metrics.get("battle_steps", 0)), int(metrics.get("unit_attacks", 0)), int(metrics.get("damage_dealt", 0)), int(metrics.get("ammo_spent", 0)), int(metrics.get("enemy_attacks", 0)), int(metrics.get("room_damage", 0)), int(metrics.get("piece_damage", 0)), int(metrics.get("repairs", 0)), int(metrics.get("disabled_units", 0)), int(metrics.get("defeated_enemies", 0))]
@@ -1375,7 +1376,7 @@ func _refresh_ui() -> void:
 	enemy_option.clear()
 	for enemy_index in range(keep.enemies.size()):
 		var enemy_id: String = String(keep.enemies[enemy_index].get("enemy_id", ""))
-		enemy_option.add_item("%d — %s" % [enemy_index + 1, String(PackKeepState.ENEMIES[enemy_id].get("name", enemy_id))])
+		enemy_option.add_item("%d — %s" % [enemy_index + 1, String(keep.enemy_definition(enemy_id).get("name", enemy_id))])
 		enemy_option.set_item_metadata(enemy_option.item_count - 1, enemy_index)
 	inspector_label.text = inspected_text
 	if placement_mode:
@@ -1720,7 +1721,7 @@ class KeepCanvas extends Control:
 			if bool(enemy.get("defeated", false)):
 				continue
 			var enemy_id: String = String(enemy.get("enemy_id", ""))
-			var enemy_def: Dictionary = PackKeepState.ENEMIES[enemy_id]
+			var enemy_def: Dictionary = keep.enemy_definition(enemy_id)
 			var enemy_origin: Vector2 = _enemy_origin(index)
 			var enemy_color: Color = Color("#d26155") if enemy_id == "raider" else Color("#d7a35b") if enemy_id == "sapper" else Color("#a77bd1") if enemy_id == "climber" else Color("#b36c45")
 			var marker_radius: float = 12.0 if enemy_id == "siege_beast" else 8.0
