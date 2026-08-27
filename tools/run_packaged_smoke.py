@@ -60,6 +60,8 @@ def validate_report(report_path: Path, profile_root: Path, expected_version: str
         errors.append(f"packaged build version {report.get('build_version')!r} does not match {expected_version!r}")
     if report.get("ok") is not True:
         errors.append(f"packaged smoke reported errors: {report.get('errors', [])}")
+    if report.get("errors") != []:
+        errors.append("packaged smoke report contains runtime errors")
     if report.get("editor_feature") is not False:
         errors.append("smoke script did not run from an exported release template")
     if report.get("offline_proxy_guard") is not True:
@@ -76,7 +78,7 @@ def validate_report(report_path: Path, profile_root: Path, expected_version: str
         if report.get(field) is not True:
             errors.append(f"packaged input/scaling assertion failed: {field}")
     if expected_phase == "initial":
-        if report.get("profile_files_present") is not False:
+        if report.get("profile_files_present") is not False or report.get("profile_files_complete") is not False:
             errors.append("initial packaged profile was not clean")
         for field in ("controller_remap_ready", "ui_scale_ready", "settings_scale_ready", "settings_remap_ready"):
             if report.get(field) is not True:

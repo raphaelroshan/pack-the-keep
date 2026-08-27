@@ -40,7 +40,7 @@ class P12AlphaValidatorTests(unittest.TestCase):
             }
             initial = {
                 **shared, "phase": "initial", "executable_path": r"C:\\build\\pack-the-keep.exe",
-                "profile_files_present": False, "controller_remap_ready": True,
+                "profile_files_present": False, "profile_files_complete": False, "controller_remap_ready": True,
                 "ui_scale_ready": True, "settings_scale_ready": True, "settings_remap_ready": True,
                 "initial_pause_ready": True, "paused_state_frozen": True,
                 "remapped_pause_ready": True, "manual_step_ready": True,

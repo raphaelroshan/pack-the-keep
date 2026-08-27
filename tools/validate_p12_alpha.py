@@ -161,7 +161,7 @@ def validate_report(path: Path, build_version: str, errors: list[str]) -> None:
     for field in initial_fields:
         if initial.get(field) is not True:
             errors.append(f"initial packaged evidence failed: {field}")
-    if initial.get("profile_files_present") is not False:
+    if initial.get("profile_files_present") is not False or initial.get("profile_files_complete") is not False:
         errors.append("initial packaged evidence did not start from a clean profile")
     for field in ("profile_files_present", "profile_files_complete", "restored_run_ready", "restored_scale_ready", "restored_remap_ready"):
         if reinstall.get(field) is not True:

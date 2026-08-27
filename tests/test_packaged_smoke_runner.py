@@ -44,6 +44,7 @@ class PackagedSmokeReportTests(unittest.TestCase):
                 "remapped_pause_ready": True,
                 "manual_step_ready": True,
                 "profile_files_present": False,
+                "profile_files_complete": False,
                 "content_status": {"ok": True, "commander_count": 2, "piece_count": 17, "pack_count": 9, "enemy_count": 7, "doctrine_count": 8, "scenario_count": 8, "event_count": 3, "modifier_count": 2},
                 "user_data_dir": str(report_path.parent),
                 "save_path": str(report_path.parent / "pack_the_keep_prototype.save"),
@@ -79,6 +80,7 @@ class PackagedSmokeReportTests(unittest.TestCase):
                 "schema_version": 1,
                 "phase": "wrong",
                 "ok": True,
+                "errors": ["runtime failure"],
                 "build_version": "wrong",
                 "editor_feature": True,
                 "offline_proxy_guard": False,
@@ -98,14 +100,14 @@ class PackagedSmokeReportTests(unittest.TestCase):
                 "remapped_pause_ready": False,
                 "manual_step_ready": False,
                 "profile_files_present": True,
-                "profile_files_complete": False,
+                "profile_files_complete": True,
                 "content_status": {"ok": False},
                 "user_data_dir": str(root.parent),
                 "save_path": str(root.parent / "save"),
                 "settings_path": str(root.parent / "settings"),
             }), encoding="utf-8")
             errors = "\n".join(runner.validate_report(report_path, root, "0.12.0-alpha-packaged-smoke", "initial"))
-            for expected in ("phase", "build version", "release template", "offline proxy", "environment guard", "did not free", "battle step", "schemas", "input/scaling", "pause assertion", "clean", "catalog", "escaped"):
+            for expected in ("phase", "runtime errors", "build version", "release template", "offline proxy", "environment guard", "did not free", "battle step", "schemas", "input/scaling", "pause assertion", "clean", "catalog", "escaped"):
                 self.assertIn(expected, errors)
 
 
