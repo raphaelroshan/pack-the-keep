@@ -50,6 +50,10 @@ DOCTRINE_TEXT_FIELDS = {
     "name", "short_role", "question", "route_pattern", "target_priority",
     "principal_pressure", "likely_target", "uncertainty",
 }
+SCENARIO_FIELDS = {
+    "id", "content_version", "status", "name", "short_role", "question", "objective",
+    "lesson", "starting_doctrine", "doctrines", "wave_plans", "variations",
+}
 SUPPORTED_FLOORS = {"ground", "upper"}
 SUPPORTED_ZONES = {"wall", "courtyard", "keep"}
 SUPPORTED_ATTACK_STYLES = {"melee", "ranged", "support", "fortification"}
@@ -312,6 +316,81 @@ def validate_doctrine(
     return doctrine_id
 
 
+def validate_scenario(
+    path: Path,
+    scenario: dict[str, Any],
+    room_ids: set[str],
+    enemy_ids: set[str],
+    doctrine_ids: set[str],
+    seen: set[str],
+    errors: list[str],
+) -> str | None:
+    for field in sorted(SCENARIO_FIELDS - scenario.keys()):
+        errors.append(f"{path}: missing required field: {field}")
+    scenario_id = scenario.get("id")
+    if not isinstance(scenario_id, str) or not SNAKE_CASE.fullmatch(scenario_id):
+        errors.append(f"{path}: id must be non-empty snake_case")
+        return None
+    if scenario_id != path.stem:
+        errors.append(f"{path}: id {scenario_id} does not match filename")
+    if scenario_id in seen:
+        errors.append(f"duplicate runtime scenario id: {scenario_id}")
+    seen.add(scenario_id)
+    if scenario.get("status") != "active":
+        errors.append(f"{path}: runtime scenario status must be active")
+    if not is_integer(scenario.get("content_version")) or scenario["content_version"] < 1:
+        errors.append(f"{path}: content_version must be a positive integer")
+    for field in ("name", "short_role", "question", "objective", "lesson", "starting_doctrine"):
+        value = scenario.get(field)
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f"{path}: {field} must be non-empty text")
+    doctrines = scenario.get("doctrines")
+    wave_plans = scenario.get("wave_plans")
+    if not isinstance(doctrines, list) or len(doctrines) != 3:
+        errors.append(f"{path}: doctrines must contain exactly three entries")
+        doctrines = []
+    if not isinstance(wave_plans, list) or len(wave_plans) != 3:
+        errors.append(f"{path}: wave_plans must contain exactly three waves")
+        wave_plans = []
+    for doctrine_id in doctrines:
+        if not isinstance(doctrine_id, str) or doctrine_id not in doctrine_ids:
+            errors.append(f"{path}: unknown doctrine reference: {doctrine_id}")
+    if scenario.get("starting_doctrine") not in doctrine_ids:
+        errors.append(f"{path}: starting_doctrine is unknown")
+    for wave in wave_plans:
+        if not isinstance(wave, list) or not wave:
+            errors.append(f"{path}: each wave plan must contain enemies")
+            continue
+        for enemy_id in wave:
+            if not isinstance(enemy_id, str) or enemy_id not in enemy_ids:
+                errors.append(f"{path}: wave plan references unknown enemy: {enemy_id}")
+    variations = scenario.get("variations")
+    if not isinstance(variations, list) or not variations:
+        errors.append(f"{path}: variations must be a non-empty array")
+        variations = []
+    variation_ids: set[str] = set()
+    for variation in variations:
+        if not isinstance(variation, dict):
+            errors.append(f"{path}: variation must be an object")
+            continue
+        variation_id = variation.get("id")
+        if not isinstance(variation_id, str) or not SNAKE_CASE.fullmatch(variation_id):
+            errors.append(f"{path}: variation id must be snake_case")
+        elif variation_id in variation_ids:
+            errors.append(f"{path}: duplicate variation id: {variation_id}")
+        else:
+            variation_ids.add(variation_id)
+        for field in ("materials", "morale"):
+            if not is_integer(variation.get(field)):
+                errors.append(f"{path}: variation {field} must be an integer")
+        target_room = variation.get("target_room")
+        if not isinstance(target_room, str) or (target_room and target_room not in room_ids):
+            errors.append(f"{path}: variation target_room is unknown")
+    if "standard_bell" not in variation_ids:
+        errors.append(f"{path}: standard_bell variation is required")
+    return scenario_id
+
+
 def validate_pack(
     path: Path,
     pack: dict[str, Any],
@@ -455,6 +534,7 @@ def main() -> int:
     parser.add_argument("--pieces", required=True)
     parser.add_argument("--enemies", required=True)
     parser.add_argument("--doctrines", required=True)
+    parser.add_argument("--scenarios", required=True)
     parser.add_argument("--manifest", required=True)
     args = parser.parse_args()
 
@@ -538,6 +618,22 @@ def main() -> int:
     for enemy_id in sorted(set(manifest_enemies) - seen_enemies):
         errors.append(f"runtime enemy file missing for manifest enemy: {enemy_id}")
 
+    manifest_scenario_ids = {
+        value for value in manifest.get("active_slice", {}).get("scenario_ids", [])
+        if isinstance(value, str)
+    }
+    seen_scenarios: set[str] = set()
+    for path in json_files(Path(args.scenarios), "scenario", errors):
+        scenario = load_json(path, errors)
+        if not isinstance(scenario, dict):
+            errors.append(f"{path}: root must be an object")
+            continue
+        validate_scenario(path, scenario, room_ids, seen_enemies, seen_doctrines, seen_scenarios, errors)
+    for scenario_id in sorted(manifest_scenario_ids - seen_scenarios):
+        errors.append(f"runtime scenario file missing for active scenario: {scenario_id}")
+    for scenario_id in sorted(seen_scenarios - manifest_scenario_ids):
+        errors.append(f"runtime scenario is missing from active-slice manifest: {scenario_id}")
+
     seen_packs: set[str] = set()
     runtime_pack_families: dict[str, str] = {}
     runtime_packs: dict[str, dict[str, Any]] = {}
@@ -588,7 +684,7 @@ def main() -> int:
         "runtime content catalog: PASS "
         f"({len(seen_pieces)} pieces, {len(seen_packs)} packs, "
         f"{len(seen_commanders)} commanders, {len(seen_enemies)} enemies, "
-        f"{len(seen_doctrines)} doctrines)"
+        f"{len(seen_doctrines)} doctrines, {len(seen_scenarios)} scenarios)"
     )
     return 0
 

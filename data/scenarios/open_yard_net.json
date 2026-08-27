@@ -1,0 +1,15 @@
+{
+  "id": "open_yard_net", "content_version": 1, "status": "active", "name": "Open Yard Net",
+  "short_role": "Test whether open response space can absorb broad pressure.",
+  "question": "Can a scarred perimeter still protect movement and refuge?",
+  "objective": "Preserve Old Chapel and response space while area pressure lands.",
+  "lesson": "A scarred perimeter can be a successful refuge if movement survives.",
+  "starting_doctrine": "area_pressure",
+  "doctrines": ["feint_and_flank", "distributed_sabotage", "area_pressure"],
+  "wave_plans": [["raider", "climber"], ["raider", "climber", "sapper"], ["siege_beast", "raider", "climber"]],
+  "variations": [
+    {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
+    {"id": "chapel_pressure", "materials": -4, "morale": 1, "target_room": "old_chapel"},
+    {"id": "outer_pressure", "materials": 2, "morale": -1, "target_room": "inner_yard"}
+  ]
+}

@@ -37,6 +37,12 @@ const DOCTRINE_PATHS: Array[String] = [
 	"res://data/doctrines/area_pressure.json"
 ]
 
+const SCENARIO_PATHS: Array[String] = [
+	"res://data/scenarios/gatehouse_lock.json",
+	"res://data/scenarios/wrong_wall.json",
+	"res://data/scenarios/open_yard_net.json"
+]
+
 const REQUIRED_PACK_FIELDS: Array[String] = [
 	"id",
 	"content_version",
@@ -136,11 +142,14 @@ const REQUIRED_DOCTRINE_FIELDS: Array[String] = [
 	"counter_families"
 ]
 
+const REQUIRED_SCENARIO_FIELDS: Array[String] = ["id", "content_version", "status", "name", "short_role", "question", "objective", "lesson", "starting_doctrine", "doctrines", "wave_plans", "variations"]
+
 var _packs: Dictionary = {}
 var _commanders: Dictionary = {}
 var _pieces: Dictionary = {}
 var _enemies: Dictionary = {}
 var _doctrines: Dictionary = {}
+var _scenarios: Dictionary = {}
 var errors: Array[String] = []
 
 func load_default(known_room_ids: Array = []) -> Dictionary:
@@ -149,6 +158,7 @@ func load_default(known_room_ids: Array = []) -> Dictionary:
 	_pieces.clear()
 	_enemies.clear()
 	_doctrines.clear()
+	_scenarios.clear()
 	errors.clear()
 	for path in DOCTRINE_PATHS:
 		_load_doctrine(path)
@@ -160,9 +170,11 @@ func load_default(known_room_ids: Array = []) -> Dictionary:
 		_load_commander(path)
 	for path in ENEMY_PATHS:
 		_load_enemy(path, known_room_ids, doctrine_ids())
+	for path in SCENARIO_PATHS:
+		_load_scenario(path, known_room_ids)
 	_validate_piece_availability()
 	_validate_doctrine_enemy_references()
-	return {"ok": errors.is_empty(), "commanders": _commanders.duplicate(true), "pieces": _pieces.duplicate(true), "packs": _packs.duplicate(true), "enemies": _enemies.duplicate(true), "doctrines": _doctrines.duplicate(true), "errors": errors.duplicate()}
+	return {"ok": errors.is_empty(), "commanders": _commanders.duplicate(true), "pieces": _pieces.duplicate(true), "packs": _packs.duplicate(true), "enemies": _enemies.duplicate(true), "doctrines": _doctrines.duplicate(true), "scenarios": _scenarios.duplicate(true), "errors": errors.duplicate()}
 
 func commander_ids() -> Array[String]:
 	var result: Array[String] = []
@@ -207,6 +219,17 @@ func doctrine_ids() -> Array[String]:
 
 func doctrine_definition(doctrine_id: String) -> Dictionary:
 	return _doctrines.get(doctrine_id, {}).duplicate(true)
+
+func scenario_ids() -> Array[String]:
+	var result: Array[String] = []
+	for path in SCENARIO_PATHS:
+		var expected_id: String = path.get_file().get_basename()
+		if _scenarios.has(expected_id):
+			result.append(expected_id)
+	return result
+
+func scenario_definition(scenario_id: String) -> Dictionary:
+	return _scenarios.get(scenario_id, {}).duplicate(true)
 
 func pack_ids() -> Array[String]:
 	var result: Array[String] = []
@@ -388,6 +411,62 @@ func validate_doctrine_definition(doctrine: Dictionary, expected_id: String, kno
 				validation_errors.append("doctrine %s counter families must be non-empty strings" % doctrine_id)
 	return validation_errors
 
+func validate_scenario_definition(scenario: Dictionary, expected_id: String, known_room_ids: Array) -> Array[String]:
+	var validation_errors: Array[String] = []
+	for field in REQUIRED_SCENARIO_FIELDS:
+		if not scenario.has(field):
+			validation_errors.append("%s is missing required field: %s" % [expected_id, field])
+	var scenario_id: String = String(scenario.get("id", ""))
+	if scenario_id != expected_id:
+		validation_errors.append("scenario id %s does not match filename %s" % [scenario_id, expected_id])
+	if not _is_snake_case_id(scenario_id):
+		validation_errors.append("scenario id %s must be snake_case" % scenario_id)
+	if String(scenario.get("status", "")) != "active":
+		validation_errors.append("scenario %s must have active status" % scenario_id)
+	_validate_integer_minimum(scenario, "content_version", scenario_id, "scenario", 1, validation_errors)
+	for field in ["name", "short_role", "question", "objective", "lesson", "starting_doctrine"]:
+		if not scenario.get(field) is String or String(scenario.get(field, "")).strip_edges().is_empty():
+			validation_errors.append("scenario %s must have non-empty text for %s" % [scenario_id, field])
+	var doctrines: Variant = scenario.get("doctrines", [])
+	var wave_plans: Variant = scenario.get("wave_plans", [])
+	if not doctrines is Array or doctrines.size() != 3 or not wave_plans is Array or wave_plans.size() != 3:
+		validation_errors.append("scenario %s must define exactly three doctrines and wave plans" % scenario_id)
+	else:
+		for doctrine_id in doctrines:
+			if not doctrine_ids().has(String(doctrine_id)):
+				validation_errors.append("scenario %s references unknown doctrine: %s" % [scenario_id, String(doctrine_id)])
+		for wave_plan in wave_plans:
+			if not wave_plan is Array or wave_plan.is_empty():
+				validation_errors.append("scenario %s wave plans must contain enemies" % scenario_id)
+			else:
+				for enemy_id in wave_plan:
+					if not enemy_ids().has(String(enemy_id)):
+						validation_errors.append("scenario %s references unknown enemy: %s" % [scenario_id, String(enemy_id)])
+	if not doctrine_ids().has(String(scenario.get("starting_doctrine", ""))):
+		validation_errors.append("scenario %s starting doctrine is unknown" % scenario_id)
+	var variations: Variant = scenario.get("variations", [])
+	var has_standard: bool = false
+	if not variations is Array or variations.is_empty():
+		validation_errors.append("scenario %s must define bounded variations" % scenario_id)
+	else:
+		for variation in variations:
+			if not variation is Dictionary:
+				validation_errors.append("scenario %s variation must be an object" % scenario_id)
+				continue
+			var variation_id: String = String(variation.get("id", ""))
+			has_standard = has_standard or variation_id == "standard_bell"
+			if not _is_snake_case_id(variation_id):
+				validation_errors.append("scenario %s has invalid variation id: %s" % [scenario_id, variation_id])
+			for field in ["materials", "morale"]:
+				if not _is_integer_number(variation.get(field)):
+					validation_errors.append("scenario %s variation %s must have integer %s" % [scenario_id, variation_id, field])
+			var target_room: String = String(variation.get("target_room", ""))
+			if not target_room.is_empty() and not known_room_ids.has(target_room):
+				validation_errors.append("scenario %s variation %s references unknown room: %s" % [scenario_id, variation_id, target_room])
+	if not has_standard:
+		validation_errors.append("scenario %s must include standard_bell variation" % scenario_id)
+	return validation_errors
+
 func validate_commander_definition(commander: Dictionary, expected_id: String) -> Array[String]:
 	var validation_errors: Array[String] = []
 	for field in REQUIRED_COMMANDER_FIELDS:
@@ -527,6 +606,28 @@ func _load_doctrine(path: String) -> void:
 		errors.append("%s: %s" % [path, validation_error])
 	if validation_errors.is_empty():
 		_doctrines[doctrine_id] = doctrine.duplicate(true)
+
+func _load_scenario(path: String, known_room_ids: Array) -> void:
+	if not FileAccess.file_exists(path):
+		errors.append("missing scenario file: %s" % path)
+		return
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		errors.append("could not open scenario file: %s" % path)
+		return
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		errors.append("scenario file must contain one JSON object: %s" % path)
+		return
+	var scenario: Dictionary = parsed
+	var scenario_id: String = String(scenario.get("id", ""))
+	var validation_errors: Array[String] = validate_scenario_definition(scenario, path.get_file().get_basename(), known_room_ids)
+	if _scenarios.has(scenario_id):
+		validation_errors.append("duplicate scenario id: %s" % scenario_id)
+	for validation_error in validation_errors:
+		errors.append("%s: %s" % [path, validation_error])
+	if validation_errors.is_empty():
+		_scenarios[scenario_id] = scenario.duplicate(true)
 
 func _load_pack(path: String, known_piece_ids: Array) -> void:
 	if not FileAccess.file_exists(path):

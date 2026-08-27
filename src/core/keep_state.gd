@@ -24,30 +24,6 @@ const ROOMS: Dictionary = {
 	"old_chapel": {"name": "Old Chapel", "floor": "upper", "origin": Vector2i(8, 5), "size": Vector2i(3, 2), "critical": false, "role": "refuge and evacuation"}
 }
 
-const SCENARIOS: Dictionary = {
-	"gatehouse_lock": {"name": "Gatehouse Lock", "objective": "Hold Gate without abandoning the response yard.", "lesson": "Concentrate strength, but preserve one interior route.", "starting_doctrine": "gate_assault", "doctrines": ["gate_assault", "distributed_sabotage", "feint_and_flank"], "wave_plans": [["raider", "raider"], ["raider", "sapper"], ["raider", "climber", "sapper"]]},
-	"wrong_wall": {"name": "The Wrong Wall", "objective": "Keep Workshop and North Tower functional through the mixed pressure.", "lesson": "Protect the dependency, not only the obvious wall.", "starting_doctrine": "distributed_sabotage", "doctrines": ["distributed_sabotage", "feint_and_flank", "distributed_sabotage"], "wave_plans": [["raider", "sapper"], ["raider", "climber", "sapper"], ["climber", "sapper", "raider", "sapper"]]},
-	"open_yard_net": {"name": "Open Yard Net", "objective": "Preserve Old Chapel and response space while area pressure lands.", "lesson": "A scarred perimeter can be a successful refuge if movement survives.", "starting_doctrine": "area_pressure", "doctrines": ["feint_and_flank", "distributed_sabotage", "area_pressure"], "wave_plans": [["raider", "climber"], ["raider", "climber", "sapper"], ["siege_beast", "raider", "climber"]]}
-}
-
-const SCENARIO_VARIATIONS: Dictionary = {
-	"gatehouse_lock": [
-		{"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
-		{"id": "thin_supply", "materials": -4, "morale": 1, "target_room": "supply_room"},
-		{"id": "late_warning", "materials": 3, "morale": -1, "target_room": "gate"}
-	],
-	"wrong_wall": [
-		{"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
-		{"id": "workshop_first", "materials": -3, "morale": 1, "target_room": "workshop"},
-		{"id": "tower_first", "materials": 2, "morale": -1, "target_room": "north_tower"}
-	],
-	"open_yard_net": [
-		{"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
-		{"id": "chapel_pressure", "materials": -4, "morale": 1, "target_room": "old_chapel"},
-		{"id": "outer_pressure", "materials": 2, "morale": -1, "target_room": "inner_yard"}
-	]
-}
-
 var seed: int = 3307
 var commander_id: String = ACTIVE_COMMANDER
 var materials: int = 60
@@ -95,6 +71,7 @@ var _piece_definitions: Dictionary = {}
 var _pack_definitions: Dictionary = {}
 var _enemy_definitions: Dictionary = {}
 var _doctrine_definitions: Dictionary = {}
+var _scenario_definitions: Dictionary = {}
 var content_catalog_errors: Array[String] = []
 
 func _init(keep_seed: int = 3307) -> void:
@@ -105,6 +82,7 @@ func _init(keep_seed: int = 3307) -> void:
 	_pack_definitions = catalog_result.get("packs", {}).duplicate(true)
 	_enemy_definitions = catalog_result.get("enemies", {}).duplicate(true)
 	_doctrine_definitions = catalog_result.get("doctrines", {}).duplicate(true)
+	_scenario_definitions = catalog_result.get("scenarios", {}).duplicate(true)
 	for error in catalog_result.get("errors", []):
 		content_catalog_errors.append(String(error))
 	if not content_catalog_errors.is_empty():
@@ -205,7 +183,7 @@ func select_commander(id: String) -> Dictionary:
 	return {"ok": true, "message": "%s takes command. %s Limitation: %s" % [_commander_definitions[id].name, _commander_definitions[id].passive, _commander_definitions[id].limitation], "ability_name": _commander_definitions[id].ability_name, "ability_text": _commander_definitions[id].ability_text}
 
 func _variation_for_scenario(id: String) -> Dictionary:
-	var options: Array = SCENARIO_VARIATIONS.get(id, [])
+	var options: Array = _scenario_definitions.get(id, {}).get("variations", [])
 	if options.is_empty():
 		return {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""}
 	var stable_id_value: int = 0
@@ -215,7 +193,7 @@ func _variation_for_scenario(id: String) -> Dictionary:
 	return options[index].duplicate(true)
 
 func select_scenario(id: String) -> Dictionary:
-	if not SCENARIOS.has(id):
+	if not _scenario_definitions.has(id):
 		return {"ok": false, "reason": "unknown Greywatch scenario"}
 	if wave_active or repair_interval_active:
 		return {"ok": false, "reason": "scenario cannot change during an invasion or repair interval"}
@@ -223,7 +201,7 @@ func select_scenario(id: String) -> Dictionary:
 		return {"ok": false, "reason": "start a new run before changing scenarios"}
 	scenario_id = id
 	scenario_active = true
-	enemy_doctrine = String(SCENARIOS[id].get("starting_doctrine", "gate_assault"))
+	enemy_doctrine = String(_scenario_definitions[id].get("starting_doctrine", "gate_assault"))
 	var variation: Dictionary = _variation_for_scenario(id)
 	scenario_variation_id = String(variation.get("id", "standard_bell"))
 	variation_target_room = String(variation.get("target_room", ""))
@@ -231,19 +209,19 @@ func select_scenario(id: String) -> Dictionary:
 	variation_morale = int(variation.get("morale", 0))
 	materials = int(_commander_definitions[commander_id].starting_materials) + variation_materials
 	morale = clampi(int(_commander_definitions[commander_id].starting_morale) + variation_morale, 0, 10)
-	_log("Scenario selected: %s / variation %s. %s" % [SCENARIOS[id].name, scenario_variation_id, SCENARIOS[id].lesson])
-	return {"ok": true, "message": "%s selected: %s Variation: %s." % [SCENARIOS[id].name, SCENARIOS[id].objective, scenario_variation_id], "scenario": scenario_preview(id)}
+	_log("Scenario selected: %s / variation %s. %s" % [_scenario_definitions[id].name, scenario_variation_id, _scenario_definitions[id].lesson])
+	return {"ok": true, "message": "%s selected: %s Variation: %s." % [_scenario_definitions[id].name, _scenario_definitions[id].objective, scenario_variation_id], "scenario": scenario_preview(id)}
 
 func scenario_preview(id: String = "") -> Dictionary:
 	var selected_id: String = scenario_id if id.is_empty() else id
-	if not SCENARIOS.has(selected_id):
+	if not _scenario_definitions.has(selected_id):
 		return {"ok": false, "reason": "unknown Greywatch scenario"}
-	var scenario: Dictionary = SCENARIOS[selected_id]
+	var scenario: Dictionary = _scenario_definitions[selected_id]
 	return {"ok": true, "scenario_id": selected_id, "name": String(scenario.name), "objective": String(scenario.objective), "lesson": String(scenario.lesson), "starting_doctrine": String(scenario.starting_doctrine), "wave_count": scenario.wave_plans.size(), "variation_id": scenario_variation_id if selected_id == scenario_id else String(_variation_for_scenario(selected_id).get("id", "standard_bell"))}
 
 func authored_wave_count() -> int:
-	if scenario_active and SCENARIOS.has(scenario_id):
-		return SCENARIOS[scenario_id].get("wave_plans", []).size()
+	if scenario_active and _scenario_definitions.has(scenario_id):
+		return _scenario_definitions[scenario_id].get("wave_plans", []).size()
 	return 0
 
 func has_next_wave() -> bool:
@@ -286,13 +264,21 @@ func doctrine_definition(id: String) -> Dictionary:
 		return {}
 	return _doctrine_definitions[id].duplicate(true)
 
+func scenario_ids() -> Array[String]:
+	return content_catalog.scenario_ids()
+
+func scenario_definition(id: String) -> Dictionary:
+	if not _scenario_definitions.has(id):
+		return {}
+	return _scenario_definitions[id].duplicate(true)
+
 func pack_definition(pack_id: String) -> Dictionary:
 	if not _pack_definitions.has(pack_id):
 		return {}
 	return _pack_definitions[pack_id].duplicate(true)
 
 func content_catalog_status() -> Dictionary:
-	return {"ok": content_catalog_errors.is_empty(), "commander_count": _commander_definitions.size(), "piece_count": _piece_definitions.size(), "pack_count": _pack_definitions.size(), "enemy_count": _enemy_definitions.size(), "doctrine_count": _doctrine_definitions.size(), "errors": content_catalog_errors.duplicate()}
+	return {"ok": content_catalog_errors.is_empty(), "commander_count": _commander_definitions.size(), "piece_count": _piece_definitions.size(), "pack_count": _pack_definitions.size(), "enemy_count": _enemy_definitions.size(), "doctrine_count": _doctrine_definitions.size(), "scenario_count": _scenario_definitions.size(), "errors": content_catalog_errors.duplicate()}
 
 func pack_preview(pack_id: String) -> Dictionary:
 	if not _pack_definitions.has(pack_id):
@@ -1086,11 +1072,11 @@ func start_wave(doctrine: String) -> Dictionary:
 		return {"ok": false, "reason": "place at least one defensive piece first"}
 	if scenario_active and last_outcome == "collapse":
 		return {"ok": false, "reason": "this authored sequence ended in collapse; start a new run to replay it"}
-	if scenario_active and SCENARIOS.has(scenario_id) and wave_index >= SCENARIOS[scenario_id].get("wave_plans", []).size():
+	if scenario_active and _scenario_definitions.has(scenario_id) and wave_index >= _scenario_definitions[scenario_id].get("wave_plans", []).size():
 		return {"ok": false, "reason": "this authored scenario has no further waves; start a new run to replay it"}
 	wave_index += 1
-	if scenario_active and SCENARIOS.has(scenario_id):
-		var scenario_doctrines: Array = SCENARIOS[scenario_id].get("doctrines", [doctrine])
+	if scenario_active and _scenario_definitions.has(scenario_id):
+		var scenario_doctrines: Array = _scenario_definitions[scenario_id].get("doctrines", [doctrine])
 		doctrine = String(scenario_doctrines[mini(wave_index - 1, scenario_doctrines.size() - 1)])
 		enemy_doctrine = doctrine
 	wave_active = true
@@ -1106,8 +1092,8 @@ func start_wave(doctrine: String) -> Dictionary:
 	enemies.clear()
 	battle_report.clear()
 	var composition: Array = _doctrine_definitions[doctrine].get("composition", []).duplicate()
-	if scenario_active and SCENARIOS.has(scenario_id):
-		var wave_plan: Array = SCENARIOS[scenario_id].wave_plans[mini(wave_index - 1, SCENARIOS[scenario_id].wave_plans.size() - 1)]
+	if scenario_active and _scenario_definitions.has(scenario_id):
+		var wave_plan: Array = _scenario_definitions[scenario_id].wave_plans[mini(wave_index - 1, _scenario_definitions[scenario_id].wave_plans.size() - 1)]
 		composition = wave_plan.duplicate()
 	_reset_combat_metrics()
 	for index in range(composition.size()):
@@ -1178,8 +1164,8 @@ func recovery_advice() -> Dictionary:
 	if not repair_interval_active:
 		return {"ok": false, "reason": "no recovery interval is open"}
 	var next_doctrine: String = ""
-	if has_next_wave() and SCENARIOS.has(scenario_id):
-		var doctrines: Array = SCENARIOS[scenario_id].get("doctrines", [])
+	if has_next_wave() and _scenario_definitions.has(scenario_id):
+		var doctrines: Array = _scenario_definitions[scenario_id].get("doctrines", [])
 		next_doctrine = String(doctrines[mini(wave_index, doctrines.size() - 1)]) if not doctrines.is_empty() else enemy_doctrine
 	var target: String = "the most damaged critical room"
 	var action: String = "repair_room"
@@ -1206,7 +1192,7 @@ func scenario_scorecard() -> Dictionary:
 		total_room_damage += int(row.get("room_damage", 0))
 		total_piece_damage += int(row.get("piece_damage", 0))
 		total_recovery_actions += int(row.get("recovery_actions_used", 0))
-	return {"scenario_id": scenario_id, "scenario_name": String(SCENARIOS.get(scenario_id, {}).get("name", scenario_id)), "completed_waves": wave_history.size(), "wave_count": authored_wave_count(), "outcomes": outcomes, "total_defeated": total_defeated, "total_room_damage": total_room_damage, "total_piece_damage": total_piece_damage, "recovery_actions_used": total_recovery_actions, "final_outcome": last_outcome, "replay_key": "%s/%s/%d" % [scenario_id, commander_id, seed]}
+	return {"scenario_id": scenario_id, "scenario_name": String(_scenario_definitions.get(scenario_id, {}).get("name", scenario_id)), "completed_waves": wave_history.size(), "wave_count": authored_wave_count(), "outcomes": outcomes, "total_defeated": total_defeated, "total_room_damage": total_room_damage, "total_piece_damage": total_piece_damage, "recovery_actions_used": total_recovery_actions, "final_outcome": last_outcome, "replay_key": "%s/%s/%d" % [scenario_id, commander_id, seed]}
 
 func scenario_report() -> Dictionary:
 	var scorecard: Dictionary = scenario_scorecard()
@@ -1430,7 +1416,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	if not _commander_definitions.has(commander_id):
 		return {"ok": false, "reason": "save contains an unknown commander"}
 	scenario_id = String(data.get("scenario_id", scenario_id))
-	if not SCENARIOS.has(scenario_id):
+	if not _scenario_definitions.has(scenario_id):
 		return {"ok": false, "reason": "save contains an unknown scenario"}
 	scenario_active = bool(data.get("scenario_active", scenario_active))
 	scenario_variation_id = String(data.get("scenario_variation_id", scenario_variation_id))
