@@ -15,9 +15,10 @@
       "requirements": {},
       "effects": [
         {"op": "record_outcome", "tag": "relief_road_complete"},
-        {"op": "unlock_modifier", "modifier": "roadside_intelligence"}
+        {"op": "unlock_modifier", "modifier": "roadside_intelligence"},
+        {"op": "unlock_modifier", "modifier": "hardened_vanguard"}
       ],
-      "visible_result": "The outcome is preserved and Roadside Intelligence is unlocked for future runs."
+      "visible_result": "The outcome is preserved; Roadside Intelligence and Hardened Vanguard are unlocked for future runs."
     }
   ],
   "follow_up": ""

@@ -76,7 +76,8 @@ const EVENT_PATHS: Array[String] = [
 ]
 
 const MODIFIER_PATHS: Array[String] = [
-	"res://data/modifiers/roadside_intelligence.json"
+	"res://data/modifiers/roadside_intelligence.json",
+	"res://data/modifiers/hardened_vanguard.json"
 ]
 
 const REQUIRED_PACK_FIELDS: Array[String] = [
@@ -185,7 +186,7 @@ const SUPPORTED_EVENT_PHASES: Array[String] = ["preparation", "recovery", "resul
 const SUPPORTED_EVENT_REQUIREMENTS: Array[String] = ["command_points", "recovery_actions", "morale"]
 const SUPPORTED_EVENT_EFFECTS: Array[String] = ["spend_command_points", "spend_recovery_action", "add_materials", "add_morale", "set_flag", "record_outcome", "unlock_modifier"]
 const REQUIRED_MODIFIER_FIELDS: Array[String] = ["id", "content_version", "status", "name", "short_role", "question", "unlock_event", "effect", "starting_morale_cost", "limitation"]
-const SUPPORTED_MODIFIER_EFFECTS: Array[String] = ["reveal_wave_composition"]
+const SUPPORTED_MODIFIER_EFFECTS: Array[String] = ["reveal_wave_composition", "enemy_health_bonus"]
 
 var _packs: Dictionary = {}
 var _commanders: Dictionary = {}
@@ -690,6 +691,13 @@ func validate_modifier_definition(modifier: Dictionary, expected_id: String) -> 
 		validation_errors.append("modifier %s references unknown unlock event" % modifier_id)
 	if not SUPPORTED_MODIFIER_EFFECTS.has(String(modifier.get("effect", ""))):
 		validation_errors.append("modifier %s has unsupported effect" % modifier_id)
+	var effect: String = String(modifier.get("effect", ""))
+	if effect == "enemy_health_bonus":
+		_validate_integer_minimum(modifier, "enemy_health_bonus", modifier_id, "modifier", 1, validation_errors)
+		if _is_integer_number(modifier.get("enemy_health_bonus")) and int(modifier.get("enemy_health_bonus", 0)) > 8:
+			validation_errors.append("modifier %s enemy_health_bonus must be at most 8" % modifier_id)
+	elif modifier.has("enemy_health_bonus"):
+		validation_errors.append("modifier %s cannot define enemy_health_bonus for effect %s" % [modifier_id, effect])
 	return validation_errors
 
 func validate_commander_definition(commander: Dictionary, expected_id: String) -> Array[String]:

@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.11.3-greywatch-three-bells` — three P11 teaching pairs plus a composed challenge scenario
+**Current build identity:** `0.11.4-greywatch-challenge-ledger` — completed P11 breadth plus a selectable durability challenge
 
 ## Purpose
 
@@ -25,6 +25,10 @@ Shield Wardens provide one non-stacking point of protection to an adjacent piece
 ## v0.11.3 Three Bells at Dusk additions
 
 Three Bells at Dusk combines Shield Guards, Ash Slingers, and Shieldbreakers over three waves without adding a scenario-only combat rule. Deterministic coverage exercises Crossbow Watch + Bell Guard and Shieldwall + Bell Guard for both commanders, preserving the two-pack preparation limit and verifying that multiple P11 status labels remain readable together.
+
+## v0.11.4 Challenge Ledger additions
+
+The Campaign Ledger now selects one authored modifier or none. The existing Roadside Intelligence trade-off is unchanged. Hardened Vanguard adds two current and maximum health when each enemy wave instance is created, grants no reward, and persists naturally through active-wave saves. Completing The Relief Road unlocks both choices.
 
 ## v0.8.2 testability additions
 

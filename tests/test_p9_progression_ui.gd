@@ -12,12 +12,15 @@ func _initialize() -> void:
 	await process_frame
 	await process_frame
 	ui._set_screen("preparation")
+	ui._select_option_metadata(ui.campaign_modifier_option, "roadside_intelligence")
+	ui._refresh_campaign_ledger()
 	_check(String(ui.campaign_ledger_label.text).contains("LOCKED"), "Campaign Ledger should explain the initial locked modifier")
 	_check(ui.campaign_modifier_button.disabled, "locked modifier action should be disabled")
 
 	ui.keep.active_event_id = "relief_road_report"
 	ui.keep.resolved_event_ids.append("relief_road_report")
 	ui.keep.unlock_modifier("roadside_intelligence", "relief_road_report")
+	ui.keep.unlock_modifier("hardened_vanguard", "relief_road_report")
 	ui.keep.active_event_id = ""
 	ui._refresh_ui()
 	await process_frame

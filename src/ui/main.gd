@@ -63,6 +63,7 @@ var authored_event_choice_buttons: Array[Button] = []
 var authored_event_choice_details: Array[Label] = []
 var campaign_ledger_panel: VBoxContainer
 var campaign_ledger_label: Label
+var campaign_modifier_option: OptionButton
 var campaign_modifier_button: Button
 var pack_option: OptionButton
 var piece_option: OptionButton
@@ -958,6 +959,15 @@ func _build_ui() -> void:
 	campaign_ledger_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	campaign_ledger_label.add_theme_color_override("font_color", Color("#bfe8cf"))
 	campaign_ledger_panel.add_child(campaign_ledger_label)
+	campaign_modifier_option = OptionButton.new()
+	campaign_modifier_option.add_item("No modifier")
+	campaign_modifier_option.set_item_metadata(0, "")
+	for modifier_id in keep.modifier_ids():
+		campaign_modifier_option.add_item(String(keep.modifier_definition(modifier_id).get("name", modifier_id)))
+		campaign_modifier_option.set_item_metadata(campaign_modifier_option.item_count - 1, modifier_id)
+	_select_option_metadata(campaign_modifier_option, keep.equipped_modifier_id)
+	campaign_modifier_option.item_selected.connect(func(_index: int) -> void: _refresh_campaign_ledger())
+	campaign_ledger_panel.add_child(_labeled_control("Ledger choice", campaign_modifier_option))
 	campaign_modifier_button = Button.new()
 	campaign_modifier_button.pressed.connect(_on_toggle_campaign_modifier)
 	campaign_ledger_panel.add_child(campaign_modifier_button)
@@ -1457,20 +1467,38 @@ func _on_authored_event_choice(index: int) -> void:
 func _refresh_campaign_ledger() -> void:
 	if campaign_ledger_panel == null:
 		return
-	var modifier_id: String = "roadside_intelligence"
-	var definition: Dictionary = keep.modifier_definition(modifier_id)
-	var unlocked: bool = keep.unlocked_modifier_ids.has(modifier_id)
+	var modifier_id: String = _selected_id(campaign_modifier_option)
 	var equipped: bool = keep.equipped_modifier_id == modifier_id
-	var status: String = "EQUIPPED" if equipped else "UNLOCKED" if unlocked else "LOCKED"
-	campaign_ledger_label.text = "CAMPAIGN LEDGER — %s\n%s\nTrade-off: reveal the next wave composition for %d less starting morale.\n%s" % [status, String(definition.get("name", modifier_id)), int(definition.get("starting_morale_cost", 0)), String(definition.get("limitation", ""))]
+	if modifier_id.is_empty():
+		var current_name: String = "None" if keep.equipped_modifier_id.is_empty() else String(keep.modifier_definition(keep.equipped_modifier_id).get("name", keep.equipped_modifier_id))
+		campaign_ledger_label.text = "CAMPAIGN LEDGER — EQUIPPED: %s\nSelected: No modifier\nRun the authored baseline without an information trade-off or challenge rule." % current_name
+	else:
+		var definition: Dictionary = keep.modifier_definition(modifier_id)
+		var unlocked: bool = keep.unlocked_modifier_ids.has(modifier_id)
+		var status: String = "EQUIPPED" if equipped else "UNLOCKED" if unlocked else "LOCKED"
+		var effect_text: String = _modifier_effect_text(definition)
+		campaign_ledger_label.text = "CAMPAIGN LEDGER — %s\n%s\n%s\nQuestion: %s\nLimitation: %s" % [status, String(definition.get("name", modifier_id)), effect_text, String(definition.get("question", "")), String(definition.get("limitation", ""))]
 	var target_id: String = "" if equipped else modifier_id
 	var preview: Dictionary = keep.modifier_equip_preview(target_id)
-	campaign_modifier_button.text = "Unequip for next run" if equipped else "Equip for next run" if unlocked else "Complete The Relief Road to unlock"
+	if modifier_id.is_empty():
+		campaign_modifier_button.text = "Unequip for next run" if not keep.equipped_modifier_id.is_empty() else "No modifier equipped"
+	else:
+		var unlocked: bool = keep.unlocked_modifier_ids.has(modifier_id)
+		campaign_modifier_button.text = "Unequip for next run" if equipped else "Equip for next run" if unlocked else "Complete The Relief Road to unlock"
 	campaign_modifier_button.disabled = not bool(preview.get("ok", false))
 	campaign_modifier_button.tooltip_text = String(preview.get("message", preview.get("reason", "")))
 
+func _modifier_effect_text(definition: Dictionary) -> String:
+	var effect: String = String(definition.get("effect", ""))
+	if effect == "reveal_wave_composition":
+		return "Effect: reveal the next authored wave composition. Cost: %d less starting morale." % int(definition.get("starting_morale_cost", 0))
+	if effect == "enemy_health_bonus":
+		return "Challenge: every enemy begins each wave with +%d health. Starting morale is unchanged." % int(definition.get("enemy_health_bonus", 0))
+	return String(definition.get("short_role", "Unknown modifier effect."))
+
 func _on_toggle_campaign_modifier() -> void:
-	var modifier_id: String = "" if keep.equipped_modifier_id == "roadside_intelligence" else "roadside_intelligence"
+	var selected_modifier_id: String = _selected_id(campaign_modifier_option)
+	var modifier_id: String = "" if keep.equipped_modifier_id == selected_modifier_id else selected_modifier_id
 	_run_result(keep.equip_modifier(modifier_id), "Campaign")
 
 func _refresh_pack_preview() -> void:
@@ -1909,6 +1937,7 @@ func _on_load() -> void:
 	_clear_placement_mode()
 	selected_instance_id = ""
 	inspected_text = "Save loaded. Click a room or piece to inspect the restored run."
+	_select_option_metadata(campaign_modifier_option, keep.equipped_modifier_id)
 	_set_event("Keep state loaded%s." % (" from a legacy save" if bool(result.get("legacy", false)) else ""))
 	_refresh_ui()
 

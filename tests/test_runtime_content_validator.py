@@ -138,6 +138,19 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         for expected in ("does not match filename", "unknown unlock_event", "unsupported modifier effect", "starting_morale_cost"):
             self.assertIn(expected, joined)
 
+    def test_health_modifier_requires_a_bounded_matching_bonus(self) -> None:
+        modifier = copy.deepcopy(load("data/modifiers/hardened_vanguard.json"))
+        modifier["enemy_health_bonus"] = 9
+        errors: list[str] = []
+        validator.validate_modifier(Path("hardened_vanguard.json"), modifier, {"relief_road_report"}, set(), errors)
+        self.assertIn("enemy_health_bonus", "\n".join(errors))
+
+        intelligence = copy.deepcopy(load("data/modifiers/roadside_intelligence.json"))
+        intelligence["enemy_health_bonus"] = 2
+        errors = []
+        validator.validate_modifier(Path("roadside_intelligence.json"), intelligence, {"relief_road_report"}, set(), errors)
+        self.assertIn("only valid", "\n".join(errors))
+
 
 if __name__ == "__main__":
     unittest.main()

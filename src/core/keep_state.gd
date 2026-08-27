@@ -175,6 +175,14 @@ func _starting_morale() -> int:
 		base -= int(_modifier_definitions[equipped_modifier_id].get("starting_morale_cost", 0))
 	return clampi(base, 0, 10)
 
+func _active_enemy_health_bonus() -> int:
+	if equipped_modifier_id.is_empty() or not _modifier_definitions.has(equipped_modifier_id):
+		return 0
+	var modifier: Dictionary = _modifier_definitions[equipped_modifier_id]
+	if String(modifier.get("effect", "")) != "enemy_health_bonus":
+		return 0
+	return int(modifier.get("enemy_health_bonus", 0))
+
 func _preparation_pack_limit() -> int:
 	return 2 if wave_index == 0 else 1
 
@@ -1516,12 +1524,15 @@ func start_wave(doctrine: String) -> Dictionary:
 		var wave_plan: Array = _scenario_definitions[scenario_id].wave_plans[mini(wave_index - 1, _scenario_definitions[scenario_id].wave_plans.size() - 1)]
 		composition = wave_plan.duplicate()
 	_reset_combat_metrics()
+	var enemy_health_bonus: int = _active_enemy_health_bonus()
 	for index in range(composition.size()):
 		var enemy_id: String = String(composition[index])
-		var enemy_health: int = int(_enemy_definitions[enemy_id].get("health", 1))
+		var enemy_health: int = int(_enemy_definitions[enemy_id].get("health", 1)) + enemy_health_bonus
 		var arrival_state: Dictionary = _enemy_arrival_state(enemy_id)
 		enemies.append({"enemy_id": enemy_id, "max_health": enemy_health, "hp": enemy_health, "damage": int(_enemy_definitions[enemy_id].get("damage", 0)), "arrival_step": int(arrival_state.arrival_step), "signal_disrupted": bool(arrival_state.signal_disrupted), "target": "", "defeated": false, "slot": index, "attacks_received": 0, "damage_taken": 0})
 	_battle_log("Forecast: %s. Question: %s" % [doctrine.replace("_", " "), _doctrine_definitions[doctrine].question])
+	if enemy_health_bonus > 0:
+		_battle_log("%s hardens the vanguard; every enemy begins with +%d health." % [String(_modifier_definitions[equipped_modifier_id].name), enemy_health_bonus])
 	_battle_log("Likely pressure: %s. Scout Post can reveal the exact target before contact." % String(_enemy_definitions[String(composition[0])].route).replace("_", " "))
 	var logged_disruptions: Array[String] = []
 	for enemy in enemies:

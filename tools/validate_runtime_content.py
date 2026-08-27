@@ -74,7 +74,7 @@ SUPPORTED_EVENT_EFFECTS = {
     "spend_command_points", "spend_recovery_action", "add_materials", "add_morale",
     "set_flag", "record_outcome", "unlock_modifier",
 }
-SUPPORTED_MODIFIER_EFFECTS = {"reveal_wave_composition"}
+SUPPORTED_MODIFIER_EFFECTS = {"reveal_wave_composition", "enemy_health_bonus"}
 SNAKE_CASE = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
 
 
@@ -581,6 +581,12 @@ def validate_modifier(
         errors.append(f"{path}: unknown unlock_event reference")
     if modifier.get("effect") not in SUPPORTED_MODIFIER_EFFECTS:
         errors.append(f"{path}: unsupported modifier effect")
+    if modifier.get("effect") == "enemy_health_bonus":
+        health_bonus = modifier.get("enemy_health_bonus")
+        if not is_integer(health_bonus) or not 1 <= health_bonus <= 8:
+            errors.append(f"{path}: enemy_health_bonus must be an integer from 1 to 8")
+    elif "enemy_health_bonus" in modifier:
+        errors.append(f"{path}: enemy_health_bonus is only valid for the enemy_health_bonus effect")
     return modifier_id
 
 
