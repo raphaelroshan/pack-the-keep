@@ -1,6 +1,7 @@
 extends Control
 
 const PackKeepState = preload("res://src/core/keep_state.gd")
+const PackagedSmoke = preload("res://src/platform/packaged_smoke.gd")
 const GREYWATCH_BACKGROUND = preload("res://assets/greywatch_background.png")
 const CASTELLAN_PORTRAIT = preload("res://assets/castellan_portrait.png")
 const PIKE_ICON = preload("res://assets/pike_squad_icon.png")
@@ -117,6 +118,9 @@ var fullscreen_enabled: bool = false
 var effects_volume_index: int = 3
 var event_feed_retention_index: int = 0
 var auto_pause_on_threat: bool = false
+var save_path: String = SAVE_PATH
+var save_temp_path: String = SAVE_TEMP_PATH
+var save_backup_path: String = SAVE_BACKUP_PATH
 var settings_path: String = SETTINGS_PATH
 var settings_temp_path: String = SETTINGS_TEMP_PATH
 var settings_backup_path: String = SETTINGS_BACKUP_PATH
@@ -167,6 +171,10 @@ func _ready() -> void:
 	_setup_audio()
 	_build_ui()
 	_set_screen("title")
+	if OS.get_cmdline_user_args().has("--packaged-smoke") and OS.get_environment("PACK_THE_KEEP_PACKAGED_SMOKE") == "1":
+		var smoke_harness: Node = PackagedSmoke.new()
+		get_tree().root.add_child(smoke_harness)
+		smoke_harness.call_deferred("run", self)
 
 func _process(delta: float) -> void:
 	if battle_paused or not keep.wave_active:
@@ -1892,7 +1900,7 @@ func _run_result(result: Dictionary, label: String) -> void:
 	_refresh_ui()
 
 func _on_save() -> void:
-	var file: FileAccess = FileAccess.open(SAVE_TEMP_PATH, FileAccess.WRITE)
+	var file: FileAccess = FileAccess.open(save_temp_path, FileAccess.WRITE)
 	if file == null:
 		_set_event("Save failed: could not open the temporary save path.")
 		return
@@ -1903,29 +1911,29 @@ func _on_save() -> void:
 	if directory == null:
 		_set_event("Save failed: could not access the user data directory.")
 		return
-	var had_previous_save: bool = FileAccess.file_exists(SAVE_PATH)
-	if FileAccess.file_exists(SAVE_BACKUP_PATH):
-		directory.remove(SAVE_BACKUP_PATH.get_file())
+	var had_previous_save: bool = FileAccess.file_exists(save_path)
+	if FileAccess.file_exists(save_backup_path):
+		directory.remove(save_backup_path.get_file())
 	if had_previous_save:
-		var backup_error: Error = directory.rename(SAVE_PATH.get_file(), SAVE_BACKUP_PATH.get_file())
+		var backup_error: Error = directory.rename(save_path.get_file(), save_backup_path.get_file())
 		if backup_error != OK:
 			_set_event("Save failed: could not protect the previous save.")
 			return
-	var rename_error: Error = directory.rename(SAVE_TEMP_PATH.get_file(), SAVE_PATH.get_file())
+	var rename_error: Error = directory.rename(save_temp_path.get_file(), save_path.get_file())
 	if rename_error != OK:
 		if had_previous_save:
-			directory.rename(SAVE_BACKUP_PATH.get_file(), SAVE_PATH.get_file())
+			directory.rename(save_backup_path.get_file(), save_path.get_file())
 		_set_event("Save failed: temporary save could not be committed; the previous save was retained.")
 		return
-	if FileAccess.file_exists(SAVE_BACKUP_PATH):
-		directory.remove(SAVE_BACKUP_PATH.get_file())
+	if FileAccess.file_exists(save_backup_path):
+		directory.remove(save_backup_path.get_file())
 	_set_event("Keep state saved safely with schema %d." % PackKeepState.SAVE_SCHEMA_VERSION)
 
 func _on_load() -> void:
-	if not FileAccess.file_exists(SAVE_PATH):
+	if not FileAccess.file_exists(save_path):
 		_set_event("Load unavailable: no local keep save exists yet.")
 		return
-	var text: String = FileAccess.get_file_as_string(SAVE_PATH)
+	var text: String = FileAccess.get_file_as_string(save_path)
 	var payload: Variant = JSON.parse_string(text)
 	if not (payload is Dictionary):
 		_set_event("Load rejected: the save is not valid JSON state. The current run is unchanged.")

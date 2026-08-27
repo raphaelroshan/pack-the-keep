@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.11.4-greywatch-challenge-ledger",
+  "framework_version": "0.12.0-alpha-packaged-smoke",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -152,6 +152,14 @@
     "presentation": "campaign_ledger_selector_names_lock_state_effect_tradeoff_and_equipped_choice",
     "determinism_rule": "modifier_application_occurs_before_combat_and_is_persisted_in_enemy_runtime_state",
     "non_goals": ["modifier_stacking", "score_multiplier", "permanent_player_power"]
+  },
+  "p12_packaged_smoke": {
+    "status": "implemented",
+    "entry": "exported_main_scene_with_guarded_packaged_smoke_argument",
+    "profile_rule": "save_settings_and_report_paths_must_resolve_below_the_ci_owned_user_profile",
+    "offline_rule": "startup_and_gameplay_smoke_run_with_unreachable_http_https_and_all_proxy_endpoints",
+    "shutdown_rule": "main_scene_is_freed_before_the_exported_process_returns_zero",
+    "ci": "same_smoke_runner_for_pull_request_and_tagged_windows_artifacts"
   },
   "v090_multi_wave": {
     "status": "implemented",

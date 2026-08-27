@@ -17,7 +17,7 @@ The pipeline is designed to catch defects before visual polish or storefront pac
 | AI gameplay review | Player-facing behavior, fairness, onboarding, failure states, design fit | Reports; blocks on critical findings. |
 | AI QA review | Edge cases, test gaps, input paths, save/load, reproducibility | Reports; blocks on critical findings. |
 | AI security review | Credential exposure, unsafe process behavior, dependency and prompt-injection risks | Reports; blocks on critical findings. |
-| Packaging | Project import, source snapshot, and Windows export when presets exist | Blocks only when release workflow requires export presets. |
+| Packaging | Windows export, packaged main-scene launch, offline gameplay smoke, isolated persistence, clean shutdown, and source snapshot | Blocks when export or packaged behavior fails. |
 
 ## Multi-agent model
 
@@ -41,7 +41,9 @@ Reviewers should read the artifact, fix blocking findings, and either resolve wa
 
 ## Release behavior
 
-Pushes to `main` produce a release-candidate artifact containing a source snapshot and, once `export_presets.cfg` exists, a Windows build. Version tags such as `v0.1.0` invoke the guarded release workflow. The tag workflow requires deterministic tests and a Windows export preset, then uploads the Windows candidate and a release manifest.
+Pushes to `main` produce a release-candidate artifact containing a source snapshot, a Windows build, and `packaged-smoke.json`. Pull requests run the same packaged smoke before their artifact is accepted. Version tags such as `v0.1.0` invoke the guarded release workflow, repeat the smoke against the tagged executable, and upload the Windows candidate and release manifest.
+
+The packaged smoke uses a CI-owned profile root and unreachable proxy endpoints. It launches the actual exported main scene, executes a guarded smoke path through normal gameplay and persistence APIs, verifies that save/settings files remain inside the isolated profile, then requires clean teardown and process exit within 30 seconds.
 
 Publishing to Steam or Epic Games Store remains a deliberate human-controlled step. Add store upload credentials only after the build has passed a release review, and use protected environments with required reviewers for actual deployment.
 

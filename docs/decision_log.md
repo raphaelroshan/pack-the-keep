@@ -295,3 +295,11 @@
 **Reason:** A second modifier should prove that progression is a real content boundary rather than a Roadside Intelligence special case. Mutual exclusivity keeps the pre-run choice legible, while wave-creation application makes the challenge deterministic and naturally saveable.
 
 **Trade-off:** Modifiers cannot yet stack or express compound effects. New effect types still require explicit validator, simulation, presentation, migration, and regression support.
+
+## ADR-038: Release artifacts must prove behavior after export
+
+**Decision:** Run a bounded smoke harness against the exported Windows executable in both pull-request packaging and tagged release workflows. Use an isolated user profile, unreachable proxy endpoints, the real main scene, normal save/settings paths, and a structured report validated outside Godot.
+
+**Reason:** Source tests and a successful export do not prove that an embedded project launches, resolves its writable data directory, includes required resources, or exits cleanly. Testing the artifact catches packaging failures at the boundary users receive.
+
+**Trade-off:** The first packaged smoke is headless and does not validate GPU presentation, installer behavior, or storefront launchers. Those remain explicit later alpha gates.
