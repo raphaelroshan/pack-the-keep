@@ -10,7 +10,7 @@
     "replay_identity": "scenario_commander_seed_replay_key"
   },
   "p5_greywatch_mastery": {
-    "status": "in_progress",
+    "status": "implemented",
     "recovery_action_cards": "implemented_with_authoritative_preview_cost_benefit_tradeoff_and_blocking_reason",
     "causal_final_report": "implemented_from_wave_history_final_keep_state_and_deterministic_replay_experiment",
     "layout_summary": "implemented_with_shared_spatial_facts_commander_comparison_and_deterministic_warnings",

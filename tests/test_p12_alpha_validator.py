@@ -15,6 +15,12 @@ SPEC.loader.exec_module(validator)
 
 
 class P12AlphaValidatorTests(unittest.TestCase):
+    def test_requires_human_release_boundary(self) -> None:
+        errors: list[str] = []
+        build_version = validator.validate_ci_manifest({"build_version": "v", "release_ready": True}, errors)
+        self.assertEqual(build_version, "v")
+        self.assertIn("release_ready must remain false", "\n".join(errors))
+
     def test_accepts_complete_initial_and_reinstall_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "report.json"

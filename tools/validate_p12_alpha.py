@@ -50,6 +50,16 @@ def windows_path_is_within(path: str, root: str) -> bool:
         return False
 
 
+def validate_ci_manifest(manifest: dict[str, Any], errors: list[str]) -> str:
+    build_version = manifest.get("build_version")
+    if not isinstance(build_version, str) or not build_version:
+        errors.append("CI manifest needs build_version")
+        build_version = ""
+    if manifest.get("release_ready") is not False:
+        errors.append("CI manifest release_ready must remain false before human alpha approval")
+    return build_version
+
+
 def validate_checklist(path: Path, root: Path, build_version: str, errors: list[str]) -> None:
     checklist = load_object(path, errors)
     if checklist.get("schema_version") != 1:
@@ -188,9 +198,7 @@ def main() -> int:
     root = Path.cwd()
     errors: list[str] = []
     manifest = load_object(args.manifest, errors)
-    build_version = str(manifest.get("build_version", ""))
-    if not build_version:
-        errors.append("CI manifest needs build_version")
+    build_version = validate_ci_manifest(manifest, errors)
     validate_checklist(args.checklist, root, build_version, errors)
     if args.report is not None:
         validate_report(args.report, build_version, errors)
