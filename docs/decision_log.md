@@ -311,3 +311,11 @@
 **Reason:** A malformed or future save must not partially mutate an active run, and an interrupted atomic replacement may leave the last valid state only in the backup slot. Candidate loading makes both guarantees explicit.
 
 **Trade-off:** A recovered backup is not promoted automatically. It remains recoverable until the player performs the next explicit save.
+
+## ADR-040: Packaged input smoke verifies mappings, not hardware
+
+**Decision:** Exercise controller navigation, conflict-resolving remap, and UI-scale layout through injected Godot input events inside the exported Windows artifact, then validate their persisted representation externally.
+
+**Reason:** Source tests alone do not prove that input-map resources and settings serialization survive export. Injected events make the package gate deterministic while still traversing the real UI handlers.
+
+**Trade-off:** This verifies mappings and layout logic without claiming physical-controller, analog, or GPU coverage.

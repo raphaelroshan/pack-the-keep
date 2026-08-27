@@ -32,6 +32,12 @@ class PackagedSmokeReportTests(unittest.TestCase):
                 "battle_step": 1,
                 "save_schema_version": 4,
                 "settings_schema_version": 4,
+                "controller_navigation_ready": True,
+                "controller_defaults_ready": True,
+                "controller_remap_ready": True,
+                "ui_scale_ready": True,
+                "settings_scale_ready": True,
+                "settings_remap_ready": True,
                 "content_status": {"ok": True, "commander_count": 2, "piece_count": 17, "pack_count": 9, "enemy_count": 7, "doctrine_count": 8, "scenario_count": 8, "event_count": 3, "modifier_count": 2},
                 "user_data_dir": str(report_path.parent),
                 "save_path": str(report_path.parent / "pack_the_keep_prototype.save"),
@@ -54,13 +60,19 @@ class PackagedSmokeReportTests(unittest.TestCase):
                 "battle_step": 0,
                 "save_schema_version": 3,
                 "settings_schema_version": 3,
+                "controller_navigation_ready": False,
+                "controller_defaults_ready": False,
+                "controller_remap_ready": False,
+                "ui_scale_ready": False,
+                "settings_scale_ready": False,
+                "settings_remap_ready": False,
                 "content_status": {"ok": False},
                 "user_data_dir": str(root.parent),
                 "save_path": str(root.parent / "save"),
                 "settings_path": str(root.parent / "settings"),
             }), encoding="utf-8")
             errors = "\n".join(runner.validate_report(report_path, root, "0.12.0-alpha-packaged-smoke"))
-            for expected in ("build version", "release template", "offline proxy", "environment guard", "did not free", "battle step", "schemas", "catalog", "escaped"):
+            for expected in ("build version", "release template", "offline proxy", "environment guard", "did not free", "battle step", "schemas", "input/scaling", "catalog", "escaped"):
                 self.assertIn(expected, errors)
 
 

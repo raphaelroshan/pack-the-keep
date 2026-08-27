@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.12.1-alpha-save-recovery` — packaged Windows smoke plus non-mutating backup recovery
+**Current build identity:** `0.12.2-alpha-packaged-input-scale` — packaged Windows input, scaling, persistence, and recovery validation
 
 ## Purpose
 
@@ -37,6 +37,10 @@ Pull-request and tagged-release Windows exports now launch under an isolated pro
 ## v0.12.1 Save recovery additions
 
 Loading validates the primary save in a fresh keep-state candidate and falls back to the backup for missing, malformed, future, or otherwise invalid primary data. If neither candidate is valid, the active run remains unchanged. Legacy migration and backup recovery are named explicitly in the UI event feed.
+
+## v0.12.2 Packaged input and scaling additions
+
+The exported Windows smoke now verifies controller navigation defaults, all gameplay controller paths, conflict-resolving remap of battle pause, 125% stacked layout, and schema-4 persistence of both scale and bindings.
 
 ## v0.8.2 testability additions
 

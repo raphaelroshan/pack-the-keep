@@ -43,7 +43,7 @@ Reviewers should read the artifact, fix blocking findings, and either resolve wa
 
 Pushes to `main` produce a release-candidate artifact containing a source snapshot, a Windows build, and `packaged-smoke.json`. Pull requests run the same packaged smoke before their artifact is accepted. Version tags such as `v0.1.0` invoke the guarded release workflow, repeat the smoke against the tagged executable, and upload the Windows candidate and release manifest.
 
-The packaged smoke uses a CI-owned profile root and unreachable proxy endpoints. It launches the actual exported main scene, executes a guarded smoke path through normal gameplay and persistence APIs, verifies that save/settings files remain inside the isolated profile, then requires clean teardown and process exit within 30 seconds.
+The packaged smoke uses a CI-owned profile root and unreachable proxy endpoints. It launches the actual exported main scene, executes a guarded smoke path through normal gameplay and persistence APIs, verifies controller navigation/remapping and 125% stacked scaling, confirms save/settings files remain inside the isolated profile, then requires clean teardown and process exit within 30 seconds.
 
 Publishing to Steam or Epic Games Store remains a deliberate human-controlled step. Add store upload credentials only after the build has passed a release review, and use protected environments with required reviewers for actual deployment.
 

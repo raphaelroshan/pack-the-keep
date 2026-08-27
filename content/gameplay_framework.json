@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.12.1-alpha-save-recovery",
+  "framework_version": "0.12.2-alpha-packaged-input-scale",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -167,6 +167,12 @@
     "fallback_rule": "missing_malformed_future_or_invalid_primary_may_recover_a_valid_backup",
     "mutation_rule": "two_rejected_candidates_leave_the_current_run_unchanged",
     "migration_rule": "schema_migration_remains_owned_by_keep_state_load_serialized"
+  },
+  "p12_controller_and_scaling_package_smoke": {
+    "status": "implemented",
+    "controller_rule": "exported_input_map_retains_navigation_and_gameplay_controller_paths",
+    "remap_rule": "button_conflicts_are_removed_and_the_new_binding_persists_in_schema_4_settings",
+    "scale_rule": "125_percent_content_scale_stacks_board_and_command_columns_in_the_exported_build"
   },
   "v090_multi_wave": {
     "status": "implemented",
