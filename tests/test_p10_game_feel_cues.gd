@@ -16,13 +16,14 @@ func _initialize() -> void:
 	_check(ui.audio_player == null, "headless validation should not initialize an audio playback device")
 	var state_before: String = JSON.stringify(ui.keep.serialize())
 
-	var required_cues: Array[String] = ["warning", "contact", "confirm", "repair", "ability", "error", "pause", "resume", "hold", "partial_breach", "collapse"]
+	var required_cues: Array[String] = ["warning", "contact", "volley", "impact", "confirm", "repair", "ability", "error", "pause", "resume", "hold", "partial_breach", "collapse"]
 	var signatures: Dictionary = {}
 	for cue_id in required_cues:
 		var profile: Dictionary = ui._cue_profile(cue_id)
 		_check(not profile.is_empty() and profile.get("frequencies", []) is Array and not profile.get("frequencies", []).is_empty(), "%s should resolve to a playable cue profile" % cue_id)
 		signatures[cue_id] = JSON.stringify(profile)
 	_check(signatures.hold != signatures.partial_breach and signatures.partial_breach != signatures.collapse and signatures.hold != signatures.collapse, "terminal outcomes should have distinct cue profiles")
+	_check(signatures.volley != signatures.impact and signatures.impact != signatures.contact, "defender volleys, enemy impacts, and general contact should have distinct cue profiles")
 
 	ui.audio_muted = true
 	ui._play_cue("repair")

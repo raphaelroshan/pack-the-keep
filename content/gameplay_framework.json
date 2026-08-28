@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.16.8-realtime-assault",
+  "framework_version": "0.16.9-combat-impact",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -321,6 +321,15 @@
     "player_language": ["assault_phases", "recovery_lulls"],
     "display": ["1600x900_default", "2560x1440_preset", "125_percent_1440p_readability_floor", "responsive_side_by_side_or_stacked_layout"],
     "non_goals": ["continuous_damage_simulation", "projectile_physics", "save_schema_change", "final_art"]
+  },
+  "p18_combat_impact_and_pacing": {
+    "status": "implemented",
+    "authority_boundary": "effects_compare_authoritative_before_and_after_state_but_never_change_combat",
+    "defender_feedback": ["data_driven_melee_lunge", "data_driven_ranged_projectile", "impact_ring", "exact_damage_label", "enemy_hit_reaction"],
+    "enemy_feedback": ["final_second_contact_telegraph", "target_pressure_stroke", "room_or_piece_impact", "exact_net_damage_label"],
+    "audio": ["volley_cue", "impact_cue", "existing_mute_and_effects_volume"],
+    "accessibility": "reduced_motion_uses_static_bounded_impact_marks_without_travel_or_hit_jitter",
+    "non_goals": ["projectile_collision", "continuous_authoritative_damage", "camera_shake", "new_save_fields"]
   },
   "v090_multi_wave": {
     "status": "implemented",

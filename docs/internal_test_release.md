@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.16.8-realtime-assault` — the controlled playtest now begins assaults in continuous playback, supports 2560×1440, and retains deterministic pause-and-inspect controls; human sessions and owner approval remain pending
+**Current build identity:** `0.16.9-combat-impact` — the controlled playtest now presents readable melee, ranged, contact, and structural-impact exchanges over deterministic combat; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of nine authored scenarios, preview and reserve a limited pack offer, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, and recover during authored lulls.
+
+## v0.16.9 Combat impact additions
+
+Each resolved tick now reads as a compact combat exchange. Ranged pieces launch a travelling bolt or ember, melee pieces lunge locally, damaged enemies react and show exact damage, and enemy pressure draws toward the room or defender whose authoritative state changed. The final second before arrival carries an explicit `CONTACT` telegraph. Reduced motion replaces travel and jitter with short static impact marks, while new volley and impact cue profiles remain subject to the existing mute and effects-volume settings.
 
 ## v0.16.8 Real-time assault additions
 
@@ -219,6 +223,10 @@ A tester should begin at the main menu, enter the guided or custom briefing, com
 ## v0.16.8 acceptance checks
 
 Start a guided run and confirm **BEGIN ASSAULT — REAL TIME** opens Battle at tick zero with live movement. Verify fractional enemy movement before the first tick, a transient engagement trace when a defender commits, and unchanged authoritative state when the presentation is paused. Confirm the primary action toggles pause/resume and the secondary manual-step action is enabled only while paused. Close the first recovery lull and confirm the next assault phase begins live once. Select 2560×1440 in Settings and confirm UI scale is at least 125%, the fort and command rail remain side-by-side, and all required controls stay reachable.
+
+## v0.16.9 acceptance checks
+
+Run a Pike Squad defense and confirm its response is a compact melee lunge rather than a projectile. Run Crossbow Patrol or Fire Team and confirm a projectile travels toward the committed target before the damage ring appears. Watch an enemy's final approach second for the `CONTACT` label, then confirm room or defender damage produces a red target impact with the exact net damage. Pause immediately after a tick and verify the short effect finishes without advancing simulation. Enable reduced motion and confirm the same exchange uses a static impact mark without travel or enemy jitter.
 
 ## v0.16.6 acceptance checks
 
