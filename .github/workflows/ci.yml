@@ -172,6 +172,14 @@ jobs:
             --source-revision "${GITHUB_SHA}" \
             --run-id "${GITHUB_RUN_ID}" \
             --output artifacts/playtest-build.json
+      - name: Write packaged playtest observer brief
+        run: |
+          slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
+          python tools/write_playtest_brief.py \
+            --protocol content/p16_playtest_protocol.json \
+            --build-manifest artifacts/playtest-build.json \
+            --artifact "build/${slug}.exe" \
+            --output artifacts/PLAYTEST_README.md
       - name: Package source snapshot
         run: |
           mkdir -p artifacts

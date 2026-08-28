@@ -16,6 +16,7 @@ python3 tests/test_p16_playtest_protocol.py
 python3 tools/summarize_p16_playtests.py --protocol content/p16_playtest_protocol.json --sessions playtests/sessions --ci-manifest tools/ci_manifest.json --alpha-checklist content/p12_alpha_checklist.json
 python3 tests/test_p16_playtest_summary.py
 python3 tests/test_p16_playtest_build_manifest.py
+python3 tests/test_p16_playtest_brief.py
 
 if command -v godot >/dev/null 2>&1; then
   godot --headless --audio-driver Dummy --path . --import
