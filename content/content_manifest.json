@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.17.2",
+  "content_version": "0.17.3",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -324,7 +324,16 @@
     "focus_feedback": "selected_timeline_arrival_uses_a_double_outline_without_obscuring_the_enemy_initial",
     "determinism": "tooltip_queries_and_focus_rendering_do_not_change_keep_state",
     "evidence": ["design/p21_threat_tooltips.md", "docs/p21_threat_tooltips_visual_verification.md", "tests/test_p2_ui.gd"],
-    "next_slice": "p21_human_threat_comprehension_sessions"
+    "next_slice": "p22_assault_lane_spacing"
+  },
+  "p22_assault_lane_spacing": {
+    "status": "implemented",
+    "canvas": "346_design_pixels_with_scroll_safe_responsive_minimums",
+    "separation": "ground_approach_annotations_end_at_least_twelve_pixels_above_the_timeline",
+    "bounds": "timeline_bar_selection_rings_and_next_contact_summary_fit_inside_the_canvas",
+    "determinism": "spacing_snapshot_drawing_and_hit_testing_do_not_change_keep_state",
+    "evidence": ["design/p22_assault_lane_spacing.md", "docs/p22_assault_lane_visual_verification.md", "tests/test_p2_ui.gd"],
+    "next_slice": "p22_human_battle_readability_sessions"
   },
   "campaign": {
     "title": "The Bell at Dusk",

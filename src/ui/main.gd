@@ -551,7 +551,7 @@ func _apply_responsive_layout() -> void:
 		command_panel.custom_minimum_size.x = 810.0 if stacked else 360.0 if logical_width >= 1500.0 else 292.0
 		command_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL if stacked else Control.SIZE_SHRINK_BEGIN
 	if keep_canvas != null:
-		keep_canvas.custom_minimum_size.y = 420.0 if not stacked and size.y >= 900.0 else 292.0
+		keep_canvas.custom_minimum_size.y = 452.0 if not stacked and size.y >= 900.0 else 346.0
 		keep_canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		keep_canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
@@ -965,7 +965,7 @@ func _build_ui() -> void:
 	left.add_child(playtest_status_label)
 
 	keep_canvas = KeepCanvas.new()
-	keep_canvas.custom_minimum_size = Vector2(810, 292)
+	keep_canvas.custom_minimum_size = Vector2(810, 346)
 	keep_canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	keep_canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	keep_canvas.keep = keep
@@ -2792,9 +2792,10 @@ class KeepCanvas extends Control:
 	var keep: PackKeepState
 	const CELL_X := 18.0
 	const CELL_Y := 28.0
-	const BASE_CANVAS_SIZE := Vector2(810, 292)
+	const BASE_CANVAS_SIZE := Vector2(810, 346)
 	const COMBAT_EFFECT_DURATION := 0.52
 	const ASSAULT_TICK_COUNT := 6
+	const ASSAULT_TIMELINE_TOP := 300.0
 	const MAP_ORIGIN := Vector2(12, 28)
 	const UPPER_ORIGIN := Vector2(436, 28)
 	const MAP_SIZE := Vector2(12 * CELL_X, 8 * CELL_Y)
@@ -3013,9 +3014,24 @@ class KeepCanvas extends Control:
 	func _timeline_layout() -> Dictionary:
 		var left: float = MAP_ORIGIN.x
 		var right: float = UPPER_ORIGIN.x + MAP_SIZE.x
-		var top: float = MAP_ORIGIN.y + MAP_SIZE.y + 12.0
+		var top: float = ASSAULT_TIMELINE_TOP
 		var gap: float = 3.0
 		return {"left": left, "right": right, "top": top, "gap": gap, "segment_width": (right - left - gap * float(ASSAULT_TICK_COUNT - 1)) / float(ASSAULT_TICK_COUNT)}
+
+	func assault_lane_spacing_snapshot() -> Dictionary:
+		var approach_label_bottom: float = MAP_ORIGIN.y + MAP_SIZE.y
+		if keep != null and keep.wave_active:
+			for index in range(keep.enemies.size()):
+				if bool(keep.enemies[index].get("defeated", false)):
+					continue
+				approach_label_bottom = maxf(approach_label_bottom, _enemy_origin(index).y + 28.0)
+		return {
+			"approach_label_bottom": approach_label_bottom,
+			"timeline_top": ASSAULT_TIMELINE_TOP,
+			"clearance": ASSAULT_TIMELINE_TOP - approach_label_bottom,
+			"summary_bottom": ASSAULT_TIMELINE_TOP + 36.0,
+			"canvas_bottom": BASE_CANVAS_SIZE.y
+		}
 
 	func _timeline_marker_origin(tick_number: int, marker_index: int, marker_count: int) -> Vector2:
 		var layout: Dictionary = _timeline_layout()

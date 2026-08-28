@@ -31,11 +31,14 @@ func _initialize() -> void:
 		failures.append("automatic threat focus did not synchronize the enemy dropdown")
 	var serialized_before_timeline: String = JSON.stringify(ui.keep.serialize())
 	var timeline_before: Dictionary = ui.keep_canvas.assault_timeline_snapshot()
+	var spacing_before: Dictionary = ui.keep_canvas.assault_lane_spacing_snapshot()
 	var arrival_marker_count: int = 0
 	for arrival_rows in timeline_before.get("arrivals", {}).values():
 		arrival_marker_count += arrival_rows.size()
 	if int(timeline_before.get("tick_count", 0)) != 6 or arrival_marker_count != ui.keep.enemies.size() or int(timeline_before.get("next_arrival_step", -1)) < 1:
 		failures.append("assault timeline did not expose six ticks, stable active-enemy arrivals, and the next contact")
+	if float(spacing_before.get("clearance", 0.0)) < 12.0 or float(spacing_before.get("summary_bottom", INF)) > float(spacing_before.get("canvas_bottom", 0.0)):
+		failures.append("gate approach labels and the complete assault timeline did not retain a readable vertical separation")
 	if JSON.stringify(ui.keep.serialize()) != serialized_before_timeline:
 		failures.append("assault timeline inspection mutated authoritative state")
 	var first_arrival_key: String = str(int(timeline_before.get("next_arrival_step", 1)))
