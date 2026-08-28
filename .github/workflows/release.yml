@@ -18,7 +18,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           filter: tree:0
@@ -53,7 +53,7 @@ jobs:
           python -c "import json, os; m=json.load(open('tools/ci_manifest.json')); m.update({'commit': os.environ['GITHUB_SHA'], 'ref': os.environ['GITHUB_REF']}); json.dump(m, open('artifacts/release_manifest.json','w'), indent=2)"
           tar --exclude=.git --exclude=.godot --exclude=artifacts --exclude=build -czf "artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" .
       - name: Upload Windows release candidate
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: windows-release-candidate-${{ github.ref_name }}
           path: |
@@ -61,7 +61,7 @@ jobs:
             artifacts/
           if-no-files-found: error
           retention-days: 90
-      - name: Publish private GitHub prerelease
+      - name: Publish GitHub prerelease
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -73,4 +73,4 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --title "Pack the Keep ${GITHUB_REF_NAME} Internal" \
             --prerelease \
-            --notes "Private internal pre-alpha Windows build. See docs/internal_test_release.md for the test checklist and deliberate production boundaries."
+            --notes "Public pre-alpha Windows test build. See docs/internal_test_release.md for the test checklist and deliberate production boundaries."

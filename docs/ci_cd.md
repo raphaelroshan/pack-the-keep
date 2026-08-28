@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The three game repositories use the same validation contract so AI-generated changes are checked consistently. Each pull request and push to `main` runs repository policy checks, deterministic Godot tests on Ubuntu and Windows, independent AI review roles, and a release-candidate packaging job. Version tags or manual dispatch run a stricter Windows release workflow that requires export presets.
+The game repositories use the same validation contract so AI-generated changes are checked consistently. Each pull request and push to `main` runs repository policy checks, deterministic Godot tests on Ubuntu and Windows, independent AI review roles, and a release-candidate packaging job. Version tags or manual dispatch run a stricter Windows release workflow that requires export presets.
 
 The pipeline is designed to catch defects before visual polish or storefront packaging hides them. It does not treat an AI reviewer as a substitute for deterministic tests. The AI layer produces a report and can block only at the configured severity threshold.
 
@@ -83,9 +83,9 @@ The workflow deliberately does not provide an automatic production deploy. Store
 
 ## All-games validation
 
-Market of Ash also contains an `All games validation` workflow. It is available by manual dispatch and runs weekly. It checks out the pinned ref from all three private repositories, runs the same policy and Godot checks, and creates one artifact bundle containing each repository’s diff and AI report.
+Market of Ash also contains an `All games validation` workflow. It is available by manual dispatch and runs weekly. It checks out the pinned ref from all configured repositories, runs the same policy and Godot checks, and creates one artifact bundle containing each repository’s diff and AI report.
 
-For this cross-repository workflow, create a read-only or least-privilege GitHub token with access to the three private repositories and save it as the `CROSS_REPO_READ_TOKEN` secret in Market of Ash. If this secret is not configured, the per-repository workflows remain fully usable, but the consolidated workflow cannot read private sibling repositories. The token must never be printed or passed into the AI prompt.
+For this cross-repository workflow, create a read-only or least-privilege GitHub token with access to any private sibling repositories and save it as the `CROSS_REPO_READ_TOKEN` secret in Market of Ash. Public repositories need no elevated token, but private siblings remain unavailable to the consolidated workflow without one. The token must never be printed or passed into the AI prompt.
 
 The equivalent local command is:
 
