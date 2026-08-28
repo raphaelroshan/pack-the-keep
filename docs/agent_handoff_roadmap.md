@@ -1,11 +1,12 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
-**Document status:** Active planning contract for post-v0.10.0 development
-**Current release baseline:** `v0.12.9-alpha-save-integrity`
+**Document status:** Active planning contract for post-v0.12.9 development
+**Current release baseline:** `0.12.9-alpha-save-integrity` on PR #26; remote `main` remains `0.12.3-alpha-packaged-pause-close`
+**Release posture:** CI-verified public repository with owner-controlled merges; no public alpha release or storefront claim yet
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
 **Primary keep:** Greywatch Keep
-**Authoring posture:** Agent-first, deterministic, private/internal until a human-approved alpha release
+**Authoring posture:** Agent-first, deterministic, public-source development with owner-controlled pre-alpha releases
 
 > **Core promise:** Choose a commander, open coherent equipment-and-soldier packs, arrange a readable top-down keep, and adapt when an invasion tests the doctrine that the player built.
 
@@ -21,7 +22,7 @@ The current slice supports two commanders, seventeen active defender pieces/equi
 
 P11 content breadth is complete. Three teaching pairs are implemented: Crossbow Watch versus Shielded Advance, Bell Guard versus Smoke and Signal, and Shieldwall versus Break the Line. Three Bells at Dusk composes all three questions across two viable two-pack baselines. The Campaign Ledger offers Roadside Intelligence or the Hardened Vanguard durability challenge through one data-driven selection boundary. P12 alpha hardening now has machine-readable evidence for Windows launch, offline play, persistence location, malformed saves, migration, controller, scaling, remapping, pause, close, and clean reinstall. Run saves and presentation settings both validate primary/backup candidates without promoting stranded temporary files; run-save loading also validates nested identities and collection shapes before mutating candidate state. A local all-scenario matrix now runs all eight scenarios for both commanders across three seeds both uninterrupted and through active-wave or recovery/event save checkpoints, proving 48 viable cases and 96 deterministic simulations without treating automation as a human playtest. Automated status remains a candidate pending human alpha approval.
 
-The next objective is not to add a large roster. The next objective is to make Greywatch feel like a complete, legible, replayable game loop and to establish safe extension points so new content can be added without turning the core simulation into an opaque collection of special cases.
+The next objective is no longer to complete P5–P12. Those milestones are historical implementation contracts and should be treated as regression requirements. The next objective is to make the now-expanded content breadth coherent, to implement the strongest portion of the event/occurrence bible, and to reduce UX/core maintainability risk before adding a large campaign layer or more combat exceptions.
 
 ### P4 completion means the following is now the reference behavior
 
@@ -88,18 +89,22 @@ The roadmap should be organized around five pillars rather than around a raw lis
 
 Milestones must be completed in order. An agent may split a milestone into smaller pull requests, but it must not skip the acceptance gate.
 
-| Milestone | Focus | New content policy | Proposed identity |
+| Milestone | Current status | What is now true | Next implication |
 |---|---|---|---|
-| P5 | UX clarity and Greywatch mastery | No large roster; improve existing flow | `v0.11.x-greywatch-mastery` |
-| P6 | Data-driven content architecture | Externalize existing content without changing behavior | `v0.12.0-data-contract` |
-| P7 | First meaningful content expansion | Add two packs, two units/equipment pairs, and one scenario only after P6 | `v0.13.0-second-doctrines` |
-| P8 | Events and scenario authoring framework | Add authored choices with validated effects and deterministic outcomes | `v0.14.0-authored-events` |
-| P9 | Campaign/run progression | Add a lightweight map and unlock structure, not grind | `v0.15.0-run-progression` |
-| P10 | Presentation and UX polish | Replace high-impact placeholders, accessibility, controller, scaling | `v0.16.0-alpha-ux` |
-| P11 | Content breadth and challenge | Add selected commanders, packs, enemy families, and scenario modifiers | `v0.17.x-alpha-content` |
-| P12 | Windows alpha and storefront readiness | Offline packaging, crash safety, saves, adapters, human review | `v0.18.0-alpha` |
+| P5 | Implemented | Greywatch has recovery advice, causal scorecards, layout summaries, and commander comparison. | Preserve as UX regression coverage. |
+| P6 | Implemented | Runtime content is externalized under `data/` and loaded through `src/core/content_catalog.gd`. | Add content without returning to hard-coded special cases. |
+| P7 | Implemented | Mobile Response and Relief Road content establish broader scenario/response patterns. | Continue teaching-pair expansion carefully. |
+| P8 | Implemented baseline | Relief Road provides the current authored event chain with typed effects and persistence. | Expand from one chain into a small occurrence/event system. |
+| P9 | Implemented baseline | Campaign Ledger supports bounded modifiers such as Roadside Intelligence and Hardened Vanguard. | Avoid grind; add only unlocks that create new decisions. |
+| P10 | Implemented | Accessibility preferences, controller/scaling, event-feed retention, auto-pause, and semantic feedback exist. | Reduce UI density and extract maintainable presentation components. |
+| P11 | Implemented | Crossbow Watch, Bell Guard, Shieldwall, Three Bells, and Hardened Vanguard are tested teaching content. | Add breadth only through isolated counter questions. |
+| P12 | Implemented baseline | Packaged Windows smoke validates launch, offline behavior, saves, nested recovery, input, scaling, pause, teardown, clean reinstall, and deterministic scenario resume. | Preserve as an alpha regression gate while human approval remains pending. |
+| P13 | Next | Greywatch content integration: implement selected events from `design/events_occurrences_bible.md`, deepen character arcs, and connect event consequences to existing rooms and reports. | Prefer one complete event chain over a broad random catalog. |
+| P14 | Planned | UX decomposition and authoring tools: split the UI monolith, improve event/ledger inspection, and make content validation agent-friendly. | Lower maintenance cost before campaign expansion. |
+| P15 | Planned | Multi-keep or regional structure with two genuinely distinct defensive identities. | Only begin after Greywatch’s event loop and replay value are proven. |
+| P16 | Planned | Controlled alpha readiness and human playtest hardening. | Requires explicit owner approval; not an automatic storefront release. |
 
-The numbers are planning identifiers, not permission to release automatically. Every milestone still requires local validation, CI, visual review, and explicit human approval before external distribution.
+P13 onward are planning identifiers, not permission to release automatically. Every milestone still requires local validation, CI, visual review, and explicit human approval before external distribution. The existing P5–P12 sections below remain useful as acceptance contracts, but agents must not re-implement them unless a regression or refactor explicitly requires it.
 
 ---
 
@@ -480,7 +485,7 @@ The agent must not add a new unit by editing only `keep_state.gd` and a label st
 
 ---
 
-# 8. P8 — Events and authored scenario framework
+# 8. P8 — Authored events and scenario authoring framework (implemented baseline)
 
 Events should make the keep feel inhabited and provide decisions that matter without becoming a separate visual-novel game.
 
@@ -541,7 +546,7 @@ The game should not moralize every decision. A deliberate sacrifice can be corre
 
 ---
 
-# 9. P9 — Run and campaign progression
+# 9. P9 — Run and campaign progression (implemented baseline)
 
 Progression should reward learning and completion, not grind. A future campaign layer may use a light regional map, but it must not make Greywatch’s individual defense irrelevant.
 
@@ -574,7 +579,7 @@ Do not build the regional map before at least two keeps or scenarios have distin
 
 ---
 
-# 10. P10 — Presentation, accessibility, and game feel
+# 10. P10 — Presentation, accessibility, and game feel (implemented baseline; continue through P14)
 
 The current procedural fort is an honest fallback, not the final art direction. Future presentation work should proceed by impact.
 
@@ -600,7 +605,7 @@ Animation and sound are presentation layers. They may make a deterministic resul
 
 ---
 
-# 11. Deterministic simulation framework
+# 11. Deterministic simulation framework (current and future content contract)
 
 The simulation must remain presentation-independent as content expands.
 
@@ -687,7 +692,7 @@ Never silently reinterpret an old save as a different scenario or commander.
 
 ---
 
-# 12. Testing framework
+# 12. Testing framework (current baseline plus P13–P16 extensions)
 
 Testing is part of the content pipeline. A new feature is not complete until the appropriate test layers pass.
 
@@ -939,9 +944,9 @@ Bad tasks are things such as:
 
 ---
 
-# 15. Release and private prerelease discipline
+# 15. Release and prerelease discipline
 
-The repository is private and should remain internal until the human owner approves broader distribution.
+The repository is public, but builds remain explicitly pre-alpha until the human owner approves broader distribution. Public source visibility is not release approval.
 
 ## Local gate
 
@@ -972,7 +977,7 @@ A transient job failure may be rerun only after inspecting the log. Do not hide 
 
 ## Tag/release gate
 
-Create a new immutable annotated tag only after main CI succeeds. Never move or reuse a previous tag. The release workflow must complete successfully and the private prerelease must contain:
+Create a new immutable annotated tag only after main CI succeeds. Never move or reuse a previous tag. The release workflow must complete successfully and the prerelease must contain:
 
 - Windows executable.
 - Source archive.
@@ -985,52 +990,55 @@ Release notes must state what was actually tested, what remains procedural or pl
 
 # 16. Ordered backlog for the next GPT agent
 
-The following order is recommended.
+The following backlog starts from the actual `0.12.3-alpha-packaged-pause-close` remote main baseline. Do not feed an agent the old P5–P12 tasks as if they were unimplemented.
 
-## Slice A — P5 recovery action cards
+## Slice A — P13 implement one event from the occurrence bible
 
-Add structured recovery action cards for repair room, repair piece, assignment, and clear assignment. Keep the existing authoritative methods. Add UI assertions for legal/illegal actions, action budget, materials, and explicit Continue.
+Implement `workshop_can_wait` or `family_blue_blanket` as a complete vertical slice. Add its runtime JSON definition, eligibility, two legal choices, typed effects, visible board/report consequence, save/load behavior, deterministic replay, UI smoke, and visual capture. Do not add a generic random scheduler in the same slice.
 
-## Slice B — P5 final report improvements
+## Slice B — P13 connect event history to the existing Ledger and Results
 
-Expand the existing scorecard into a compact causal report with “what worked,” “what failed,” and one suggested replay experiment derived from state. Add tests that report content changes correctly for Hold, Partial Breach, and Collapse.
+Expose resolved event history, relationship flags, and event consequences in the existing Campaign Ledger and final report. Keep the event history bounded and newest-first. Test that inspection and display toggles do not mutate authoritative state.
 
-## Slice C — P5 layout summary and commander comparison
+## Slice C — P13 build one three-event chain
 
-Add a layout summary and a side-by-side or sequential commander comparison mode that uses the existing fort, not a new dashboard. Ensure comparison is presentation-only and deterministic.
+Implement a short authored chain such as **The Wrong Wall** or **The Refuge Bell**: forecast → meeting/recovery decision → consequence report. Include a decline path, a scarcity path, a collapse-safe path, and a save during an active event. Do not add unbounded branching.
 
-## Slice D — P6 externalize existing definitions
+## Slice D — P13 add one character arc
 
-Move the existing commanders, pieces, packs, enemies, doctrines, and scenarios into validated data files. Preserve every existing outcome with golden replay fixtures. Do not add new content in the same change unless required to prove loading.
+Choose Mara Venn or Jory Pike. Implement three bounded relationship/arc flags, two commander variants, and one changed future event. The arc must alter a spatial or operational question; it must not become a separate dialogue-only subsystem.
 
-## Slice E — P6 content validators
+## Slice E — P13 add one rare occurrence slot
 
-Extend validators for stable IDs, missing references, duplicate IDs, invalid footprints, unsupported floors/zones, missing counter families, scenario wave counts, and pack composition rules. Make failures actionable for an agent.
+Implement one bounded rare event such as `old_drain_opens` or `door_chapel_floor`. Show eligibility or a useful clue, preserve at least one counter to the next doctrine, seed the selection, and test multiple seeds. No arbitrary run-ending random events.
 
-## Slice F — P7 one new pack family
+## Slice F — P14 split the presentation monolith safely
 
-Choose one pack family, write its design card and asset brief, implement its definitions, integrate it into one scenario, add the counter matrix, run the full balance harness, and capture its preparation/battle/results flow.
+Extract one self-contained panel/controller from `src/ui/main.gd`, beginning with event cards, the Campaign Ledger, or settings. Preserve signal names, authoritative command boundaries, keyboard/controller paths, and all existing visual states. This is a refactor with golden UI smoke coverage, not a redesign.
 
-## Slice G — P8 one event chain
+## Slice G — P14 make runtime content authoring safer
 
-Implement one three-event chain: forecast → recovery choice → consequence report. Effects must be typed commands. Save/load while the event is active and replay the same seed.
+Extend `tools/validate_runtime_content.py` and the content schema for event choice requirements, typed effect operations, follow-up links, cooldown/repeat policy, and manifest parity. Add actionable negative tests for every new validation rule.
 
-## Slice H — P9 lightweight progression prototype
+## Slice H — P14 complete packaged reinstall/upgrade safety
 
-Only after two or more scenarios are distinct, prototype a small between-run unlock screen. Unlocks must add decisions rather than raw power. Keep it offline and outside the core simulation.
+Add the remaining Windows clean-install, upgrade, missing-profile, and stale-backup cases. Keep all platform behavior behind adapters and ensure the simulation remains offline and presentation-independent.
 
-## Slice I — P10 controller and scaling
+## Slice I — P15 add a second defensive identity before building a regional map
 
-Add controller navigation, input remapping, display scaling, reduced motion, high contrast, and settings persistence. Test all primary actions through mouse, keyboard, and controller paths.
+Only after Greywatch’s event loop is stable, prototype a second keep or substantially distinct scenario identity. It must have a different room graph, spatial question, pack doctrine, and recovery problem. First prove the defense loop in isolation; only then connect it to a map.
 
-## Slice J — P11 content breadth
+## Slice J — P15 add a minimal regional consequence layer
 
-Add content in teaching pairs: one new friendly doctrine and one enemy question at a time. Every pair gets a scenario that first isolates and then combines the new question.
+Represent one settlement, one route, and one political consequence as a bounded report/state change. Do not build a shop, economy, faction reputation tree, or large map until the player can understand how the previous keep run caused the regional change.
 
-## Slice K — P12 alpha hardening
+## Slice K — P16 controlled alpha playtest hardening
 
-Build Windows smoke tests for launch, offline play, save location, malformed saves, migration, controller, scaling, input remapping, pause, crash-safe close, and clean uninstall/reinstall behavior. Maintain a local deterministic viability matrix across every authored scenario and commander. Add platform adapters only around the simulation.
+Run structured human playtests for onboarding, first successful hold, partial breach recovery, event comprehension, replay motivation, controller/scaling use, pause trust, save recovery, and packaged close. Convert repeated observations into small reversible tasks.
 
+## Slice L — P16 release preparation
+
+Review Windows artifacts, create the first post-P12 immutable tag only after main CI passes, and keep any public prerelease clearly labeled as pre-alpha until the human owner approves broader distribution.
 ---
 
 # 17. Definition of a successful future build
