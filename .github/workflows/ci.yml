@@ -163,6 +163,15 @@ jobs:
             --report-copy artifacts/packaged-smoke.json
       - name: Audit packaged alpha evidence
         run: python tools/validate_p12_alpha.py --report artifacts/packaged-smoke.json
+      - name: Record playtest artifact provenance
+        run: |
+          slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
+          python tools/write_playtest_build_manifest.py \
+            --executable "build/${slug}.exe" \
+            --ci-manifest tools/ci_manifest.json \
+            --source-revision "${GITHUB_SHA}" \
+            --run-id "${GITHUB_RUN_ID}" \
+            --output artifacts/playtest-build.json
       - name: Package source snapshot
         run: |
           mkdir -p artifacts

@@ -99,7 +99,7 @@ def validate_protocol(
         errors.append("P16 protocol repeat_threshold must be 2")
     if not is_exact_unique_list(
         protocol.get("required_provenance_fields"),
-        {"source_revision", "artifact.name", "artifact.sha256", "artifact.size_bytes"},
+        {"source_revision", "ci_run_id", "artifact.name", "artifact.sha256", "artifact.size_bytes"},
     ):
         errors.append("P16 protocol provenance fields differ from validator contract")
     for field in ("privacy_rule", "completion_rule", "finding_rule", "approval_rule"):
@@ -121,6 +121,9 @@ def validate_session(path: Path, session: dict[str, Any], build_version: str, er
     source_revision = session.get("source_revision")
     if not isinstance(source_revision, str) or not REVISION_PATTERN.fullmatch(source_revision):
         errors.append(f"{path}: source_revision must be a lowercase 40-character commit SHA")
+    ci_run_id = session.get("ci_run_id")
+    if type(ci_run_id) is not int or ci_run_id <= 0:
+        errors.append(f"{path}: ci_run_id must be a positive integer")
     artifact = session.get("artifact")
     if not isinstance(artifact, dict):
         errors.append(f"{path}: artifact must be an object")
