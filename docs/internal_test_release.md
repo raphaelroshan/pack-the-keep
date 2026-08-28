@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.15.1-regional-consequence` — P15 connects completed defenses to one bounded Low Mill consequence; P12 human approval remains pending
+**Current build identity:** `0.16.0-playtest-readiness` — P16 evidence tooling is ready; human sessions and owner approval remain pending
 
 ## Purpose
 
@@ -109,6 +109,10 @@ Ash Ford Redoubt adds a distinct room graph, river-board presentation, and an ex
 ## v0.15.1 Low Mill regional consequence
 
 Terminal defenses now produce one authored Low Mill report from the Gate and Supply Room conditions. Miller's Road can remain open, become contested, or close; the council correspondingly commits grain, guards its stores, or turns inward. Open and contested outcomes persist a one-shot three- or one-material contribution to the next selected scenario. Ledger and Results show the same read-only state, while save validation rejects unknown or content-mismatched regional records. No map, shop, stockpile, reputation score, or procedural regional system is introduced.
+
+## v0.16.0 Controlled playtest readiness
+
+The title screen now names the exact pre-alpha build under observation. A versioned P16 protocol defines the four commander/modifier matrix sessions and nine required observations, while a generator creates privacy-light unfilled records and a validator checks record completeness, actionable findings, build parity, and matrix coverage. Automation cannot write successful observations, complete the human gate, set `release_ready`, or approve distribution.
 
 ## v0.8.2 testability additions
 

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.15.1-regional-consequence",
+  "framework_version": "0.16.0-playtest-readiness",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -298,6 +298,15 @@
     "next_run_effect": "one_shot_bounded_starting_material_support",
     "surfaces": ["campaign_ledger", "scenario_results"],
     "non_goals": ["map", "shop", "stockpile", "reputation_score", "procedural_region_scheduler"]
+  },
+  "p16_playtest_readiness": {
+    "status": "ready_for_human_sessions",
+    "session_contract": "one_privacy_light_human_authored_record_per_observed_session",
+    "matrix": ["castellan_baseline", "castellan_hardened_vanguard", "warden_baseline", "warden_hardened_vanguard"],
+    "observation_contract": ["onboarding", "first_successful_hold", "partial_breach_recovery", "event_comprehension", "replay_motivation", "controller_scaling", "pause_trust", "save_recovery", "packaged_close"],
+    "presentation": "title_screen_names_the_exact_pre_alpha_build_identity",
+    "automation_boundary": "validators_may_report_matrix_coverage_but_human_playtest_and_release_gates_remain_pending_until_owner_approval",
+    "non_goals": ["fabricated_sessions", "automatic_release_approval", "external_distribution", "storefront_submission"]
   },
   "v090_multi_wave": {
     "status": "implemented",

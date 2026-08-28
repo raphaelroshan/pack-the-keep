@@ -455,3 +455,11 @@
 **Reason:** P15 needs proof that a keep defense can cause something legible beyond its walls before a map or campaign economy is justified. Named anchors make the cause inspectable, and one-shot support makes the consequence operational without creating a stockpile or hidden reputation score.
 
 **Trade-off:** Low Mill has no player-selected regional action and only one route. The contribution is intentionally small, non-negative, and consumed on scenario selection; travel, shops, settlement inventories, relationship trees, and procedural regional scheduling remain out of scope.
+
+## ADR-058: Human playtest evidence stays human-authored
+
+**Decision:** Define P16 playtest coverage as privacy-light JSON session records generated empty, completed only by a human observer, validated against the exact build identity and four-case commander/modifier matrix, and stored as durable repository evidence. The running title screen displays the same pre-alpha build identity.
+
+**Reason:** Automated simulations prove determinism and known-path viability but cannot establish comprehension, trust, readability, or replay motivation. Explicit records make observations reproducible without allowing CI to impersonate a tester or silently turn readiness into approval.
+
+**Trade-off:** A green validator can report that the matrix is structurally complete, but the `human_playtest` gate and `release_ready` flag remain pending until the owner reviews the evidence. External recruitment, recordings, public distribution, signing, and storefront work remain outside this slice.

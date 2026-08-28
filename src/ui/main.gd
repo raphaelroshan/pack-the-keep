@@ -86,6 +86,7 @@ var page_scroll: ScrollContainer
 var command_scroll: ScrollContainer
 var command_panel: PanelContainer
 var title_card: PanelContainer
+var build_identity_label: Label
 var screen_label: Label
 var screen_hint: Label
 var art_banner: TextureRect
@@ -1259,6 +1260,12 @@ func _build_title_card() -> PanelContainer:
 	copy.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	copy.add_theme_color_override("font_color", Color("#c0b2c8"))
 	content.add_child(copy)
+	build_identity_label = Label.new()
+	build_identity_label.name = "BuildIdentityLabel"
+	build_identity_label.text = "PRE-ALPHA • BUILD %s • HUMAN EVIDENCE PENDING" % String(ProjectSettings.get_setting("application/config/version", "unknown"))
+	build_identity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	build_identity_label.add_theme_color_override("font_color", Color("#aab1b2"))
+	content.add_child(build_identity_label)
 	quick_test_button = Button.new()
 	quick_test_button.text = "Start Game — Quick Playtest"
 	quick_test_button.tooltip_text = "Open a deterministic preset Greywatch state with Pike Squad and Narrow Gate already placed."

@@ -11,6 +11,8 @@ python3 tests/test_packaged_smoke_runner.py
 python3 tests/test_release_identity.py
 python3 tools/validate_p12_alpha.py
 python3 tests/test_p12_alpha_validator.py
+python3 tools/validate_p16_playtests.py --protocol content/p16_playtest_protocol.json --sessions playtests/sessions --ci-manifest tools/ci_manifest.json --alpha-checklist content/p12_alpha_checklist.json
+python3 tests/test_p16_playtest_protocol.py
 
 if command -v godot >/dev/null 2>&1; then
   godot --headless --audio-driver Dummy --path . --import
@@ -67,6 +69,7 @@ if command -v godot >/dev/null 2>&1; then
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p15_ash_ford_identity_ui.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p15_regional_consequence.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p15_regional_consequence_ui.gd
+  godot --headless --audio-driver Dummy --path . --script res://tests/test_p16_playtest_readiness_ui.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_initial_combat.gd
 elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --import
@@ -123,6 +126,7 @@ elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p15_ash_ford_identity_ui.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p15_regional_consequence.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p15_regional_consequence_ui.gd
+  godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p16_playtest_readiness_ui.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_initial_combat.gd
 else
   echo "Godot 4.x is not installed or not on PATH."
