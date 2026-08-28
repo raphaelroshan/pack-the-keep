@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.16.1",
+  "content_version": "0.16.2",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -259,6 +259,8 @@
     "required_observations": ["onboarding", "first_successful_hold", "partial_breach_recovery", "event_comprehension", "replay_motivation", "controller_scaling", "pause_trust", "save_recovery", "packaged_close"],
     "required_matrix": ["castellan_baseline", "castellan_hardened_vanguard", "warden_baseline", "warden_hardened_vanguard"],
     "build_identity_surface": "title_screen_pre_alpha_build_label",
+    "artifact_provenance": ["source_revision", "artifact_filename", "artifact_sha256", "artifact_size_bytes"],
+    "matrix_rule": "all_four_required_combinations_must_share_one_source_revision_and_artifact_sha256",
     "human_gate": "pending",
     "release_ready": false,
     "scope_boundary": "automation_validates_evidence_shape_but_never_authors_observations_approves_distribution_or_marks_release_ready",

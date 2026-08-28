@@ -16,7 +16,18 @@ SEVERITY_RANK = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 def render_summary(evidence: dict[str, Any]) -> str:
     protocol = evidence["protocol"]
     sessions = [record["session"] for record in evidence["sessions"]]
-    completed_matrix = evidence["completed_matrix"]
+    required_matrix = {
+        (commander, run_type)
+        for commander in validator.COMMANDERS
+        for run_type in validator.RUN_TYPES
+    }
+    cohorts = evidence["completed_cohorts"]
+    ranked_cohorts = sorted(
+        cohorts.items(),
+        key=lambda item: (-len(item[1]), item[0][0], item[0][1]),
+    )
+    active_cohort = ranked_cohorts[0] if ranked_cohorts else None
+    completed_matrix = active_cohort[1] if active_cohort else set()
     lines = [
         "# P16 Human Playtest Summary",
         "",
@@ -25,11 +36,37 @@ def render_summary(evidence: dict[str, Any]) -> str:
         f"Records: {len(sessions)} total; {evidence['completed_count']} completed.",
         "Human playtest gate: **PENDING**. This report never grants release approval.",
         "",
+        "## Artifact cohorts",
+        "",
+    ]
+    if not ranked_cohorts:
+        lines.append("No completed artifact cohort recorded.")
+    else:
+        lines.extend([
+            "| Source revision | Artifact SHA-256 | Matrix coverage | Complete |",
+            "| --- | --- | ---: | --- |",
+        ])
+        for (revision, artifact_sha256), matrix in ranked_cohorts:
+            lines.append(
+                f"| `{revision[:12]}` | `{artifact_sha256[:12]}` | {len(matrix)}/4 | "
+                f"{'yes' if required_matrix <= matrix else 'no'} |"
+            )
+    lines.extend([
+        "",
         "## Required matrix",
         "",
         "| Commander | Run type | Completed |",
         "| --- | --- | --- |",
-    ]
+    ])
+    if active_cohort:
+        lines.insert(
+            lines.index("## Required matrix") + 2,
+            f"Active cohort: `{active_cohort[0][0][:12]}` / `{active_cohort[0][1][:12]}`",
+        )
+        lines.insert(lines.index("## Required matrix") + 3, "")
+    else:
+        lines.insert(lines.index("## Required matrix") + 2, "Active cohort: none")
+        lines.insert(lines.index("## Required matrix") + 3, "")
     for commander in sorted(validator.COMMANDERS):
         for run_type in sorted(validator.RUN_TYPES):
             completed = "yes" if (commander, run_type) in completed_matrix else "no"

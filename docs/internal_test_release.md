@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.16.1-playtest-triage` — P16 evidence and repeated-finding triage are ready; human sessions and owner approval remain pending
+**Current build identity:** `0.16.2-playtest-provenance` — P16 evidence, triage, and artifact provenance are ready; human sessions and owner approval remain pending
 
 ## Purpose
 
@@ -117,6 +117,10 @@ The title screen now names the exact pre-alpha build under observation. A versio
 ## v0.16.1 Repeated-finding triage
 
 Session findings now carry stable issue keys. A deterministic summary reports matrix coverage, observation-status counts, and any issue observed in at least two records as a candidate for a small reversible improvement. The tool repeats only human-authored summaries and suggested actions; it does not manufacture findings or change the pending human gate.
+
+## v0.16.2 Playtest artifact provenance
+
+Every generated session now records the exact source commit and hashes the packaged executable under test. Matrix completion is calculated separately for each revision-and-artifact cohort, preventing four sessions from different binaries from being combined into false release-candidate coverage.
 
 ## v0.8.2 testability additions
 

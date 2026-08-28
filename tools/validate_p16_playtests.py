@@ -21,6 +21,8 @@ COMMANDERS = {"castellan", "warden"}
 RUN_TYPES = {"baseline", "hardened_vanguard"}
 ID_PATTERN = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
 TIMESTAMP_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+REVISION_PATTERN = re.compile(r"^[0-9a-f]{40}$")
+SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 PLAYTEST_GUIDE = "docs/p16_human_playtest_protocol.md"
 REQUIRED_FINDING_FIELDS = {
     "id", "issue_key", "observation_id", "severity", "summary", "reproduction", "suggested_action",
@@ -95,6 +97,11 @@ def validate_protocol(
         errors.append("P16 protocol finding fields differ from validator contract")
     if protocol.get("repeat_threshold") != 2:
         errors.append("P16 protocol repeat_threshold must be 2")
+    if not is_exact_unique_list(
+        protocol.get("required_provenance_fields"),
+        {"source_revision", "artifact.name", "artifact.sha256", "artifact.size_bytes"},
+    ):
+        errors.append("P16 protocol provenance fields differ from validator contract")
     for field in ("privacy_rule", "completion_rule", "finding_rule", "approval_rule"):
         if not isinstance(protocol.get(field), str) or not protocol[field].strip():
             errors.append(f"P16 protocol needs a non-empty {field}")
@@ -111,6 +118,26 @@ def validate_session(path: Path, session: dict[str, Any], build_version: str, er
         errors.append(f"{path}: schema_version must be 1")
     if session.get("build_version") != build_version:
         errors.append(f"{path}: build_version must match the active playtest build")
+    source_revision = session.get("source_revision")
+    if not isinstance(source_revision, str) or not REVISION_PATTERN.fullmatch(source_revision):
+        errors.append(f"{path}: source_revision must be a lowercase 40-character commit SHA")
+    artifact = session.get("artifact")
+    if not isinstance(artifact, dict):
+        errors.append(f"{path}: artifact must be an object")
+    else:
+        artifact_name = artifact.get("name")
+        if (
+            not isinstance(artifact_name, str)
+            or not artifact_name.strip()
+            or Path(artifact_name).name != artifact_name
+        ):
+            errors.append(f"{path}: artifact name must be a plain filename")
+        artifact_sha256 = artifact.get("sha256")
+        if not isinstance(artifact_sha256, str) or not SHA256_PATTERN.fullmatch(artifact_sha256):
+            errors.append(f"{path}: artifact sha256 must be 64 lowercase hexadecimal characters")
+        artifact_size = artifact.get("size_bytes")
+        if type(artifact_size) is not int or artifact_size <= 0:
+            errors.append(f"{path}: artifact size_bytes must be a positive integer")
     session_id = session.get("session_id")
     if not isinstance(session_id, str) or not ID_PATTERN.fullmatch(session_id):
         errors.append(f"{path}: session_id must be snake_case")
@@ -229,6 +256,7 @@ def load_and_validate_evidence(
     session_ids: set[str] = set()
     completed_count = 0
     completed_matrix: set[tuple[str, str]] = set()
+    completed_cohorts: dict[tuple[str, str], set[tuple[str, str]]] = {}
     sessions: list[dict[str, Any]] = []
     for path in session_paths:
         session = load_object(path, errors)
@@ -242,12 +270,17 @@ def load_and_validate_evidence(
             completed_count += 1
         if matrix_entry is not None:
             completed_matrix.add(matrix_entry)
+            artifact = session.get("artifact")
+            if isinstance(session.get("source_revision"), str) and isinstance(artifact, dict) and isinstance(artifact.get("sha256"), str):
+                cohort = (str(session["source_revision"]), str(artifact["sha256"]))
+                completed_cohorts.setdefault(cohort, set()).add(matrix_entry)
         sessions.append({"path": path, "session": session, "completed": completed, "matrix_entry": matrix_entry})
     return {
         "protocol": protocol,
         "sessions": sessions,
         "completed_count": completed_count,
         "completed_matrix": completed_matrix,
+        "completed_cohorts": completed_cohorts,
         "errors": errors,
     }
 
@@ -270,9 +303,8 @@ def main() -> int:
             print(f"ERROR: {error}")
         return 1
     completed_count = int(evidence["completed_count"])
-    completed_matrix = evidence["completed_matrix"]
     required_matrix = {(commander, run_type) for commander in COMMANDERS for run_type in RUN_TYPES}
-    matrix_status = "complete" if completed_count >= int(protocol.get("minimum_completed_sessions", 4)) and required_matrix <= completed_matrix else "pending"
+    matrix_status = "complete" if any(required_matrix <= matrix for matrix in evidence["completed_cohorts"].values()) else "pending"
     print(f"P16 playtest protocol: READY ({len(evidence['sessions'])} records, {completed_count} completed, matrix {matrix_status}; human gate remains pending)")
     return 0
 

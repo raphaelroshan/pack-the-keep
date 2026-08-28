@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import subprocess
 import sys
@@ -45,10 +46,13 @@ class P16PlaytestProtocolTests(unittest.TestCase):
     def test_generator_creates_unfilled_privacy_light_record(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "session_001.json"
+            artifact = Path(directory) / "pack-the-keep.exe"
+            artifact.write_bytes(b"pack-the-keep-test-artifact")
             subprocess.run(
                 [
                     sys.executable, str(ROOT / "tools/new_playtest_session.py"),
                     "--protocol", str(ROOT / "content/p16_playtest_protocol.json"),
+                    "--source-revision", "a" * 40, "--artifact", str(artifact),
                     "--session-id", "session_001", "--tester-alias", "tester_a",
                     "--commander", "castellan", "--run-type", "baseline",
                     "--scenario", "gatehouse_lock", "--output", str(output),
@@ -59,6 +63,10 @@ class P16PlaytestProtocolTests(unittest.TestCase):
             )
             record = json.loads(output.read_text(encoding="utf-8"))
             self.assertFalse(record["completed"])
+            self.assertEqual(record["source_revision"], "a" * 40)
+            self.assertEqual(record["artifact"]["name"], artifact.name)
+            self.assertEqual(record["artifact"]["sha256"], hashlib.sha256(artifact.read_bytes()).hexdigest())
+            self.assertEqual(record["artifact"]["size_bytes"], artifact.stat().st_size)
             self.assertEqual({item["id"] for item in record["observations"]}, validator.REQUIRED_OBSERVATIONS)
             self.assertEqual({item["status"] for item in record["observations"]}, {"not_tested"})
             errors: list[str] = []
@@ -69,10 +77,13 @@ class P16PlaytestProtocolTests(unittest.TestCase):
 
     def test_generator_rejects_identifying_or_malformed_aliases(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
+            artifact = Path(directory) / "pack-the-keep.exe"
+            artifact.write_bytes(b"artifact")
             result = subprocess.run(
                 [
                     sys.executable, str(ROOT / "tools/new_playtest_session.py"),
                     "--protocol", str(ROOT / "content/p16_playtest_protocol.json"),
+                    "--source-revision", "a" * 40, "--artifact", str(artifact),
                     "--session-id", "session_004", "--tester-alias", "name@example.com",
                     "--commander", "castellan", "--run-type", "baseline",
                     "--scenario", "gatehouse_lock", "--output", str(Path(directory) / "session.json"),
@@ -84,11 +95,33 @@ class P16PlaytestProtocolTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("snake_case", result.stderr)
 
+    def test_generator_rejects_empty_artifact(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            artifact = Path(directory) / "empty.exe"
+            artifact.touch()
+            result = subprocess.run(
+                [
+                    sys.executable, str(ROOT / "tools/new_playtest_session.py"),
+                    "--protocol", str(ROOT / "content/p16_playtest_protocol.json"),
+                    "--source-revision", "a" * 40, "--artifact", str(artifact),
+                    "--session-id", "session_empty", "--tester-alias", "tester_empty",
+                    "--commander", "castellan", "--run-type", "baseline",
+                    "--scenario", "gatehouse_lock", "--output", str(Path(directory) / "session.json"),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("artifact is empty", result.stderr)
+
     def test_completed_session_requires_every_observation(self) -> None:
         protocol = load("content/p16_playtest_protocol.json")
         record = {
             "schema_version": 1,
             "build_version": protocol["build_version"],
+            "source_revision": "a" * 40,
+            "artifact": {"name": "pack-the-keep.exe", "sha256": "b" * 64, "size_bytes": 1024},
             "session_id": "session_002",
             "tester_alias": "tester_b",
             "recorded_at": "2026-08-28T06:00:00Z",
@@ -121,6 +154,8 @@ class P16PlaytestProtocolTests(unittest.TestCase):
         record = {
             "schema_version": 1,
             "build_version": protocol["build_version"],
+            "source_revision": "a" * 40,
+            "artifact": {"name": "pack-the-keep.exe", "sha256": "b" * 64, "size_bytes": 1024},
             "session_id": "session_003",
             "tester_alias": "tester_c",
             "recorded_at": "2026-08-28T06:00:00Z",
@@ -161,6 +196,8 @@ class P16PlaytestProtocolTests(unittest.TestCase):
                     record = {
                         "schema_version": 1,
                         "build_version": protocol["build_version"],
+                        "source_revision": "a" * 40,
+                        "artifact": {"name": "pack-the-keep.exe", "sha256": "b" * 64, "size_bytes": 1024},
                         "session_id": f"matrix_{index}",
                         "tester_alias": f"tester_{index}",
                         "recorded_at": f"2026-08-28T06:00:0{index}Z",
@@ -193,6 +230,54 @@ class P16PlaytestProtocolTests(unittest.TestCase):
             )
             self.assertIn("matrix complete", result.stdout)
             self.assertIn("human gate remains pending", result.stdout)
+
+    def test_matrix_cannot_combine_different_artifacts(self) -> None:
+        protocol = load("content/p16_playtest_protocol.json")
+        with tempfile.TemporaryDirectory() as directory:
+            sessions = Path(directory)
+            combinations = [
+                ("castellan", "baseline"),
+                ("castellan", "hardened_vanguard"),
+                ("warden", "baseline"),
+                ("warden", "hardened_vanguard"),
+            ]
+            for index, (commander, run_type) in enumerate(combinations, start=1):
+                record = {
+                    "schema_version": 1,
+                    "build_version": protocol["build_version"],
+                    "source_revision": ("a" if index <= 2 else "c") * 40,
+                    "artifact": {
+                        "name": "pack-the-keep.exe",
+                        "sha256": ("b" if index <= 2 else "d") * 64,
+                        "size_bytes": 1024,
+                    },
+                    "session_id": f"split_{index}",
+                    "tester_alias": f"tester_split_{index}",
+                    "recorded_at": f"2026-08-28T07:00:0{index}Z",
+                    "platform": "windows_packaged",
+                    "input_method": "keyboard_mouse",
+                    "display": "1280x720_windowed",
+                    "commander": commander,
+                    "run_type": run_type,
+                    "scenario": "gatehouse_lock",
+                    "completed": True,
+                    "observations": [
+                        {"id": item["id"], "status": "pass", "notes": "Observed directly."}
+                        for item in protocol["required_observations"]
+                    ],
+                    "findings": [],
+                    "observer_summary": "Completed the required observed flow.",
+                }
+                (sessions / f"split_{index}.json").write_text(json.dumps(record), encoding="utf-8")
+            evidence = validator.load_and_validate_evidence(
+                ROOT / "content/p16_playtest_protocol.json",
+                sessions,
+                ROOT / "tools/ci_manifest.json",
+                ROOT / "content/p12_alpha_checklist.json",
+            )
+            self.assertFalse(evidence["errors"])
+            required = {(commander, run_type) for commander, run_type in combinations}
+            self.assertFalse(any(required <= matrix for matrix in evidence["completed_cohorts"].values()))
 
 
 if __name__ == "__main__":

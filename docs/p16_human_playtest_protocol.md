@@ -19,6 +19,8 @@ Generate a record before play begins:
 
 ```bash
 python3 tools/new_playtest_session.py \
+  --source-revision 0123456789abcdef0123456789abcdef01234567 \
+  --artifact path/to/pack-the-keep.exe \
   --session-id session_001 \
   --tester-alias tester_a \
   --commander castellan \
@@ -27,7 +29,7 @@ python3 tools/new_playtest_session.py \
   --output playtests/sessions/session_001.json
 ```
 
-The generated record contains only `not_tested` observations. A human observer updates it after the session. Use a non-identifying alias; do not include names, contact details, recordings, or unrelated device identifiers.
+The generator hashes the exact executable and records its filename, byte size, SHA-256 digest, and 40-character source revision. The generated record contains only `not_tested` observations. A human observer updates it after the session. Use a non-identifying alias; do not include names, contact details, recordings, or unrelated device identifiers.
 
 ## Required observations
 
@@ -59,4 +61,4 @@ python3 tools/summarize_p16_playtests.py \
   --alpha-checklist content/p12_alpha_checklist.json
 ```
 
-The deterministic summary reports matrix coverage, observation-status counts, all finding keys, and task candidates only when the same `issue_key` appears in at least two session records. Suggested actions remain human-authored and should be implemented as small reversible changes. The summary does not approve a release.
+The deterministic summary reports artifact cohorts, matrix coverage, observation-status counts, all finding keys, and task candidates only when the same `issue_key` appears in at least two session records. All four required commander/modifier combinations must use the same source revision and executable SHA-256 before one matrix is called complete. Suggested actions remain human-authored and should be implemented as small reversible changes. The summary does not approve a release.

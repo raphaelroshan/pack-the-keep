@@ -471,3 +471,11 @@
 **Reason:** The roadmap asks repeated observations to become small reversible work. Stable keys distinguish repetition from coincidental wording while keeping automation limited to counting and presentation.
 
 **Trade-off:** Observers must classify the same problem consistently. The summary can surface evidence but cannot decide product priority, rewrite the finding, create an external ticket, or approve release.
+
+## ADR-060: Playtest matrices are artifact cohorts
+
+**Decision:** Bind every P16 session record to one 40-character source revision and one packaged executable name, byte size, and SHA-256 digest. Count a completed commander/modifier matrix only within a single revision-and-digest cohort.
+
+**Reason:** A version label alone does not prove which binary a person tested, and combining sessions from different fixes can make an untested candidate appear covered. Content-addressed provenance keeps feedback reproducible and the final matrix honest.
+
+**Trade-off:** Rebuilding after a fix starts a new artifact cohort, so the four-case matrix may need to be repeated. The stronger evidence is worth that cost before any owner-approved alpha release.

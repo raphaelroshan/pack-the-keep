@@ -20,6 +20,8 @@ def base_record(protocol: dict, session_id: str) -> dict:
     return {
         "schema_version": 1,
         "build_version": protocol["build_version"],
+        "source_revision": "a" * 40,
+        "artifact": {"name": "pack-the-keep.exe", "sha256": "b" * 64, "size_bytes": 1024},
         "session_id": session_id,
         "tester_alias": f"tester_{session_id}",
         "recorded_at": "2026-08-28T07:00:00Z",
@@ -55,6 +57,7 @@ class P16PlaytestSummaryTests(unittest.TestCase):
             rendered = summary.render_summary(evidence)
             self.assertIn("Records: 0 total; 0 completed.", rendered)
             self.assertIn("Human playtest gate: **PENDING**", rendered)
+            self.assertIn("No completed artifact cohort recorded.", rendered)
             self.assertIn("No human findings recorded.", rendered)
 
     def test_repeated_issue_keys_become_deterministic_task_candidates(self) -> None:
