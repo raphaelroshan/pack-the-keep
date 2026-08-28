@@ -6,7 +6,13 @@ Keep every authored Greywatch scenario locally reproducible and demonstrably via
 
 ## Matrix
 
-The automated matrix covers all eight scenarios, both commanders, and seeds `3307`, `3308`, and `3309`: 48 cases. Every case is executed twice, for 96 total deterministic simulations.
+The automated matrix covers all eight scenarios, both commanders, and seeds `3307`, `3308`, and `3309`: 48 cases. Every case is executed once continuously and once with a save/load checkpoint, for 96 total deterministic simulations.
+
+The three seeds deliberately exercise distinct persistence boundaries:
+
+- `3307` reloads during wave one before its first resolved combat step.
+- `3308` reloads during the first recovery interval, before any active recovery event is resolved.
+- `3309` reloads during wave two before its first resolved combat step.
 
 Each scenario uses one documented baseline that expresses its intended answer:
 
@@ -28,6 +34,8 @@ Each scenario uses one documented baseline that expresses its intended answer:
 - The final outcome must be `held` or `partial_breach`, never `collapse`.
 - The final recovery interval and any authored event must be closed so the result represents a terminal scenario state.
 - Repeating the same scenario, commander, seed, loadout, and command sequence must produce byte-identical serialized JSON.
+- Loading the checkpoint into a fresh `KeepState` must reproduce the checkpoint byte-for-byte before play continues.
+- The uninterrupted and resumed runs must finish with byte-identical serialized JSON.
 - The scorecard replay key must remain `scenario_id/commander_id/seed`.
 - The matrix runs in the local headless verification suite and does not depend on GitHub Actions.
 

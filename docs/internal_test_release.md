@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.12.7-alpha-scenario-matrix` — machine-audited P12 candidate evidence pending human approval
+**Current build identity:** `0.12.8-alpha-resume-matrix` — machine-audited P12 candidate evidence pending human approval
 
 ## Purpose
 
@@ -61,6 +61,10 @@ Presentation settings now use the same validated primary/backup candidate discip
 ## v0.12.7 Alpha scenario matrix
 
 Local headless verification now runs a documented viable baseline for every combination of eight authored scenarios, both commanders, and three seeds. Each of the 48 cases runs twice, producing 96 simulations that must serialize identically, resolve all three waves without collapse, close final recovery and event state, and retain the canonical replay key. This is deterministic viability evidence only; human playtest and presentation approval remain pending.
+
+## v0.12.8 Scenario resume matrix
+
+The second execution of every alpha scenario case now crosses a save/load boundary in a fresh `KeepState`. Seeds distribute checkpoints across wave-one setup, first recovery before event resolution, and wave-two setup. Each checkpoint must round-trip byte-for-byte, and its resumed terminal state must match the uninterrupted run exactly.
 
 ## v0.8.2 testability additions
 

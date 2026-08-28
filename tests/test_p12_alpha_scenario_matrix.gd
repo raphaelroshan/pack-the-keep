@@ -92,7 +92,37 @@ func _resolve_event(state: RefCounted, label: String) -> bool:
 	failures.append("%s reached unhandled event %s" % [label, state.active_event_id])
 	return false
 
-func _run_case(seed: int, commander_id: String, scenario_id: String) -> Dictionary:
+func _checkpoint_kind(seed: int) -> String:
+	match seed:
+		3307:
+			return "wave_one"
+		3308:
+			return "first_recovery"
+		3309:
+			return "wave_two"
+	return ""
+
+func _checkpoint_ready(state: RefCounted, checkpoint_kind: String) -> bool:
+	match checkpoint_kind:
+		"wave_one":
+			return state.wave_active and state.wave_index == 1 and state.battle_step == 0
+		"first_recovery":
+			return not state.wave_active and state.wave_index == 1 and state.repair_interval_active
+		"wave_two":
+			return state.wave_active and state.wave_index == 2 and state.battle_step == 0
+	return false
+
+func _restore_checkpoint(state: RefCounted, label: String, checkpoint_kind: String) -> RefCounted:
+	var snapshot: Dictionary = state.serialize()
+	var snapshot_json: String = JSON.stringify(snapshot)
+	var restored: RefCounted = PackKeepState.new(1)
+	if not _check_command(restored.load_serialized(snapshot), "%s %s checkpoint load" % [label, checkpoint_kind]):
+		return state
+	if JSON.stringify(restored.serialize()) != snapshot_json:
+		failures.append("%s %s checkpoint should round-trip byte-for-byte" % [label, checkpoint_kind])
+	return restored
+
+func _run_case(seed: int, commander_id: String, scenario_id: String, checkpoint_kind: String = "") -> Dictionary:
 	var label: String = "%s/%s/%d" % [scenario_id, commander_id, seed]
 	var state: RefCounted = PackKeepState.new(seed)
 	if not _check_command(state.select_commander(commander_id), "%s commander selection" % label):
@@ -102,8 +132,12 @@ func _run_case(seed: int, commander_id: String, scenario_id: String) -> Dictiona
 	if not _setup_baseline(state, scenario_id):
 		return {}
 	var guard: int = 0
+	var checkpoint_taken: bool = checkpoint_kind.is_empty()
 	while guard < 100:
 		guard += 1
+		if not checkpoint_taken and _checkpoint_ready(state, checkpoint_kind):
+			state = _restore_checkpoint(state, label, checkpoint_kind)
+			checkpoint_taken = true
 		if not state.active_event_id.is_empty():
 			if not _resolve_event(state, label):
 				break
@@ -132,6 +166,7 @@ func _run_case(seed: int, commander_id: String, scenario_id: String) -> Dictiona
 		"event_open": not state.active_event_id.is_empty(),
 		"replay_key": String(scorecard.get("replay_key", "")),
 		"guard": guard,
+		"checkpoint_taken": checkpoint_taken,
 	}
 
 func _initialize() -> void:
@@ -141,11 +176,14 @@ func _initialize() -> void:
 			for seed in SEEDS:
 				var label: String = "%s/%s/%d" % [scenario_id, commander_id, seed]
 				var first: Dictionary = _run_case(seed, commander_id, scenario_id)
-				var second: Dictionary = _run_case(seed, commander_id, scenario_id)
+				var checkpoint_kind: String = _checkpoint_kind(seed)
+				var second: Dictionary = _run_case(seed, commander_id, scenario_id, checkpoint_kind)
 				if first.is_empty() or second.is_empty():
 					continue
 				if first.serialized != second.serialized:
-					failures.append("%s replay should be deterministic" % label)
+					failures.append("%s uninterrupted and %s-resumed runs should match" % [label, checkpoint_kind])
+				if not bool(second.checkpoint_taken):
+					failures.append("%s should reach its %s save/load checkpoint" % [label, checkpoint_kind])
 				if int(first.waves) != 3:
 					failures.append("%s should resolve all three authored waves" % label)
 				if not ["held", "partial_breach"].has(String(first.outcome)):
@@ -159,7 +197,7 @@ func _initialize() -> void:
 				outcome_counts[first.outcome] = int(outcome_counts.get(first.outcome, 0)) + 1
 				completed_cases += 1
 	if failures.is_empty():
-		print("P12 alpha scenario matrix: PASS (%d deterministic viable cases; %d simulation executions)" % [completed_cases, completed_cases * 2])
+		print("P12 alpha scenario matrix: PASS (%d deterministic viable cases; %d uninterrupted/resumed simulations)" % [completed_cases, completed_cases * 2])
 		print("P12 alpha scenario outcomes: %s" % outcome_counts)
 		quit(0)
 	else:

@@ -362,8 +362,8 @@
 
 ## ADR-046: Alpha viability is an all-scenario deterministic matrix
 
-**Decision:** Run one documented viable baseline through every authored scenario for both commanders and three fixed seeds. Execute each case twice, require identical serialization, three completed waves, a non-collapse outcome, closed final recovery/event state, and the canonical replay key.
+**Decision:** Run one documented viable baseline through every authored scenario for both commanders and three fixed seeds. Execute each case once uninterrupted and once through a fresh-state save/load checkpoint, require byte-identical checkpoint and terminal serialization, three completed waves, a non-collapse outcome, closed final recovery/event state, and the canonical replay key.
 
-**Reason:** Isolated mechanic tests can remain green while an older scenario becomes unwinnable, a final event remains unresolved, or a commander-specific path drifts. A compact cross-product gate catches those release-wide regressions locally without depending on hosted CI.
+**Reason:** Isolated mechanic tests can remain green while an older scenario becomes unwinnable, a final event remains unresolved, a commander-specific path drifts, or persistence changes the continuation. A compact cross-product gate catches those release-wide regressions locally without depending on hosted CI.
 
 **Trade-off:** The matrix proves only that a known answer remains viable and deterministic. It does not establish that all layouts are balanced, that partial breaches feel fair, or that the human alpha playtest is complete.
