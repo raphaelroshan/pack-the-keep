@@ -7,6 +7,7 @@
   "type": "recovery",
   "scenario": "wrong_wall",
   "trigger": {"phase": "recovery", "wave": 1},
+  "selection": {"stream": "wrong_wall_recovery", "repeat_policy": "once_per_run", "cooldown_waves": 0, "max_occurrences": 1},
   "setup": "The entrance still stands, but the Workshop has taken the support pressure. Repair it now, or keep the stores and accept the exposed dependency.",
   "choices": [
     {

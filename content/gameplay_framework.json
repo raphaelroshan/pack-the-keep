@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.14.0-event-panel-extraction",
+  "framework_version": "0.14.1-event-authoring-safety",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -263,6 +263,15 @@
     "ownership": "component_renders_event_read_models_and_emits_choice_ids_only",
     "authority": "main_controller_dispatches_choices_to_keep_state",
     "compatibility": "existing_labels_buttons_focus_paths_and_visual_states_preserved"
+  },
+  "p14_event_authoring_safety": {
+    "status": "implemented",
+    "schema": "content/event_schema.json",
+    "selection": "stable_named_stream_plus_explicit_once_or_bounded_cooldown_policy",
+    "choice_validation": "required_fields_bounded_requirements_and_closed_typed_effect_payloads",
+    "graph_validation": "known_same_scenario_acyclic_follow_ups_match_scenario_chain_order",
+    "manifest_parity": "active_event_ids_match_runtime_files_in_both_directions",
+    "runtime_rule": "event_history_enforces_occurrence_limits_and_cooldown_without_duplicating_resolved_ids"
   },
   "v090_multi_wave": {
     "status": "implemented",

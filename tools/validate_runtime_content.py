@@ -56,8 +56,10 @@ SCENARIO_FIELDS = {
 }
 EVENT_FIELDS = {
     "id", "content_version", "status", "title", "short_role", "type", "scenario",
-    "trigger", "setup", "choices", "follow_up",
+    "trigger", "selection", "setup", "choices", "follow_up",
 }
+EVENT_CHOICE_FIELDS = {"id", "label", "requirements", "effects", "visible_result"}
+EVENT_SELECTION_FIELDS = {"stream", "repeat_policy", "cooldown_waves", "max_occurrences"}
 MODIFIER_FIELDS = {
     "id", "content_version", "status", "name", "short_role", "question",
     "unlock_event", "effect", "starting_morale_cost", "limitation",
@@ -70,10 +72,25 @@ SUPPORTED_NON_ENEMY_TARGETS = {"all"} | SUPPORTED_DOCTRINES
 SUPPORTED_EVENT_TYPES = {"forecast", "recovery", "scenario_conclusion"}
 SUPPORTED_EVENT_PHASES = {"preparation", "recovery", "results"}
 SUPPORTED_EVENT_REQUIREMENTS = {"command_points", "recovery_actions", "morale", "materials", "piece_available"}
+SUPPORTED_EVENT_REQUIREMENT_OPERATORS = {"gte", "lt"}
 SUPPORTED_EVENT_EFFECTS = {
     "spend_command_points", "spend_recovery_action", "add_materials", "add_morale",
     "set_flag", "record_outcome", "unlock_modifier", "repair_room", "assign_piece",
 }
+EVENT_EFFECT_FIELDS = {
+    "spend_command_points": {"amount"},
+    "spend_recovery_action": {"amount"},
+    "add_materials": {"amount"},
+    "add_morale": {"amount"},
+    "set_flag": {"flag", "value"},
+    "record_outcome": {"tag"},
+    "unlock_modifier": {"modifier"},
+    "repair_room": {"room"},
+    "assign_piece": {"piece", "room"},
+}
+SUPPORTED_EVENT_REPEAT_POLICIES = {"once_per_run", "repeat_after_cooldown"}
+MAX_EVENT_COOLDOWN_WAVES = 3
+MAX_EVENT_OCCURRENCES = 3
 SUPPORTED_MODIFIER_EFFECTS = {"reveal_wave_composition", "enemy_health_bonus"}
 SNAKE_CASE = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
 
@@ -95,6 +112,115 @@ def json_files(directory: Path, content_type: str, errors: list[str]) -> list[Pa
 
 def is_integer(value: Any) -> bool:
     return isinstance(value, int) and not isinstance(value, bool)
+
+
+def schema_string_set(path: Path, value: Any, field: str, errors: list[str]) -> set[str]:
+    if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
+        errors.append(f"{path}: {field} must be an array of strings")
+        return set()
+    if len(value) != len(set(value)):
+        errors.append(f"{path}: {field} contains duplicates")
+    return set(value)
+
+
+def validate_event_schema_contract(path: Path, schema: Any, errors: list[str]) -> None:
+    if not isinstance(schema, dict):
+        errors.append(f"{path}: root must be an object")
+        return
+    if schema.get("schema_version") != 1:
+        errors.append(f"{path}: schema_version must be 1")
+    comparisons = (
+        ("required_event_fields", schema_string_set(path, schema.get("required_event_fields"), "required_event_fields", errors), EVENT_FIELDS),
+        ("required_choice_fields", schema_string_set(path, schema.get("required_choice_fields"), "required_choice_fields", errors), EVENT_CHOICE_FIELDS),
+    )
+    for label, actual, expected in comparisons:
+        if actual != expected:
+            errors.append(f"{path}: {label} differ from validator contract")
+    selection = schema.get("selection")
+    if not isinstance(selection, dict):
+        errors.append(f"{path}: selection contract must be an object")
+    else:
+        if schema_string_set(path, selection.get("required_fields"), "selection.required_fields", errors) != EVENT_SELECTION_FIELDS:
+            errors.append(f"{path}: selection required_fields differ from validator contract")
+        if schema_string_set(path, selection.get("repeat_policies"), "selection.repeat_policies", errors) != SUPPORTED_EVENT_REPEAT_POLICIES:
+            errors.append(f"{path}: selection repeat_policies differ from validator contract")
+        if selection.get("maximum_cooldown_waves") != MAX_EVENT_COOLDOWN_WAVES:
+            errors.append(f"{path}: selection maximum_cooldown_waves differs from validator contract")
+        if selection.get("maximum_occurrences") != MAX_EVENT_OCCURRENCES:
+            errors.append(f"{path}: selection maximum_occurrences differs from validator contract")
+    requirements = schema.get("requirements")
+    if not isinstance(requirements, dict) or set(requirements) != SUPPORTED_EVENT_REQUIREMENTS:
+        errors.append(f"{path}: requirement operations differ from validator contract")
+    else:
+        for requirement_id, operators in requirements.items():
+            expected = {"piece_id"} if requirement_id == "piece_available" else SUPPORTED_EVENT_REQUIREMENT_OPERATORS
+            if schema_string_set(path, operators, f"requirements.{requirement_id}", errors) != expected:
+                errors.append(f"{path}: requirement {requirement_id} operators differ from validator contract")
+    effects = schema.get("effects")
+    if not isinstance(effects, dict) or set(effects) != SUPPORTED_EVENT_EFFECTS:
+        errors.append(f"{path}: effect operations differ from validator contract")
+    elif isinstance(effects, dict):
+        for operation, expected_fields in EVENT_EFFECT_FIELDS.items():
+            if schema_string_set(path, effects.get(operation), f"effects.{operation}", errors) != expected_fields:
+                errors.append(f"{path}: effect {operation} fields differ from validator contract")
+
+
+def validate_id_parity(kind: str, manifest_ids: set[str], runtime_ids: set[str], errors: list[str]) -> None:
+    for content_id in sorted(manifest_ids - runtime_ids):
+        errors.append(f"runtime {kind} file missing for manifest {kind}: {content_id}")
+    for content_id in sorted(runtime_ids - manifest_ids):
+        errors.append(f"runtime {kind} is missing from active-slice manifest: {content_id}")
+
+
+def validate_event_graph(
+    runtime_events: dict[str, tuple[str, str]],
+    runtime_scenarios: dict[str, dict[str, Any]],
+    errors: list[str],
+) -> None:
+    for event_id, (event_scenario, follow_up) in runtime_events.items():
+        if follow_up and follow_up not in runtime_events:
+            errors.append(f"runtime event {event_id} references unknown follow_up: {follow_up}")
+        elif follow_up and runtime_events[follow_up][0] != event_scenario:
+            errors.append(f"runtime event {event_id} follow_up crosses scenarios: {follow_up}")
+        chain = runtime_scenarios.get(event_scenario, {}).get("event_chain", [])
+        if event_id not in chain:
+            errors.append(f"runtime event {event_id} is missing from scenario {event_scenario} event_chain")
+
+    visited: set[str] = set()
+    active: set[str] = set()
+
+    def visit(event_id: str) -> None:
+        if event_id in active:
+            errors.append(f"runtime event follow_up cycle includes: {event_id}")
+            return
+        if event_id in visited:
+            return
+        visited.add(event_id)
+        active.add(event_id)
+        follow_up = runtime_events.get(event_id, ("", ""))[1]
+        if follow_up in runtime_events:
+            visit(follow_up)
+        active.remove(event_id)
+
+    for event_id in sorted(runtime_events):
+        visit(event_id)
+
+    for scenario_id, scenario in runtime_scenarios.items():
+        chain = scenario.get("event_chain", [])
+        if not isinstance(chain, list):
+            errors.append(f"runtime scenario {scenario_id} event_chain must be an array")
+            continue
+        if len(chain) != len(set(chain)):
+            errors.append(f"runtime scenario {scenario_id} event_chain contains duplicates")
+        for index, event_id in enumerate(chain):
+            if event_id not in runtime_events:
+                errors.append(f"runtime scenario {scenario_id} references unknown event: {event_id}")
+            elif runtime_events[event_id][0] != scenario_id:
+                errors.append(f"runtime scenario {scenario_id} references event for another scenario: {event_id}")
+            else:
+                expected_follow_up = chain[index + 1] if index + 1 < len(chain) else ""
+                if runtime_events[event_id][1] != expected_follow_up:
+                    errors.append(f"runtime scenario {scenario_id} event {event_id} follow_up does not match chain order")
 
 
 def validate_string_array(
@@ -492,6 +618,32 @@ def validate_event(
                 errors.append(f"{path}: trigger wave array contains a duplicate")
         elif not is_integer(wave) or not 0 <= wave <= 3:
             errors.append(f"{path}: trigger wave must be an integer or array from 0 to 3")
+    selection = event.get("selection")
+    if not isinstance(selection, dict):
+        errors.append(f"{path}: selection must be an object")
+    else:
+        for field in sorted(EVENT_SELECTION_FIELDS - selection.keys()):
+            errors.append(f"{path}: selection is missing required field: {field}")
+        for field in sorted(selection.keys() - EVENT_SELECTION_FIELDS):
+            errors.append(f"{path}: selection has unsupported field: {field}")
+        stream = selection.get("stream")
+        if not isinstance(stream, str) or not SNAKE_CASE.fullmatch(stream):
+            errors.append(f"{path}: selection stream must be snake_case")
+        repeat_policy = selection.get("repeat_policy")
+        if repeat_policy not in SUPPORTED_EVENT_REPEAT_POLICIES:
+            errors.append(f"{path}: selection repeat_policy is unsupported")
+        cooldown_waves = selection.get("cooldown_waves")
+        if not is_integer(cooldown_waves) or not 0 <= cooldown_waves <= MAX_EVENT_COOLDOWN_WAVES:
+            errors.append(f"{path}: selection cooldown_waves must be an integer from 0 to {MAX_EVENT_COOLDOWN_WAVES}")
+        max_occurrences = selection.get("max_occurrences")
+        if not is_integer(max_occurrences) or not 1 <= max_occurrences <= MAX_EVENT_OCCURRENCES:
+            errors.append(f"{path}: selection max_occurrences must be an integer from 1 to {MAX_EVENT_OCCURRENCES}")
+        if repeat_policy == "once_per_run" and (cooldown_waves != 0 or max_occurrences != 1):
+            errors.append(f"{path}: selection once_per_run requires cooldown_waves 0 and max_occurrences 1")
+        if repeat_policy == "repeat_after_cooldown" and (not is_integer(cooldown_waves) or cooldown_waves < 1):
+            errors.append(f"{path}: selection repeat_after_cooldown requires at least one cooldown wave")
+        if repeat_policy == "repeat_after_cooldown" and (not is_integer(max_occurrences) or max_occurrences < 2):
+            errors.append(f"{path}: selection repeat_after_cooldown requires max_occurrences of at least 2")
     eligibility = event.get("eligibility", {})
     if not isinstance(eligibility, dict):
         errors.append(f"{path}: eligibility must be an object")
@@ -544,6 +696,8 @@ def validate_event(
         elif choice_id in choice_ids:
             errors.append(f"{path}: duplicate choice id: {choice_id}")
         choice_ids.add(choice_id)
+        for field in sorted(EVENT_CHOICE_FIELDS - choice.keys()):
+            errors.append(f"{path}: choice {choice_id} is missing required field: {field}")
         for field in ("label", "visible_result"):
             if not isinstance(choice.get(field), str) or not choice[field].strip():
                 errors.append(f"{path}: choice {choice_id} {field} must be non-empty text")
@@ -563,8 +717,10 @@ def validate_event(
                 errors.append(f"{path}: choice {choice_id} requirement {requirement_id} must contain one constraint")
                 continue
             operator, value = next(iter(constraint.items()))
-            if operator not in {"gte", "lt"} or not is_integer(value):
+            if operator not in SUPPORTED_EVENT_REQUIREMENT_OPERATORS or not is_integer(value):
                 errors.append(f"{path}: choice {choice_id} requirement {requirement_id} has invalid constraint")
+            elif value < 0:
+                errors.append(f"{path}: choice {choice_id} requirement {requirement_id} must use a non-negative integer")
         effects = choice.get("effects")
         if not isinstance(effects, list) or not effects:
             errors.append(f"{path}: choice {choice_id} effects must be a non-empty array")
@@ -577,6 +733,12 @@ def validate_event(
             if operation not in SUPPORTED_EVENT_EFFECTS:
                 errors.append(f"{path}: choice {choice_id} has unsupported effect: {operation}")
                 continue
+            expected_fields = EVENT_EFFECT_FIELDS[operation]
+            payload_fields = set(effect) - {"op"}
+            for field in sorted(expected_fields - payload_fields):
+                errors.append(f"{path}: choice {choice_id} effect {operation} is missing required field: {field}")
+            for field in sorted(payload_fields - expected_fields):
+                errors.append(f"{path}: choice {choice_id} effect {operation} has unsupported field: {field}")
             if operation in {"spend_command_points", "spend_recovery_action", "add_materials", "add_morale"}:
                 if not is_integer(effect.get("amount")) or effect["amount"] <= 0:
                     errors.append(f"{path}: choice {choice_id} effect {operation} needs a positive integer amount")
@@ -822,6 +984,7 @@ def main() -> int:
     parser.add_argument("--events", required=True)
     parser.add_argument("--modifiers", required=True)
     parser.add_argument("--manifest", required=True)
+    parser.add_argument("--event-schema")
     args = parser.parse_args()
 
     errors: list[str] = []
@@ -830,6 +993,9 @@ def main() -> int:
     if not isinstance(manifest, dict):
         errors.append(f"{manifest_path}: root must be an object")
         manifest = {}
+    event_schema_path = Path(args.event_schema) if args.event_schema else manifest_path.with_name("event_schema.json")
+    event_schema = load_json(event_schema_path, errors)
+    validate_event_schema_contract(event_schema_path, event_schema, errors)
 
     manifest_pieces = {
         item.get("id"): item for item in manifest.get("pieces", [])
@@ -927,14 +1093,13 @@ def main() -> int:
     for scenario_id in sorted(seen_scenarios - manifest_scenario_ids):
         errors.append(f"runtime scenario is missing from active-slice manifest: {scenario_id}")
 
-    manifest_event_ids = {
-        value for value in manifest.get("p8_authored_events", {}).get("event_chain", [])
-        if isinstance(value, str)
-    }
-    manifest_event_ids.update(
-        value for value in manifest.get("p13_workshop_event", {}).get("event_ids", [])
-        if isinstance(value, str)
-    )
+    manifest_event_values = manifest.get("active_slice", {}).get("event_ids")
+    if not isinstance(manifest_event_values, list) or any(not isinstance(value, str) for value in manifest_event_values):
+        errors.append(f"{manifest_path}: active_slice.event_ids must be an array of event IDs")
+        manifest_event_values = []
+    manifest_event_ids = set(manifest_event_values)
+    if len(manifest_event_ids) != len(manifest_event_values):
+        errors.append(f"{manifest_path}: active_slice.event_ids contains duplicates")
     manifest_modifier_ids = {
         value for value in manifest.get("p9_run_progression", {}).get("modifiers", [])
         if isinstance(value, str)
@@ -964,32 +1129,8 @@ def main() -> int:
         event_id, event_scenario, follow_up = validate_event(path, event, seen_scenarios, seen_modifiers, seen_events, errors, room_ids, seen_pieces)
         if event_id is not None:
             runtime_events[event_id] = (event_scenario, follow_up)
-    for event_id in sorted(manifest_event_ids - seen_events):
-        errors.append(f"runtime event file missing for active event: {event_id}")
-    for event_id in sorted(seen_events - manifest_event_ids):
-        errors.append(f"runtime event is missing from P8 manifest: {event_id}")
-    for event_id, (event_scenario, follow_up) in runtime_events.items():
-        if follow_up and follow_up not in seen_events:
-            errors.append(f"runtime event {event_id} references unknown follow_up: {follow_up}")
-        chain = runtime_scenarios.get(event_scenario, {}).get("event_chain", [])
-        if event_id not in chain:
-            errors.append(f"runtime event {event_id} is missing from scenario {event_scenario} event_chain")
-    for scenario_id, scenario in runtime_scenarios.items():
-        chain = scenario.get("event_chain", [])
-        if not isinstance(chain, list):
-            errors.append(f"runtime scenario {scenario_id} event_chain must be an array")
-            continue
-        if len(chain) != len(set(chain)):
-            errors.append(f"runtime scenario {scenario_id} event_chain contains duplicates")
-        for index, event_id in enumerate(chain):
-            if event_id not in seen_events:
-                errors.append(f"runtime scenario {scenario_id} references unknown event: {event_id}")
-            elif runtime_events[event_id][0] != scenario_id:
-                errors.append(f"runtime scenario {scenario_id} references event for another scenario: {event_id}")
-            else:
-                expected_follow_up = chain[index + 1] if index + 1 < len(chain) else ""
-                if runtime_events[event_id][1] != expected_follow_up:
-                    errors.append(f"runtime scenario {scenario_id} event {event_id} follow_up does not match chain order")
+    validate_id_parity("event", manifest_event_ids, seen_events, errors)
+    validate_event_graph(runtime_events, runtime_scenarios, errors)
 
     seen_packs: set[str] = set()
     runtime_pack_families: dict[str, str] = {}

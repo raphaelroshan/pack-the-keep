@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "required_event_fields": [
+    "id",
+    "content_version",
+    "status",
+    "title",
+    "short_role",
+    "type",
+    "scenario",
+    "trigger",
+    "selection",
+    "setup",
+    "choices",
+    "follow_up"
+  ],
+  "required_choice_fields": ["id", "label", "requirements", "effects", "visible_result"],
+  "selection": {
+    "required_fields": ["stream", "repeat_policy", "cooldown_waves", "max_occurrences"],
+    "repeat_policies": ["once_per_run", "repeat_after_cooldown"],
+    "maximum_cooldown_waves": 3,
+    "maximum_occurrences": 3
+  },
+  "requirements": {
+    "command_points": ["gte", "lt"],
+    "recovery_actions": ["gte", "lt"],
+    "morale": ["gte", "lt"],
+    "materials": ["gte", "lt"],
+    "piece_available": ["piece_id"]
+  },
+  "effects": {
+    "spend_command_points": ["amount"],
+    "spend_recovery_action": ["amount"],
+    "add_materials": ["amount"],
+    "add_morale": ["amount"],
+    "set_flag": ["flag", "value"],
+    "record_outcome": ["tag"],
+    "unlock_modifier": ["modifier"],
+    "repair_room": ["room"],
+    "assign_piece": ["piece", "room"]
+  }
+}

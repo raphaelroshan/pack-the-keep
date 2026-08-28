@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.14.0-event-panel-extraction` — first P14 presentation decomposition slice; P12 human approval remains pending
+**Current build identity:** `0.14.1-event-authoring-safety` — P14 event schema and scheduling guardrails; P12 human approval remains pending
 
 ## Purpose
 
@@ -93,6 +93,10 @@ Open Yard Net now has one deterministic rare occurrence after wave two. A stable
 ## v0.14.0 Authored event panel extraction
 
 The event card now lives in a dedicated presentation-only component that owns its labels, two-choice rendering, blocked reasons, and stable choice-ID signal. The main controller still obtains event read models from `KeepState` and dispatches every choice back through the authoritative command boundary. Existing UI handles and visual behavior remain compatible.
+
+## v0.14.1 Event authoring safety
+
+Every runtime event now declares a stable deterministic stream, repeat policy, cooldown, and occurrence bound. A machine-readable event schema is checked against both the offline validator and Godot catalog contract. Validation rejects incomplete choice records, negative requirement thresholds, missing or extra typed-effect fields, unknown or cross-scenario follow-ups, follow-up cycles, chain-order drift, and bidirectional manifest drift. Runtime scheduling derives repeat eligibility from authoritative event history and keeps legacy resolved IDs unique for save compatibility.
 
 ## v0.8.2 testability additions
 

@@ -7,6 +7,7 @@
   "type": "forecast",
   "scenario": "relief_road",
   "trigger": {"phase": "preparation", "wave": 0},
+  "selection": {"stream": "relief_road_preparation", "repeat_policy": "once_per_run", "cooldown_waves": 0, "max_occurrences": 1},
   "setup": "A road scout can mark the support lane now, but doing so consumes the command signal that might be needed during contact.",
   "choices": [
     {

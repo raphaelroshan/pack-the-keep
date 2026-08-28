@@ -186,11 +186,28 @@ const REQUIRED_DOCTRINE_FIELDS: Array[String] = [
 ]
 
 const REQUIRED_SCENARIO_FIELDS: Array[String] = ["id", "content_version", "status", "name", "short_role", "question", "objective", "lesson", "starting_doctrine", "doctrines", "wave_plans", "variations"]
-const REQUIRED_EVENT_FIELDS: Array[String] = ["id", "content_version", "status", "title", "short_role", "type", "scenario", "trigger", "setup", "choices", "follow_up"]
+const REQUIRED_EVENT_FIELDS: Array[String] = ["id", "content_version", "status", "title", "short_role", "type", "scenario", "trigger", "selection", "setup", "choices", "follow_up"]
+const REQUIRED_EVENT_CHOICE_FIELDS: Array[String] = ["id", "label", "requirements", "effects", "visible_result"]
+const REQUIRED_EVENT_SELECTION_FIELDS: Array[String] = ["stream", "repeat_policy", "cooldown_waves", "max_occurrences"]
 const SUPPORTED_EVENT_TYPES: Array[String] = ["forecast", "recovery", "scenario_conclusion"]
 const SUPPORTED_EVENT_PHASES: Array[String] = ["preparation", "recovery", "results"]
 const SUPPORTED_EVENT_REQUIREMENTS: Array[String] = ["command_points", "recovery_actions", "morale", "materials", "piece_available"]
+const SUPPORTED_EVENT_REQUIREMENT_OPERATORS: Array[String] = ["gte", "lt"]
 const SUPPORTED_EVENT_EFFECTS: Array[String] = ["spend_command_points", "spend_recovery_action", "add_materials", "add_morale", "set_flag", "record_outcome", "unlock_modifier", "repair_room", "assign_piece"]
+const EVENT_EFFECT_FIELDS: Dictionary = {
+	"spend_command_points": ["amount"],
+	"spend_recovery_action": ["amount"],
+	"add_materials": ["amount"],
+	"add_morale": ["amount"],
+	"set_flag": ["flag", "value"],
+	"record_outcome": ["tag"],
+	"unlock_modifier": ["modifier"],
+	"repair_room": ["room"],
+	"assign_piece": ["piece", "room"]
+}
+const SUPPORTED_EVENT_REPEAT_POLICIES: Array[String] = ["once_per_run", "repeat_after_cooldown"]
+const MAX_EVENT_COOLDOWN_WAVES: int = 3
+const MAX_EVENT_OCCURRENCES: int = 3
 const REQUIRED_MODIFIER_FIELDS: Array[String] = ["id", "content_version", "status", "name", "short_role", "question", "unlock_event", "effect", "starting_morale_cost", "limitation"]
 const SUPPORTED_MODIFIER_EFFECTS: Array[String] = ["reveal_wave_composition", "enemy_health_bonus"]
 
@@ -302,6 +319,21 @@ func event_ids() -> Array[String]:
 
 func event_definition(event_id: String) -> Dictionary:
 	return _events.get(event_id, {}).duplicate(true)
+
+func event_schema_contract() -> Dictionary:
+	return {
+		"required_event_fields": REQUIRED_EVENT_FIELDS.duplicate(),
+		"required_choice_fields": REQUIRED_EVENT_CHOICE_FIELDS.duplicate(),
+		"selection": {
+			"required_fields": REQUIRED_EVENT_SELECTION_FIELDS.duplicate(),
+			"repeat_policies": SUPPORTED_EVENT_REPEAT_POLICIES.duplicate(),
+			"maximum_cooldown_waves": MAX_EVENT_COOLDOWN_WAVES,
+			"maximum_occurrences": MAX_EVENT_OCCURRENCES
+		},
+		"requirements": SUPPORTED_EVENT_REQUIREMENTS.duplicate(),
+		"requirement_operators": SUPPORTED_EVENT_REQUIREMENT_OPERATORS.duplicate(),
+		"effects": EVENT_EFFECT_FIELDS.duplicate(true)
+	}
 
 func modifier_ids() -> Array[String]:
 	var result: Array[String] = []
@@ -621,6 +653,7 @@ func validate_event_definition(event: Dictionary, expected_id: String, known_roo
 					seen_waves.append(int(wave_value))
 		elif not _is_integer_number(trigger_wave) or int(trigger_wave) < 0 or int(trigger_wave) > 3:
 			validation_errors.append("event %s trigger wave must be an integer or array from 0 to 3" % event_id)
+	_validate_event_selection(event_id, event.get("selection"), validation_errors)
 	var eligibility: Variant = event.get("eligibility", {})
 	if not eligibility is Dictionary:
 		validation_errors.append("event %s eligibility must be an object" % event_id)
@@ -672,6 +705,9 @@ func validate_event_definition(event: Dictionary, expected_id: String, known_roo
 				validation_errors.append("event %s has duplicate choice id: %s" % [event_id, choice_id])
 			else:
 				choice_ids.append(choice_id)
+			for required_field in REQUIRED_EVENT_CHOICE_FIELDS:
+				if not choice.has(required_field):
+					validation_errors.append("event %s choice %s is missing required field: %s" % [event_id, choice_id, required_field])
 			for field in ["label", "visible_result"]:
 				if not choice.get(field) is String or String(choice.get(field, "")).strip_edges().is_empty():
 					validation_errors.append("event %s choice %s must have non-empty %s" % [event_id, choice_id, field])
@@ -698,6 +734,36 @@ func validate_event_definition(event: Dictionary, expected_id: String, known_roo
 		validation_errors.append("event %s cannot follow itself" % event_id)
 	return validation_errors
 
+func _validate_event_selection(event_id: String, selection: Variant, validation_errors: Array[String]) -> void:
+	if not selection is Dictionary:
+		validation_errors.append("event %s selection must be an object" % event_id)
+		return
+	for field in REQUIRED_EVENT_SELECTION_FIELDS:
+		if not selection.has(field):
+			validation_errors.append("event %s selection is missing required field: %s" % [event_id, field])
+	for field_value in selection.keys():
+		var field: String = String(field_value)
+		if not REQUIRED_EVENT_SELECTION_FIELDS.has(field):
+			validation_errors.append("event %s selection has unsupported field: %s" % [event_id, field])
+	var stream: String = String(selection.get("stream", ""))
+	if not selection.get("stream") is String or not _is_snake_case_id(stream):
+		validation_errors.append("event %s selection stream must be snake_case" % event_id)
+	var repeat_policy: String = String(selection.get("repeat_policy", ""))
+	if not SUPPORTED_EVENT_REPEAT_POLICIES.has(repeat_policy):
+		validation_errors.append("event %s selection repeat_policy is unsupported" % event_id)
+	var cooldown_waves: Variant = selection.get("cooldown_waves")
+	if not _is_integer_number(cooldown_waves) or int(cooldown_waves) < 0 or int(cooldown_waves) > MAX_EVENT_COOLDOWN_WAVES:
+		validation_errors.append("event %s selection cooldown_waves must be an integer from 0 to %d" % [event_id, MAX_EVENT_COOLDOWN_WAVES])
+	var max_occurrences: Variant = selection.get("max_occurrences")
+	if not _is_integer_number(max_occurrences) or int(max_occurrences) < 1 or int(max_occurrences) > MAX_EVENT_OCCURRENCES:
+		validation_errors.append("event %s selection max_occurrences must be an integer from 1 to %d" % [event_id, MAX_EVENT_OCCURRENCES])
+	if repeat_policy == "once_per_run" and (cooldown_waves != 0 or max_occurrences != 1):
+		validation_errors.append("event %s selection once_per_run requires cooldown_waves 0 and max_occurrences 1" % event_id)
+	if repeat_policy == "repeat_after_cooldown" and (not _is_integer_number(cooldown_waves) or int(cooldown_waves) < 1):
+		validation_errors.append("event %s selection repeat_after_cooldown requires at least one cooldown wave" % event_id)
+	if repeat_policy == "repeat_after_cooldown" and (not _is_integer_number(max_occurrences) or int(max_occurrences) < 2):
+		validation_errors.append("event %s selection repeat_after_cooldown requires max_occurrences of at least 2" % event_id)
+
 func _validate_event_requirements(event_id: String, choice_id: String, requirements: Variant, validation_errors: Array[String]) -> void:
 	if not requirements is Dictionary:
 		validation_errors.append("event %s choice %s requirements must be an object" % [event_id, choice_id])
@@ -715,8 +781,10 @@ func _validate_event_requirements(event_id: String, choice_id: String, requireme
 			validation_errors.append("event %s choice %s requirement %s must contain one constraint" % [event_id, choice_id, String(requirement_id)])
 			continue
 		var operator_id: String = String(constraint.keys()[0])
-		if not ["gte", "lt"].has(operator_id) or not _is_integer_number(constraint[operator_id]):
+		if not SUPPORTED_EVENT_REQUIREMENT_OPERATORS.has(operator_id) or not _is_integer_number(constraint[operator_id]):
 			validation_errors.append("event %s choice %s requirement %s has invalid constraint" % [event_id, choice_id, String(requirement_id)])
+		elif int(constraint[operator_id]) < 0:
+			validation_errors.append("event %s choice %s requirement %s must use a non-negative integer" % [event_id, choice_id, String(requirement_id)])
 
 func _validate_event_choice_flags(event_id: String, choice_id: String, flags: Variant, validation_errors: Array[String]) -> void:
 	if not flags is Dictionary:
@@ -738,6 +806,14 @@ func _validate_event_effects(event_id: String, choice_id: String, effects: Varia
 		if not SUPPORTED_EVENT_EFFECTS.has(operation):
 			validation_errors.append("event %s choice %s has unsupported effect: %s" % [event_id, choice_id, operation])
 			continue
+		var expected_fields: Array = EVENT_EFFECT_FIELDS.get(operation, [])
+		for required_field in expected_fields:
+			if not effect.has(required_field):
+				validation_errors.append("event %s choice %s effect %s is missing required field: %s" % [event_id, choice_id, operation, String(required_field)])
+		for field_value in effect.keys():
+			var field: String = String(field_value)
+			if field != "op" and not expected_fields.has(field):
+				validation_errors.append("event %s choice %s effect %s has unsupported field: %s" % [event_id, choice_id, operation, field])
 		if ["spend_command_points", "spend_recovery_action", "add_materials", "add_morale"].has(operation):
 			if not _is_integer_number(effect.get("amount")) or int(effect.get("amount", 0)) <= 0:
 				validation_errors.append("event %s choice %s effect %s needs a positive integer amount" % [event_id, choice_id, operation])
@@ -1041,6 +1117,16 @@ func _validate_event_follow_ups() -> void:
 		var follow_up: String = String(_events[event_id].get("follow_up", ""))
 		if not follow_up.is_empty() and not _events.has(follow_up):
 			errors.append("event %s references unavailable follow_up: %s" % [event_id, follow_up])
+		elif not follow_up.is_empty() and String(_events[follow_up].get("scenario", "")) != String(_events[event_id].get("scenario", "")):
+			errors.append("event %s follow_up crosses scenarios: %s" % [event_id, follow_up])
+		var visited: Array[String] = []
+		var current_id: String = event_id
+		while not current_id.is_empty() and _events.has(current_id):
+			if visited.has(current_id):
+				errors.append("event follow_up cycle includes: %s" % current_id)
+				break
+			visited.append(current_id)
+			current_id = String(_events[current_id].get("follow_up", ""))
 
 func _validate_scenario_event_references() -> void:
 	for scenario_id in scenario_ids():

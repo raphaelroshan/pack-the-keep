@@ -7,6 +7,7 @@
   "type": "forecast",
   "scenario": "wrong_wall",
   "trigger": {"phase": "preparation", "wave": 0},
+  "selection": {"stream": "wrong_wall_preparation", "repeat_policy": "once_per_run", "cooldown_waves": 0, "max_occurrences": 1},
   "setup": "The bellkeeper hears a clean Gate signal crossed by a second rhythm from the Workshop lane. The warning can be marked now, or command can remain concentrated at the entrance.",
   "choices": [
     {

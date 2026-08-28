@@ -7,6 +7,7 @@
   "type": "recovery",
   "scenario": "gatehouse_lock",
   "trigger": {"phase": "recovery", "wave": 2},
+  "selection": {"stream": "gatehouse_workshop_recovery", "repeat_policy": "once_per_run", "cooldown_waves": 0, "max_occurrences": 1},
   "eligibility": {
     "room_condition": {"room": "workshop", "lte": 70},
     "next_doctrine": ["feint_and_flank"]

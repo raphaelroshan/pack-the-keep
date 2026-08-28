@@ -410,11 +410,11 @@
 
 ## ADR-052: Rare occurrence selection uses a named deterministic seed slot
 
-**Decision:** A rare authored event may declare a bounded modulus and eligible slots. `KeepState` derives the slot from the run seed plus scenario, event ID, and wave using a local stable stream; it never consumes global or presentation randomness.
+**Decision:** A rare authored event may declare a bounded modulus and eligible slots. `KeepState` derives the slot from the run seed plus scenario, the event's named selection stream, and wave; it never consumes global or presentation randomness.
 
 **Reason:** Rare events must replay reliably and vary across known seeds without introducing a general weighted scheduler before the event system needs one.
 
-**Trade-off:** The first occurrence has a fixed one-in-three cadence and flag-only consequences. Weighted pools, cooldowns, and combat-changing rare effects remain deferred.
+**Trade-off:** The first occurrence has a fixed one-in-three cadence and flag-only consequences. Weighted pools and combat-changing rare effects remain deferred; bounded cooldown metadata is introduced separately in ADR-054.
 
 ## ADR-053: Event-card presentation is a stateless component
 
@@ -423,3 +423,11 @@
 **Reason:** Event breadth increased enough that construction and rendering obscured the main controller. A narrow component boundary lowers maintenance cost without moving gameplay authority or redesigning the interface.
 
 **Trade-off:** Compatibility aliases remain in `main.gd` for current tests and neighboring UI code. Further panel extraction should remove those only through a separately tested migration.
+
+## ADR-054: Event scheduling is explicit, bounded, and schema-checked
+
+**Decision:** Require every runtime event to declare a stable selection stream, repeat policy, cooldown, and maximum occurrence count. Keep the machine-readable contract in `content/event_schema.json`, mirror it in both validators, derive repeat eligibility from authoritative event history, and use `active_slice.event_ids` as the canonical manifest inventory.
+
+**Reason:** Implicit once-only behavior hid scheduling assumptions in control flow and made content drift difficult to diagnose. Closed choice/effect payloads and explicit graph checks now reject typos, unknown links, cycles, cross-scenario chains, unbounded repetition, and missing manifest entries before gameplay mutation.
+
+**Trade-off:** The current runtime supports only `once_per_run` and bounded `repeat_after_cooldown`; weighted pools and broader campaign scheduling remain deferred. Adding an operation or policy now requires coordinated schema, offline-validator, runtime-validator, and negative-fixture changes.

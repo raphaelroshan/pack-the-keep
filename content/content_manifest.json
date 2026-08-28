@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.14.0",
+  "content_version": "0.14.1",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -209,6 +209,15 @@
     "mara_arc_flags": ["mara_workshop_repaired", "mara_station_trusted", "mara_second_door_open"],
     "rare_occurrence": "old_drain_opens_seeded_one_in_three_without_combat_effects",
     "next_slice": "p14_content_authoring_validation"
+  },
+  "p14_content_authoring_validation": {
+    "status": "implemented",
+    "schema": "content/event_schema.json",
+    "selection_contract": ["stable_stream", "repeat_policy", "bounded_cooldown", "bounded_occurrences"],
+    "graph_validation": ["known_follow_up", "same_scenario", "acyclic", "scenario_chain_order"],
+    "manifest_parity": "active_slice_event_ids_match_runtime_files_bidirectionally",
+    "validation": "offline_negative_fixtures_runtime_catalog_parity_and_deterministic_repeat_policy_tests",
+    "next_slice": "p14_packaged_reinstall_upgrade_safety"
   },
   "campaign": {
     "title": "The Bell at Dusk",
@@ -1109,6 +1118,17 @@
       "ash_at_the_bell",
       "the_splintered_gate",
       "three_bells_at_dusk"
+    ],
+    "event_ids": [
+      "relief_road_warning",
+      "relief_road_recovery",
+      "relief_road_report",
+      "workshop_can_wait",
+      "mara_second_door",
+      "old_drain_opens",
+      "the_bell_has_a_pattern",
+      "the_gate_is_not_the_keep",
+      "wrong_wall_report"
     ],
     "variation_contract": "seed-derived bounded target or resource variation; scenario objective and counter meaning remain fixed",
     "waves": [

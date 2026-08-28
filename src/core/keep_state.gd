@@ -316,7 +316,8 @@ func choose_event_option(choice_id: String) -> Dictionary:
 		"state_changes": state_changes.duplicate(true)
 	}
 	event_history.append(history_entry)
-	resolved_event_ids.append(event_id)
+	if not resolved_event_ids.has(event_id):
+		resolved_event_ids.append(event_id)
 	active_event_id = ""
 	_log("Event resolved — %s: %s" % [String(definition.get("title", event_id)), String(choice.get("visible_result", ""))])
 	_refresh_active_event()
@@ -441,7 +442,8 @@ func _current_event_phase() -> String:
 
 func _event_trigger_matches(definition: Dictionary) -> bool:
 	var trigger: Dictionary = definition.get("trigger", {})
-	return String(definition.get("scenario", "")) == scenario_id and String(trigger.get("phase", "")) == _current_event_phase() and _event_trigger_wave_matches(trigger.get("wave")) and _event_eligibility_matches(definition.get("eligibility", {}), String(definition.get("id", "")))
+	var selection: Dictionary = definition.get("selection", {})
+	return String(definition.get("scenario", "")) == scenario_id and String(trigger.get("phase", "")) == _current_event_phase() and _event_trigger_wave_matches(trigger.get("wave")) and _event_repeat_policy_allows(definition) and _event_eligibility_matches(definition.get("eligibility", {}), String(selection.get("stream", definition.get("id", ""))))
 
 func _event_trigger_wave_matches(trigger_wave: Variant) -> bool:
 	if trigger_wave is Array:
@@ -494,16 +496,37 @@ func _event_eligibility_matches(eligibility: Variant, event_id: String = "") -> 
 			return false
 	return true
 
+func _event_repeat_policy_allows(definition: Dictionary) -> bool:
+	var event_id: String = String(definition.get("id", ""))
+	var selection: Dictionary = definition.get("selection", {})
+	var repeat_policy: String = String(selection.get("repeat_policy", "once_per_run"))
+	var occurrence_count: int = 0
+	var last_wave: int = -1
+	var last_phase: String = ""
+	for history_entry in event_history:
+		if String(history_entry.get("event_id", "")) == event_id:
+			occurrence_count += 1
+			last_wave = int(history_entry.get("wave", -1))
+			last_phase = String(history_entry.get("phase", ""))
+	if occurrence_count >= int(selection.get("max_occurrences", 1)):
+		return false
+	if repeat_policy == "once_per_run":
+		return not resolved_event_ids.has(event_id)
+	if repeat_policy != "repeat_after_cooldown":
+		return false
+	if last_wave == wave_index and last_phase == _current_event_phase():
+		return false
+	return last_wave < 0 or wave_index - last_wave > int(selection.get("cooldown_waves", 0))
+
 func _refresh_active_event() -> void:
 	if not active_event_id.is_empty() or not scenario_active or not _scenario_definitions.has(scenario_id):
 		return
 	for event_id_value in _scenario_definitions[scenario_id].get("event_chain", []):
 		var event_id: String = String(event_id_value)
-		if resolved_event_ids.has(event_id):
+		if not _event_definitions.has(event_id) or not _event_trigger_matches(_event_definitions[event_id]):
 			continue
-		if _event_definitions.has(event_id) and _event_trigger_matches(_event_definitions[event_id]):
-			active_event_id = event_id
-			_log("Event opened — %s." % String(_event_definitions[event_id].get("title", event_id)))
+		active_event_id = event_id
+		_log("Event opened — %s." % String(_event_definitions[event_id].get("title", event_id)))
 		break
 
 func _surviving_piece_count() -> int:
