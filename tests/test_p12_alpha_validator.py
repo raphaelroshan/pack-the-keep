@@ -15,6 +15,15 @@ SPEC.loader.exec_module(validator)
 
 
 class P12AlphaValidatorTests(unittest.TestCase):
+    def test_evidence_paths_must_stay_repository_relative(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            evidence = root / "evidence.md"
+            evidence.write_text("proof", encoding="utf-8")
+            self.assertTrue(validator.evidence_file_exists(root, "evidence.md"))
+            self.assertFalse(validator.evidence_file_exists(root, str(evidence)))
+            self.assertFalse(validator.evidence_file_exists(root, "../evidence.md"))
+
     def test_requires_human_release_boundary(self) -> None:
         errors: list[str] = []
         build_version = validator.validate_ci_manifest({"build_version": "v", "release_ready": True}, errors)

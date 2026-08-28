@@ -60,6 +60,18 @@ def validate_ci_manifest(manifest: dict[str, Any], errors: list[str]) -> str:
     return build_version
 
 
+def evidence_file_exists(root: Path, relative: str) -> bool:
+    candidate = Path(relative)
+    if candidate.is_absolute() or ".." in candidate.parts:
+        return False
+    try:
+        candidate_path = (root / candidate).resolve()
+        candidate_path.relative_to(root.resolve())
+    except (OSError, ValueError):
+        return False
+    return candidate_path.is_file()
+
+
 def validate_checklist(path: Path, root: Path, build_version: str, errors: list[str]) -> None:
     checklist = load_object(path, errors)
     if checklist.get("schema_version") != 1:
@@ -91,7 +103,7 @@ def validate_checklist(path: Path, root: Path, build_version: str, errors: list[
             errors.append(f"P12 check {check_id} needs evidence paths")
             continue
         for relative in evidence:
-            if not isinstance(relative, str) or not (root / relative).is_file():
+            if not isinstance(relative, str) or not evidence_file_exists(root, relative):
                 errors.append(f"P12 check {check_id} has missing evidence: {relative!r}")
     for missing in sorted(REQUIRED_CHECKS - seen):
         errors.append(f"P12 checklist is missing: {missing}")
@@ -111,7 +123,7 @@ def validate_checklist(path: Path, root: Path, build_version: str, errors: list[
         if record.get("status") != "pending":
             errors.append(f"P12 human gate {gate_id} must remain pending until human approval")
         evidence = record.get("evidence")
-        if not isinstance(evidence, str) or not (root / evidence).is_file():
+        if not isinstance(evidence, str) or not evidence_file_exists(root, evidence):
             errors.append(f"P12 human gate {gate_id} has missing evidence guidance")
     for missing in sorted(REQUIRED_HUMAN_GATES - human_seen):
         errors.append(f"P12 checklist is missing human gate: {missing}")
