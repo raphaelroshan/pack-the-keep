@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.16.3-playtest-kit` — P16 evidence, triage, and self-identifying Windows artifacts are ready; human sessions and owner approval remain pending
+**Current build identity:** `0.16.4-observer-brief` — P16 evidence, triage, and self-contained Windows playtest guidance are ready; human sessions and owner approval remain pending
 
 ## Purpose
 
@@ -125,6 +125,10 @@ Every generated session now records the exact source commit and hashes the packa
 ## v0.16.3 Self-identifying playtest kit
 
 CI now writes `playtest-build.json` beside the packaged Windows executable. The manifest records the build version, exact source revision, workflow run ID, filename, byte size, and SHA-256 digest. Session generation consumes and revalidates that bundled manifest, eliminating manual provenance entry while retaining an unfilled human-only evidence record.
+
+## v0.16.4 Packaged observer brief
+
+Every Windows candidate now includes `PLAYTEST_README.md` beside its provenance and smoke evidence. CI creates the brief only after revalidating the exact executable against `playtest-build.json`; it carries the build identity, all nine human observation prompts, privacy limits, record-generation path, and explicit pre-alpha/owner-approval boundary without filling in any result.
 
 ## v0.8.2 testability additions
 

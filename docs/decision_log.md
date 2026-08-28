@@ -487,3 +487,11 @@
 **Reason:** Manually copying provenance into a session record is error-prone. A self-identifying bundle makes the safe path the easy path and lets testers prove exactly which candidate they observed.
 
 **Trade-off:** A rebuilt or renamed executable invalidates the bundled manifest and requires regenerating it. This is intentional: modified binaries must not inherit evidence from the original CI artifact.
+
+## ADR-062: Packaged candidates carry a generated observer brief
+
+**Decision:** Generate `PLAYTEST_README.md` inside every Windows release-candidate artifact after validating the executable against `playtest-build.json`. The brief repeats exact provenance, all protocol-owned observation prompts, privacy limits, the human-only completion rule, and the pending owner-approval boundary.
+
+**Reason:** A provenance manifest proves which binary is present but does not make a downloaded candidate operational for an observer who is not browsing the repository. Generating the brief from the same protocol and manifest prevents instructions from drifting away from the tested build.
+
+**Trade-off:** The brief is deliberately read-only guidance, not a questionnaire or automatic result collector. Session JSON remains the durable evidence, and CI still cannot populate observations, recruit testers, or approve distribution.

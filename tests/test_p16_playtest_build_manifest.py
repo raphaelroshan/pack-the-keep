@@ -64,6 +64,7 @@ class P16PlaytestBuildManifestTests(unittest.TestCase):
             manifest = json.loads(output.read_text(encoding="utf-8"))
             self.assertEqual(manifest["ci_run_id"], 999)
             self.assertEqual(manifest["source_revision"], "c" * 40)
+            self.assertNotIn(b"\r\n", output.read_bytes())
 
 
 if __name__ == "__main__":
