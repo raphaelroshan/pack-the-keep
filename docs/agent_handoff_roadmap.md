@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
-**Document status:** Active planning contract for post-v0.13.4 development
-**Current release baseline:** `0.13.4-old-drain-occurrence` on PR #26; remote `main` remains `0.12.3-alpha-packaged-pause-close`
+**Document status:** Active planning contract for post-v0.14.0 development
+**Current release baseline:** `0.14.0-event-panel-extraction` on PR #26; remote `main` remains `0.12.3-alpha-packaged-pause-close`
 **Release posture:** CI-verified public repository with owner-controlled merges; no public alpha release or storefront claim yet
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
@@ -100,7 +100,7 @@ Milestones must be completed in order. An agent may split a milestone into small
 | P11 | Implemented | Crossbow Watch, Bell Guard, Shieldwall, Three Bells, and Hardened Vanguard are tested teaching content. | Add breadth only through isolated counter questions. |
 | P12 | Implemented baseline | Packaged Windows smoke validates launch, offline behavior, saves, nested recovery, input, scaling, pause, teardown, clean reinstall, and deterministic scenario resume. | Preserve as an alpha regression gate while human approval remains pending. |
 | P13 | Implemented baseline | Gatehouse recovery, bounded Ledger/Results history, The Wrong Wall chain, Mara Venn's Second Door arc, and one deterministic Old Drain occurrence are integrated and tested. | Begin P14 by extracting one presentation panel without redesigning it. |
-| P14 | Planned | UX decomposition and authoring tools: split the UI monolith, improve event/ledger inspection, and make content validation agent-friendly. | Lower maintenance cost before campaign expansion. |
+| P14 | In progress | The authored-event panel is extracted behind a stable choice-ID signal while `main.gd` retains command dispatch and compatibility handles. | Next strengthen runtime content authoring validation and diagnostics. |
 | P15 | Planned | Multi-keep or regional structure with two genuinely distinct defensive identities. | Only begin after Greywatch’s event loop and replay value are proven. |
 | P16 | Planned | Controlled alpha readiness and human playtest hardening. | Requires explicit owner approval; not an automatic storefront release. |
 

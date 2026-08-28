@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.13.4-old-drain-occurrence` — complete bounded P13 content-integration baseline; P12 human approval remains pending
+**Current build identity:** `0.14.0-event-panel-extraction` — first P14 presentation decomposition slice; P12 human approval remains pending
 
 ## Purpose
 
@@ -89,6 +89,10 @@ Repairing the Workshop or trusting its Repair Station now records one of two vis
 ## v0.13.4 Old Drain occurrence
 
 Open Yard Net now has one deterministic rare occurrence after wave two. A stable named seed stream selects one of three slots, so identical seeds replay exactly and three consecutive matrix seeds demonstrate both selected and unselected outcomes. Sealing or marking the drain changes only explicit visible flags and preserves every existing defensive counter.
+
+## v0.14.0 Authored event panel extraction
+
+The event card now lives in a dedicated presentation-only component that owns its labels, two-choice rendering, blocked reasons, and stable choice-ID signal. The main controller still obtains event read models from `KeepState` and dispatches every choice back through the authoritative command boundary. Existing UI handles and visual behavior remain compatible.
 
 ## v0.8.2 testability additions
 

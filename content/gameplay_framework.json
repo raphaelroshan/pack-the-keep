@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.13.4-old-drain-occurrence",
+  "framework_version": "0.14.0-event-panel-extraction",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -256,6 +256,13 @@
     "choices": ["seal_old_drain", "mark_escape_route"],
     "safety_rule": "both_paths_preserve_existing_defensive_counters_and_change_only_visible_flags",
     "non_goals": ["weighted_pool", "global_rng", "run_ending_randomness"]
+  },
+  "p14_authored_event_panel": {
+    "status": "implemented",
+    "component": "src/ui/authored_event_panel.gd",
+    "ownership": "component_renders_event_read_models_and_emits_choice_ids_only",
+    "authority": "main_controller_dispatches_choices_to_keep_state",
+    "compatibility": "existing_labels_buttons_focus_paths_and_visual_states_preserved"
   },
   "v090_multi_wave": {
     "status": "implemented",

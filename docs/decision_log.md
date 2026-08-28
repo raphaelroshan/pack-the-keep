@@ -415,3 +415,11 @@
 **Reason:** Rare events must replay reliably and vary across known seeds without introducing a general weighted scheduler before the event system needs one.
 
 **Trade-off:** The first occurrence has a fixed one-in-three cadence and flag-only consequences. Weighted pools, cooldowns, and combat-changing rare effects remain deferred.
+
+## ADR-053: Event-card presentation is a stateless component
+
+**Decision:** Extract authored-event label and button construction into `AuthoredEventPanel`. It accepts an event read model and emits only a stable choice ID; `main.gd` remains responsible for invoking `KeepState` commands.
+
+**Reason:** Event breadth increased enough that construction and rendering obscured the main controller. A narrow component boundary lowers maintenance cost without moving gameplay authority or redesigning the interface.
+
+**Trade-off:** Compatibility aliases remain in `main.gd` for current tests and neighboring UI code. Further panel extraction should remove those only through a separately tested migration.

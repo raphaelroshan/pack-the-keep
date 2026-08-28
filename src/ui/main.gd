@@ -1,5 +1,7 @@
 extends Control
 
+const AuthoredEventPanelView = preload("res://src/ui/authored_event_panel.gd")
+
 const PackKeepState = preload("res://src/core/keep_state.gd")
 const PackagedSmoke = preload("res://src/platform/packaged_smoke.gd")
 const GREYWATCH_BACKGROUND = preload("res://assets/greywatch_background.png")
@@ -943,28 +945,14 @@ func _build_ui() -> void:
 	scenario_preview_label.custom_minimum_size = Vector2(292, 82)
 	scenario_preview_label.add_theme_color_override("font_color", Color("#d8c389"))
 	controls.add_child(scenario_preview_label)
-	authored_event_panel = VBoxContainer.new()
-	authored_event_panel.add_theme_constant_override("separation", 4)
+	authored_event_panel = AuthoredEventPanelView.new()
+	authored_event_panel.build(2)
+	authored_event_panel.choice_requested.connect(_on_authored_event_choice_id)
 	controls.add_child(authored_event_panel)
-	authored_event_title = Label.new()
-	authored_event_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	authored_event_title.add_theme_font_size_override("font_size", 16)
-	authored_event_title.add_theme_color_override("font_color", Color("#e2bd84"))
-	authored_event_panel.add_child(authored_event_title)
-	authored_event_setup = Label.new()
-	authored_event_setup.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	authored_event_setup.add_theme_color_override("font_color", Color("#c9bfd0"))
-	authored_event_panel.add_child(authored_event_setup)
-	for choice_index in range(2):
-		var choice_detail: Label = Label.new()
-		choice_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		choice_detail.add_theme_color_override("font_color", Color("#aab1b2"))
-		authored_event_panel.add_child(choice_detail)
-		authored_event_choice_details.append(choice_detail)
-		var choice_button: Button = Button.new()
-		choice_button.pressed.connect(_on_authored_event_choice.bind(choice_index))
-		authored_event_panel.add_child(choice_button)
-		authored_event_choice_buttons.append(choice_button)
+	authored_event_title = authored_event_panel.title_label
+	authored_event_setup = authored_event_panel.setup_label
+	authored_event_choice_details = authored_event_panel.choice_details
+	authored_event_choice_buttons = authored_event_panel.choice_buttons
 	campaign_ledger_panel = VBoxContainer.new()
 	campaign_ledger_panel.add_theme_constant_override("separation", 4)
 	controls.add_child(campaign_ledger_panel)
@@ -1449,32 +1437,15 @@ func _refresh_scenario_preview() -> void:
 func _refresh_authored_event() -> void:
 	if authored_event_panel == null:
 		return
-	var event: Dictionary = keep.current_event()
-	authored_event_panel.visible = bool(event.get("ok", false))
-	if not authored_event_panel.visible:
-		return
-	authored_event_title.text = "AUTHORED EVENT — %s | %s" % [String(event.get("title", "")), String(event.get("phase", "")).to_upper()]
-	authored_event_setup.text = String(event.get("setup", ""))
-	var choices: Array = event.get("choices", [])
-	for index in range(authored_event_choice_buttons.size()):
-		var button: Button = authored_event_choice_buttons[index]
-		var detail: Label = authored_event_choice_details[index]
-		var has_choice: bool = index < choices.size()
-		button.visible = has_choice
-		detail.visible = has_choice
-		if not has_choice:
-			continue
-		var choice: Dictionary = choices[index]
-		button.text = String(choice.get("label", "Choose"))
-		button.disabled = not bool(choice.get("available", false))
-		button.set_meta("choice_id", String(choice.get("id", "")))
-		var reason: String = String(choice.get("reason", ""))
-		detail.text = "%s%s" % [String(choice.get("visible_result", "")), "\nBLOCKED — %s" % reason.replace("_", " ") if not reason.is_empty() else ""]
+	authored_event_panel.render(keep.current_event())
 
 func _on_authored_event_choice(index: int) -> void:
 	if index < 0 or index >= authored_event_choice_buttons.size():
 		return
 	var choice_id: String = String(authored_event_choice_buttons[index].get_meta("choice_id", ""))
+	_on_authored_event_choice_id(choice_id)
+
+func _on_authored_event_choice_id(choice_id: String) -> void:
 	_run_result(keep.choose_event_option(choice_id), "Event")
 
 func _refresh_campaign_ledger() -> void:
