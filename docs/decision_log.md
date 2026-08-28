@@ -519,3 +519,11 @@
 **Reason:** The previous enemy-first loop allowed every defender to attack every compatible enemy during the same one-second step. Larger waves therefore multiplied defender actions and ranged ammunition use, obscuring the meaning of focus, timing, and coherent counter coverage. One commitment per defender makes mixed waves a real allocation problem while preserving deterministic pause-and-inspect play.
 
 **Trade-off:** Multi-enemy waves become more demanding and some historical balance fixtures may need explicit layout adjustments. Target choice remains automatic in this slice; direct focus-fire commands, movement, projectile travel, and a general threat-scoring resource are deferred until playtest evidence justifies them.
+
+## ADR-066: Combat runs continuously over deterministic assault phases
+
+**Decision:** Start Battle in real-time playback, interpolate enemy motion from the fractional authoritative clock, and present brief defender engagement traces at each resolved tick. Keep the deterministic one-second resolver and authored scenario group boundaries, but describe those boundaries to the player as assault phases and recovery lulls rather than requiring a primary advance-step interaction. Add a 2560×1440 window preset and default new windowed installs to 1600×900.
+
+**Reason:** The step-first presentation made a real-time simulation read like a turn-based wave prototype. Continuous motion and automatic playback make pressure legible as an unfolding siege while retaining pause, speed, manual-step, replay, and save guarantees. A larger default window and explicit 1440p option let the fort occupy an appropriate desktop canvas.
+
+**Trade-off:** Combat still resolves on deterministic one-second ticks beneath the interpolation, and recovery still separates authored pressure phases. Fully continuous damage, projectile physics, and removal of all internal wave terminology would widen simulation and migration risk without improving the current vertical-slice test proportionally.

@@ -23,27 +23,41 @@ func _initialize() -> void:
 	ui._on_start_wave()
 	if not ui.keep.wave_active:
 		failures.append("start wave did not activate the invasion")
-	if not ui.battle_paused:
-		failures.append("new invasion should begin paused for inspection")
-	var paused_step: int = ui.keep.battle_step
+	if ui.battle_paused:
+		failures.append("new invasion should begin in real-time playback")
+	var moving_origin: Vector2 = ui.keep_canvas._enemy_origin(0)
+	ui._process(0.25)
+	if ui.keep.battle_step != 0 or ui.keep_canvas._enemy_origin(0) == moving_origin:
+		failures.append("fractional real-time presentation did not move the enemy before the next deterministic tick")
 	var space_event: InputEventKey = InputEventKey.new()
 	space_event.physical_keycode = 32
 	space_event.pressed = true
 	ui._unhandled_key_input(space_event)
-	if ui.battle_paused:
-		failures.append("named Space action did not resume the active battle")
-	ui._unhandled_key_input(space_event)
 	if not ui.battle_paused:
-		failures.append("named Space action did not pause the active battle")
+		failures.append("named Space action did not pause the live battle")
+	var paused_step: int = ui.keep.battle_step
 	var enter_event: InputEventKey = InputEventKey.new()
 	enter_event.physical_keycode = 4194309
 	enter_event.pressed = true
 	ui._unhandled_key_input(enter_event)
 	if ui.keep.battle_step != paused_step + 1:
 		failures.append("named Enter action did not resolve one manual step")
+	if ui.keep_canvas.engagement_traces.is_empty() or ui.keep_canvas.engagement_ttl <= 0.0:
+		failures.append("resolved combat tick did not produce a bounded engagement trace")
 	ui._process(1.0)
 	if ui.keep.battle_step != paused_step + 1:
 		failures.append("paused automatic presentation advanced the simulation")
+	ui._unhandled_key_input(space_event)
+	if ui.battle_paused:
+		failures.append("named Space action did not resume the paused battle")
+	ui._unhandled_key_input(space_event)
+	if not ui.battle_paused:
+		failures.append("second named Space action did not pause the battle again")
+	ui.keep_canvas.set_reduced_motion(true)
+	var reduced_motion_traces: Array[Dictionary] = [{"attacker_id": "pike_squad_0", "enemy_index": 0, "damage": 1}]
+	ui.keep_canvas.show_engagements(reduced_motion_traces)
+	if not ui.keep_canvas.engagement_traces.is_empty():
+		failures.append("reduced motion did not suppress transient engagement traces")
 
 	ui._set_battle_speed(2)
 	if ui.battle_speed_index != 2 or ui.keep.battle_step != paused_step + 1:
@@ -62,6 +76,7 @@ func _initialize() -> void:
 		failures.append("placement cancel did not exit placement mode")
 
 	ui._toggle_contrast()
+	ui._toggle_reduced_motion()
 	ui._toggle_mute()
 	if ui.keep.summary() != initial_summary:
 		failures.append("presentation-only accessibility/audio toggles changed authoritative summary")

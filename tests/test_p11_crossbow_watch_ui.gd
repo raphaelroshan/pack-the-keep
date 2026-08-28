@@ -53,7 +53,7 @@ func _initialize() -> void:
 	ui._refresh_ui()
 	await process_frame
 	_check(not ui.keep.wave_active and ui.keep.wave_history.size() == 1, "Red Banner Road teaching wave should resolve through the UI")
-	_check(String(ui.scorecard_label.text).contains("Red Banner Road") and String(ui.scorecard_label.text).contains("W1"), "Results should identify the P11 scenario and resolved wave")
+	_check(String(ui.scorecard_label.text).contains("Red Banner Road") and String(ui.scorecard_label.text).contains("PHASE 1"), "Results should identify the P11 scenario and resolved assault phase")
 
 	ui.queue_free()
 	await process_frame

@@ -190,7 +190,7 @@ def validate_report(path: Path, build_version: str, errors: list[str]) -> None:
     clean_install_fields = (
         "offline_proxy_guard", "controller_navigation_ready", "controller_defaults_ready",
         "controller_remap_ready", "ui_scale_ready", "settings_scale_ready", "settings_remap_ready",
-        "initial_pause_ready", "paused_state_frozen", "remapped_pause_ready", "manual_step_ready",
+        "initial_realtime_ready", "paused_state_frozen", "remapped_pause_ready", "manual_step_ready",
     )
     for field in clean_install_fields:
         if clean_install.get(field) is not True:

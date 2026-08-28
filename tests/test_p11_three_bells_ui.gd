@@ -16,7 +16,7 @@ func _initialize() -> void:
 	ui._set_screen("preparation")
 	ui._select_option_metadata(ui.scenario_option, "three_bells_at_dusk")
 	ui._on_select_scenario()
-	_check(String(ui.scenario_preview_label.text).contains("Three Bells at Dusk") and String(ui.scenario_preview_label.text).contains("Waves: 3"), "Preparation should expose the three-wave P11 challenge")
+	_check(String(ui.scenario_preview_label.text).contains("Three Bells at Dusk") and String(ui.scenario_preview_label.text).contains("Assault phases: 3"), "Preparation should expose the three-phase P11 challenge")
 	ui.keep.open_pack("bell_guard")
 	ui.keep.open_pack("crossbow_watch")
 	ui.keep.place_piece("pike_squad", Vector2i(0, 3), "ground")

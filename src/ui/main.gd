@@ -21,8 +21,8 @@ const SETTINGS_SCHEMA_VERSION := 4
 const SETTINGS_PATH := "user://pack_the_keep_settings.json"
 const SETTINGS_TEMP_PATH := "user://pack_the_keep_settings.json.tmp"
 const SETTINGS_BACKUP_PATH := "user://pack_the_keep_settings.json.bak"
-const UI_SCALE_PRESETS := [0.8, 1.0, 1.25, 1.5]
-const WINDOW_SIZE_PRESETS := [Vector2i(1280, 720), Vector2i(1600, 900), Vector2i(1920, 1080)]
+const UI_SCALE_PRESETS := [0.8, 1.0, 1.25, 1.5, 2.0]
+const WINDOW_SIZE_PRESETS := [Vector2i(1280, 720), Vector2i(1600, 900), Vector2i(1920, 1080), Vector2i(2560, 1440)]
 const EFFECTS_VOLUME_PRESETS := [0.25, 0.5, 0.75, 1.0]
 const EVENT_FEED_RETENTION_PRESETS := [4, 8, 16, 32]
 const RESERVED_CONTROLLER_NAVIGATION_BUTTONS := [0, 11, 12, 13, 14]
@@ -82,6 +82,7 @@ var preview_valid: bool = false
 var selected_instance_id: String = ""
 var inspected_text: String = "Click a room or placed piece on the keep to inspect its authoritative state."
 var gameplay_columns: BoxContainer
+var gameplay_main_column: VBoxContainer
 var page_scroll: ScrollContainer
 var command_scroll: ScrollContainer
 var command_panel: PanelContainer
@@ -104,6 +105,7 @@ var title_custom_button: Button
 var title_settings_button: Button
 var title_continue_button: Button
 var pause_button: Button
+var manual_step_button: Button
 var speed_button: Button
 var mute_button: Button
 var contrast_button: Button
@@ -128,7 +130,7 @@ var audio_muted: bool = false
 var high_contrast: bool = false
 var reduced_motion: bool = false
 var ui_scale_index: int = 1
-var window_size_index: int = 0
+var window_size_index: int = 1
 var fullscreen_enabled: bool = false
 var effects_volume_index: int = 3
 var event_feed_retention_index: int = 0
@@ -200,6 +202,10 @@ func _ready() -> void:
 	if OS.get_cmdline_user_args().has("--packaged-smoke") and OS.get_environment("PACK_THE_KEEP_PACKAGED_SMOKE") == "1":
 		call_deferred("_start_packaged_smoke")
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED and is_node_ready():
+		call_deferred("_apply_responsive_layout")
+
 func _start_packaged_smoke() -> void:
 	var smoke_harness: Node = PackagedSmoke.new()
 	get_tree().root.add_child(smoke_harness)
@@ -210,14 +216,19 @@ func _process(delta: float) -> void:
 		return
 	var battle_step_before: int = keep.battle_step
 	var breach_before: int = keep.breach_level
+	var engagement_traces: Array[Dictionary] = _next_engagement_traces()
 	var advance_delta: float = delta * _battle_speed()
 	if auto_pause_on_threat and battle_step_before == 0 and last_auto_pause_wave_index != keep.wave_index:
 		advance_delta = minf(advance_delta, maxf(0.0, 1.0 - keep.battle_clock))
 	var result: Dictionary = keep.advance_wave(advance_delta)
+	if keep_canvas != null:
+		keep_canvas.queue_redraw()
+	if keep.battle_step > battle_step_before and keep_canvas != null:
+		keep_canvas.call("show_engagements", engagement_traces)
 	if bool(result.get("resolved", false)):
 		battle_paused = true
 		_set_feedback(Color("#bfe8cf"), _outcome_cue(String(result.get("outcome", "unknown"))))
-		_set_event("Wave resolved: %s. Read the report before rebuilding." % String(result.get("outcome", "unknown")).replace("_", " "))
+		_set_event("Assault phase resolved: %s. Use the recovery lull before the next pressure arrives." % String(result.get("outcome", "unknown")).replace("_", " "))
 		_set_screen("results")
 	else:
 		if keep.battle_report.size() > last_log_size:
@@ -295,6 +306,22 @@ func _setup_audio() -> void:
 
 func _battle_speed() -> float:
 	return [0.5, 1.0, 2.0][battle_speed_index]
+
+func _next_engagement_traces() -> Array[Dictionary]:
+	var traces: Array[Dictionary] = []
+	if not keep.wave_active:
+		return traces
+	for enemy_index in range(keep.enemies.size()):
+		if bool(keep.enemies[enemy_index].get("defeated", false)):
+			continue
+		var response: Dictionary = keep.defender_response_preview(enemy_index)
+		for attacker in response.get("attackers", []):
+			traces.append({
+				"attacker_id": String(attacker.get("id", "")),
+				"enemy_index": enemy_index,
+				"damage": int(attacker.get("damage", 0))
+			})
+	return traces
 
 func _set_feedback(color: Color, cue_id: String = "") -> void:
 	if keep_canvas != null:
@@ -408,9 +435,12 @@ func _toggle_fullscreen() -> void:
 
 func _set_window_size(index: int) -> void:
 	window_size_index = clampi(index, 0, WINDOW_SIZE_PRESETS.size() - 1)
+	if window_size_index == 3 and ui_scale_index < 2:
+		ui_scale_index = 2
 	_apply_display_settings()
+	_apply_ui_scale()
 	_save_preferences()
-	_set_event("Windowed resolution set to %s%s." % [_window_size_text(), " for the next windowed session" if fullscreen_enabled else ""])
+	_set_event("Windowed resolution set to %s%s%s." % [_window_size_text(), " for the next windowed session" if fullscreen_enabled else "", " with 125% UI scale for 1440p readability" if window_size_index == 3 and ui_scale_index == 2 else ""])
 	_refresh_ui()
 
 func _cycle_window_size() -> void:
@@ -458,11 +488,25 @@ func _apply_display_settings() -> void:
 
 func _apply_ui_scale() -> void:
 	get_window().content_scale_factor = float(UI_SCALE_PRESETS[ui_scale_index])
-	if gameplay_columns != null:
-		gameplay_columns.vertical = ui_scale_index >= 2
+	_apply_responsive_layout()
+
+func _apply_responsive_layout() -> void:
+	if gameplay_columns == null:
+		return
+	var logical_width: float = size.x
+	var stacked: bool = logical_width < 1160.0
+	gameplay_columns.vertical = stacked
+	gameplay_columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if gameplay_main_column != null:
+		gameplay_main_column.custom_minimum_size.x = 810.0
+		gameplay_main_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if command_panel != null:
-		command_panel.custom_minimum_size.x = 810.0 if ui_scale_index >= 2 else 292.0
-		command_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL if ui_scale_index >= 2 else Control.SIZE_SHRINK_BEGIN
+		command_panel.custom_minimum_size.x = 810.0 if stacked else 360.0 if logical_width >= 1500.0 else 292.0
+		command_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL if stacked else Control.SIZE_SHRINK_BEGIN
+	if keep_canvas != null:
+		keep_canvas.custom_minimum_size.y = 420.0 if not stacked and size.y >= 900.0 else 292.0
+		keep_canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		keep_canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 func _begin_rebind(action: String = "") -> void:
 	if action.is_empty() and rebind_action_option != null and rebind_action_option.selected >= 0:
@@ -648,7 +692,7 @@ func _load_preferences() -> void:
 	high_contrast = false
 	reduced_motion = false
 	ui_scale_index = 1
-	window_size_index = 0
+	window_size_index = 1
 	fullscreen_enabled = false
 	effects_volume_index = 3
 	event_feed_retention_index = 0
@@ -808,14 +852,15 @@ func _build_ui() -> void:
 	var columns: BoxContainer = BoxContainer.new()
 	columns.vertical = ui_scale_index >= 2
 	columns.add_theme_constant_override("separation", 14)
-	columns.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	gameplay_columns = columns
 	shell.add_child(columns)
 
 	var left: VBoxContainer = VBoxContainer.new()
 	left.custom_minimum_size = Vector2(810, 0)
-	left.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left.add_theme_constant_override("separation", 8)
+	gameplay_main_column = left
 	columns.add_child(left)
 
 	main_title_label = Label.new()
@@ -874,6 +919,8 @@ func _build_ui() -> void:
 
 	keep_canvas = KeepCanvas.new()
 	keep_canvas.custom_minimum_size = Vector2(810, 292)
+	keep_canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	keep_canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	keep_canvas.keep = keep
 	keep_canvas.connect("map_hovered", Callable(self, "_on_map_hovered"))
 	keep_canvas.connect("map_clicked", Callable(self, "_on_map_clicked"))
@@ -1192,6 +1239,11 @@ func _build_ui() -> void:
 	pause_button.tooltip_text = "Pause or resume automatic battle timing. Manual N steps remain deterministic."
 	pause_button.pressed.connect(_toggle_battle_pause)
 	battle_section.add_child(pause_button)
+	manual_step_button = Button.new()
+	manual_step_button.text = "Step once while paused (N)"
+	manual_step_button.tooltip_text = "Resolve exactly one deterministic combat tick while the assault is paused."
+	manual_step_button.pressed.connect(_on_advance_wave)
+	battle_section.add_child(manual_step_button)
 	speed_button = Button.new()
 	speed_button.text = "Speed: 1.0x (1/2/3)"
 	speed_button.tooltip_text = "Cycle battle speed; speed changes timing only, never outcomes."
@@ -1200,7 +1252,7 @@ func _build_ui() -> void:
 
 	commander_ability_button = Button.new()
 	commander_ability_button.text = "Lockdown (Castellan)"
-	commander_ability_button.tooltip_text = "Use the active commander ability once per wave."
+	commander_ability_button.tooltip_text = "Use the active commander ability once per assault phase."
 	commander_ability_button.pressed.connect(_on_use_ability)
 	battle_section.add_child(commander_ability_button)
 
@@ -1284,7 +1336,7 @@ func _build_ui() -> void:
 	settings_section.add_child(event_feed_button)
 	auto_pause_button = Button.new()
 	auto_pause_button.text = "Threat auto-pause: OFF"
-	auto_pause_button.tooltip_text = "Pause after the first resolved threat step in each wave and after a new breach; resume manually when ready."
+	auto_pause_button.tooltip_text = "Pause after first contact in each assault phase and after a new breach; resume manually when ready."
 	auto_pause_button.pressed.connect(_toggle_auto_pause_on_threat)
 	settings_section.add_child(auto_pause_button)
 	rebind_action_option = OptionButton.new()
@@ -1553,9 +1605,9 @@ func _set_screen(next_screen: String) -> void:
 	if input_help_label:
 		input_help_label.text = {
 			"setup": "Choose the strategic context here. The board stays out of the way until the briefing is confirmed.",
-			"preparation": "Open a pack, select a piece, then arm placement and click the fort. The main action starts Battle paused.",
-			"battle": "Space pauses. N advances one deterministic step. Inspect the focused threat before committing the ability.",
-			"results": "Use the two recovery actions deliberately. The next wave starts paused only after explicit confirmation.",
+			"preparation": "Open a pack, select a piece, then arm placement and click the fort. The main action starts the assault in real time.",
+			"battle": "The assault runs continuously. Space pauses; N resolves one deterministic tick while paused.",
+			"results": "Use the two recovery actions deliberately. The next assault phase resumes only after explicit confirmation.",
 			"settings": "Every option here is presentation-only and remains separate from authoritative run state."
 		}.get(screen, "Tab/D-pad moves focus. Enter/A confirms.")
 	if screen_hint:
@@ -1564,10 +1616,10 @@ func _set_screen(next_screen: String) -> void:
 		elif screen == "preparation":
 			screen_hint.text = "Place and assign before opening the next doctrine."
 		elif screen == "battle":
-			screen_hint.text = "Advance one step; inspect enemies before spending Lockdown."
+			screen_hint.text = "The assault is live; pause to inspect before spending the commander ability."
 		elif screen == "results":
 			if keep and keep.repair_interval_active and keep.has_next_wave():
-				screen_hint.text = "Repair or assign, then finish the interval to start the next wave automatically."
+				screen_hint.text = "Repair or assign during the lull, then release the next assault phase."
 			else:
 				screen_hint.text = "Read the report, repair what matters, then return to preparation."
 		elif screen == "settings":
@@ -1739,7 +1791,7 @@ func _refresh_scenario_preview() -> void:
 	var pack_names: Array[String] = []
 	for pack_id in preview.get("recommended_packs", []):
 		pack_names.append(String(keep.pack_definition(String(pack_id)).get("name", pack_id)))
-	scenario_preview_label.text = "SCENARIO — %s / %s\nObjective: %s\nLesson: %s\nRecommended doctrine: %s\nWaves: %d | Seed variation: %s" % [String(preview.get("keep_name", "Keep")), String(preview.get("name", "")), String(preview.get("objective", "")), String(preview.get("lesson", "")), " + ".join(pack_names), int(preview.get("wave_count", 0)), String(preview.get("variation_id", "standard"))]
+	scenario_preview_label.text = "SCENARIO — %s / %s\nObjective: %s\nLesson: %s\nRecommended doctrine: %s\nAssault phases: %d | Seed variation: %s" % [String(preview.get("keep_name", "Keep")), String(preview.get("name", "")), String(preview.get("objective", "")), String(preview.get("lesson", "")), " + ".join(pack_names), int(preview.get("wave_count", 0)), String(preview.get("variation_id", "standard"))]
 
 func _refresh_room_options() -> void:
 	if room_option == null:
@@ -1797,9 +1849,9 @@ func _refresh_campaign_ledger() -> void:
 func _modifier_effect_text(definition: Dictionary) -> String:
 	var effect: String = String(definition.get("effect", ""))
 	if effect == "reveal_wave_composition":
-		return "Effect: reveal the next authored wave composition. Cost: %d less starting morale." % int(definition.get("starting_morale_cost", 0))
+		return "Effect: reveal the next authored assault composition. Cost: %d less starting morale." % int(definition.get("starting_morale_cost", 0))
 	if effect == "enemy_health_bonus":
-		return "Challenge: every enemy begins each wave with +%d health. Starting morale is unchanged." % int(definition.get("enemy_health_bonus", 0))
+		return "Challenge: every enemy begins each assault phase with +%d health. Starting morale is unchanged." % int(definition.get("enemy_health_bonus", 0))
 	return String(definition.get("short_role", "Unknown modifier effect."))
 
 func _event_ledger_text() -> String:
@@ -1813,7 +1865,7 @@ func _event_ledger_text() -> String:
 		var history_heading: String = "RECENT EVENTS — newest %d of %d" % [entries.size(), int(snapshot.get("total", entries.size()))] if bool(snapshot.get("truncated", false)) else "RECENT EVENTS — newest first"
 		rows.append(history_heading)
 		for entry in entries:
-			rows.append("W%d %s → %s" % [int(entry.get("wave", 0)), _event_ledger_name(entry), String(entry.get("visible_result", ""))])
+			rows.append("P%d %s → %s" % [int(entry.get("wave", 0)), _event_ledger_name(entry), String(entry.get("visible_result", ""))])
 	if not flags.is_empty():
 		rows.append("RUN FLAGS")
 		for flag in flags:
@@ -2144,13 +2196,13 @@ func _refresh_recovery_action_cards() -> void:
 	finish_interval_button.disabled = not keep.active_event_id.is_empty()
 	finish_interval_button.tooltip_text = "Resolve the active event before continuing." if finish_interval_button.disabled else "Close recovery explicitly; unused actions are recorded and never spent automatically."
 	if keep.has_next_wave():
-		finish_interval_button.text = "CONTINUE — START WAVE %d/%d" % [keep.wave_index + 1, keep.authored_wave_count()]
+		finish_interval_button.text = "END LULL — RELEASE PHASE %d/%d" % [keep.wave_index + 1, keep.authored_wave_count()]
 	else:
 		finish_interval_button.text = "FINISH RECOVERY"
 
 func _on_remove_piece() -> void:
 	if keep.wave_active or keep.repair_interval_active:
-		_set_event("Piece removal is preparation-only; finish the active wave or recovery interval first.")
+		_set_event("Piece removal is preparation-only; finish the active assault phase or recovery lull first.")
 		return
 	var instance_id: String = _selected_piece_instance()
 	if instance_id.is_empty():
@@ -2173,10 +2225,10 @@ func _on_start_wave() -> void:
 	var result: Dictionary = keep.start_wave(_selected_id(doctrine_option))
 	_run_result(result, "Invasion")
 	if bool(result.get("ok", false)):
-		battle_paused = true
+		battle_paused = false
 		last_log_size = keep.battle_report.size()
 		_set_screen("battle")
-		_set_event("Invasion staged. Battle is paused for inspection; press Space to run or N to step.")
+		_set_event("Assault underway at %.1fx. Press Space to pause and inspect; N advances one tick while paused." % _battle_speed())
 		_refresh_ui()
 
 func _selected_piece_instance() -> String:
@@ -2205,26 +2257,30 @@ func _on_finish_interval() -> void:
 	_run_result(result, "Interval")
 	if bool(result.get("ok", false)):
 		if bool(result.get("next_wave_started", false)):
-			battle_paused = true
+			battle_paused = false
 			focused_enemy_index = -1
 			last_log_size = 0
 			_set_screen("battle")
-			_set_event("Next wave staged automatically. Battle is paused for inspection; press Space to run or N to step.")
+			_set_event("The recovery lull ends and assault phase %d begins in real time." % keep.wave_index)
 			_refresh_ui()
 		else:
 			_set_screen("preparation")
 
 func _on_advance_wave() -> void:
+	var engagement_traces: Array[Dictionary] = _next_engagement_traces()
 	var result: Dictionary = keep.advance_wave(1.0)
+	if bool(result.get("ok", false)) and keep_canvas != null:
+		keep_canvas.call("show_engagements", engagement_traces)
 	if not bool(result.get("ok", false)):
 		_set_event("Battle blocked: %s." % String(result.get("reason", "unknown")))
 		_play_cue("error")
 	elif bool(result.get("resolved", false)):
+		battle_paused = true
 		_set_feedback(Color("#bfe8cf"), _outcome_cue(String(result.get("outcome", "unknown"))))
 		if keep.has_next_wave() and keep.repair_interval_active:
-			_set_event("Wave %d resolved: %s. Recovery is open; finish the interval to start wave %d automatically." % [keep.wave_index, String(result.get("outcome", "unknown")).replace("_", " "), keep.wave_index + 1])
+			_set_event("Assault phase %d resolved: %s. Recovery lull open before phase %d." % [keep.wave_index, String(result.get("outcome", "unknown")).replace("_", " "), keep.wave_index + 1])
 		else:
-			_set_event("Wave %d resolved: %s. Read the final report." % [keep.wave_index, String(result.get("outcome", "unknown")).replace("_", " ")])
+			_set_event("Final assault phase resolved: %s. Read the report." % String(result.get("outcome", "unknown")).replace("_", " "))
 		_set_screen("results")
 	else:
 		_set_feedback(Color("#d7a35b"), "contact")
@@ -2324,7 +2380,7 @@ func _on_playtest_primary_action() -> void:
 	elif screen == "preparation":
 		_on_start_wave()
 	elif screen == "battle":
-		_on_advance_wave()
+		_toggle_battle_pause()
 
 func _on_start_quick_playtest() -> void:
 	_reset_for_setup()
@@ -2384,6 +2440,7 @@ func _on_continue_saved_run() -> void:
 	_on_load()
 	setup_confirmed = keep.scenario_active
 	if keep.wave_active:
+		battle_paused = false
 		_set_screen("battle")
 	elif keep.repair_interval_active or not keep.wave_history.is_empty():
 		_set_screen("results")
@@ -2399,7 +2456,7 @@ func _on_quick_test_action() -> void:
 		return
 	if screen == "battle":
 		if keep.wave_active:
-			_on_advance_wave()
+			_toggle_battle_pause()
 		else:
 			_set_event("Battle is complete. Review Results or restart the quick playtest.")
 			_refresh_ui()
@@ -2409,8 +2466,6 @@ func _on_quick_test_action() -> void:
 		_refresh_ui()
 		return
 	_on_start_wave()
-	if keep.wave_active:
-		_on_advance_wave()
 
 func _on_reset_run() -> void:
 	keep.reset_run(3307)
@@ -2438,12 +2493,12 @@ func _first_battle_guidance() -> String:
 			return "FIRST BATTLE GUIDE — Resolve the authored forecast choice in the command table, then place the defense and start the invasion."
 		if keep.pieces.is_empty():
 			return "FIRST BATTLE GUIDE — 1 Use the recommended starter layout, or place Pike Squad in the courtyard and Narrow Gate by the gate. 2 Open one pack if you want a second doctrine. 3 Start the invasion when the board reads clearly."
-		return "FIRST BATTLE GUIDE — Layout ready. Read the FORECAST, then start the invasion. Battle begins paused; use Space to run or N to resolve one readable step."
+		return "FIRST BATTLE GUIDE — Layout ready. Read the FORECAST, then begin the assault. It runs immediately; use Space to pause or N to resolve one readable tick while paused."
 	if screen == "battle":
-		return "FIRST BATTLE GUIDE — The fort stays visible while enemies enter through the gate. Read the event feed after each step; use the focused enemy and response preview before spending the commander ability."
+		return "FIRST BATTLE GUIDE — The fort stays visible while enemies move continuously toward contact. Pause when needed; the focused response preview shows the next committed defenders."
 	if screen == "results":
 		if keep.repair_interval_active and keep.has_next_wave():
-			return "INTER-WAVE RECOVERY — Read the causal result, spend up to two repair or assignment actions, then finish the interval to start wave %d/%d automatically." % [keep.wave_index + 1, keep.authored_wave_count()]
+			return "RECOVERY LULL — Read the causal result, spend up to two repair or assignment actions, then release assault phase %d/%d." % [keep.wave_index + 1, keep.authored_wave_count()]
 		if keep.authored_wave_count() > 0 and keep.wave_index >= keep.authored_wave_count():
 			return "SCENARIO COMPLETE — Read the final causal result, then restart the quick playtest to test a different doctrine response."
 		return "FIRST BATTLE GUIDE — Read the causal result below, repair the highest-priority room, then finish the interval before the next doctrine. Change one placement at a time to learn the counter."
@@ -2453,14 +2508,14 @@ func _scorecard_compact_text() -> String:
 	var rows: Array[String] = []
 	for index in range(keep.wave_history.size()):
 		var wave: Dictionary = keep.wave_history[index]
-		rows.append("W%d %s/%s" % [int(wave.get("wave", index + 1)), String(wave.get("doctrine", "")).replace("_", " "), String(wave.get("outcome", "")).replace("_", " ")])
-	return " | ".join(rows) if not rows.is_empty() else "No resolved waves yet"
+		rows.append("P%d %s/%s" % [int(wave.get("wave", index + 1)), String(wave.get("doctrine", "")).replace("_", " "), String(wave.get("outcome", "")).replace("_", " ")])
+	return " | ".join(rows) if not rows.is_empty() else "No resolved assault phases yet"
 
 func _refresh_result_explanation() -> void:
 	if result_explain_label == null:
 		return
 	if keep.last_outcome.is_empty():
-		result_explain_label.text = "RESULT GUIDE — Finish a wave to see what the forecast, placement, and response produced."
+		result_explain_label.text = "RESULT GUIDE — Finish an assault phase to see what the forecast, placement, and response produced."
 		return
 	var report: Dictionary = keep.scenario_report()
 	var final_state: Dictionary = report.get("final_state", {})
@@ -2473,15 +2528,15 @@ func _refresh_result_explanation() -> void:
 	result_explain_label.text = "CAUSAL RESULT — FINAL KEEP\nMorale %d | Breach %d | Materials %d | Defenders %d active / %d disabled\nWHAT WORKED\n%s\nWHAT FAILED\n%s\nTRY NEXT — %s" % [int(final_state.get("morale", 0)), int(final_state.get("breach_level", 0)), int(final_state.get("materials", 0)), int(final_state.get("surviving_pieces", 0)), int(final_state.get("disabled_pieces", 0)), "\n".join(worked_lines), "\n".join(failed_lines), String(report.get("suggested_experiment", "Replay one changed decision."))]
 	var score_rows: Array[String] = []
 	for wave in report.get("wave_rows", []):
-		score_rows.append("W%d — %s — %s\nPressure: %s | Defeated %d | Room %d | Piece %d | recovery actions %d" % [int(wave.get("wave", score_rows.size() + 1)), String(wave.get("doctrine", "")).replace("_", " ").capitalize(), String(wave.get("outcome", "")).replace("_", " ").to_upper(), String(wave.get("principal_pressure", "Unknown pressure")), int(wave.get("defeated_enemies", 0)), int(wave.get("room_damage", 0)), int(wave.get("piece_damage", 0)), int(wave.get("recovery_actions_used", 0))])
+		score_rows.append("PHASE %d — %s — %s\nPressure: %s | Defeated %d | Room %d | Piece %d | recovery actions %d" % [int(wave.get("wave", score_rows.size() + 1)), String(wave.get("doctrine", "")).replace("_", " ").capitalize(), String(wave.get("outcome", "")).replace("_", " ").to_upper(), String(wave.get("principal_pressure", "Unknown pressure")), int(wave.get("defeated_enemies", 0)), int(wave.get("room_damage", 0)), int(wave.get("piece_damage", 0)), int(wave.get("recovery_actions_used", 0))])
 	var report_heading: String = "SCENARIO REPORT" if String(report.get("status", "in_progress")) == "complete" else "RUN SO FAR"
 	var event_snapshot: Dictionary = keep.event_ledger_snapshot(5)
 	var event_rows: Array[String] = []
 	for event_entry in event_snapshot.get("entries", []):
-		event_rows.append("W%d %s → %s" % [int(event_entry.get("wave", 0)), _event_ledger_name(event_entry), String(event_entry.get("visible_result", ""))])
+		event_rows.append("P%d %s → %s" % [int(event_entry.get("wave", 0)), _event_ledger_name(event_entry), String(event_entry.get("visible_result", ""))])
 	var event_heading: String = "EVENT CONSEQUENCES — newest %d of %d" % [event_rows.size(), int(event_snapshot.get("total", event_rows.size()))] if bool(event_snapshot.get("truncated", false)) else "EVENT CONSEQUENCES — newest first"
 	var event_report: String = "\n%s\n%s" % [event_heading, "\n".join(event_rows)] if not event_rows.is_empty() else ""
-	scorecard_label.text = "%s — %s | %s\n%s%s%s\nREPLAY KEY — %s" % [report_heading, String(report.get("scenario_name", keep.scenario_id)), String(report.get("commander_name", keep.commander_id)), "\n".join(score_rows) if not score_rows.is_empty() else "No resolved waves yet.", event_report, _regional_report_text(true), String(report.get("replay_key", ""))]
+	scorecard_label.text = "%s — %s | %s\n%s%s%s\nREPLAY KEY — %s" % [report_heading, String(report.get("scenario_name", keep.scenario_id)), String(report.get("commander_name", keep.commander_id)), "\n".join(score_rows) if not score_rows.is_empty() else "No resolved assault phases yet.", event_report, _regional_report_text(true), String(report.get("replay_key", ""))]
 
 func _refresh_ui() -> void:
 	_refresh_room_options()
@@ -2512,13 +2567,13 @@ func _refresh_ui() -> void:
 	var interval_text: String = "closed"
 	if keep.repair_interval_active:
 		interval_text = "%d action(s): %s" % [keep.repair_actions_remaining, keep.repair_interval_reason]
-	status_label.text = "%s | %s / %s | Materials %d | Command %d | Morale %d | Pieces %d | Wave %d | Step %d | Breach %d | %s | Repair %s" % [keep.summary().get("commander", "Commander"), String(keep.keep_definition().get("name", keep.keep_id)), String(keep.scenario_preview().get("name", "Free drill")), keep.materials, keep.command_points, keep.morale, keep.pieces.size(), keep.wave_index, keep.battle_step, keep.breach_level, "PAUSED" if battle_paused else "RUNNING %.1fx" % _battle_speed(), interval_text]
+	status_label.text = "%s | %s / %s | Materials %d | Command %d | Morale %d | Pieces %d | Assault %d | Tick %d | Breach %d | %s | Recovery %s" % [keep.summary().get("commander", "Commander"), String(keep.keep_definition().get("name", keep.keep_id)), String(keep.scenario_preview().get("name", "Free drill")), keep.materials, keep.command_points, keep.morale, keep.pieces.size(), keep.wave_index, keep.battle_step, keep.breach_level, "PAUSED" if battle_paused else "LIVE %.1fx" % _battle_speed(), interval_text]
 	var commander: Dictionary = keep.commander_definition(keep.commander_id)
 	commander_profile_label.text = "%s\nPassive: %s\nAbility: %s — %s\nLimitation: %s" % [String(commander.get("name", keep.commander_id)), String(commander.get("passive", "")), String(commander.get("ability_name", "")), String(commander.get("ability_text", "")), String(commander.get("limitation", ""))]
 	commander_portrait.modulate = Color("#9fb9c3") if keep.commander_id == "warden" else Color.WHITE
 	commander_portrait.tooltip_text = "The Warden — Open Lanes and Rally" if keep.commander_id == "warden" else "The Castellan — Layered Masonry and Lockdown"
 	commander_ability_button.text = "%s (%s)" % [String(commander.get("ability_name", "Ability")), String(commander.get("name", keep.commander_id)).replace("The ", "")]
-	commander_ability_button.tooltip_text = String(commander.get("ability_text", "Use once per wave."))
+	commander_ability_button.tooltip_text = String(commander.get("ability_text", "Use once per assault phase."))
 	var forecast: Dictionary = keep.forecast()
 	forecast_label.text = "FORECAST — %s | Likely target: %s | Uncertainty: %s | Scout: %s" % [String(forecast.get("doctrine", "")).replace("_", " "), String(forecast.get("likely_target", "")), String(forecast.get("uncertainty", "")), "revealed" if bool(forecast.get("scout_bonus", false)) else "not revealed"]
 	if bool(forecast.get("signal_disrupted", false)):
@@ -2546,7 +2601,7 @@ func _refresh_ui() -> void:
 	enemy_label.text = "ENEMIES — " + (" | ".join(enemy_lines) if not enemy_lines.is_empty() else "No active enemies. Start an invasion to see doctrine-driven actors.")
 	var metrics: Dictionary = keep.combat_metrics
 	metrics_label.text = "METRICS — steps %d | unit attacks %d | damage dealt %d | ammo spent %d | enemy attacks %d | room damage %d | piece damage %d | repairs %d | disabled %d | defeated %d" % [int(metrics.get("battle_steps", 0)), int(metrics.get("unit_attacks", 0)), int(metrics.get("damage_dealt", 0)), int(metrics.get("ammo_spent", 0)), int(metrics.get("enemy_attacks", 0)), int(metrics.get("room_damage", 0)), int(metrics.get("piece_damage", 0)), int(metrics.get("repairs", 0)), int(metrics.get("disabled_units", 0)), int(metrics.get("defeated_enemies", 0))]
-	combat_explain_label.text = "COMBAT — defenders commit to one threat each step before surviving enemies make contact. Priority is deterministic: contact, arrival, effective counter damage, pressure, remaining health, then wave slot. Pause and focus an enemy to preview the next commitment."
+	combat_explain_label.text = "REAL-TIME ASSAULT — enemies move continuously while deterministic combat ticks resolve underneath. Defenders commit once per tick before contact. Pause at any time to inspect the next response."
 	var available_names: Array[String] = []
 	for available_id in keep.available_pieces:
 		available_names.append(String(keep.piece_definition(available_id).get("name", available_id)))
@@ -2573,23 +2628,23 @@ func _refresh_ui() -> void:
 	guidance_label.text = _first_battle_guidance()
 	if playtest_button:
 		if screen == "preparation":
-			playtest_button.text = "START INVASION — PAUSED"
+			playtest_button.text = "BEGIN ASSAULT — REAL TIME"
 			playtest_button.disabled = keep.pieces.is_empty() or keep.repair_interval_active or not keep.active_event_id.is_empty()
-			playtest_button.tooltip_text = "Stage the selected invasion and enter Battle paused before the first step."
+			playtest_button.tooltip_text = "Begin the selected assault immediately at the chosen speed. Space pauses at any time."
 			if not keep.active_event_id.is_empty():
 				playtest_status_label.text = "EVENT WAITING — choose an authored response before the invasion can begin."
 			else:
-				playtest_status_label.text = "DEFENSE READY — %d piece(s) placed. Battle opens paused so the first pressure can be inspected." % keep.pieces.size() if not keep.pieces.is_empty() else "DEFENSE WAITING — use the recommended layout or place at least one defender first."
+				playtest_status_label.text = "DEFENSE READY — %d piece(s) placed. The assault begins live; Space pauses for inspection." % keep.pieces.size() if not keep.pieces.is_empty() else "DEFENSE WAITING — use the recommended layout or place at least one defender first."
 		elif screen == "battle":
-			playtest_button.text = "ADVANCE ONE STEP — INSPECT"
+			playtest_button.text = "RESUME ASSAULT" if battle_paused else "PAUSE — INSPECT"
 			playtest_button.disabled = not keep.wave_active
-			playtest_button.tooltip_text = "Resolve one deterministic battle step and remain paused for inspection."
-			playtest_status_label.text = "STEP %d — Battle is %s. Use this button or N for one step; use Space for real-time play." % [keep.battle_step, "paused" if battle_paused else "running"]
+			playtest_button.tooltip_text = "Resume continuous combat." if battle_paused else "Pause immediately without advancing authoritative combat."
+			playtest_status_label.text = "ASSAULT PHASE %d/%d · TICK %d · %s — Space toggles pause; N advances one tick while paused." % [keep.wave_index, maxi(1, keep.authored_wave_count()), keep.battle_step, "PAUSED" if battle_paused else "LIVE %.1fx" % _battle_speed()]
 		elif screen == "results":
 			if keep.repair_interval_active and keep.has_next_wave():
-				playtest_button.text = "CONTINUE — START WAVE %d/%d" % [keep.wave_index + 1, keep.authored_wave_count()]
+				playtest_button.text = "END LULL — RELEASE PHASE %d/%d" % [keep.wave_index + 1, keep.authored_wave_count()]
 				playtest_button.disabled = false
-				playtest_button.tooltip_text = "Close recovery and automatically start the next authored wave."
+				playtest_button.tooltip_text = "Close recovery and return immediately to the live assault."
 				playtest_status_label.text = "RECOVERY — %d action(s) remain. Repair or assign, then continue. %s" % [keep.repair_actions_remaining, _scorecard_compact_text()]
 			else:
 				playtest_button.text = "REVIEW SETUP — PLAY AGAIN"
@@ -2601,9 +2656,10 @@ func _refresh_ui() -> void:
 	for index in range(start, keep.battle_report.size()):
 		recent.append(keep.battle_report[index])
 	recent.reverse()
-	log_label.text = "COMBAT EVENT FEED — newest %d, newest first\n" % _event_feed_retention() + ("\n".join(recent) if not recent.is_empty() else "No wave has started. This feed will name the forecast, response, target, damage, and recovery.")
+	log_label.text = "COMBAT EVENT FEED — newest %d, newest first\n" % _event_feed_retention() + ("\n".join(recent) if not recent.is_empty() else "No assault has started. This feed will name the forecast, response, target, damage, and recovery.")
 
 	pause_button.text = "Resume battle (Space)" if battle_paused else "Pause battle (Space)"
+	manual_step_button.disabled = not keep.wave_active or not battle_paused
 	speed_button.text = "Speed: %.1fx (1/2/3)" % _battle_speed()
 	mute_button.text = "Feedback tones: OFF" if audio_muted else "Feedback tones: ON"
 	contrast_button.text = "High-contrast cues: ON" if high_contrast else "High-contrast cues: OFF"
@@ -2635,6 +2691,7 @@ class KeepCanvas extends Control:
 	var keep: PackKeepState
 	const CELL_X := 18.0
 	const CELL_Y := 28.0
+	const BASE_CANVAS_SIZE := Vector2(810, 292)
 	const MAP_ORIGIN := Vector2(12, 28)
 	const UPPER_ORIGIN := Vector2(436, 28)
 	const MAP_SIZE := Vector2(12 * CELL_X, 8 * CELL_Y)
@@ -2648,6 +2705,8 @@ class KeepCanvas extends Control:
 	var high_contrast_mode: bool = false
 	var reduced_motion_mode: bool = false
 	var focused_enemy_index: int = -1
+	var engagement_traces: Array[Dictionary] = []
+	var engagement_ttl: float = 0.0
 
 	func set_focus(index: int) -> void:
 		focused_enemy_index = index
@@ -2674,31 +2733,89 @@ class KeepCanvas extends Control:
 		reduced_motion_mode = enabled
 		if enabled:
 			feedback_ttl = 0.0
+			engagement_ttl = 0.0
+			engagement_traces.clear()
+		queue_redraw()
+
+	func show_engagements(traces: Array[Dictionary]) -> void:
+		if reduced_motion_mode:
+			return
+		engagement_traces = traces.duplicate(true)
+		engagement_ttl = 0.34
 		queue_redraw()
 
 	func _process(delta: float) -> void:
 		if feedback_ttl > 0.0:
 			feedback_ttl = maxf(0.0, feedback_ttl - delta)
 			queue_redraw()
+		if engagement_ttl > 0.0:
+			engagement_ttl = maxf(0.0, engagement_ttl - delta)
+			if engagement_ttl <= 0.0:
+				engagement_traces.clear()
+			queue_redraw()
+		if keep != null and keep.wave_active:
+			queue_redraw()
+
+	func _board_scale() -> float:
+		return maxf(0.01, minf(size.x / BASE_CANVAS_SIZE.x, size.y / BASE_CANVAS_SIZE.y))
+
+	func _board_offset() -> Vector2:
+		var scale_factor: float = _board_scale()
+		return (size - BASE_CANVAS_SIZE * scale_factor) * 0.5
+
+	func _view_to_board(position: Vector2) -> Vector2:
+		return (position - _board_offset()) / _board_scale()
+
+	func _piece_board_origin(instance_id: String) -> Vector2:
+		if not keep.pieces.has(instance_id):
+			return Vector2.ZERO
+		var instance: Dictionary = keep.pieces[instance_id]
+		var piece_id: String = String(instance.get("piece_id", ""))
+		var piece: Dictionary = keep.piece_definition(piece_id)
+		var floor_origin: Vector2 = UPPER_ORIGIN if String(instance.get("floor", "ground")) == "upper" else MAP_ORIGIN
+		var cell: Vector2i = instance.get("origin", Vector2i.ZERO)
+		return floor_origin + Vector2(cell.x * CELL_X, cell.y * CELL_Y) + Vector2(piece.size.x * CELL_X, piece.size.y * CELL_Y) * 0.5
+
+	func _enemy_contact_point(index: int, fallback: Vector2) -> Vector2:
+		var enemy: Dictionary = keep.enemies[index]
+		var enemy_id: String = String(enemy.get("enemy_id", ""))
+		var target_id: String = String(enemy.get("target", ""))
+		if target_id.is_empty():
+			var target_rooms: Array = keep.enemy_definition(enemy_id).get("target_rooms", [])
+			if not target_rooms.is_empty():
+				target_id = String(target_rooms[0])
+		if keep.room_definitions().has(target_id):
+			var target_room: Dictionary = keep.room_definition(target_id)
+			var room_origin: Vector2 = UPPER_ORIGIN if String(target_room.get("floor", "ground")) == "upper" else MAP_ORIGIN
+			return _room_rect(target_id, room_origin).get_center()
+		if keep.pieces.has(target_id):
+			return _piece_board_origin(target_id)
+		return fallback
 
 	func _enemy_origin(index: int) -> Vector2:
 		var enemy: Dictionary = keep.enemies[index]
 		var enemy_id: String = String(enemy.get("enemy_id", ""))
 		var entry_offset: Vector2 = Vector2(-16.0 + float(index % 2) * 32.0, float(index) * 5.0)
 		var gate_start: Vector2 = MAP_ORIGIN + Vector2(MAP_SIZE.x * 0.5, MAP_SIZE.y - 10) + entry_offset
-		var courtyard_target: Vector2 = MAP_ORIGIN + Vector2(MAP_SIZE.x * 0.5, MAP_SIZE.y * 0.55) + entry_offset * 0.35
-		var origin: Vector2 = gate_start.lerp(courtyard_target, clampf(keep.wave_progress, 0.0, 1.0))
+		var fallback_target: Vector2 = MAP_ORIGIN + Vector2(MAP_SIZE.x * 0.5, MAP_SIZE.y * 0.55) + entry_offset * 0.35
+		var start: Vector2 = gate_start
 		if enemy_id == "climber":
-			var wall_start: Vector2 = UPPER_ORIGIN + Vector2(MAP_SIZE.x + 30, MAP_SIZE.y * 0.35 + index * 18)
-			var wall_target: Vector2 = UPPER_ORIGIN + Vector2(MAP_SIZE.x * 0.45, 18 + index * 18)
-			origin = wall_start.lerp(wall_target, clampf(keep.wave_progress, 0.0, 1.0))
+			start = UPPER_ORIGIN + Vector2(MAP_SIZE.x + 30, MAP_SIZE.y * 0.35 + index * 18)
+			fallback_target = UPPER_ORIGIN + Vector2(MAP_SIZE.x * 0.45, 18 + index * 18)
 		elif enemy_id == "siege_beast":
-			origin = gate_start.lerp(courtyard_target + Vector2(0, 18), clampf(keep.wave_progress, 0.0, 1.0))
-		return origin
+			fallback_target += Vector2(0, 18)
+		var arrival_step: float = maxf(1.0, float(enemy.get("arrival_step", 1)))
+		var continuous_time: float = float(keep.battle_step)
+		if not reduced_motion_mode:
+			continuous_time += keep.battle_clock
+		var progress: float = clampf(continuous_time / arrival_step, 0.0, 1.0)
+		progress = progress * progress * (3.0 - 2.0 * progress)
+		return start.lerp(_enemy_contact_point(index, fallback_target), progress)
 
 	func _enemy_hit(position: Vector2) -> int:
 		if keep == null or not keep.wave_active:
 			return -1
+		var board_position: Vector2 = _view_to_board(position)
 		var best_index: int = -1
 		var best_distance: float = INF
 		for index in range(keep.enemies.size()):
@@ -2707,13 +2824,14 @@ class KeepCanvas extends Control:
 				continue
 			var enemy_id: String = String(enemy.get("enemy_id", ""))
 			var radius: float = 12.0 if enemy_id == "siege_beast" else 8.0
-			var distance: float = position.distance_to(_enemy_origin(index))
+			var distance: float = board_position.distance_to(_enemy_origin(index))
 			if distance <= radius + 8.0 and (distance < best_distance or (is_equal_approx(distance, best_distance) and index < best_index)):
 				best_index = index
 				best_distance = distance
 		return best_index
 
 	func _map_hit(position: Vector2) -> Dictionary:
+		position = _view_to_board(position)
 		var hit_floor: String = ""
 		var origin: Vector2 = MAP_ORIGIN
 		if Rect2(MAP_ORIGIN, MAP_SIZE).has_point(position):
@@ -3040,9 +3158,27 @@ class KeepCanvas extends Control:
 			var doctrine_initial: String = "R" if enemy_id == "raider" else "S" if enemy_id == "sapper" else "C" if enemy_id == "climber" else "G" if enemy_id == "shield_guard" else "A" if enemy_id == "ash_slinger" else "X" if enemy_id == "shieldbreaker" else "B"
 			draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(-3, 4), doctrine_initial, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#271b22"))
 
+	func _draw_engagement_traces() -> void:
+		if engagement_ttl <= 0.0 or engagement_traces.is_empty():
+			return
+		var intensity: float = clampf(engagement_ttl / 0.34, 0.0, 1.0)
+		for trace in engagement_traces:
+			var attacker_id: String = String(trace.get("attacker_id", ""))
+			var enemy_index: int = int(trace.get("enemy_index", -1))
+			if not keep.pieces.has(attacker_id) or enemy_index < 0 or enemy_index >= keep.enemies.size():
+				continue
+			var start: Vector2 = _piece_board_origin(attacker_id)
+			var target: Vector2 = _enemy_origin(enemy_index)
+			var trace_color: Color = Color(1.0, 0.77, 0.35, 0.35 + intensity * 0.55)
+			draw_line(start, target, trace_color, 2.0 + intensity * 1.5)
+			draw_circle(target, 5.0 + intensity * 6.0, trace_color, false, 2.0)
+			draw_string(ThemeDB.fallback_font, target + Vector2(10, -8), "-%d" % int(trace.get("damage", 0)), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#fff4df"))
+
 	func _draw() -> void:
 		if keep == null:
 			return
+		var scale_factor: float = _board_scale()
+		draw_set_transform(_board_offset(), 0.0, Vector2(scale_factor, scale_factor))
 		var visual: Dictionary = keep.keep_definition().get("visual", {})
 		_draw_floor(String(visual.get("ground_label", "GROUND FLOOR")), "ground", MAP_ORIGIN)
 		_draw_floor(String(visual.get("upper_label", "UPPER FLOOR")), "upper", UPPER_ORIGIN)
@@ -3054,12 +3190,14 @@ class KeepCanvas extends Control:
 			draw_rect(rect, preview_color, true)
 			draw_rect(rect, Color("#bff0cc") if preview_valid else Color("#ffb0a6"), false, 2.0)
 			draw_string(ThemeDB.fallback_font, rect.position + Vector2(3, 12), "VALID" if preview_valid else "INVALID", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#fff4df"))
+		_draw_engagement_traces()
 		_draw_enemies()
 		if keep.wave_active:
 			var progress_width: float = 2.0 * MAP_SIZE.x * keep.wave_progress
 			draw_rect(Rect2(MAP_ORIGIN + Vector2(0, MAP_SIZE.y + 12), Vector2(2.0 * MAP_SIZE.x, 8)), Color("#402630"), true)
 			draw_rect(Rect2(MAP_ORIGIN + Vector2(0, MAP_SIZE.y + 12), Vector2(progress_width, 8)), Color("#d26155"), true)
 			draw_string(ThemeDB.fallback_font, MAP_ORIGIN + Vector2(0, MAP_SIZE.y + 34), "RED = active invasion | Lines = declared target | AREA = Siege Beast pressure | State text is authoritative", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#bfaeaa"))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		if feedback_ttl > 0.0:
 			var feedback_alpha: float = minf(0.32, feedback_ttl * 0.9)
 			draw_rect(Rect2(Vector2.ZERO, size), Color(feedback_color, feedback_alpha), false, 5.0)

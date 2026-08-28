@@ -36,7 +36,7 @@ def complete_report(profile_dir: Path, version: str, phase: str, executable: Pat
         report.update({
             "controller_remap_ready": True, "ui_scale_ready": True,
             "settings_scale_ready": True, "settings_remap_ready": True,
-            "initial_pause_ready": True, "paused_state_frozen": True,
+            "initial_realtime_ready": True, "paused_state_frozen": True,
             "remapped_pause_ready": True, "manual_step_ready": True,
             "profile_files_present": False, "profile_files_complete": False,
         })
@@ -223,7 +223,7 @@ class PackagedSmokeReportTests(unittest.TestCase):
                 "ui_scale_ready": False,
                 "settings_scale_ready": False,
                 "settings_remap_ready": False,
-                "initial_pause_ready": False,
+                "initial_realtime_ready": False,
                 "paused_state_frozen": False,
                 "remapped_pause_ready": False,
                 "manual_step_ready": False,

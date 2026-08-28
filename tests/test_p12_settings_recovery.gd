@@ -84,7 +84,7 @@ func _initialize() -> void:
 	_remove_test_files()
 	_write(TEST_TEMP, _settings(0, true, 0))
 	ui._load_preferences()
-	_check(ui.battle_speed_index == 1 and not ui.audio_muted and ui.ui_scale_index == 1 and ui.window_size_index == 0 and not ui.fullscreen_enabled and ui.effects_volume_index == 3 and ui.event_feed_retention_index == 0 and not ui.auto_pause_on_threat, "temporary settings alone should fall back to documented defaults")
+	_check(ui.battle_speed_index == 1 and not ui.audio_muted and ui.ui_scale_index == 1 and ui.window_size_index == 1 and not ui.fullscreen_enabled and ui.effects_volume_index == 3 and ui.event_feed_retention_index == 0 and not ui.auto_pause_on_threat, "temporary settings alone should fall back to documented defaults")
 	_check(_has_joypad_binding("battle_pause", 6) and _has_joypad_binding("placement_arm", 10), "temporary-only settings should restore default controller bindings")
 
 	_remove_test_files()
