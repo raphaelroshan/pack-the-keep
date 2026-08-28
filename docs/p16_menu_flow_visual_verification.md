@@ -1,0 +1,7 @@
+# P16 Menu-to-Playtest Visual Verification
+
+The `0.16.6-menu-flow` journey was captured from the real Godot renderer at 1280×720 on the main menu, guided briefing, settings, preparation, paused battle, and first recovery report.
+
+The main menu presents one dominant guided-playtest action, two secondary routes, three compact promise cards, the keep artwork, and the exact pre-alpha build identity without exposing gameplay controls. The briefing keeps the board hidden, shows the chosen commander/scenario/modifier as a compact summary, leaves the detailed selector rail independently scrollable, and keeps **Enter Keep — Recommended Layout** visible without scrolling. Preparation resets the page to the top, makes the fort the main body, places **Start Invasion — Paused** above it, and starts the command rail with pack decisions instead of the full layout report.
+
+The dedicated settings screen contains only presentation controls and a clear return action. Paused Battle replaces build tools with pause, speed, ability, threat inspection, and response preview. Recovery/Report replaces those with the two-action recovery puzzle and an explicit next-wave action. Unavailable future phases are disabled in the navigation bar. No capture showed overlapping controls, clipped primary actions, or an unrelated command group on the active screen; the command rail and outer page remain intentionally scrollable for lower-priority detail and scaled layouts.

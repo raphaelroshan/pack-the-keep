@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.16.5",
+  "content_version": "0.16.6",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -260,13 +260,15 @@
     "required_matrix": ["castellan_baseline", "castellan_hardened_vanguard", "warden_baseline", "warden_hardened_vanguard"],
     "build_identity_surface": "title_screen_pre_alpha_build_label",
     "artifact_provenance": ["source_revision", "artifact_filename", "artifact_sha256", "artifact_size_bytes"],
-    "playtest_kit": "ci_bundles_playtest_build_json_beside_the_exact_windows_executable",
+    "playtest_kit": "ci_bundles_playtest_build_json_observer_brief_and_four_unfilled_matrix_templates_beside_the_exact_windows_executable",
+    "launch_flow": "main_menu_to_briefing_to_preparation_to_paused_battle_to_recovery_or_report",
+    "screen_distribution": "briefing_build_battle_recovery_and_settings_controls_are_contextual_not_one_long_command_list",
     "matrix_rule": "all_four_required_combinations_must_share_one_source_revision_and_artifact_sha256",
     "human_gate": "pending",
     "release_ready": false,
     "scope_boundary": "automation_validates_evidence_shape_but_never_authors_observations_approves_distribution_or_marks_release_ready",
     "triage": "stable_issue_keys_group_repeated_findings_into_deterministic_reversible_task_candidates",
-    "evidence": ["docs/p16_human_playtest_protocol.md", "tools/write_playtest_build_manifest.py", "tools/new_playtest_session.py", "tools/validate_p16_playtests.py", "tools/summarize_p16_playtests.py", "tests/test_p16_playtest_build_manifest.py", "tests/test_p16_playtest_protocol.py", "tests/test_p16_playtest_summary.py", "tests/test_p16_playtest_readiness_ui.gd"],
+    "evidence": ["docs/p16_human_playtest_protocol.md", "docs/p16_menu_flow_visual_verification.md", "tools/write_playtest_build_manifest.py", "tools/new_playtest_session.py", "tools/validate_p16_playtests.py", "tools/summarize_p16_playtests.py", "tests/test_p16_playtest_build_manifest.py", "tests/test_p16_playtest_protocol.py", "tests/test_p16_playtest_summary.py", "tests/test_p16_playtest_readiness_ui.gd", "tests/test_menu_flow_ui.gd"],
     "next_slice": "p16_human_sessions_then_release_preparation"
   },
   "campaign": {
