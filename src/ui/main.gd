@@ -229,6 +229,7 @@ func _process(delta: float) -> void:
 		target_impacts = _resolved_target_impacts(target_snapshot)
 		if keep_canvas != null:
 			keep_canvas.call("show_combat_exchange", engagement_traces, target_impacts)
+		_ensure_enemy_focus()
 	if bool(result.get("resolved", false)):
 		battle_paused = true
 		_set_feedback(Color("#bfe8cf"), _outcome_cue(String(result.get("outcome", "unknown"))))
@@ -247,7 +248,9 @@ func _process(delta: float) -> void:
 				last_auto_pause_wave_index = keep.wave_index
 			_play_cue("warning")
 			_set_event("Accessibility auto-pause: %s resolved. Inspect the board, then resume when ready." % ("first threat step" if first_threat_step else "new breach"))
-		_refresh_ui()
+			_refresh_ui()
+		elif keep.battle_step > battle_step_before:
+			_refresh_ui()
 
 func _input(event: InputEvent) -> void:
 	if not rebind_waiting_action.is_empty() and _capture_rebind_input(event):
@@ -969,6 +972,7 @@ func _build_ui() -> void:
 	keep_canvas.connect("map_hovered", Callable(self, "_on_map_hovered"))
 	keep_canvas.connect("map_clicked", Callable(self, "_on_map_clicked"))
 	keep_canvas.connect("enemy_clicked", Callable(self, "_on_enemy_clicked"))
+	keep_canvas.connect("timeline_enemy_clicked", Callable(self, "_on_timeline_enemy_clicked"))
 	left.add_child(keep_canvas)
 
 	forecast_label = Label.new()
@@ -2093,22 +2097,63 @@ func _active_enemy_indices() -> Array[int]:
 			indices.append(index)
 	return indices
 
-func _select_enemy_focus(index: int, source: String) -> void:
+func _priority_enemy_index() -> int:
+	var best_index: int = -1
+	for index in _active_enemy_indices():
+		if best_index < 0:
+			best_index = index
+			continue
+		var candidate: Dictionary = keep.enemies[index]
+		var selected: Dictionary = keep.enemies[best_index]
+		var candidate_arrival: int = int(candidate.get("arrival_step", 1))
+		var selected_arrival: int = int(selected.get("arrival_step", 1))
+		var candidate_contact: bool = keep.battle_step >= candidate_arrival
+		var selected_contact: bool = keep.battle_step >= selected_arrival
+		if candidate_contact != selected_contact:
+			if candidate_contact:
+				best_index = index
+			continue
+		if candidate_arrival != selected_arrival:
+			if candidate_arrival < selected_arrival:
+				best_index = index
+			continue
+		var candidate_id: String = String(candidate.get("enemy_id", ""))
+		var selected_id: String = String(selected.get("enemy_id", ""))
+		var candidate_damage: int = int(keep.enemy_definition(candidate_id).get("damage", 0))
+		var selected_damage: int = int(keep.enemy_definition(selected_id).get("damage", 0))
+		if candidate_damage > selected_damage:
+			best_index = index
+	return best_index
+
+func _apply_enemy_focus(index: int) -> bool:
 	if index < 0 or index >= keep.enemies.size() or bool(keep.enemies[index].get("defeated", false)):
-		return
+		return false
 	focused_enemy_index = index
-	var inspection: Dictionary = keep.inspect_enemy(index)
-	inspected_text = _format_inspection(inspection)
+	inspected_text = _format_inspection(keep.inspect_enemy(index))
+	if keep_canvas != null:
+		keep_canvas.call("set_focus", focused_enemy_index)
+	return true
+
+func _ensure_enemy_focus() -> bool:
+	if focused_enemy_index >= 0 and focused_enemy_index < keep.enemies.size() and not bool(keep.enemies[focused_enemy_index].get("defeated", false)):
+		return false
+	return _apply_enemy_focus(_priority_enemy_index())
+
+func _select_enemy_focus(index: int, source: String) -> void:
+	if not _apply_enemy_focus(index):
+		return
 	for option_index in range(enemy_option.item_count):
 		if int(enemy_option.get_item_metadata(option_index)) == index:
 			enemy_option.select(option_index)
 			break
 	_set_event("Enemy %d focused via %s. Pause and choose the response." % [index + 1, source])
-	keep_canvas.call("set_focus", focused_enemy_index)
 	_refresh_ui()
 
 func _on_enemy_clicked(index: int) -> void:
 	_select_enemy_focus(index, "map click")
+
+func _on_timeline_enemy_clicked(index: int) -> void:
+	_select_enemy_focus(index, "timeline marker")
 
 func _cycle_enemy_focus(direction: int) -> void:
 	var active: Array[int] = _active_enemy_indices()
@@ -2271,6 +2316,8 @@ func _on_start_wave() -> void:
 	if bool(result.get("ok", false)):
 		battle_paused = false
 		last_log_size = keep.battle_report.size()
+		focused_enemy_index = -1
+		_ensure_enemy_focus()
 		_set_screen("battle")
 		_set_event("Assault underway at %.1fx. Press Space to pause and inspect; N advances one tick while paused." % _battle_speed())
 		_refresh_ui()
@@ -2304,6 +2351,7 @@ func _on_finish_interval() -> void:
 			battle_paused = false
 			focused_enemy_index = -1
 			last_log_size = 0
+			_ensure_enemy_focus()
 			_set_screen("battle")
 			_set_event("The recovery lull ends and assault phase %d begins in real time." % keep.wave_index)
 			_refresh_ui()
@@ -2317,6 +2365,8 @@ func _on_advance_wave() -> void:
 	var target_impacts: Array[Dictionary] = _resolved_target_impacts(target_snapshot) if bool(result.get("ok", false)) else []
 	if bool(result.get("ok", false)) and keep_canvas != null:
 		keep_canvas.call("show_combat_exchange", engagement_traces, target_impacts)
+	if bool(result.get("ok", false)):
+		_ensure_enemy_focus()
 	if not bool(result.get("ok", false)):
 		_set_event("Battle blocked: %s." % String(result.get("reason", "unknown")))
 		_play_cue("error")
@@ -2488,6 +2538,7 @@ func _on_continue_saved_run() -> void:
 	setup_confirmed = keep.scenario_active
 	if keep.wave_active:
 		battle_paused = false
+		_ensure_enemy_focus()
 		_set_screen("battle")
 	elif keep.repair_interval_active or not keep.wave_history.is_empty():
 		_set_screen("results")
@@ -2661,6 +2712,8 @@ func _refresh_ui() -> void:
 		var enemy_id: String = String(keep.enemies[enemy_index].get("enemy_id", ""))
 		enemy_option.add_item("%d — %s" % [enemy_index + 1, String(keep.enemy_definition(enemy_id).get("name", enemy_id))])
 		enemy_option.set_item_metadata(enemy_option.item_count - 1, enemy_index)
+		if enemy_index == focused_enemy_index:
+			enemy_option.select(enemy_option.item_count - 1)
 	inspector_label.text = inspected_text
 	if placement_mode:
 		var selected_id: String = _selected_id(piece_option)
@@ -2735,6 +2788,7 @@ class KeepCanvas extends Control:
 	signal map_hovered(floor: String, cell: Vector2i)
 	signal map_clicked(floor: String, cell: Vector2i)
 	signal enemy_clicked(index: int)
+	signal timeline_enemy_clicked(index: int)
 	var keep: PackKeepState
 	const CELL_X := 18.0
 	const CELL_Y := 28.0
@@ -2956,6 +3010,31 @@ class KeepCanvas extends Control:
 				best_distance = distance
 		return best_index
 
+	func _timeline_layout() -> Dictionary:
+		var left: float = MAP_ORIGIN.x
+		var right: float = UPPER_ORIGIN.x + MAP_SIZE.x
+		var top: float = MAP_ORIGIN.y + MAP_SIZE.y + 12.0
+		var gap: float = 3.0
+		return {"left": left, "right": right, "top": top, "gap": gap, "segment_width": (right - left - gap * float(ASSAULT_TICK_COUNT - 1)) / float(ASSAULT_TICK_COUNT)}
+
+	func _timeline_marker_origin(tick_number: int, marker_index: int, marker_count: int) -> Vector2:
+		var layout: Dictionary = _timeline_layout()
+		var segment_width: float = float(layout.segment_width)
+		var segment_left: float = float(layout.left) + float(tick_number - 1) * (segment_width + float(layout.gap))
+		return Vector2(segment_left + segment_width * 0.5 + (float(marker_index) - float(marker_count - 1) * 0.5) * 10.0, float(layout.top) - 5.0)
+
+	func _timeline_enemy_hit(position: Vector2) -> int:
+		if keep == null or not keep.wave_active:
+			return -1
+		var board_position: Vector2 = _view_to_board(position)
+		var timeline: Dictionary = assault_timeline_snapshot()
+		for tick_number in range(1, ASSAULT_TICK_COUNT + 1):
+			var arrival_rows: Array = timeline.get("arrivals", {}).get(str(tick_number), [])
+			for marker_index in range(arrival_rows.size()):
+				if board_position.distance_to(_timeline_marker_origin(tick_number, marker_index, arrival_rows.size())) <= 9.0:
+					return int(arrival_rows[marker_index].get("index", -1))
+		return -1
+
 	func _map_hit(position: Vector2) -> Dictionary:
 		position = _view_to_board(position)
 		var hit_floor: String = ""
@@ -2979,6 +3058,10 @@ class KeepCanvas extends Control:
 			var enemy_index: int = _enemy_hit(event.position)
 			if enemy_index >= 0:
 				emit_signal("enemy_clicked", enemy_index)
+				return
+			var timeline_enemy_index: int = _timeline_enemy_hit(event.position)
+			if timeline_enemy_index >= 0:
+				emit_signal("timeline_enemy_clicked", timeline_enemy_index)
 				return
 			var hit: Dictionary = _map_hit(event.position)
 			if not String(hit.get("floor", "")).is_empty():
@@ -3294,11 +3377,12 @@ class KeepCanvas extends Control:
 		if keep == null or not keep.wave_active:
 			return
 		var timeline: Dictionary = assault_timeline_snapshot()
-		var left: float = MAP_ORIGIN.x
-		var right: float = UPPER_ORIGIN.x + MAP_SIZE.x
-		var top: float = MAP_ORIGIN.y + MAP_SIZE.y + 12.0
-		var gap: float = 3.0
-		var segment_width: float = (right - left - gap * float(ASSAULT_TICK_COUNT - 1)) / float(ASSAULT_TICK_COUNT)
+		var layout: Dictionary = _timeline_layout()
+		var left: float = float(layout.left)
+		var right: float = float(layout.right)
+		var top: float = float(layout.top)
+		var gap: float = float(layout.gap)
+		var segment_width: float = float(layout.segment_width)
 		var resolved_ticks: int = int(timeline.get("resolved_ticks", 0))
 		var fractional_tick: float = float(timeline.get("fractional_tick", 0.0))
 		var completed_color: Color = Color("#77c7a0") if high_contrast_mode else Color("#4f9278")
@@ -3317,8 +3401,7 @@ class KeepCanvas extends Control:
 			for marker_index in range(arrival_rows.size()):
 				var marker: Dictionary = arrival_rows[marker_index]
 				var enemy_id: String = String(marker.get("enemy_id", ""))
-				var marker_x: float = segment.get_center().x + (float(marker_index) - float(arrival_rows.size() - 1) * 0.5) * 10.0
-				var marker_origin: Vector2 = Vector2(marker_x, top - 5.0)
+				var marker_origin: Vector2 = _timeline_marker_origin(tick_number, marker_index, arrival_rows.size())
 				draw_circle(marker_origin, 5.0, _enemy_marker_color(enemy_id))
 				draw_circle(marker_origin, 5.0, Color("#fff4df"), false, 1.0)
 				draw_string(ThemeDB.fallback_font, marker_origin + Vector2(-2.5, 2.8), _enemy_marker_initial(enemy_id), HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("#211a24"))

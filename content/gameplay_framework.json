@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.17.0-assault-timeline",
+  "framework_version": "0.17.1-threat-focus",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -338,6 +338,16 @@
     "layout": "replaces_the_existing_board_footer_progress_bar_without_adding_a_panel",
     "accessibility": "high_contrast_colors_preserve_tick_and_enemy_initial_labels",
     "non_goals": ["timeline_scrubbing", "timeline_commands", "arrival_retiming", "sub_tick_damage"]
+  },
+  "p20_threat_focus_handoff": {
+    "status": "implemented",
+    "initial_focus": "highest_priority_living_threat_on_assault_start_or_active_save_load",
+    "priority": ["already_in_contact", "earlier_arrival", "higher_damage", "stable_enemy_index"],
+    "handoff": "preserve_living_player_focus_and_replace_only_invalid_or_defeated_focus",
+    "focus_inputs": ["map_marker", "timeline_arrival_marker", "dropdown", "keyboard_or_controller_cycle"],
+    "synchronization": ["map_outline", "timeline_source", "dropdown", "inspector", "response_preview"],
+    "live_refresh": "status_metrics_feed_timeline_and_focus_refresh_after_each_resolved_tick",
+    "non_goals": ["focus_fire_command", "defender_retargeting", "command_point_cost", "simulation_mutation"]
   },
   "v090_multi_wave": {
     "status": "implemented",

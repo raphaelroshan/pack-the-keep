@@ -25,6 +25,10 @@ func _initialize() -> void:
 		failures.append("start wave did not activate the invasion")
 	if ui.battle_paused:
 		failures.append("new invasion should begin in real-time playback")
+	if ui.focused_enemy_index != ui._priority_enemy_index() or ui.focused_enemy_index < 0 or not String(ui.response_preview_label.text).contains("FOCUSED"):
+		failures.append("live battle did not begin with the highest-priority threat and a populated response preview")
+	if ui.enemy_option.selected < 0 or int(ui.enemy_option.get_item_metadata(ui.enemy_option.selected)) != ui.focused_enemy_index:
+		failures.append("automatic threat focus did not synchronize the enemy dropdown")
 	var serialized_before_timeline: String = JSON.stringify(ui.keep.serialize())
 	var timeline_before: Dictionary = ui.keep_canvas.assault_timeline_snapshot()
 	var arrival_marker_count: int = 0
@@ -34,6 +38,34 @@ func _initialize() -> void:
 		failures.append("assault timeline did not expose six ticks, stable active-enemy arrivals, and the next contact")
 	if JSON.stringify(ui.keep.serialize()) != serialized_before_timeline:
 		failures.append("assault timeline inspection mutated authoritative state")
+	var first_arrival_key: String = str(int(timeline_before.get("next_arrival_step", 1)))
+	var first_arrival_rows: Array = timeline_before.get("arrivals", {}).get(first_arrival_key, [])
+	if not first_arrival_rows.is_empty():
+		var marker_board: Vector2 = ui.keep_canvas._timeline_marker_origin(int(first_arrival_key), 0, first_arrival_rows.size())
+		var marker_view: Vector2 = ui.keep_canvas._board_offset() + marker_board * ui.keep_canvas._board_scale()
+		var marker_enemy_index: int = int(first_arrival_rows[0].get("index", -1))
+		if ui.keep_canvas._timeline_enemy_hit(marker_view) != marker_enemy_index:
+			failures.append("timeline arrival marker hit testing did not resolve the matching enemy")
+		var timeline_click: InputEventMouseButton = InputEventMouseButton.new()
+		timeline_click.button_index = MOUSE_BUTTON_LEFT
+		timeline_click.pressed = true
+		timeline_click.position = marker_view
+		ui.keep_canvas._gui_input(timeline_click)
+		if ui.focused_enemy_index != marker_enemy_index or not String(ui.event_label.text).contains("timeline marker"):
+			failures.append("timeline arrival click did not route through the dedicated focus source")
+	var focus_state_before: String = JSON.stringify(ui.keep.serialize())
+	if ui.keep.enemies.size() > 1:
+		ui._on_enemy_clicked(1)
+		ui._ensure_enemy_focus()
+		if ui.focused_enemy_index != 1:
+			failures.append("automatic focus replaced a living player-selected threat")
+		ui.keep.enemies[1].defeated = true
+		ui._ensure_enemy_focus()
+		if ui.focused_enemy_index != 0:
+			failures.append("defeated threat did not hand focus to the next deterministic priority")
+		ui.keep.enemies[1].defeated = false
+	if JSON.stringify(ui.keep.serialize()) != focus_state_before:
+		failures.append("threat focus selection or handoff mutated authoritative state")
 	var moving_origin: Vector2 = ui.keep_canvas._enemy_origin(0)
 	ui._process(0.25)
 	if ui.keep.battle_step != 0 or ui.keep_canvas._enemy_origin(0) == moving_origin:
@@ -52,6 +84,9 @@ func _initialize() -> void:
 	var preview_traces: Array[Dictionary] = ui._next_engagement_traces()
 	if preview_traces.is_empty() or String(preview_traces[0].get("style", "")) != "melee":
 		failures.append("engagement traces did not retain the defender's data-driven combat style")
+	ui._process(0.8)
+	if ui.keep.battle_step != 1 or not String(ui.status_label.text).contains("Tick 1"):
+		failures.append("live UI did not refresh status after an automatic deterministic tick")
 	var space_event: InputEventKey = InputEventKey.new()
 	space_event.physical_keycode = 32
 	space_event.pressed = true

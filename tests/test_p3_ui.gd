@@ -17,13 +17,12 @@ func _initialize() -> void:
 		failures.append("P3 setup could not start a valid invasion")
 
 	var before_focus: Dictionary = ui.keep.summary()
-	ui._cycle_enemy_focus(1)
 	if ui.focused_enemy_index != 0:
-		failures.append("forward focus did not select the first active enemy")
+		failures.append("battle start did not automatically focus the first priority enemy")
 	if not ui.response_preview_label.text.contains("FOCUSED 1"):
-		failures.append("response preview did not expose the selected enemy")
+		failures.append("response preview did not expose the automatically focused enemy")
 	if ui.enemy_option.selected < 0 or int(ui.enemy_option.get_item_metadata(ui.enemy_option.selected)) != 0:
-		failures.append("map/focus selection did not synchronize the enemy fallback dropdown")
+		failures.append("automatic focus did not synchronize the enemy fallback dropdown")
 
 	var marker_position: Vector2 = ui.keep_canvas._enemy_origin(0)
 	if ui.keep_canvas._enemy_hit(marker_position) != 0:
