@@ -98,7 +98,8 @@ def main() -> int:
         print(f"ERROR: {exc}")
         return 1
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    with args.output.open("w", encoding="utf-8", newline="\n") as stream:
+        stream.write(json.dumps(manifest, indent=2) + "\n")
     print(f"Playtest build manifest: WROTE {args.output}")
     return 0
 

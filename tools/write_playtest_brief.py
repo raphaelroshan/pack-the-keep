@@ -94,7 +94,8 @@ def main() -> int:
         print(f"ERROR: {exc}")
         return 1
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(rendered, encoding="utf-8")
+    with args.output.open("w", encoding="utf-8", newline="\n") as stream:
+        stream.write(rendered)
     print(f"Playtest observer brief: WROTE {args.output}")
     return 0
 

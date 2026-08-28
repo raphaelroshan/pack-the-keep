@@ -66,6 +66,7 @@ class P16PlaytestBriefTests(unittest.TestCase):
             rendered = output_path.read_text(encoding="utf-8")
             self.assertIn("`24680`", rendered)
             self.assertIn(manifest["artifact"]["sha256"], rendered)
+            self.assertNotIn(b"\r\n", output_path.read_bytes())
 
     def test_cli_rejects_tampered_artifact(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
