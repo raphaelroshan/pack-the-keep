@@ -148,6 +148,24 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         self.assertIn("repair_room references unknown room", joined)
         self.assertIn("piece_available must reference a known piece", joined)
 
+    def test_event_trigger_wave_array_rejects_duplicates_and_range(self) -> None:
+        event = copy.deepcopy(load("data/events/wrong_wall_report.json"))
+        event["trigger"]["wave"] = [1, 1, 4]
+        errors: list[str] = []
+        validator.validate_event(
+            Path("wrong_wall_report.json"),
+            event,
+            {"wrong_wall"},
+            set(),
+            set(),
+            errors,
+            {"workshop"},
+            {"repair_station"},
+        )
+        joined = "\n".join(errors)
+        self.assertIn("trigger waves must be integers from 0 to 3", joined)
+        self.assertIn("trigger wave array contains a duplicate", joined)
+
     def test_modifier_rejects_unknown_unlock_effect_and_cost(self) -> None:
         modifier = copy.deepcopy(load("data/modifiers/roadside_intelligence.json"))
         modifier["unlock_event"] = "missing_event"

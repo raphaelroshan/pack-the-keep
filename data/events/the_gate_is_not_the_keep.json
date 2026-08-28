@@ -1,0 +1,28 @@
+{
+  "id": "the_gate_is_not_the_keep",
+  "content_version": 1,
+  "status": "active",
+  "title": "The Gate Is Not the Keep",
+  "short_role": "Decide whether scarce recovery belongs to the Workshop support chain.",
+  "type": "recovery",
+  "scenario": "wrong_wall",
+  "trigger": {"phase": "recovery", "wave": 1},
+  "setup": "The entrance still stands, but the Workshop has taken the support pressure. Repair it now, or keep the stores and accept the exposed dependency.",
+  "choices": [
+    {
+      "id": "repair_workshop",
+      "label": "Repair Workshop (8 materials, 1 action)",
+      "requirements": {"materials": {"gte": 8}, "recovery_actions": {"gte": 1}},
+      "effects": [{"op": "repair_room", "room": "workshop"}],
+      "visible_result": "The Workshop regains thirty condition before the next mixed pressure."
+    },
+    {
+      "id": "defer_workshop",
+      "label": "Keep the stores for the wall",
+      "requirements": {},
+      "effects": [{"op": "set_flag", "flag": "wrong_wall_workshop_deferred", "value": true}],
+      "visible_result": "Materials and recovery actions are preserved, but the Workshop remains exposed."
+    }
+  ],
+  "follow_up": "wrong_wall_report"
+}

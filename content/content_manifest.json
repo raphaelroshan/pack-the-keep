@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.13.1",
+  "content_version": "0.13.2",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -198,14 +198,15 @@
   },
   "p13_workshop_event": {
     "status": "implemented",
-    "event_ids": ["workshop_can_wait"],
-    "scenario": "gatehouse_lock",
+    "event_ids": ["workshop_can_wait", "the_bell_has_a_pattern", "the_gate_is_not_the_keep", "wrong_wall_report"],
+    "scenarios": ["gatehouse_lock", "wrong_wall"],
     "trigger": "wave_two_recovery_when_workshop_condition_is_at_most_70",
     "choices": ["repair_workshop", "assign_repair_station"],
     "effect_model": "typed_recovery_commands_reuse_authoritative_room_repair_and_piece_assignment_mutations",
     "validation": "eligibility_atomic_rejection_save_load_deterministic_replay_ui_and_visual_checkpoint",
     "ledger_projection": "newest_first_five_entry_read_model_with_stable_sorted_run_flags",
-    "next_slice": "p13_three_event_chain"
+    "wrong_wall_chain": ["the_bell_has_a_pattern", "the_gate_is_not_the_keep", "wrong_wall_report"],
+    "next_slice": "p13_character_arc"
   },
   "campaign": {
     "title": "The Bell at Dusk",

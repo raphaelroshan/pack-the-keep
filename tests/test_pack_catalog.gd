@@ -40,7 +40,7 @@ func _initialize() -> void:
 	var doctrine_errors: Array[String] = catalog.validate_doctrine_definition(malformed_doctrine, "wrong_filename", catalog.enemy_ids())
 	_check(doctrine_errors.size() >= 4, "catalog validator did not reject missing fields, ID mismatch, enemy references, and incomplete counters")
 	_check(catalog.scenario_ids() == ["gatehouse_lock", "wrong_wall", "open_yard_net", "relief_road", "red_banner_road", "ash_at_the_bell", "the_splintered_gate", "three_bells_at_dusk"], "scenario catalog order or active IDs changed")
-	_check(catalog.event_ids() == ["relief_road_warning", "relief_road_recovery", "relief_road_report", "workshop_can_wait"], "event catalog order or active IDs changed")
+	_check(catalog.event_ids() == ["relief_road_warning", "relief_road_recovery", "relief_road_report", "workshop_can_wait", "the_bell_has_a_pattern", "the_gate_is_not_the_keep", "wrong_wall_report"], "event catalog order or active IDs changed")
 	_check(catalog.modifier_ids() == ["roadside_intelligence", "hardened_vanguard"], "modifier catalog order or active IDs changed")
 	var intelligence: Dictionary = catalog.modifier_definition("roadside_intelligence")
 	_check(String(intelligence.get("unlock_event", "")) == "relief_road_report" and int(intelligence.get("starting_morale_cost", 0)) == 1, "Roadside Intelligence did not load its unlock source and tradeoff")
@@ -201,7 +201,7 @@ func _initialize() -> void:
 
 	var first: PackKeepState = PackKeepState.new(3307)
 	var second: PackKeepState = PackKeepState.new(3307)
-	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("pack_count", 0)) == 9 and int(first.content_catalog_status().get("commander_count", 0)) == 2 and int(first.content_catalog_status().get("piece_count", 0)) == 17 and int(first.content_catalog_status().get("enemy_count", 0)) == 7 and int(first.content_catalog_status().get("doctrine_count", 0)) == 8 and int(first.content_catalog_status().get("scenario_count", 0)) == 8 and int(first.content_catalog_status().get("event_count", 0)) == 4 and int(first.content_catalog_status().get("modifier_count", 0)) == 2, "KeepState did not expose the complete P13 runtime catalog")
+	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("pack_count", 0)) == 9 and int(first.content_catalog_status().get("commander_count", 0)) == 2 and int(first.content_catalog_status().get("piece_count", 0)) == 17 and int(first.content_catalog_status().get("enemy_count", 0)) == 7 and int(first.content_catalog_status().get("doctrine_count", 0)) == 8 and int(first.content_catalog_status().get("scenario_count", 0)) == 8 and int(first.content_catalog_status().get("event_count", 0)) == 7 and int(first.content_catalog_status().get("modifier_count", 0)) == 2, "KeepState did not expose the complete P13 runtime catalog")
 	_check(first.piece_ids() == catalog.piece_ids(), "KeepState did not preserve stable piece order")
 	_check(first.enemy_ids() == catalog.enemy_ids(), "KeepState did not preserve stable enemy order")
 	_check(first.doctrine_ids() == catalog.doctrine_ids(), "KeepState did not preserve stable doctrine order")

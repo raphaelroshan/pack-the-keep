@@ -25,6 +25,8 @@ func _check_command(result: Dictionary, label: String) -> bool:
 	return false
 
 func _setup_baseline(state: RefCounted, scenario_id: String) -> bool:
+	if scenario_id == "wrong_wall" and not _check_command(state.choose_event_option("hold_gate_command"), "Wrong Wall warning"):
+		return false
 	if not _check_command(state.place_piece("pike_squad", Vector2i(0, 3), "ground"), "%s starter placement" % scenario_id):
 		return false
 	match scenario_id:
@@ -89,6 +91,12 @@ func _resolve_event(state: RefCounted, label: String) -> bool:
 			return _check_command(state.choose_event_option("release_field_stores"), "%s recovery event" % label)
 		"relief_road_report":
 			return _check_command(state.choose_event_option("record_the_cost"), "%s report event" % label)
+		"the_bell_has_a_pattern":
+			return _check_command(state.choose_event_option("hold_gate_command"), "%s Wrong Wall warning" % label)
+		"the_gate_is_not_the_keep":
+			return _check_command(state.choose_event_option("defer_workshop"), "%s Wrong Wall recovery" % label)
+		"wrong_wall_report":
+			return _check_command(state.choose_event_option("record_wrong_wall"), "%s Wrong Wall report" % label)
 	failures.append("%s reached unhandled event %s" % [label, state.active_event_id])
 	return false
 

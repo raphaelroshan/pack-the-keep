@@ -483,8 +483,15 @@ def validate_event(
         if trigger.get("phase") not in SUPPORTED_EVENT_PHASES:
             errors.append(f"{path}: unsupported trigger phase")
         wave = trigger.get("wave")
-        if not is_integer(wave) or not 0 <= wave <= 3:
-            errors.append(f"{path}: trigger wave must be an integer from 0 to 3")
+        if isinstance(wave, list):
+            if not wave:
+                errors.append(f"{path}: trigger wave array must not be empty")
+            if any(not is_integer(value) or not 0 <= value <= 3 for value in wave):
+                errors.append(f"{path}: trigger waves must be integers from 0 to 3")
+            if len({value for value in wave if is_integer(value)}) != len(wave):
+                errors.append(f"{path}: trigger wave array contains a duplicate")
+        elif not is_integer(wave) or not 0 <= wave <= 3:
+            errors.append(f"{path}: trigger wave must be an integer or array from 0 to 3")
     eligibility = event.get("eligibility", {})
     if not isinstance(eligibility, dict):
         errors.append(f"{path}: eligibility must be an object")

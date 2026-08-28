@@ -391,3 +391,11 @@
 **Reason:** Players need a compact account of recent consequences in both existing surfaces, and both views should agree without duplicating sorting, title lookup, or truncation rules in presentation code.
 
 **Trade-off:** Older events remain in saved state and reports but are omitted from the compact UI projection. A searchable cross-run archive remains outside this slice.
+
+## ADR-050: Terminal event triggers may name several authored waves
+
+**Decision:** Event trigger `wave` accepts either one integer or a bounded non-empty array of unique wave indices. The Wrong Wall conclusion uses `[1, 2, 3]` so the same resource-free report can resolve a normal finish or an early collapse.
+
+**Reason:** Collapse ends the authored sequence immediately and skips recovery. A terminal report should explain that outcome without requiring duplicate event definitions or pretending the player reached wave three.
+
+**Trade-off:** Multi-wave triggers remain explicit authored lists, not wildcard scheduling. Validation rejects empty, duplicate, or out-of-range arrays.

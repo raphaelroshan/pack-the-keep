@@ -1,0 +1,31 @@
+{
+  "id": "the_bell_has_a_pattern",
+  "content_version": 1,
+  "status": "active",
+  "title": "The Bell Has a Pattern",
+  "short_role": "Choose whether the support warning deserves command attention before the first assault.",
+  "type": "forecast",
+  "scenario": "wrong_wall",
+  "trigger": {"phase": "preparation", "wave": 0},
+  "setup": "The bellkeeper hears a clean Gate signal crossed by a second rhythm from the Workshop lane. The warning can be marked now, or command can remain concentrated at the entrance.",
+  "choices": [
+    {
+      "id": "mark_support_warning",
+      "label": "Mark the support warning (1 command)",
+      "requirements": {"command_points": {"gte": 1}},
+      "effects": [
+        {"op": "spend_command_points", "amount": 1},
+        {"op": "set_flag", "flag": "wrong_wall_signal_read", "value": true}
+      ],
+      "visible_result": "The Workshop lane enters the command record, but one intervention is no longer available."
+    },
+    {
+      "id": "hold_gate_command",
+      "label": "Keep command at the Gate",
+      "requirements": {},
+      "effects": [{"op": "set_flag", "flag": "wrong_wall_warning_declined", "value": true}],
+      "visible_result": "Command remains ready for contact; the secondary warning is explicitly left unresolved."
+    }
+  ],
+  "follow_up": "the_gate_is_not_the_keep"
+}

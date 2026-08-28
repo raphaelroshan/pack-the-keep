@@ -111,7 +111,7 @@ def validate_report(report_path: Path, profile_root: Path, expected_version: str
             "enemy_count": 7,
             "doctrine_count": 8,
             "scenario_count": 8,
-            "event_count": 4,
+            "event_count": 7,
             "modifier_count": 2,
         }
         for key, expected in expected_counts.items():

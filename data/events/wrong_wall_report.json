@@ -1,0 +1,21 @@
+{
+  "id": "wrong_wall_report",
+  "content_version": 1,
+  "status": "active",
+  "title": "The Wrong Wall",
+  "short_role": "Record which visible defense held and which support dependency carried the cost.",
+  "type": "scenario_conclusion",
+  "scenario": "wrong_wall",
+  "trigger": {"phase": "results", "wave": [1, 2, 3]},
+  "setup": "The final report separates the wall everyone watched from the keep functions that actually absorbed the pressure.",
+  "choices": [
+    {
+      "id": "record_wrong_wall",
+      "label": "Record the support-chain lesson",
+      "requirements": {},
+      "effects": [{"op": "record_outcome", "tag": "wrong_wall_complete"}],
+      "visible_result": "The report records whether the Workshop was repaired or deferred and preserves the run for replay."
+    }
+  ],
+  "follow_up": ""
+}

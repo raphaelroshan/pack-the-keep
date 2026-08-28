@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.13.1-event-ledger` — bounded P13 event history in Ledger and Results; P12 human approval remains pending
+**Current build identity:** `0.13.2-wrong-wall-chain` — bounded three-beat P13 scenario chain; P12 human approval remains pending
 
 ## Purpose
 
@@ -77,6 +77,10 @@ Gatehouse Lock now opens **The Workshop Can Wait** after wave two when sabotage 
 ## v0.13.1 Event Ledger
 
 The existing Campaign Ledger now includes the five most recent authored-event consequences in newest-first order plus stable, explicit run flags. Results uses the same bounded read model, including an omission count when older entries exist. Reading either surface, refreshing it, or changing presentation-only contrast settings leaves serialized keep state unchanged.
+
+## v0.13.2 The Wrong Wall chain
+
+The Wrong Wall now carries a preparation warning, a wave-one Workshop recovery decision, and a terminal consequence report. Players may explicitly decline the warning, preserve scarce resources when Workshop repair is unavailable, or spend the normal eight materials and one recovery action to repair it. The conclusion event can open after normal completion or early collapse, and an active recovery choice round-trips through save/load.
 
 ## v0.8.2 testability additions
 

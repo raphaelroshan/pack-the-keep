@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.13.1-event-ledger",
+  "framework_version": "0.13.2-wrong-wall-chain",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -230,6 +230,15 @@
     "surfaces": ["campaign_ledger", "results_event_consequences"],
     "flags": "stable_id_sorted_explicit_boolean_run_flags",
     "determinism_rule": "inspection_refresh_and_presentation_toggles_do_not_mutate_serialized_keep_state"
+  },
+  "p13_wrong_wall_chain": {
+    "status": "implemented",
+    "scenario": "wrong_wall",
+    "chain": ["the_bell_has_a_pattern", "the_gate_is_not_the_keep", "wrong_wall_report"],
+    "paths": ["command_spend", "explicit_decline", "scarce_repair_fallback", "normal_completion", "early_collapse_report"],
+    "trigger_rule": "terminal_result_events_may_list_bounded_authored_wave_indices",
+    "persistence": "active_recovery_event_round_trips_before_choice",
+    "non_goals": ["random_scheduler", "campaign_map", "new_combat_rule", "unbounded_branching"]
   },
   "v090_multi_wave": {
     "status": "implemented",

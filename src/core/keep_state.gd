@@ -422,6 +422,8 @@ func _event_piece_instance(piece_id: String, room_id: String = "") -> String:
 	return ""
 
 func _current_event_phase() -> String:
+	if not wave_active and last_outcome == "collapse":
+		return "results"
 	if repair_interval_active and not has_next_wave() and not last_outcome.is_empty():
 		return "results"
 	if repair_interval_active:
@@ -432,7 +434,15 @@ func _current_event_phase() -> String:
 
 func _event_trigger_matches(definition: Dictionary) -> bool:
 	var trigger: Dictionary = definition.get("trigger", {})
-	return String(definition.get("scenario", "")) == scenario_id and String(trigger.get("phase", "")) == _current_event_phase() and int(trigger.get("wave", -1)) == wave_index and _event_eligibility_matches(definition.get("eligibility", {}))
+	return String(definition.get("scenario", "")) == scenario_id and String(trigger.get("phase", "")) == _current_event_phase() and _event_trigger_wave_matches(trigger.get("wave")) and _event_eligibility_matches(definition.get("eligibility", {}))
+
+func _event_trigger_wave_matches(trigger_wave: Variant) -> bool:
+	if trigger_wave is Array:
+		for wave_value in trigger_wave:
+			if int(wave_value) == wave_index:
+				return true
+		return false
+	return int(trigger_wave) == wave_index
 
 func _event_eligibility_matches(eligibility: Variant) -> bool:
 	if not eligibility is Dictionary:

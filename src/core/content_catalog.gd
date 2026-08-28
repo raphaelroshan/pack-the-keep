@@ -73,7 +73,10 @@ const EVENT_PATHS: Array[String] = [
 	"res://data/events/relief_road_warning.json",
 	"res://data/events/relief_road_recovery.json",
 	"res://data/events/relief_road_report.json",
-	"res://data/events/workshop_can_wait.json"
+	"res://data/events/workshop_can_wait.json",
+	"res://data/events/the_bell_has_a_pattern.json",
+	"res://data/events/the_gate_is_not_the_keep.json",
+	"res://data/events/wrong_wall_report.json"
 ]
 
 const MODIFIER_PATHS: Array[String] = [
@@ -602,8 +605,20 @@ func validate_event_definition(event: Dictionary, expected_id: String, known_roo
 	else:
 		if not SUPPORTED_EVENT_PHASES.has(String(trigger.get("phase", ""))):
 			validation_errors.append("event %s trigger phase is unsupported" % event_id)
-		if not _is_integer_number(trigger.get("wave")) or int(trigger.get("wave", -1)) < 0 or int(trigger.get("wave", -1)) > 3:
-			validation_errors.append("event %s trigger wave must be an integer from 0 to 3" % event_id)
+		var trigger_wave: Variant = trigger.get("wave")
+		if trigger_wave is Array:
+			var seen_waves: Array[int] = []
+			if trigger_wave.is_empty():
+				validation_errors.append("event %s trigger wave array must not be empty" % event_id)
+			for wave_value in trigger_wave:
+				if not _is_integer_number(wave_value) or int(wave_value) < 0 or int(wave_value) > 3:
+					validation_errors.append("event %s trigger waves must be integers from 0 to 3" % event_id)
+				elif seen_waves.has(int(wave_value)):
+					validation_errors.append("event %s trigger wave array contains a duplicate" % event_id)
+				else:
+					seen_waves.append(int(wave_value))
+		elif not _is_integer_number(trigger_wave) or int(trigger_wave) < 0 or int(trigger_wave) > 3:
+			validation_errors.append("event %s trigger wave must be an integer or array from 0 to 3" % event_id)
 	var eligibility: Variant = event.get("eligibility", {})
 	if not eligibility is Dictionary:
 		validation_errors.append("event %s eligibility must be an object" % event_id)
