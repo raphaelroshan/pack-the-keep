@@ -950,6 +950,42 @@ func enemy_attack_timing(index: int) -> Dictionary:
 		"has_target": _target_is_active(String(enemy.get("target", "")))
 	}
 
+func enemy_target_readout(index: int) -> Dictionary:
+	if index < 0 or index >= enemies.size():
+		return {"ok": false, "reason": "unknown enemy"}
+	var enemy: Dictionary = enemies[index]
+	var target_id: String = String(enemy.get("target", ""))
+	if target_id.is_empty():
+		var timing: Dictionary = enemy_attack_timing(index)
+		var summary: String = "No valid target" if bool(timing.get("in_contact", false)) else "Approaching"
+		return {"ok": true, "kind": "none", "id": "", "name": summary, "summary": summary, "active": false}
+	if pieces.has(target_id):
+		var instance: Dictionary = pieces[target_id]
+		var piece_id: String = String(instance.get("piece_id", ""))
+		var piece: Dictionary = _piece_definitions.get(piece_id, {})
+		var current_health: int = int(instance.get("health", 0))
+		var maximum_health: int = int(instance.get("max_health", piece.get("max_health", 0)))
+		var disabled: bool = bool(instance.get("disabled", false)) or current_health <= 0
+		return {
+			"ok": true, "kind": "piece", "id": target_id,
+			"name": String(piece.get("name", piece_id.replace("_", " ").capitalize())),
+			"summary": "%s · %d/%d HP%s" % [String(piece.get("name", piece_id.replace("_", " ").capitalize())), current_health, maximum_health, " · DISABLED" if disabled else ""],
+			"health": current_health, "max_health": maximum_health,
+			"floor": String(instance.get("floor", "ground")), "active": not disabled
+		}
+	if rooms.has(target_id):
+		var room: Dictionary = _room_definitions.get(target_id, {})
+		var condition: int = room_condition(target_id)
+		var state: String = room_state(target_id)
+		return {
+			"ok": true, "kind": "room", "id": target_id,
+			"name": String(room.get("name", target_id.replace("_", " ").capitalize())),
+			"summary": "%s · %d%% · %s" % [String(room.get("name", target_id.replace("_", " ").capitalize())), condition, state.capitalize()],
+			"condition": condition, "state": state, "critical": bool(room.get("critical", false)),
+			"floor": String(room.get("floor", "ground")), "active": condition > 0
+		}
+	return {"ok": false, "reason": "enemy target is unavailable", "id": target_id}
+
 func remove_piece(instance_id: String) -> Dictionary:
 	if wave_active or repair_interval_active:
 		return {"ok": false, "reason": "piece removal is only available during Preparation"}

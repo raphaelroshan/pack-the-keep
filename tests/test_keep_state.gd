@@ -12,6 +12,7 @@ func _init() -> void:
 	_test_sapper_targeting_and_repair()
 	_test_unit_hunters_clear_defenders_first()
 	_test_enemy_attack_cadence_projection()
+	_test_enemy_target_readout()
 	_test_climber_targets_upper_floor()
 	_test_lockdown_changes_room_damage()
 	_test_disabled_defense_is_partial_breach()
@@ -160,6 +161,24 @@ func _test_enemy_attack_cadence_projection() -> void:
 	var sapper_filling: Dictionary = keep.enemy_attack_timing(1)
 	_expect(is_equal_approx(float(sapper_filling.get("cadence_progress", 0.0)), 0.25) and is_equal_approx(float(sapper_filling.get("ticks_until_attack", 0.0)), 1.5), "cadence progress should fill fractionally between deterministic strikes")
 	_expect(not bool(keep.enemy_attack_timing(99).get("ok", true)), "attack cadence projection should reject an unknown enemy")
+
+func _test_enemy_target_readout() -> void:
+	var keep: PackKeepState = PackKeepState.new(3307)
+	keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
+	keep.start_wave("distributed_sabotage")
+	var serialized_before: String = JSON.stringify(keep.serialize())
+	_expect(String(keep.enemy_target_readout(0).get("summary", "")) == "Approaching", "targetless enemy should use a player-facing approach state")
+	keep.enemies[0].target = "pike_squad_0"
+	var piece_target: Dictionary = keep.enemy_target_readout(0)
+	_expect(String(piece_target.get("kind", "")) == "piece" and String(piece_target.get("summary", "")).contains("Pike Squad") and String(piece_target.get("summary", "")).contains("14/14 HP"), "piece target readout should expose a friendly name and health")
+	_expect(not String(piece_target.get("summary", "")).contains("pike_squad_0"), "piece target readout should hide the internal instance ID")
+	keep.enemies[1].target = "workshop"
+	var room_target: Dictionary = keep.enemy_target_readout(1)
+	_expect(String(room_target.get("kind", "")) == "room" and String(room_target.get("summary", "")).contains("Workshop") and String(room_target.get("summary", "")).contains("100%"), "room target readout should expose a friendly name and condition")
+	keep.enemies[0].target = ""
+	keep.enemies[1].target = ""
+	_expect(JSON.stringify(keep.serialize()) == serialized_before, "target readout queries must not mutate authoritative state")
+	_expect(not bool(keep.enemy_target_readout(99).get("ok", true)), "target readout should reject an unknown enemy")
 
 func _test_climber_targets_upper_floor() -> void:
 	var keep: PackKeepState = PackKeepState.new(3307)

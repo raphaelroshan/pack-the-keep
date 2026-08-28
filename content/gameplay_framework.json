@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.18.1-combat-cadence",
+  "framework_version": "0.18.2-friendly-targets",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -393,6 +393,13 @@
     "surfaces": ["enemy_map_tooltip", "timeline_tooltip", "focused_response_card", "contacted_enemy_cadence_meter"],
     "authority_boundary": "cadence_display_reads_battle_step_fractional_clock_arrival_and_enemy_definition_without_advancing_or_reserving_combat",
     "non_goals": ["interrupt_commands", "stuns", "attack_speed_upgrades", "sub_tick_damage", "new_save_fields"]
+  },
+  "p26_friendly_target_readouts": {
+    "status": "implemented",
+    "projection": "enemy_target_ids_resolve_to_piece_name_and_health_room_name_and_condition_or_approaching_state",
+    "surfaces": ["enemy_inspector", "focused_response_card", "map_tooltip", "timeline_tooltip"],
+    "authority_boundary": "target_readouts_resolve_existing_ids_without_selecting_retargeting_or_mutating_state",
+    "non_goals": ["piece_nicknames", "target_selection_changes", "new_panels", "new_save_fields"]
   },
   "v090_multi_wave": {
     "status": "implemented",

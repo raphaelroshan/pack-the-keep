@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.18.1-combat-cadence` — the controlled playtest now exposes when each contacted threat will strike again as well as what it targets; human sessions and owner approval remain pending
+**Current build identity:** `0.18.2-friendly-targets` — the controlled playtest now names each targeted defender or room with current health or condition instead of exposing internal IDs; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of nine authored scenarios, preview and reserve a limited pack offer, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, and recover during authored lulls.
+
+## v0.18.2 Friendly-target additions
+
+Enemy inspection, focused response cards, and matching map/timeline tooltips now resolve stable target IDs into player-facing summaries. Defender targets show their name and current/max health; room targets show their name, condition, and state; unresolved routes show `Approaching`, and contacted threats with no remaining target say `No valid target`. Target selection and save data are unchanged.
 
 ## v0.18.1 Combat-cadence additions
 
@@ -287,6 +291,10 @@ During Battle, verify the keep has no cell grid or placement boxes, both floors 
 ## v0.18.1 acceptance checks
 
 Hover a Raider before contact and confirm its tooltip names contact tick, one-tick cadence, and next strike. Hover a Sapper or Shieldbreaker and confirm the same surfaces show a two-tick cadence. Pause after its first contact and verify the focused response card names the next strike tick while the cadence meter begins empty, then fills smoothly as presentation time advances. Pause again and confirm the meter freezes without changing battle step, target, or serialized state.
+
+## v0.18.2 acceptance checks
+
+Before contact, confirm the focused response, inspector, map tooltip, and timeline tooltip say `Approaching`. After a Raider acquires a Pike Squad, confirm every surface names `Pike Squad` with current/max HP and does not show `pike_squad_0`. Focus a Sapper targeting a room and confirm the readout names that room with condition and state. Disable the last valid defender and confirm the stale target is described as disabled until deterministic retargeting resolves.
 
 ## v0.16.6 acceptance checks
 
