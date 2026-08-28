@@ -543,3 +543,11 @@
 **Reason:** Real-time movement and impact feedback clarified moment-to-moment action but did not show the overall cadence. A compact timeline lets players anticipate attention spikes and understand why speed controls matter without adding another panel or exposing internal scheduling data as a command surface.
 
 **Trade-off:** The footer explicitly reveals the six-tick vertical-slice structure and authored arrival timing. That clarity is preferred for the current tactical puzzle; a future variable-duration scenario format would need to provide its own declared tick count.
+
+## ADR-069: Threat focus follows urgency without issuing combat orders
+
+**Decision:** Automatically focus the highest-priority living enemy when Battle begins, preserve any living player-selected focus, and hand off only when focus becomes invalid or defeated. Use contact state, authored arrival, enemy damage, and stable index for presentation priority. Timeline arrival markers and map markers share the same focus pathway.
+
+**Reason:** A live assault opened with an empty response panel and forced the player to find a small moving marker before the central tactical explanation became useful. Automatic focus makes the inspector immediately informative, while deterministic handoff prevents it from going stale as enemies fall.
+
+**Trade-off:** Automatic focus can draw attention toward one threat even when the player is watching another part of the keep. Preserving any living manual selection avoids fighting the player, and focus remains strictly observational rather than a focus-fire command.

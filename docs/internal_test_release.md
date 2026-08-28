@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.17.0-assault-timeline` — the controlled playtest now exposes deterministic assault cadence and authored arrivals directly beneath the fort; human sessions and owner approval remain pending
+**Current build identity:** `0.17.1-threat-focus` — the controlled playtest now opens with a useful threat response, preserves manual inspection, and hands focus forward as enemies fall; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of nine authored scenarios, preview and reserve a limited pack offer, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, and recover during authored lulls.
+
+## v0.17.1 Threat focus additions
+
+Battle now automatically focuses the highest-priority living threat and immediately populates the inspector and response preview. Contact state, earlier arrival, higher enemy damage, and stable index define presentation priority. A living manual selection remains fixed; when that enemy is defeated, focus hands off deterministically. Arrival markers on the assault timeline are clickable and use a distinct `timeline marker` focus source, while the enemy dropdown remains synchronized after live tick refreshes.
 
 ## v0.17.0 Assault timeline additions
 
@@ -235,6 +239,10 @@ Run a Pike Squad defense and confirm its response is a compact melee lunge rathe
 ## v0.17.0 acceptance checks
 
 Start Three Bells at Dusk and confirm the footer shows six labelled ticks with enemy initials at their authored arrival points. Before tick one resolves, verify `T1` fills fractionally while the status remains tick zero and the next-contact summary names the earliest unresolved threat. Pause and confirm the fill freezes. Resume through contact and confirm completed segments remain filled while the next-contact summary advances without changing enemy timing or serialized state.
+
+## v0.17.1 acceptance checks
+
+Begin a multi-enemy assault and confirm the earliest, most urgent living threat is focused without input and the response preview is populated. Select a different living enemy from the map, timeline, dropdown, and keyboard/controller cycle, confirming all focus surfaces agree. Let that selected enemy be defeated and confirm focus hands off to the next priority. Verify live status and metrics update after each automatic tick, and compare serialized state before and after focus-only interactions.
 
 ## v0.16.6 acceptance checks
 
