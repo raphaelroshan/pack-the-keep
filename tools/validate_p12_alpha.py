@@ -27,6 +27,7 @@ EXPECTED_CONTENT_COUNTS = {
     "event_count": 9,
     "modifier_count": 2,
 }
+PACKAGED_PHASES = ("clean_install", "reinstall", "stale_backup", "missing_profile", "upgrade")
 
 
 def load_object(path: Path, errors: list[str]) -> dict[str, Any]:
@@ -131,14 +132,16 @@ def validate_checklist(path: Path, root: Path, build_version: str, errors: list[
 
 def validate_report(path: Path, build_version: str, errors: list[str]) -> None:
     combined = load_object(path, errors)
-    if combined.get("schema_version") != 1:
-        errors.append("combined packaged smoke schema_version must be 1")
-    initial = combined.get("initial")
-    reinstall = combined.get("reinstall")
-    if not isinstance(initial, dict) or not isinstance(reinstall, dict):
-        errors.append("combined packaged smoke needs initial and reinstall reports")
+    if combined.get("schema_version") != 2:
+        errors.append("combined packaged smoke schema_version must be 2")
+    reports = {phase: combined.get(phase) for phase in PACKAGED_PHASES}
+    if any(not isinstance(report, dict) for report in reports.values()):
+        errors.append("combined packaged smoke needs clean-install, reinstall, stale-backup, missing-profile, and upgrade reports")
         return
-    for phase, report in (("initial", initial), ("reinstall", reinstall)):
+    for phase, report in reports.items():
+        assert isinstance(report, dict)
+        if report.get("schema_version") != 2:
+            errors.append(f"packaged {phase} report schema_version must be 2")
         if report.get("phase") != phase or report.get("ok") is not True:
             errors.append(f"packaged {phase} phase did not pass")
         if report.get("errors") != []:
@@ -151,10 +154,11 @@ def validate_report(path: Path, build_version: str, errors: list[str]) -> None:
             errors.append(f"packaged {phase} phase lost its guarded offline launch")
         if report.get("main_scene_freed") is not True:
             errors.append(f"packaged {phase} main scene did not close cleanly")
-        if report.get("battle_step") != 1:
-            errors.append(f"packaged {phase} phase did not preserve battle step one")
-        if report.get("save_schema_version") != 4 or report.get("settings_schema_version") != 4:
-            errors.append(f"packaged {phase} persistence schemas do not match")
+        if phase != "missing_profile":
+            if report.get("battle_step") != 1:
+                errors.append(f"packaged {phase} phase did not preserve battle step one")
+            if report.get("save_schema_version") != 4 or report.get("settings_schema_version") != 4:
+                errors.append(f"packaged {phase} persistence schemas do not match")
         content_status = report.get("content_status")
         if not isinstance(content_status, dict) or content_status.get("ok") is not True:
             errors.append(f"packaged {phase} runtime content catalog did not load")
@@ -165,20 +169,47 @@ def validate_report(path: Path, build_version: str, errors: list[str]) -> None:
         for field in ("controller_navigation_ready", "controller_defaults_ready"):
             if report.get(field) is not True:
                 errors.append(f"packaged {phase} controller evidence failed: {field}")
-    initial_fields = (
+        if report.get("settings_state_unchanged") is not True:
+            errors.append(f"packaged {phase} settings changed authoritative state")
+        user_data_dir = report.get("user_data_dir")
+        if not isinstance(user_data_dir, str):
+            errors.append(f"packaged {phase} phase needs user_data_dir")
+        else:
+            for field in ("save_path", "settings_path"):
+                value = report.get(field)
+                if not isinstance(value, str) or not windows_path_is_within(value, user_data_dir):
+                    errors.append(f"packaged {phase} evidence placed {field} outside user data")
+    clean_install = reports["clean_install"]
+    reinstall = reports["reinstall"]
+    stale_backup = reports["stale_backup"]
+    missing_profile = reports["missing_profile"]
+    upgrade = reports["upgrade"]
+    assert all(isinstance(report, dict) for report in reports.values())
+    clean_install_fields = (
         "offline_proxy_guard", "controller_navigation_ready", "controller_defaults_ready",
         "controller_remap_ready", "ui_scale_ready", "settings_scale_ready", "settings_remap_ready",
         "initial_pause_ready", "paused_state_frozen", "remapped_pause_ready", "manual_step_ready",
     )
-    for field in initial_fields:
-        if initial.get(field) is not True:
-            errors.append(f"initial packaged evidence failed: {field}")
-    if initial.get("profile_files_present") is not False or initial.get("profile_files_complete") is not False:
-        errors.append("initial packaged evidence did not start from a clean profile")
+    for field in clean_install_fields:
+        if clean_install.get(field) is not True:
+            errors.append(f"clean-install packaged evidence failed: {field}")
+    if clean_install.get("profile_files_present") is not False or clean_install.get("profile_files_complete") is not False:
+        errors.append("clean-install packaged evidence did not start from a clean profile")
     for field in ("profile_files_present", "profile_files_complete", "restored_run_ready", "restored_scale_ready", "restored_remap_ready"):
         if reinstall.get(field) is not True:
             errors.append(f"reinstall packaged evidence failed: {field}")
-    initial_executable = initial.get("executable_path")
+    for field in ("profile_files_present", "profile_files_complete", "profile_backups_complete", "primary_preferred_ready"):
+        if stale_backup.get(field) is not True:
+            errors.append(f"stale-backup packaged evidence failed: {field}")
+    if missing_profile.get("profile_files_present") is not False or missing_profile.get("profile_files_complete") is not False:
+        errors.append("missing-profile packaged evidence unexpectedly found persistence files")
+    for field in ("missing_profile_defaults_ready", "missing_profile_state_unchanged"):
+        if missing_profile.get(field) is not True:
+            errors.append(f"missing-profile packaged evidence failed: {field}")
+    for field in ("legacy_profile_detected", "upgrade_run_migrated", "upgrade_settings_ready", "upgraded_files_current"):
+        if upgrade.get(field) is not True:
+            errors.append(f"upgrade packaged evidence failed: {field}")
+    initial_executable = clean_install.get("executable_path")
     reinstall_executable = reinstall.get("executable_path")
     if not isinstance(initial_executable, str) or not isinstance(reinstall_executable, str):
         errors.append("packaged evidence needs both executable paths")
@@ -186,19 +217,27 @@ def validate_report(path: Path, build_version: str, errors: list[str]) -> None:
         errors.append("reinstall packaged evidence did not relocate the executable")
     elif ntpath.basename(initial_executable).casefold() != ntpath.basename(reinstall_executable).casefold():
         errors.append("reinstall packaged executable name changed unexpectedly")
+    upgrade_executable = upgrade.get("executable_path")
+    if not isinstance(initial_executable, str) or not isinstance(upgrade_executable, str):
+        errors.append("upgrade packaged evidence needs both executable paths")
+    elif ntpath.normcase(ntpath.abspath(initial_executable)) == ntpath.normcase(ntpath.abspath(upgrade_executable)):
+        errors.append("upgrade packaged evidence did not use a fresh install directory")
+    elif ntpath.basename(initial_executable).casefold() != ntpath.basename(upgrade_executable).casefold():
+        errors.append("upgrade packaged executable name changed unexpectedly")
     for field in ("user_data_dir", "save_path", "settings_path"):
-        initial_path = initial.get(field)
+        initial_path = clean_install.get(field)
         reinstall_path = reinstall.get(field)
         if not isinstance(initial_path, str) or not isinstance(reinstall_path, str):
             errors.append(f"packaged evidence needs both {field} values")
         elif ntpath.normcase(ntpath.abspath(initial_path)) != ntpath.normcase(ntpath.abspath(reinstall_path)):
             errors.append(f"reinstall packaged evidence changed {field}")
-    user_data_dir = initial.get("user_data_dir")
-    if isinstance(user_data_dir, str):
-        for field in ("save_path", "settings_path"):
-            value = initial.get(field)
-            if isinstance(value, str) and not windows_path_is_within(value, user_data_dir):
-                errors.append(f"initial packaged evidence placed {field} outside user data")
+    for field in ("user_data_dir", "save_path", "settings_path"):
+        if stale_backup.get(field) != clean_install.get(field):
+            errors.append(f"stale-backup packaged evidence changed {field}")
+    if missing_profile.get("user_data_dir") == clean_install.get("user_data_dir"):
+        errors.append("missing-profile packaged evidence reused the clean-install profile")
+    if upgrade.get("user_data_dir") == clean_install.get("user_data_dir"):
+        errors.append("upgrade packaged evidence reused the clean-install profile")
 
 
 def main() -> int:

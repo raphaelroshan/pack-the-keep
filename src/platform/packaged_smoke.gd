@@ -49,8 +49,9 @@ func run(ui: Control) -> void:
 	var errors: Array[String] = []
 	var phase: String = OS.get_environment("PACK_THE_KEEP_SMOKE_PHASE")
 	if phase.is_empty():
-		phase = "initial"
-	var reinstall_phase: bool = phase == "reinstall"
+		phase = "clean_install"
+	var supported_phases: Array[String] = ["clean_install", "reinstall", "stale_backup", "missing_profile", "upgrade"]
+	_record_error(errors, supported_phases.has(phase), "unknown packaged smoke phase: %s" % phase)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	ui.preferences_persistence_enabled = true
@@ -67,6 +68,7 @@ func run(ui: Control) -> void:
 	)
 	var profile_files_present: bool = bool(profile_status.present)
 	var profile_files_complete: bool = bool(profile_status.complete)
+	var profile_backups_complete: bool = FileAccess.file_exists(SAVE_BACKUP_PATH) and FileAccess.file_exists(SETTINGS_BACKUP_PATH)
 	var controller_navigation_ready: bool = _has_joypad_binding("ui_accept") and _has_joypad_binding("ui_down")
 	_record_error(errors, controller_navigation_ready, "packaged UI navigation lost its controller path")
 	var controller_defaults_ready: bool = true
@@ -90,9 +92,19 @@ func run(ui: Control) -> void:
 	var restored_run_ready: bool = false
 	var restored_scale_ready: bool = false
 	var restored_remap_ready: bool = false
-	if reinstall_phase:
+	var primary_preferred_ready: bool = false
+	var missing_profile_defaults_ready: bool = false
+	var missing_profile_state_unchanged: bool = false
+	var legacy_profile_detected: bool = false
+	var upgrade_run_migrated: bool = false
+	var upgrade_settings_ready: bool = false
+	var upgraded_files_current: bool = false
+	var authoritative_before_settings: String = JSON.stringify(ui.keep.serialize())
+	var settings_state_unchanged: bool = false
+	if phase == "reinstall":
 		_record_error(errors, profile_files_complete, "reinstalled build could not see both existing profile files")
 		ui._load_preferences()
+		settings_state_unchanged = JSON.stringify(ui.keep.serialize()) == authoritative_before_settings
 		ui._on_load()
 		restored_run_ready = ui.keep.wave_active and ui.keep.battle_step == 1
 		restored_scale_ready = ui.ui_scale_index == 2 and is_equal_approx(get_tree().root.content_scale_factor, 1.25) and ui.gameplay_columns.vertical
@@ -100,7 +112,40 @@ func run(ui: Control) -> void:
 		_record_error(errors, restored_run_ready, "reinstalled build did not restore the saved battle")
 		_record_error(errors, restored_scale_ready, "reinstalled build did not restore 125 percent stacked scale")
 		_record_error(errors, restored_remap_ready, "reinstalled build did not restore the controller remap")
-	else:
+	elif phase == "stale_backup":
+		_record_error(errors, profile_files_complete and profile_backups_complete, "stale-backup phase needs complete primary and backup files")
+		ui._load_preferences()
+		settings_state_unchanged = JSON.stringify(ui.keep.serialize()) == authoritative_before_settings
+		ui._on_load()
+		primary_preferred_ready = ui.keep.seed == 3307 and ui.keep.wave_active and ui.keep.battle_step == 1 and ui.ui_scale_index == 2 and _has_joypad_binding("battle_pause", 10)
+		_record_error(errors, primary_preferred_ready, "valid primary files did not outrank stale backups")
+	elif phase == "missing_profile":
+		_record_error(errors, not profile_files_present, "missing-profile phase unexpectedly found persistence files")
+		var state_before_missing_load: String = JSON.stringify(ui.keep.serialize())
+		ui._load_preferences()
+		settings_state_unchanged = JSON.stringify(ui.keep.serialize()) == authoritative_before_settings
+		ui._on_load()
+		missing_profile_defaults_ready = ui.battle_speed_index == 1 and not ui.audio_muted and ui.ui_scale_index == 1 and ui.event_feed_retention_index == 0 and not ui.auto_pause_on_threat
+		missing_profile_state_unchanged = JSON.stringify(ui.keep.serialize()) == state_before_missing_load
+		_record_error(errors, missing_profile_defaults_ready, "missing profile did not retain documented presentation defaults")
+		_record_error(errors, missing_profile_state_unchanged, "missing profile load mutated authoritative state")
+	elif phase == "upgrade":
+		var legacy_save_payload: Dictionary = _read_json(SAVE_PATH)
+		var legacy_settings_payload: Dictionary = _read_json(SETTINGS_PATH)
+		legacy_profile_detected = int(legacy_save_payload.get("schema_version", 0)) == 3 and int(legacy_settings_payload.get("schema_version", 0)) == 3
+		_record_error(errors, legacy_profile_detected, "upgrade phase did not receive schema-3 profile files")
+		ui._load_preferences()
+		settings_state_unchanged = JSON.stringify(ui.keep.serialize()) == authoritative_before_settings
+		ui._on_load()
+		upgrade_run_migrated = ui.keep.wave_active and ui.keep.battle_step == 1 and String(ui.event_label.text).contains("legacy migration")
+		upgrade_settings_ready = ui.ui_scale_index == 2 and _has_joypad_binding("battle_pause", 10) and ui.event_feed_retention_index == 0 and not ui.auto_pause_on_threat
+		_record_error(errors, upgrade_run_migrated, "legacy run did not load through the migration boundary")
+		_record_error(errors, upgrade_settings_ready, "legacy settings did not preserve supported values and default new fields")
+		ui._on_save()
+		_record_error(errors, ui._save_preferences(), "upgraded settings could not be rewritten")
+		upgraded_files_current = int(_read_json(SAVE_PATH).get("schema_version", 0)) == 4 and int(_read_json(SETTINGS_PATH).get("schema_version", 0)) == 4
+		_record_error(errors, upgraded_files_current, "legacy profile was not rewritten at current schemas")
+	elif phase == "clean_install":
 		_record_error(errors, not profile_files_present, "initial packaged profile was not clean")
 		ui._set_ui_scale(2)
 		ui_scale_ready = ui.ui_scale_index == 2 and is_equal_approx(get_tree().root.content_scale_factor, 1.25) and ui.gameplay_columns.vertical
@@ -109,6 +154,7 @@ func run(ui: Control) -> void:
 		ui._unhandled_input(replacement)
 		controller_remap_ready = _has_joypad_binding("battle_pause", 10) and not _has_joypad_binding("placement_arm", 10)
 		_record_error(errors, controller_remap_ready, "packaged controller remap did not resolve the button conflict")
+		settings_state_unchanged = JSON.stringify(ui.keep.serialize()) == authoritative_before_settings
 		ui._set_screen("preparation")
 		var placed: Dictionary = ui.keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
 		_record_error(errors, bool(placed.get("ok", false)), "starter placement failed")
@@ -131,14 +177,16 @@ func run(ui: Control) -> void:
 		_record_error(errors, FileAccess.file_exists(SAVE_PATH), "run save was not written to user data")
 		_record_error(errors, ui._save_preferences(), "settings were not written to user data")
 		_record_error(errors, FileAccess.file_exists(SETTINGS_PATH), "settings file is missing")
+	_record_error(errors, settings_state_unchanged, "presentation settings changed authoritative keep state")
 	var save_payload: Dictionary = _read_json(SAVE_PATH)
 	var settings_payload: Dictionary = _read_json(SETTINGS_PATH)
-	_record_error(errors, String(save_payload.get("game_id", "")) == "pack-the-keep", "run save has the wrong game ID")
-	_record_error(errors, int(save_payload.get("schema_version", 0)) == 4, "run save has the wrong schema version")
-	_record_error(errors, int(settings_payload.get("schema_version", 0)) == 4, "settings have the wrong schema version")
+	if phase != "missing_profile":
+		_record_error(errors, String(save_payload.get("game_id", "")) == "pack-the-keep", "run save has the wrong game ID")
+		_record_error(errors, int(save_payload.get("schema_version", 0)) == 4, "run save has the wrong schema version")
+		_record_error(errors, int(settings_payload.get("schema_version", 0)) == 4, "settings have the wrong schema version")
 	var settings_scale_ready: bool = int(settings_payload.get("ui_scale_index", -1)) == 2
 	var settings_remap_ready: bool = _settings_has_joypad_binding(settings_payload, "battle_pause", 10)
-	if not reinstall_phase:
+	if phase == "clean_install":
 		_record_error(errors, settings_scale_ready, "packaged settings did not persist 125 percent scale")
 		_record_error(errors, settings_remap_ready, "packaged settings did not persist the controller remap")
 
@@ -148,7 +196,7 @@ func run(ui: Control) -> void:
 	var main_scene_freed: bool = not is_instance_valid(ui)
 	_record_error(errors, main_scene_freed, "main scene did not free cleanly")
 	var report: Dictionary = {
-		"schema_version": 1,
+		"schema_version": 2,
 		"ok": errors.is_empty(),
 		"errors": errors,
 		"phase": phase,
@@ -174,9 +222,18 @@ func run(ui: Control) -> void:
 		"manual_step_ready": manual_step_ready,
 		"profile_files_present": profile_files_present,
 		"profile_files_complete": profile_files_complete,
+		"profile_backups_complete": profile_backups_complete,
 		"restored_run_ready": restored_run_ready,
 		"restored_scale_ready": restored_scale_ready,
 		"restored_remap_ready": restored_remap_ready,
+		"primary_preferred_ready": primary_preferred_ready,
+		"missing_profile_defaults_ready": missing_profile_defaults_ready,
+		"missing_profile_state_unchanged": missing_profile_state_unchanged,
+		"legacy_profile_detected": legacy_profile_detected,
+		"upgrade_run_migrated": upgrade_run_migrated,
+		"upgrade_settings_ready": upgrade_settings_ready,
+		"upgraded_files_current": upgraded_files_current,
+		"settings_state_unchanged": settings_state_unchanged,
 		"main_scene_freed": main_scene_freed,
 		"smoke_guard": OS.get_environment("PACK_THE_KEEP_PACKAGED_SMOKE") == "1",
 		"offline_proxy_guard": OS.get_environment("HTTPS_PROXY").contains("127.0.0.1:9")

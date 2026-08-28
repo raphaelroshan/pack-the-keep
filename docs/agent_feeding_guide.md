@@ -46,10 +46,16 @@ Choose Mara Venn or Jory Pike. Add three bounded relationship/arc flags, two com
 Extract one self-contained panel/controller from src/ui/main.gd, preferably event cards, the Campaign Ledger, or settings. Preserve all existing signals, mouse/keyboard/controller paths, pause semantics, and authoritative command boundaries. Add regression coverage before changing layout or copy.
 ```
 
-### Current feed 6 — finish packaged alpha hardening
+### Completed feed 6 — finish packaged alpha hardening
 
 ```text
 Complete the remaining clean-install, upgrade, missing-profile, and stale-backup Windows smoke cases. Keep platform behavior behind adapters, preserve offline operation, and verify that no packaged setting changes authoritative combat outcomes.
+```
+
+### Current feed 7 — add a second defensive identity
+
+```text
+Add one bounded second defensive identity with a distinct spatial rule, one compatible pack pairing, one teaching scenario, and deterministic balance/save/UI coverage. Do not begin the regional map until this identity is playable and legible.
 ```
 
 ## Historical feeds: prototype build sequence

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.14.1-event-authoring-safety",
+  "framework_version": "0.14.2-packaged-lifecycle-safety",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -190,7 +190,7 @@
   "p12_release_candidate_audit": {
     "status": "implemented",
     "checklist": "all_required_p12_items_have_unique_ids_and_existing_evidence_paths",
-    "package_gate": "combined_windows_initial_and_reinstall_report_must_satisfy_dynamic_fields",
+    "package_gate": "combined_windows_five_phase_lifecycle_report_must_satisfy_dynamic_fields",
     "human_boundary": "automated_success_does_not_publish_or_approve_alpha"
   },
   "p12_settings_recovery": {
@@ -272,6 +272,14 @@
     "graph_validation": "known_same_scenario_acyclic_follow_ups_match_scenario_chain_order",
     "manifest_parity": "active_event_ids_match_runtime_files_in_both_directions",
     "runtime_rule": "event_history_enforces_occurrence_limits_and_cooldown_without_duplicating_resolved_ids"
+  },
+  "p14_packaged_lifecycle_safety": {
+    "status": "implemented",
+    "phases": ["clean_install", "reinstall", "stale_backup", "missing_profile", "upgrade"],
+    "adapter_boundary": "python_owns_profile_and_install_layout_godot_reports_application_behavior",
+    "upgrade_contract": "schema_3_profile_restores_then_rewrites_at_schema_4",
+    "backup_contract": "valid_primary_state_outranks_valid_but_stale_backup_state",
+    "simulation_boundary": "presentation_settings_are_proven_not_to_mutate_authoritative_keep_state"
   },
   "v090_multi_wave": {
     "status": "implemented",

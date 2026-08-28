@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.14.1",
+  "content_version": "0.14.2",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -160,14 +160,14 @@
     "status": "implemented",
     "method": "relocate_embedded_windows_executable_and_relaunch_against_same_isolated_profile",
     "restores": ["active_battle_step", "ui_scale", "controller_remap"],
-    "artifact": "combined_initial_and_reinstall_packaged_smoke_report",
+    "artifact": "combined_five_phase_packaged_lifecycle_report",
     "next_slice": "p12_release_candidate_audit"
   },
   "p12_release_candidate_audit": {
     "status": "implemented",
     "checklist": "content/p12_alpha_checklist.json",
     "required_checks": 11,
-    "dynamic_evidence": "combined_initial_and_reinstall_windows_smoke_report",
+    "dynamic_evidence": "combined_windows_packaged_lifecycle_report",
     "release_status": "candidate_pending_human_approval",
     "next_slice": "p12_settings_recovery"
   },
@@ -218,6 +218,15 @@
     "manifest_parity": "active_slice_event_ids_match_runtime_files_bidirectionally",
     "validation": "offline_negative_fixtures_runtime_catalog_parity_and_deterministic_repeat_policy_tests",
     "next_slice": "p14_packaged_reinstall_upgrade_safety"
+  },
+  "p14_packaged_lifecycle_safety": {
+    "status": "implemented",
+    "phases": ["clean_install", "reinstall", "stale_backup", "missing_profile", "upgrade"],
+    "profile_rule": "each_case_uses_an_explicit_isolated_profile_root_and_user_data_paths_remain_outside_install_directories",
+    "upgrade_rule": "schema_3_run_and_settings_load_then_rewrite_as_schema_4",
+    "precedence_rule": "valid_primary_files_outrank_valid_but_stale_backups",
+    "determinism_rule": "presentation_settings_never_mutate_authoritative_keep_state",
+    "next_slice": "p15_second_defensive_identity"
   },
   "campaign": {
     "title": "The Bell at Dusk",

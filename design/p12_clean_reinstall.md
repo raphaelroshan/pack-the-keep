@@ -14,4 +14,6 @@ Prove that the single-file Windows build can move to a fresh install directory w
 - Both initial and reinstall reports retain the same build identity and user-data root.
 - The combined smoke artifact records both phases.
 
+P14 extends this baseline with missing-profile, stale-backup, and schema-upgrade phases in `design/p14_packaged_lifecycle_safety.md`.
+
 **Trade-off:** Copying the embedded executable models portable uninstall/reinstall behavior, not a signed installer, registry entries, shortcuts, or storefront launchers.

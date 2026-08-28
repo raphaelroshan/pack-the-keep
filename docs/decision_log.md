@@ -431,3 +431,11 @@
 **Reason:** Implicit once-only behavior hid scheduling assumptions in control flow and made content drift difficult to diagnose. Closed choice/effect payloads and explicit graph checks now reject typos, unknown links, cycles, cross-scenario chains, unbounded repetition, and missing manifest entries before gameplay mutation.
 
 **Trade-off:** The current runtime supports only `once_per_run` and bounded `repeat_after_cooldown`; weighted pools and broader campaign scheduling remain deferred. Adding an operation or policy now requires coordinated schema, offline-validator, runtime-validator, and negative-fixture changes.
+
+## ADR-055: Packaged persistence uses a five-phase lifecycle gate
+
+**Decision:** Expand the Windows packaged smoke artifact to include clean-install, relocated-reinstall, stale-backup, missing-profile, and schema-upgrade reports. Keep profile/install setup in the Python runner and application-state assertions in the Godot smoke adapter.
+
+**Reason:** A successful reinstall proves only one persistence path. Release candidates also need evidence that absent profiles retain defaults, valid primaries outrank stale backups, legacy schema-3 data migrates and rewrites cleanly, and presentation settings do not alter deterministic simulation state.
+
+**Trade-off:** CI now launches the exported executable several additional times. Signed installer, registry, shortcut, storefront, and forced-termination behavior still require explicit human or later release validation.

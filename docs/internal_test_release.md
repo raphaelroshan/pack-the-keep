@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.14.1-event-authoring-safety` — P14 event schema and scheduling guardrails; P12 human approval remains pending
+**Current build identity:** `0.14.2-packaged-lifecycle-safety` — complete P14 presentation, content-authoring, and packaged-profile hardening baseline; P12 human approval remains pending
 
 ## Purpose
 
@@ -52,7 +52,7 @@ CI copies the embedded Windows executable to a fresh install directory and launc
 
 ## v0.12.5 Alpha readiness audit
 
-The repository now carries a versioned checklist for all eleven P12 hardening requirements. Source CI verifies unique implemented entries and durable evidence paths; Windows packaging additionally validates the combined initial/reinstall report. Passing remains candidate evidence, not automatic release approval.
+The repository now carries a versioned checklist for all eleven P12 hardening requirements. Source CI verifies unique implemented entries and durable evidence paths; Windows packaging validates the combined lifecycle report. Passing remains candidate evidence, not automatic release approval.
 
 ## v0.12.6 Persistence recovery
 
@@ -97,6 +97,10 @@ The event card now lives in a dedicated presentation-only component that owns it
 ## v0.14.1 Event authoring safety
 
 Every runtime event now declares a stable deterministic stream, repeat policy, cooldown, and occurrence bound. A machine-readable event schema is checked against both the offline validator and Godot catalog contract. Validation rejects incomplete choice records, negative requirement thresholds, missing or extra typed-effect fields, unknown or cross-scenario follow-ups, follow-up cycles, chain-order drift, and bidirectional manifest drift. Runtime scheduling derives repeat eligibility from authoritative event history and keeps legacy resolved IDs unique for save compatibility.
+
+## v0.14.2 Packaged lifecycle safety
+
+The Windows release-candidate smoke now runs five isolated lifecycle phases: clean install, relocated reinstall, stale-backup precedence, missing profile, and schema-3 upgrade. The runner prepares filesystem fixtures outside the executable, while the packaged Godot adapter verifies profile discovery, primary-over-backup selection, legacy migration and schema-4 rewrite, documented defaults, unchanged authoritative state during presentation-setting operations, offline guards, and clean shutdown.
 
 ## v0.8.2 testability additions
 

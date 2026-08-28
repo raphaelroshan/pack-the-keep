@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.14.1-event-authoring-safety",
+  "build_version": "0.14.2-packaged-lifecycle-safety",
   "status": "candidate",
   "checks": [
     {"id": "windows_launch", "status": "implemented", "evidence": ["tests/test_release_identity.py", "tools/run_packaged_smoke.py", ".github/workflows/ci.yml"]},
@@ -13,7 +13,7 @@
     {"id": "input_remapping", "status": "implemented", "evidence": ["tests/test_p10_controller_scaling.gd", "src/platform/packaged_smoke.gd"]},
     {"id": "pause", "status": "implemented", "evidence": ["tests/test_p2_ui.gd", "src/platform/packaged_smoke.gd"]},
     {"id": "crash_safe_close", "status": "implemented", "evidence": ["tests/test_p12_save_path_isolation.gd", "tests/test_p12_save_recovery.gd", "tests/test_p12_settings_recovery.gd", "src/platform/packaged_smoke.gd"]},
-    {"id": "clean_reinstall", "status": "implemented", "evidence": ["tests/test_p12_packaged_profile.gd", "tools/run_packaged_smoke.py", "design/p12_clean_reinstall.md"]}
+    {"id": "clean_reinstall", "status": "implemented", "evidence": ["tests/test_p12_packaged_profile.gd", "tests/test_packaged_smoke_runner.py", "tools/run_packaged_smoke.py", "design/p12_clean_reinstall.md", "design/p14_packaged_lifecycle_safety.md"]}
   ],
   "human_gates": [
     {"id": "windows_gpu_presentation", "status": "pending", "evidence": "docs/p12_human_alpha_checklist.md"},
