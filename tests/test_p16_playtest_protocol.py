@@ -135,7 +135,7 @@ class P16PlaytestProtocolTests(unittest.TestCase):
                 {"id": item["id"], "status": "friction" if index == 0 else "not_tested", "notes": ""}
                 for index, item in enumerate(protocol["required_observations"])
             ],
-            "findings": [{"id": "unclear_start", "severity": "urgent", "summary": "", "reproduction": ""}],
+            "findings": [{"id": "unclear_start", "issue_key": "Not stable", "severity": "urgent", "summary": "", "reproduction": ""}],
             "observer_summary": "",
         }
         errors: list[str] = []
@@ -143,10 +143,12 @@ class P16PlaytestProtocolTests(unittest.TestCase):
         joined = "\n".join(errors)
         self.assertIn("needs notes for friction", joined)
         self.assertIn("finding severity is unsupported", joined)
+        self.assertIn("finding issue_key must be unique snake_case", joined)
         self.assertIn("finding must reference a required observation_id", joined)
         self.assertIn("finding summary must be non-empty", joined)
         self.assertIn("finding reproduction must be non-empty", joined)
         self.assertIn("finding suggested_action must be non-empty", joined)
+        self.assertIn("observation onboarding needs a linked finding", joined)
 
     def test_complete_matrix_still_reports_human_gate_pending(self) -> None:
         protocol = load("content/p16_playtest_protocol.json")

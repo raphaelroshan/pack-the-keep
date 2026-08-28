@@ -43,6 +43,8 @@ jobs:
         run: python tools/validate_p12_alpha.py
       - name: Validate P16 playtest readiness
         run: python tools/validate_p16_playtests.py --protocol content/p16_playtest_protocol.json --sessions playtests/sessions --ci-manifest tools/ci_manifest.json --alpha-checklist content/p12_alpha_checklist.json
+      - name: Summarize P16 playtest evidence
+        run: python tools/summarize_p16_playtests.py --protocol content/p16_playtest_protocol.json --sessions playtests/sessions --ci-manifest tools/ci_manifest.json --alpha-checklist content/p12_alpha_checklist.json
 
   tests:
     name: Godot headless tests (${{ matrix.os }})

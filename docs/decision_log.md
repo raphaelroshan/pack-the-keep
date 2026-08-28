@@ -463,3 +463,11 @@
 **Reason:** Automated simulations prove determinism and known-path viability but cannot establish comprehension, trust, readability, or replay motivation. Explicit records make observations reproducible without allowing CI to impersonate a tester or silently turn readiness into approval.
 
 **Trade-off:** A green validator can report that the matrix is structurally complete, but the `human_playtest` gate and `release_ready` flag remain pending until the owner reviews the evidence. External recruitment, recordings, public distribution, signing, and storefront work remain outside this slice.
+
+## ADR-059: Repeated playtest findings use stable issue keys
+
+**Decision:** Require each finding to carry a stable snake-case issue key. Deterministic summary tooling groups matching keys across records and promotes a task candidate only after the same key appears in at least two sessions, retaining every human-authored summary and suggested action.
+
+**Reason:** The roadmap asks repeated observations to become small reversible work. Stable keys distinguish repetition from coincidental wording while keeping automation limited to counting and presentation.
+
+**Trade-off:** Observers must classify the same problem consistently. The summary can surface evidence but cannot decide product priority, rewrite the finding, create an external ticket, or approve release.

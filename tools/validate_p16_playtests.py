@@ -22,6 +22,9 @@ RUN_TYPES = {"baseline", "hardened_vanguard"}
 ID_PATTERN = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
 TIMESTAMP_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 PLAYTEST_GUIDE = "docs/p16_human_playtest_protocol.md"
+REQUIRED_FINDING_FIELDS = {
+    "id", "issue_key", "observation_id", "severity", "summary", "reproduction", "suggested_action",
+}
 
 
 def is_exact_unique_list(value: Any, expected: set[str]) -> bool:
@@ -88,7 +91,11 @@ def validate_protocol(
         errors.append("P16 protocol observation statuses differ from validator contract")
     if not is_exact_unique_list(protocol.get("allowed_finding_severities"), ALLOWED_SEVERITIES):
         errors.append("P16 protocol finding severities differ from validator contract")
-    for field in ("privacy_rule", "completion_rule", "approval_rule"):
+    if not is_exact_unique_list(protocol.get("required_finding_fields"), REQUIRED_FINDING_FIELDS):
+        errors.append("P16 protocol finding fields differ from validator contract")
+    if protocol.get("repeat_threshold") != 2:
+        errors.append("P16 protocol repeat_threshold must be 2")
+    for field in ("privacy_rule", "completion_rule", "finding_rule", "approval_rule"):
         if not isinstance(protocol.get(field), str) or not protocol[field].strip():
             errors.append(f"P16 protocol needs a non-empty {field}")
     gates = alpha_checklist.get("human_gates")
@@ -134,6 +141,7 @@ def validate_session(path: Path, session: dict[str, Any], build_version: str, er
     observations = session.get("observations")
     observed_ids: list[str] = []
     statuses: list[str] = []
+    status_by_observation: dict[str, str] = {}
     if not isinstance(observations, list):
         errors.append(f"{path}: observations must be an array")
     else:
@@ -146,6 +154,8 @@ def validate_session(path: Path, session: dict[str, Any], build_version: str, er
             notes = observation.get("notes")
             observed_ids.append(observation_id if isinstance(observation_id, str) else "")
             statuses.append(status if isinstance(status, str) else "")
+            if isinstance(observation_id, str) and isinstance(status, str):
+                status_by_observation[observation_id] = status
             if observation_id not in REQUIRED_OBSERVATIONS:
                 errors.append(f"{path}: unknown observation id: {observation_id}")
             if status not in ALLOWED_STATUSES:
@@ -163,6 +173,8 @@ def validate_session(path: Path, session: dict[str, Any], build_version: str, er
         errors.append(f"{path}: findings must be an array")
     else:
         finding_ids: set[str] = set()
+        finding_issue_keys: set[str] = set()
+        finding_observation_ids: set[str] = set()
         for finding in findings:
             if not isinstance(finding, dict):
                 errors.append(f"{path}: finding must be an object")
@@ -172,13 +184,26 @@ def validate_session(path: Path, session: dict[str, Any], build_version: str, er
                 errors.append(f"{path}: finding id must be unique snake_case")
             else:
                 finding_ids.add(finding_id)
+            issue_key = finding.get("issue_key")
+            if not isinstance(issue_key, str) or not ID_PATTERN.fullmatch(issue_key) or issue_key in finding_issue_keys:
+                errors.append(f"{path}: finding issue_key must be unique snake_case within a session")
+            else:
+                finding_issue_keys.add(issue_key)
             if finding.get("severity") not in ALLOWED_SEVERITIES:
                 errors.append(f"{path}: finding severity is unsupported")
-            if finding.get("observation_id") not in REQUIRED_OBSERVATIONS:
+            observation_id = finding.get("observation_id")
+            if observation_id not in REQUIRED_OBSERVATIONS:
                 errors.append(f"{path}: finding must reference a required observation_id")
+            else:
+                finding_observation_ids.add(str(observation_id))
+                if status_by_observation.get(str(observation_id)) not in {"friction", "blocked"}:
+                    errors.append(f"{path}: finding observation_id must reference friction or blocked status")
             for field in ("summary", "reproduction", "suggested_action"):
                 if not isinstance(finding.get(field), str) or not finding[field].strip():
                     errors.append(f"{path}: finding {field} must be non-empty text")
+        for observation_id, status in status_by_observation.items():
+            if status in {"friction", "blocked"} and observation_id not in finding_observation_ids:
+                errors.append(f"{path}: observation {observation_id} needs a linked finding")
     observer_summary = session.get("observer_summary")
     if not isinstance(observer_summary, str):
         errors.append(f"{path}: observer_summary must be text")
@@ -187,25 +212,24 @@ def validate_session(path: Path, session: dict[str, Any], build_version: str, er
     return bool(completed), (str(commander), str(run_type)) if completed and commander in COMMANDERS and run_type in RUN_TYPES else None
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--protocol", required=True)
-    parser.add_argument("--sessions", required=True)
-    parser.add_argument("--ci-manifest", required=True)
-    parser.add_argument("--alpha-checklist", required=True)
-    args = parser.parse_args()
+def load_and_validate_evidence(
+    protocol_path: Path,
+    sessions_directory: Path,
+    ci_manifest_path: Path,
+    alpha_checklist_path: Path,
+) -> dict[str, Any]:
     errors: list[str] = []
-    protocol = load_object(Path(args.protocol), errors)
-    ci_manifest = load_object(Path(args.ci_manifest), errors)
-    alpha_checklist = load_object(Path(args.alpha_checklist), errors)
+    protocol = load_object(protocol_path, errors)
+    ci_manifest = load_object(ci_manifest_path, errors)
+    alpha_checklist = load_object(alpha_checklist_path, errors)
     validate_protocol(protocol, ci_manifest, alpha_checklist, errors)
-    sessions_directory = Path(args.sessions)
     if not sessions_directory.is_dir():
         errors.append(f"{sessions_directory}: sessions directory does not exist")
     session_paths = sorted(sessions_directory.glob("*.json")) if sessions_directory.is_dir() else []
     session_ids: set[str] = set()
     completed_count = 0
     completed_matrix: set[tuple[str, str]] = set()
+    sessions: list[dict[str, Any]] = []
     for path in session_paths:
         session = load_object(path, errors)
         session_id = session.get("session_id")
@@ -218,14 +242,38 @@ def main() -> int:
             completed_count += 1
         if matrix_entry is not None:
             completed_matrix.add(matrix_entry)
+        sessions.append({"path": path, "session": session, "completed": completed, "matrix_entry": matrix_entry})
+    return {
+        "protocol": protocol,
+        "sessions": sessions,
+        "completed_count": completed_count,
+        "completed_matrix": completed_matrix,
+        "errors": errors,
+    }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--protocol", required=True)
+    parser.add_argument("--sessions", required=True)
+    parser.add_argument("--ci-manifest", required=True)
+    parser.add_argument("--alpha-checklist", required=True)
+    args = parser.parse_args()
+    evidence = load_and_validate_evidence(
+        Path(args.protocol), Path(args.sessions), Path(args.ci_manifest), Path(args.alpha_checklist)
+    )
+    errors = evidence["errors"]
+    protocol = evidence["protocol"]
     if errors:
         print(f"P16 playtest protocol: BLOCK ({len(errors)} errors)")
         for error in errors:
             print(f"ERROR: {error}")
         return 1
+    completed_count = int(evidence["completed_count"])
+    completed_matrix = evidence["completed_matrix"]
     required_matrix = {(commander, run_type) for commander in COMMANDERS for run_type in RUN_TYPES}
     matrix_status = "complete" if completed_count >= int(protocol.get("minimum_completed_sessions", 4)) and required_matrix <= completed_matrix else "pending"
-    print(f"P16 playtest protocol: READY ({len(session_paths)} records, {completed_count} completed, matrix {matrix_status}; human gate remains pending)")
+    print(f"P16 playtest protocol: READY ({len(evidence['sessions'])} records, {completed_count} completed, matrix {matrix_status}; human gate remains pending)")
     return 0
 
 

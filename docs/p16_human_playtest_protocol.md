@@ -33,7 +33,7 @@ The generated record contains only `not_tested` observations. A human observer u
 
 Every completed record must cover onboarding, first successful hold, partial-breach recovery, event comprehension, replay motivation, controller/scaling use, pause trust, save recovery, and packaged close. Mark an item `not_tested` when the session genuinely did not exercise it; never infer success from automated checks.
 
-Findings should be concrete and reproducible. Each finding records a unique snake-case `id`, one required `observation_id`, severity, summary, reproduction steps, and a small `suggested_action`. Use `critical` only for data loss, unsafe distribution, unrecoverable progression, or an inability to complete the required flow. Repeated observations should become small reversible roadmap tasks; preserve the original JSON evidence.
+Findings should be concrete and reproducible. Every `friction` or `blocked` observation must link to a finding. Each finding records a unique snake-case `id`, a stable snake-case `issue_key` shared by the same problem across sessions, one required `observation_id`, severity, summary, reproduction steps, and a small `suggested_action`. Use `critical` only for data loss, unsafe distribution, unrecoverable progression, or an inability to complete the required flow. Preserve the original JSON evidence.
 
 Only the human observer may set `completed` to `true`, after all nine observations have been exercised and `observer_summary` has been written. Automation must leave generated records unfilled.
 
@@ -48,3 +48,15 @@ python3 tools/validate_p16_playtests.py \
 ```
 
 With no completed sessions, validation reports readiness and leaves the human gate pending. A complete matrix is coverage evidence only: the human gate remains pending until the owner reviews the records and explicitly changes the release boundary.
+
+## Summarize and triage
+
+```bash
+python3 tools/summarize_p16_playtests.py \
+  --protocol content/p16_playtest_protocol.json \
+  --sessions playtests/sessions \
+  --ci-manifest tools/ci_manifest.json \
+  --alpha-checklist content/p12_alpha_checklist.json
+```
+
+The deterministic summary reports matrix coverage, observation-status counts, all finding keys, and task candidates only when the same `issue_key` appears in at least two session records. Suggested actions remain human-authored and should be implemented as small reversible changes. The summary does not approve a release.

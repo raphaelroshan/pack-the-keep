@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.16.0-playtest-readiness` — P16 evidence tooling is ready; human sessions and owner approval remain pending
+**Current build identity:** `0.16.1-playtest-triage` — P16 evidence and repeated-finding triage are ready; human sessions and owner approval remain pending
 
 ## Purpose
 
@@ -113,6 +113,10 @@ Terminal defenses now produce one authored Low Mill report from the Gate and Sup
 ## v0.16.0 Controlled playtest readiness
 
 The title screen now names the exact pre-alpha build under observation. A versioned P16 protocol defines the four commander/modifier matrix sessions and nine required observations, while a generator creates privacy-light unfilled records and a validator checks record completeness, actionable findings, build parity, and matrix coverage. Automation cannot write successful observations, complete the human gate, set `release_ready`, or approve distribution.
+
+## v0.16.1 Repeated-finding triage
+
+Session findings now carry stable issue keys. A deterministic summary reports matrix coverage, observation-status counts, and any issue observed in at least two records as a candidate for a small reversible improvement. The tool repeats only human-authored summaries and suggested actions; it does not manufacture findings or change the pending human gate.
 
 ## v0.8.2 testability additions
 
