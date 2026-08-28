@@ -37,6 +37,8 @@ func _initialize() -> void:
 	await process_frame
 	ui._on_start_quick_playtest()
 	await process_frame
+	ui._on_confirm_setup()
+	await process_frame
 	if not String(ui.layout_lens_label.text).contains("LAYOUT SUMMARY"):
 		failures.append("preparation did not expose the layout summary")
 	if not String(ui.layout_lens_label.text).contains("CASTELLAN") or not String(ui.layout_lens_label.text).contains("WARDEN") or not String(ui.layout_lens_label.text).contains("WARNINGS"):
@@ -62,8 +64,8 @@ func _initialize() -> void:
 	await _resolve_current_wave(ui)
 	if ui.screen != "results" or ui.keep.has_next_wave() or not ui.keep.repair_interval_active:
 		failures.append("final wave did not produce terminal Results recovery")
-	if _find_button(ui, "RESTART QUICK PLAYTEST") == null:
-		failures.append("terminal Results did not expose restart action")
+	if _find_button(ui, "REVIEW SETUP — PLAY AGAIN") == null:
+		failures.append("terminal Results did not expose the replay setup action")
 	if not String(ui.scorecard_label.text).contains("W1") or not String(ui.scorecard_label.text).contains("W2") or not String(ui.scorecard_label.text).contains("W3") or not String(ui.scorecard_label.text).contains("recovery actions"):
 		failures.append("terminal Results did not expose the complete three-wave scorecard")
 	if not String(ui.scorecard_label.text).contains("SCENARIO REPORT") or not String(ui.scorecard_label.text).contains("Pressure:"):

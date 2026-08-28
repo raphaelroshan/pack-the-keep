@@ -90,8 +90,20 @@ var build_identity_label: Label
 var screen_label: Label
 var screen_hint: Label
 var art_banner: TextureRect
+var main_title_label: Label
+var main_subtitle_label: Label
+var setup_overview_panel: PanelContainer
+var setup_summary_panel: PanelContainer
+var setup_overview_label: Label
+var settings_overview_panel: PanelContainer
+var command_panel_title: Label
+var setup_confirm_button: Button
+var setup_back_button: Button
+var settings_back_button: Button
+var title_custom_button: Button
+var title_settings_button: Button
+var title_continue_button: Button
 var pause_button: Button
-var start_invasion_button: Button
 var speed_button: Button
 var mute_button: Button
 var contrast_button: Button
@@ -133,6 +145,16 @@ var rebind_waiting_action: String = ""
 var last_auto_pause_wave_index: int = -1
 var last_cue_id: String = "none"
 var menu_buttons: Dictionary = {}
+var setup_controls: Array[Control] = []
+var event_controls: Array[Control] = []
+var preparation_controls: Array[Control] = []
+var battle_controls: Array[Control] = []
+var inspection_controls: Array[Control] = []
+var run_controls: Array[Control] = []
+var settings_controls: Array[Control] = []
+var guided_setup: bool = true
+var setup_confirmed: bool = false
+var settings_return_screen: String = "title"
 var audio_player: AudioStreamPlayer
 var audio_stream: AudioStreamGenerator
 var last_log_size: int = 0
@@ -749,14 +771,20 @@ func _build_ui() -> void:
 	var menu_bar: HBoxContainer = HBoxContainer.new()
 	menu_bar.add_theme_constant_override("separation", 8)
 	screen_label = Label.new()
-	screen_label.custom_minimum_size = Vector2(170, 0)
+	screen_label.custom_minimum_size = Vector2(150, 0)
+	screen_label.text = "PACK THE KEEP"
 	screen_label.add_theme_font_size_override("font_size", 16)
 	screen_label.add_theme_color_override("font_color", Color("#e2bd84"))
 	menu_bar.add_child(screen_label)
-	for menu_item in ["title", "preparation", "battle", "results"]:
+	var navigation_labels: Dictionary = {
+		"title": "Home", "setup": "Briefing", "preparation": "Prepare",
+		"battle": "Battle", "results": "Report", "settings": "Settings"
+	}
+	for menu_item in ["title", "setup", "preparation", "battle", "results", "settings"]:
 		var menu_button: Button = Button.new()
-		menu_button.text = String(menu_item).capitalize()
-		menu_button.pressed.connect(func() -> void: _set_screen(String(menu_item)))
+		menu_button.text = String(navigation_labels[menu_item])
+		menu_button.pressed.connect(func() -> void: _on_navigation_requested(String(menu_item)))
+		_style_button(menu_button, false)
 		menu_bar.add_child(menu_button)
 		menu_buttons[menu_item] = menu_button
 	screen_hint = Label.new()
@@ -790,16 +818,37 @@ func _build_ui() -> void:
 	left.add_theme_constant_override("separation", 8)
 	columns.add_child(left)
 
-	var title: Label = Label.new()
-	title.text = "PACK THE KEEP — GREYWATCH"
-	title.add_theme_font_size_override("font_size", 28)
-	title.add_theme_color_override("font_color", Color("#e2bd84"))
-	left.add_child(title)
+	main_title_label = Label.new()
+	main_title_label.text = "PACK THE KEEP — GREYWATCH"
+	main_title_label.add_theme_font_size_override("font_size", 28)
+	main_title_label.add_theme_color_override("font_color", Color("#e2bd84"))
+	left.add_child(main_title_label)
 
-	var subtitle: Label = Label.new()
-	subtitle.text = "Greywatch’s defense: connect the floors, read the doctrine, hold what matters."
-	subtitle.add_theme_color_override("font_color", Color("#c0b2c8"))
-	left.add_child(subtitle)
+	main_subtitle_label = Label.new()
+	main_subtitle_label.text = "Greywatch’s defense: connect the floors, read the doctrine, hold what matters."
+	main_subtitle_label.add_theme_color_override("font_color", Color("#c0b2c8"))
+	left.add_child(main_subtitle_label)
+
+	setup_overview_panel = _build_overview_panel(
+		"THE DEFENSE BRIEF",
+		"Choose a commander lens and an authored scenario before touching the board. The guided route enters Gatehouse Lock with a readable two-piece baseline; custom setup leaves placement in your hands."
+	)
+	left.add_child(setup_overview_panel)
+	setup_summary_panel = PanelContainer.new()
+	_style_panel(setup_summary_panel, Color("#1e2830"), Color("#45606b"))
+	left.add_child(setup_summary_panel)
+	setup_overview_label = Label.new()
+	setup_overview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	setup_overview_label.custom_minimum_size = Vector2(748, 118)
+	setup_overview_label.add_theme_font_size_override("font_size", 16)
+	setup_overview_label.add_theme_color_override("font_color", Color("#f0dca8"))
+	setup_summary_panel.add_child(setup_overview_label)
+
+	settings_overview_panel = _build_overview_panel(
+		"READABILITY BEFORE PRESSURE",
+		"Display, audio, input, and pacing preferences live on their own screen. They never alter the deterministic keep state, seed, target selection, or battle outcome."
+	)
+	left.add_child(settings_overview_panel)
 
 	status_label = Label.new()
 	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -884,6 +933,7 @@ func _build_ui() -> void:
 	command_panel = PanelContainer.new()
 	command_panel.custom_minimum_size = Vector2(810, 0) if ui_scale_index >= 2 else Vector2(292, 0)
 	command_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL if ui_scale_index >= 2 else Control.SIZE_SHRINK_BEGIN
+	_style_panel(command_panel, Color("#211c29"), Color("#4e4357"), 8)
 	columns.add_child(command_panel)
 	command_scroll = ScrollContainer.new()
 	command_scroll.custom_minimum_size = Vector2(286, 520)
@@ -896,67 +946,87 @@ func _build_ui() -> void:
 	controls.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	command_scroll.add_child(controls)
 
-	var panel_title: Label = Label.new()
-	panel_title.text = "COMMAND TABLE"
-	panel_title.add_theme_font_size_override("font_size", 19)
-	panel_title.add_theme_color_override("font_color", Color("#e2bd84"))
-	controls.add_child(panel_title)
+	command_panel_title = Label.new()
+	command_panel_title.text = "COMMAND TABLE"
+	command_panel_title.add_theme_font_size_override("font_size", 19)
+	command_panel_title.add_theme_color_override("font_color", Color("#e2bd84"))
+	controls.add_child(command_panel_title)
 	input_help_label = Label.new()
-	input_help_label.text = "INPUT — keyboard and controller use the same named actions. Tab/D-pad cycles focus; Enter/A activates. Bindings and scale are below."
+	input_help_label.text = "Tab/D-pad moves focus. Enter/A confirms. Screen-specific actions stay grouped below."
 	input_help_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	input_help_label.add_theme_font_size_override("font_size", 10)
 	input_help_label.add_theme_color_override("font_color", Color("#aab1b2"))
 	controls.add_child(input_help_label)
+	var event_section: VBoxContainer = _build_command_section("DECISION")
+	controls.add_child(event_section)
+	event_controls.append(event_section)
+	var setup_section: VBoxContainer = _build_command_section("CHOOSE THE DEFENSE")
+	controls.add_child(setup_section)
+	setup_controls.append(setup_section)
+	var preparation_section: VBoxContainer = _build_command_section("BUILD THE ANSWER")
+	controls.add_child(preparation_section)
+	preparation_controls.append(preparation_section)
+	var battle_section: VBoxContainer = _build_command_section("CONTROL THE PRESSURE")
+	controls.add_child(battle_section)
+	battle_controls.append(battle_section)
+	var inspection_section: VBoxContainer = _build_command_section("INSPECT")
+	controls.add_child(inspection_section)
+	inspection_controls.append(inspection_section)
+	var run_section: VBoxContainer = _build_command_section("RUN")
+	controls.add_child(run_section)
+	run_controls.append(run_section)
+	var settings_section: VBoxContainer = _build_command_section("SETTINGS & ACCESSIBILITY")
+	controls.add_child(settings_section)
+	settings_controls.append(settings_section)
 	commander_portrait = TextureRect.new()
 	commander_portrait.texture = CASTELLAN_PORTRAIT
 	commander_portrait.custom_minimum_size = Vector2(0, 92)
 	commander_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	commander_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	commander_portrait.tooltip_text = "Commander portrait; Warden portrait art is pending the next asset-generation window."
-	controls.add_child(commander_portrait)
+	setup_section.add_child(commander_portrait)
 	commander_profile_label = Label.new()
 	commander_profile_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	commander_profile_label.custom_minimum_size = Vector2(292, 78)
 	commander_profile_label.add_theme_color_override("font_color", Color("#c9bfd0"))
-	controls.add_child(commander_profile_label)
+	setup_section.add_child(commander_profile_label)
 	layout_lens_label = Label.new()
 	layout_lens_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	layout_lens_label.custom_minimum_size = Vector2(292, 142)
 	layout_lens_label.add_theme_color_override("font_color", Color("#d8c389"))
-	controls.add_child(layout_lens_label)
+	preparation_section.add_child(layout_lens_label)
 
 	commander_option = OptionButton.new()
 	for commander_id in keep.commander_ids():
 		commander_option.add_item(String(keep.commander_definition(commander_id).get("name", commander_id)))
 		commander_option.set_item_metadata(commander_option.item_count - 1, commander_id)
-	controls.add_child(_labeled_control("Commander", commander_option))
-	var commander_button: Button = Button.new()
-	commander_button.text = "Take command"
-	commander_button.pressed.connect(_on_select_commander)
-	controls.add_child(commander_button)
+	commander_option.item_selected.connect(func(_index: int) -> void: _on_select_commander())
+	var commander_group: VBoxContainer = _labeled_control("Commander lens", commander_option)
+	setup_section.add_child(commander_group)
 
 	scenario_option = OptionButton.new()
 	scenario_option.item_selected.connect(func(_index: int) -> void: _on_select_scenario())
 	for scenario_id in keep.scenario_ids():
 		scenario_option.add_item(String(keep.scenario_definition(scenario_id).get("name", scenario_id)))
 		scenario_option.set_item_metadata(scenario_option.item_count - 1, scenario_id)
-	controls.add_child(_labeled_control("Defensive scenario", scenario_option))
+	var scenario_group: VBoxContainer = _labeled_control("Defensive scenario", scenario_option)
+	setup_section.add_child(scenario_group)
 	scenario_preview_label = Label.new()
 	scenario_preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	scenario_preview_label.custom_minimum_size = Vector2(292, 82)
 	scenario_preview_label.add_theme_color_override("font_color", Color("#d8c389"))
-	controls.add_child(scenario_preview_label)
+	setup_section.add_child(scenario_preview_label)
 	authored_event_panel = AuthoredEventPanelView.new()
 	authored_event_panel.build(2)
 	authored_event_panel.choice_requested.connect(_on_authored_event_choice_id)
-	controls.add_child(authored_event_panel)
+	event_section.add_child(authored_event_panel)
 	authored_event_title = authored_event_panel.title_label
 	authored_event_setup = authored_event_panel.setup_label
 	authored_event_choice_details = authored_event_panel.choice_details
 	authored_event_choice_buttons = authored_event_panel.choice_buttons
 	campaign_ledger_panel = VBoxContainer.new()
 	campaign_ledger_panel.add_theme_constant_override("separation", 4)
-	controls.add_child(campaign_ledger_panel)
+	setup_section.add_child(campaign_ledger_panel)
 	campaign_ledger_label = Label.new()
 	campaign_ledger_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	campaign_ledger_label.add_theme_color_override("font_color", Color("#bfe8cf"))
@@ -973,31 +1043,44 @@ func _build_ui() -> void:
 	campaign_modifier_button = Button.new()
 	campaign_modifier_button.pressed.connect(_on_toggle_campaign_modifier)
 	campaign_ledger_panel.add_child(campaign_modifier_button)
+	setup_confirm_button = Button.new()
+	setup_confirm_button.text = "Enter Keep — Recommended Layout"
+	setup_confirm_button.tooltip_text = "Confirm this briefing and enter Preparation with the guided two-piece baseline."
+	setup_confirm_button.pressed.connect(_on_confirm_setup)
+	_style_button(setup_confirm_button, true)
+	left.add_child(setup_confirm_button)
+	setup_controls.append(setup_confirm_button)
+	setup_back_button = Button.new()
+	setup_back_button.text = "Back to Main Menu"
+	setup_back_button.pressed.connect(func() -> void: _set_screen("title"))
+	left.add_child(setup_back_button)
+	setup_controls.append(setup_back_button)
 
 	pack_option = OptionButton.new()
 	pack_option.item_selected.connect(func(_index: int) -> void: _refresh_pack_preview())
 	for pack_id in keep.pack_ids():
 		pack_option.add_item(String(keep.pack_definition(pack_id).get("name", pack_id)))
 		pack_option.set_item_metadata(pack_option.item_count - 1, pack_id)
-	controls.add_child(_labeled_control("Pack offer", pack_option))
+	var pack_group: VBoxContainer = _labeled_control("Pack offer", pack_option)
+	preparation_section.add_child(pack_group)
 	var pack_button: Button = Button.new()
 	pack_button.text = "Open pack"
 	pack_button.pressed.connect(_on_open_pack)
-	controls.add_child(pack_button)
+	preparation_section.add_child(pack_button)
 	availability_label = Label.new()
 	availability_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	availability_label.add_theme_color_override("font_color", Color("#aab1b2"))
-	controls.add_child(availability_label)
+	preparation_section.add_child(availability_label)
 	pack_preview_label = Label.new()
 	pack_preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	pack_preview_label.custom_minimum_size = Vector2(292, 112)
 	pack_preview_label.add_theme_color_override("font_color", Color("#d8c389"))
-	controls.add_child(pack_preview_label)
+	preparation_section.add_child(pack_preview_label)
 	var reserve_button: Button = Button.new()
 	reserve_button.text = "Reserve selected pack"
 	reserve_button.tooltip_text = "Hold this offer without granting its pieces; opening it later consumes a preparation opening and its shown material cost."
 	reserve_button.pressed.connect(_on_reserve_pack)
-	controls.add_child(reserve_button)
+	preparation_section.add_child(reserve_button)
 	var asset_strip: VBoxContainer = VBoxContainer.new()
 	for asset_row in [[PIKE_ICON, REPAIR_ICON, FIRE_ICON, SCOUT_ICON, GATE_ICON], [RAIDER_ICON, SAPPER_ICON, CLIMBER_ICON]]:
 		var row: HBoxContainer = HBoxContainer.new()
@@ -1010,7 +1093,7 @@ func _build_ui() -> void:
 			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 			row.add_child(icon)
 		asset_strip.add_child(row)
-	controls.add_child(asset_strip)
+	preparation_section.add_child(asset_strip)
 
 	piece_option = OptionButton.new()
 	piece_option.item_selected.connect(func(_index: int) -> void: _on_piece_option_changed())
@@ -1018,7 +1101,8 @@ func _build_ui() -> void:
 		piece_option.add_item(String(keep.piece_definition(piece_id).get("name", piece_id)))
 		piece_option.set_item_metadata(piece_option.item_count - 1, piece_id)
 		piece_option.set_item_disabled(piece_option.item_count - 1, not keep.available_pieces.has(String(piece_id)))
-	controls.add_child(_labeled_control("Available piece", piece_option))
+	var piece_group: VBoxContainer = _labeled_control("Piece", piece_option)
+	inspection_section.add_child(piece_group)
 
 	floor_option = OptionButton.new()
 	floor_option.item_selected.connect(func(_index: int) -> void: _arm_selected_piece())
@@ -1026,40 +1110,39 @@ func _build_ui() -> void:
 	floor_option.set_item_metadata(0, "ground")
 	floor_option.add_item("Upper floor")
 	floor_option.set_item_metadata(1, "upper")
-	controls.add_child(_labeled_control("Floor", floor_option))
+	var floor_group: VBoxContainer = _labeled_control("Placement floor", floor_option)
+	preparation_section.add_child(floor_group)
 	room_option = OptionButton.new()
 	room_option.item_selected.connect(func(_index: int) -> void: _refresh_recovery_action_cards())
 	_refresh_room_options()
-	controls.add_child(_labeled_control("Room", room_option))
+	var room_group: VBoxContainer = _labeled_control("Room", room_option)
+	inspection_section.add_child(room_group)
 	var map_place_button: Button = Button.new()
 	map_place_button.text = "Arm selected piece for map"
 	map_place_button.tooltip_text = "Select a cell on either keep floor. The green footprint is authoritative; red means the state will reject it."
 	map_place_button.pressed.connect(_arm_selected_piece)
-	controls.add_child(map_place_button)
+	preparation_section.add_child(map_place_button)
 	var recommended_layout_button: Button = Button.new()
 	recommended_layout_button.text = "Use recommended starter layout"
 	recommended_layout_button.tooltip_text = "Places Pike Squad and Narrow Gate in a readable first-battle arrangement; each placement remains authoritative."
 	recommended_layout_button.pressed.connect(_on_recommended_layout)
-	controls.add_child(recommended_layout_button)
+	preparation_section.add_child(recommended_layout_button)
 	var remove_piece_button: Button = Button.new()
 	remove_piece_button.text = "Remove selected piece"
 	remove_piece_button.tooltip_text = "Preparation-only: remove the inspected piece so you can test a different layout. Materials are not refunded."
 	remove_piece_button.pressed.connect(_on_remove_piece)
-	controls.add_child(remove_piece_button)
+	preparation_section.add_child(remove_piece_button)
 	var cancel_place_button: Button = Button.new()
 	cancel_place_button.text = "Cancel map placement"
 	cancel_place_button.pressed.connect(_on_cancel_placement)
-	controls.add_child(cancel_place_button)
-	var place_button: Button = Button.new()
-	place_button.text = "Fallback: place at next slot"
-	place_button.pressed.connect(_on_place_piece)
-	controls.add_child(place_button)
-
+	preparation_section.add_child(cancel_place_button)
 	doctrine_option = OptionButton.new()
 	for doctrine_id in keep.doctrine_ids():
 		doctrine_option.add_item(String(keep.doctrine_definition(doctrine_id).get("name", doctrine_id)))
 		doctrine_option.set_item_metadata(doctrine_option.item_count - 1, doctrine_id)
-	controls.add_child(_labeled_control("Invasion doctrine", doctrine_option))
+	var doctrine_group: VBoxContainer = _labeled_control("Invasion doctrine", doctrine_option)
+	preparation_section.add_child(doctrine_group)
+	preparation_section.move_child(layout_lens_label, preparation_section.get_child_count() - 1)
 	recovery_actions_panel = VBoxContainer.new()
 	recovery_actions_panel.add_theme_constant_override("separation", 6)
 	controls.add_child(recovery_actions_panel)
@@ -1102,164 +1185,170 @@ func _build_ui() -> void:
 	finish_interval_button.tooltip_text = "Close recovery explicitly; unused actions are recorded and never spent automatically."
 	finish_interval_button.pressed.connect(_on_finish_interval)
 	recovery_actions_panel.add_child(finish_interval_button)
-	controls.move_child(recovery_actions_panel, 2)
-	controls.move_child(authored_event_panel, 2)
-	controls.move_child(campaign_ledger_panel, 4)
+	controls.move_child(recovery_actions_panel, 3)
 
-	start_invasion_button = Button.new()
-	start_invasion_button.text = "Start invasion"
-	start_invasion_button.pressed.connect(_on_start_wave)
-	controls.add_child(start_invasion_button)
-
-	var advance_button: Button = Button.new()
-	advance_button.text = "Advance one battle step"
-	advance_button.tooltip_text = "Resolve one readable step; pause here to inspect the report."
-	advance_button.pressed.connect(_on_advance_wave)
-	advance_button.focus_mode = Control.FOCUS_ALL
-	controls.add_child(advance_button)
 	pause_button = Button.new()
 	pause_button.text = "Pause battle (Space)"
 	pause_button.tooltip_text = "Pause or resume automatic battle timing. Manual N steps remain deterministic."
 	pause_button.pressed.connect(_toggle_battle_pause)
-	controls.add_child(pause_button)
+	battle_section.add_child(pause_button)
 	speed_button = Button.new()
 	speed_button.text = "Speed: 1.0x (1/2/3)"
 	speed_button.tooltip_text = "Cycle battle speed; speed changes timing only, never outcomes."
 	speed_button.pressed.connect(_cycle_battle_speed)
-	controls.add_child(speed_button)
+	battle_section.add_child(speed_button)
 
 	commander_ability_button = Button.new()
 	commander_ability_button.text = "Lockdown (Castellan)"
 	commander_ability_button.tooltip_text = "Use the active commander ability once per wave."
 	commander_ability_button.pressed.connect(_on_use_ability)
-	controls.add_child(commander_ability_button)
-
-	var repair_gate_button: Button = Button.new()
-	repair_gate_button.text = "Repair Gate"
-	repair_gate_button.pressed.connect(func() -> void: _run_result(keep.repair_room("gate"), "Repair"))
-	controls.add_child(repair_gate_button)
+	battle_section.add_child(commander_ability_button)
 
 	enemy_option = OptionButton.new()
-	controls.add_child(_labeled_control("Enemy to inspect", enemy_option))
+	var enemy_group: VBoxContainer = _labeled_control("Enemy to inspect", enemy_option)
+	battle_section.add_child(enemy_group)
 	var inspect_enemy_button: Button = Button.new()
 	inspect_enemy_button.text = "Inspect selected enemy"
 	inspect_enemy_button.pressed.connect(_on_inspect_enemy)
-	controls.add_child(inspect_enemy_button)
+	battle_section.add_child(inspect_enemy_button)
 	inspector_label = Label.new()
 	inspector_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	inspector_label.custom_minimum_size = Vector2(292, 92)
 	inspector_label.add_theme_color_override("font_color", Color("#c9bfd0"))
-	controls.add_child(inspector_label)
+	inspection_section.add_child(inspector_label)
 	response_preview_label = Label.new()
 	response_preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	response_preview_label.custom_minimum_size = Vector2(292, 90)
 	response_preview_label.add_theme_color_override("font_color", Color("#d8c389"))
-	controls.add_child(response_preview_label)
+	battle_section.add_child(response_preview_label)
 	recovery_priority_label = Label.new()
 	recovery_priority_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	recovery_priority_label.custom_minimum_size = Vector2(292, 80)
 	recovery_priority_label.add_theme_color_override("font_color", Color("#bfe8cf"))
-	controls.add_child(recovery_priority_label)
+	recovery_actions_panel.add_child(recovery_priority_label)
 	var save_button: Button = Button.new()
 	save_button.text = "Save keep state"
 	save_button.pressed.connect(_on_save)
-	controls.add_child(save_button)
+	run_section.add_child(save_button)
 	var load_button: Button = Button.new()
 	load_button.text = "Load keep state"
 	load_button.pressed.connect(_on_load)
-	controls.add_child(load_button)
+	run_section.add_child(load_button)
 	var reset_button: Button = Button.new()
-	reset_button.text = "New run / reset"
+	reset_button.text = "Return to Briefing / New Run"
 	reset_button.pressed.connect(_on_reset_run)
-	controls.add_child(reset_button)
+	run_section.add_child(reset_button)
 	mute_button = Button.new()
 	mute_button.text = "Feedback tones: ON"
 	mute_button.pressed.connect(_toggle_mute)
-	controls.add_child(mute_button)
+	settings_section.add_child(mute_button)
 	contrast_button = Button.new()
 	contrast_button.text = "High-contrast cues: OFF"
 	contrast_button.pressed.connect(_toggle_contrast)
 	contrast_button.tooltip_text = "Adds shape/text cues so doctrine and damage are not color-dependent."
-	controls.add_child(contrast_button)
+	settings_section.add_child(contrast_button)
 	reduced_motion_button = Button.new()
 	reduced_motion_button.text = "Reduced motion: OFF"
 	reduced_motion_button.tooltip_text = "Suppress transient board flashes without changing simulation timing or outcomes."
 	reduced_motion_button.pressed.connect(_toggle_reduced_motion)
-	controls.add_child(reduced_motion_button)
+	settings_section.add_child(reduced_motion_button)
 	ui_scale_button = Button.new()
 	ui_scale_button.text = "UI scale: 100%"
 	ui_scale_button.tooltip_text = "Cycle 80%, 100%, 125%, and 150% interface scaling; the command rail remains scrollable."
 	ui_scale_button.pressed.connect(_cycle_ui_scale)
-	controls.add_child(ui_scale_button)
+	settings_section.add_child(ui_scale_button)
 	window_mode_button = Button.new()
 	window_mode_button.text = "Window mode: Windowed"
 	window_mode_button.tooltip_text = "Toggle fullscreen without forgetting the selected windowed resolution."
 	window_mode_button.pressed.connect(_toggle_fullscreen)
-	controls.add_child(window_mode_button)
+	settings_section.add_child(window_mode_button)
 	resolution_button = Button.new()
 	resolution_button.text = "Window size: 1280×720"
 	resolution_button.tooltip_text = "Cycle the windowed resolution; fullscreen keeps this value for later restoration."
 	resolution_button.pressed.connect(_cycle_window_size)
-	controls.add_child(resolution_button)
+	settings_section.add_child(resolution_button)
 	effects_volume_button = Button.new()
 	effects_volume_button.text = "Effects volume: 100%"
 	effects_volume_button.tooltip_text = "Adjust generated feedback tones independently from the mute preference."
 	effects_volume_button.pressed.connect(_cycle_effects_volume)
-	controls.add_child(effects_volume_button)
+	settings_section.add_child(effects_volume_button)
 	feedback_cue_label = Label.new()
 	feedback_cue_label.text = "Last feedback cue: NONE"
 	feedback_cue_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	feedback_cue_label.add_theme_color_override("font_color", Color("#aab1b2"))
-	controls.add_child(feedback_cue_label)
+	settings_section.add_child(feedback_cue_label)
 	event_feed_button = Button.new()
 	event_feed_button.text = "Event feed: newest 4"
 	event_feed_button.tooltip_text = "Change only how many authoritative report entries are shown; the complete report remains saved."
 	event_feed_button.pressed.connect(_cycle_event_feed_retention)
-	controls.add_child(event_feed_button)
+	settings_section.add_child(event_feed_button)
 	auto_pause_button = Button.new()
 	auto_pause_button.text = "Threat auto-pause: OFF"
 	auto_pause_button.tooltip_text = "Pause after the first resolved threat step in each wave and after a new breach; resume manually when ready."
 	auto_pause_button.pressed.connect(_toggle_auto_pause_on_threat)
-	controls.add_child(auto_pause_button)
+	settings_section.add_child(auto_pause_button)
 	rebind_action_option = OptionButton.new()
 	for action in REMAPPABLE_ACTIONS:
 		rebind_action_option.add_item(String(ACTION_LABELS.get(action, action)))
 		rebind_action_option.set_item_metadata(rebind_action_option.item_count - 1, action)
 	rebind_action_option.item_selected.connect(func(_index: int) -> void: _refresh_binding_controls())
-	controls.add_child(_labeled_control("Input action", rebind_action_option))
+	var rebind_group: VBoxContainer = _labeled_control("Input action", rebind_action_option)
+	settings_section.add_child(rebind_group)
 	binding_summary_label = Label.new()
 	binding_summary_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	binding_summary_label.add_theme_color_override("font_color", Color("#c9bfd0"))
-	controls.add_child(binding_summary_label)
+	settings_section.add_child(binding_summary_label)
 	rebind_button = Button.new()
 	rebind_button.text = "Rebind selected action"
 	rebind_button.tooltip_text = "Capture one keyboard key or controller button while preserving the other device path."
 	rebind_button.pressed.connect(func() -> void: _begin_rebind())
-	controls.add_child(rebind_button)
+	settings_section.add_child(rebind_button)
 	reset_bindings_button = Button.new()
 	reset_bindings_button.text = "Reset input bindings"
 	reset_bindings_button.pressed.connect(_reset_input_bindings)
-	controls.add_child(reset_bindings_button)
+	settings_section.add_child(reset_bindings_button)
+	settings_back_button = Button.new()
+	settings_back_button.text = "Back"
+	settings_back_button.pressed.connect(_on_close_settings)
+	left.add_child(settings_back_button)
+	settings_controls.append(settings_back_button)
+	_style_buttons_recursive(menu_bar)
+	_style_buttons_recursive(command_panel)
+	_style_button(quick_test_button, true)
+	_style_button(playtest_button, true)
+	_style_button(setup_confirm_button, true)
 	_refresh_binding_controls()
 
 func _build_title_card() -> PanelContainer:
 	var card: PanelContainer = PanelContainer.new()
-	card.custom_minimum_size = Vector2(0, 170)
+	card.custom_minimum_size = Vector2(0, 330)
+	_style_panel(card, Color("#211c29"), Color("#6f5947"))
 	var content: VBoxContainer = VBoxContainer.new()
 	content.alignment = BoxContainer.ALIGNMENT_CENTER
-	content.add_theme_constant_override("separation", 8)
+	content.add_theme_constant_override("separation", 12)
 	card.add_child(content)
 	var heading: Label = Label.new()
-	heading.text = "GREYWATCH KEEP"
+	heading.text = "PACK THE KEEP"
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	heading.add_theme_font_size_override("font_size", 34)
+	heading.add_theme_font_size_override("font_size", 42)
 	heading.add_theme_color_override("font_color", Color("#e2bd84"))
 	content.add_child(heading)
 	var copy: Label = Label.new()
-	copy.text = "Pack the Keep — a readable, deterministic defense of one two-floor stronghold.\nChoose a pack, place the defense, read the enemy doctrine, and recover what survives."
+	copy.text = "Choose a doctrine. Shape the keep. Read the invasion before it breaks you.\nA deliberate top-down defense built for pausing, inspecting, and adapting."
 	copy.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	copy.add_theme_font_size_override("font_size", 17)
 	copy.add_theme_color_override("font_color", Color("#c0b2c8"))
 	content.add_child(copy)
+	var pillars: HBoxContainer = HBoxContainer.new()
+	pillars.alignment = BoxContainer.ALIGNMENT_CENTER
+	pillars.add_theme_constant_override("separation", 10)
+	for pillar in [
+		["CHOOSE", "Commander and scenario define what matters."],
+		["BUILD", "Packs become a readable two-floor defense."],
+		["HOLD", "Pause, inspect pressure, then recover deliberately."]
+	]:
+		pillars.add_child(_build_small_info_card(String(pillar[0]), String(pillar[1])))
+	content.add_child(pillars)
 	build_identity_label = Label.new()
 	build_identity_label.name = "BuildIdentityLabel"
 	build_identity_label.text = "PRE-ALPHA • BUILD %s • HUMAN EVIDENCE PENDING" % String(ProjectSettings.get_setting("application/config/version", "unknown"))
@@ -1268,50 +1357,211 @@ func _build_title_card() -> PanelContainer:
 	content.add_child(build_identity_label)
 	quick_test_button = Button.new()
 	quick_test_button.text = "Start Game — Quick Playtest"
-	quick_test_button.tooltip_text = "Open a deterministic preset Greywatch state with Pike Squad and Narrow Gate already placed."
-	quick_test_button.custom_minimum_size = Vector2(280, 38)
+	quick_test_button.tooltip_text = "Review the guided Gatehouse Lock briefing before entering a recommended starter defense."
+	quick_test_button.custom_minimum_size = Vector2(300, 44)
 	quick_test_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	quick_test_button.pressed.connect(_on_start_quick_playtest)
+	_style_button(quick_test_button, true)
 	content.add_child(quick_test_button)
-	var empty_button: Button = Button.new()
-	empty_button.text = "Open Empty Preparation"
-	empty_button.tooltip_text = "Enter the normal preparation screen without the quick-playtest preset."
-	empty_button.custom_minimum_size = Vector2(220, 30)
-	empty_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	empty_button.pressed.connect(func() -> void: _set_screen("preparation"))
-	content.add_child(empty_button)
+	var secondary_actions: HBoxContainer = HBoxContainer.new()
+	secondary_actions.alignment = BoxContainer.ALIGNMENT_CENTER
+	secondary_actions.add_theme_constant_override("separation", 8)
+	title_custom_button = Button.new()
+	title_custom_button.text = "Custom Defense"
+	title_custom_button.tooltip_text = "Choose any commander and scenario, then build from an empty preparation board."
+	title_custom_button.custom_minimum_size = Vector2(180, 34)
+	title_custom_button.pressed.connect(_on_start_custom_setup)
+	_style_button(title_custom_button, false)
+	secondary_actions.add_child(title_custom_button)
+	title_continue_button = Button.new()
+	title_continue_button.text = "Continue Saved Run"
+	title_continue_button.tooltip_text = "Load the latest valid primary or backup save and return to its correct phase."
+	title_continue_button.custom_minimum_size = Vector2(180, 34)
+	title_continue_button.pressed.connect(_on_continue_saved_run)
+	_style_button(title_continue_button, false)
+	secondary_actions.add_child(title_continue_button)
+	title_settings_button = Button.new()
+	title_settings_button.text = "Settings"
+	title_settings_button.custom_minimum_size = Vector2(120, 34)
+	title_settings_button.pressed.connect(_on_open_settings)
+	_style_button(title_settings_button, false)
+	secondary_actions.add_child(title_settings_button)
+	content.add_child(secondary_actions)
 	return card
+
+func _build_overview_panel(title_text: String, body_text: String) -> PanelContainer:
+	var panel: PanelContainer = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(800, 118)
+	_style_panel(panel, Color("#211c29"), Color("#55495f"))
+	var body: VBoxContainer = VBoxContainer.new()
+	body.add_theme_constant_override("separation", 10)
+	panel.add_child(body)
+	var heading: Label = Label.new()
+	heading.text = title_text
+	heading.add_theme_font_size_override("font_size", 22)
+	heading.add_theme_color_override("font_color", Color("#e2bd84"))
+	body.add_child(heading)
+	var copy: Label = Label.new()
+	copy.text = body_text
+	copy.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	copy.add_theme_font_size_override("font_size", 16)
+	copy.add_theme_color_override("font_color", Color("#c9bfd0"))
+	body.add_child(copy)
+	return panel
+
+func _build_small_info_card(title_text: String, body_text: String) -> PanelContainer:
+	var panel: PanelContainer = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(220, 74)
+	_style_panel(panel, Color("#292231"), Color("#4e4357"), 8)
+	var body: VBoxContainer = VBoxContainer.new()
+	body.add_theme_constant_override("separation", 3)
+	panel.add_child(body)
+	var heading: Label = Label.new()
+	heading.text = title_text
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	heading.add_theme_color_override("font_color", Color("#e2bd84"))
+	body.add_child(heading)
+	var copy: Label = Label.new()
+	copy.text = body_text
+	copy.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	copy.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	copy.add_theme_font_size_override("font_size", 11)
+	copy.add_theme_color_override("font_color", Color("#aab1b2"))
+	body.add_child(copy)
+	return panel
+
+func _build_command_section(title_text: String) -> VBoxContainer:
+	var section: VBoxContainer = VBoxContainer.new()
+	section.add_theme_constant_override("separation", 6)
+	var heading: Label = Label.new()
+	heading.text = title_text
+	heading.add_theme_font_size_override("font_size", 15)
+	heading.add_theme_color_override("font_color", Color("#e2bd84"))
+	section.add_child(heading)
+	return section
+
+func _style_panel(panel: PanelContainer, background: Color, border: Color, radius: int = 10) -> void:
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = background
+	style.border_color = border
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(radius)
+	style.content_margin_left = 16
+	style.content_margin_top = 14
+	style.content_margin_right = 16
+	style.content_margin_bottom = 14
+	panel.add_theme_stylebox_override("panel", style)
+
+func _style_button(button: Button, primary: bool) -> void:
+	var normal: StyleBoxFlat = StyleBoxFlat.new()
+	normal.bg_color = Color("#8f5f3d") if primary else Color("#302838")
+	normal.border_color = Color("#e2bd84") if primary else Color("#5c4e65")
+	normal.set_border_width_all(1)
+	normal.set_corner_radius_all(6)
+	normal.content_margin_left = 12
+	normal.content_margin_right = 12
+	button.add_theme_stylebox_override("normal", normal)
+	var hover: StyleBoxFlat = normal.duplicate()
+	hover.bg_color = Color("#aa7247") if primary else Color("#403548")
+	button.add_theme_stylebox_override("hover", hover)
+	var pressed: StyleBoxFlat = normal.duplicate()
+	pressed.bg_color = Color("#70472f") if primary else Color("#241f2a")
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_color_override("font_color", Color("#fff4df"))
+
+func _style_buttons_recursive(node: Node) -> void:
+	for child in node.get_children():
+		if child is Button:
+			_style_button(child, false)
+		_style_buttons_recursive(child)
 
 func _set_screen(next_screen: String) -> void:
 	screen = next_screen
+	var gameplay_screen: bool = screen in ["preparation", "battle", "results"]
 	if gameplay_columns:
 		gameplay_columns.visible = screen != "title"
 	if title_card:
 		title_card.visible = screen == "title"
 	if art_banner:
-		art_banner.visible = screen == "title"
+		art_banner.visible = screen in ["title", "setup"]
+		art_banner.custom_minimum_size.y = 100 if screen == "setup" else 150
+	if main_title_label:
+		main_title_label.visible = screen != "title"
+	if main_subtitle_label:
+		main_subtitle_label.visible = screen != "title"
+	if setup_overview_panel:
+		setup_overview_panel.visible = screen == "setup"
+	if setup_overview_label:
+		setup_overview_label.visible = screen == "setup"
+	if setup_summary_panel:
+		setup_summary_panel.visible = screen == "setup"
+	if settings_overview_panel:
+		settings_overview_panel.visible = screen == "settings"
+	if status_label:
+		status_label.visible = gameplay_screen
+	if guidance_label:
+		guidance_label.visible = gameplay_screen
+	if playtest_button:
+		playtest_button.visible = gameplay_screen
+	if playtest_status_label:
+		playtest_status_label.visible = gameplay_screen
+	if keep_canvas:
+		keep_canvas.visible = gameplay_screen
 	if forecast_label:
-		forecast_label.visible = screen != "results"
+		forecast_label.visible = screen in ["preparation", "battle"]
 	if enemy_label:
-		enemy_label.visible = screen != "results"
+		enemy_label.visible = screen == "battle"
 	if metrics_label:
-		metrics_label.visible = screen != "title"
+		metrics_label.visible = screen in ["battle", "results"]
 	if result_explain_label:
 		result_explain_label.visible = screen == "results"
 	if scorecard_label:
 		scorecard_label.visible = screen == "results"
 	if combat_explain_label:
-		combat_explain_label.visible = screen != "results"
+		combat_explain_label.visible = screen == "battle"
 	if placement_label:
-		placement_label.visible = screen != "results"
+		placement_label.visible = screen == "preparation"
 	if event_label:
-		event_label.visible = screen != "results"
+		event_label.visible = screen in ["preparation", "battle"]
 	if log_label:
-		log_label.visible = screen != "results"
+		log_label.visible = screen == "battle"
+	_set_group_visibility(setup_controls, screen == "setup")
+	_set_group_visibility(preparation_controls, screen == "preparation")
+	_set_group_visibility(battle_controls, screen == "battle")
+	_set_group_visibility(inspection_controls, gameplay_screen)
+	_set_group_visibility(run_controls, gameplay_screen)
+	_set_group_visibility(settings_controls, screen == "settings")
+	_set_group_visibility(event_controls, screen in ["preparation", "results"] and keep != null and not keep.active_event_id.is_empty())
 	if screen_label:
-		screen_label.text = "GREYWATCH / %s" % screen.capitalize()
+		screen_label.text = "PACK THE KEEP / %s" % ("Briefing" if screen == "setup" else "Report" if screen == "results" else screen.capitalize())
+	if main_title_label:
+		if screen == "setup":
+			main_title_label.text = "PLAYTEST BRIEFING"
+			main_subtitle_label.text = "Choose the lens and pressure first; the board comes next."
+		elif screen == "settings":
+			main_title_label.text = "SETTINGS & ACCESSIBILITY"
+			main_subtitle_label.text = "Tune readability and input without touching the simulation."
+		else:
+			main_title_label.text = "%s — %s" % [String(keep.keep_definition().get("name", "The Keep")).to_upper(), screen.to_upper()]
+			main_subtitle_label.text = "Build a visible answer, inspect pressure, and preserve a recovery option."
+	if command_panel_title:
+		command_panel_title.text = {
+			"setup": "BRIEFING CONTROLS", "preparation": "PREPARATION TOOLS",
+			"battle": "BATTLE CONTROLS", "results": "RECOVERY & REPORT",
+			"settings": "SETTINGS"
+		}.get(screen, "COMMAND TABLE")
+	if input_help_label:
+		input_help_label.text = {
+			"setup": "Choose the strategic context here. The board stays out of the way until the briefing is confirmed.",
+			"preparation": "Open a pack, select a piece, then arm placement and click the fort. The main action starts Battle paused.",
+			"battle": "Space pauses. N advances one deterministic step. Inspect the focused threat before committing the ability.",
+			"results": "Use the two recovery actions deliberately. The next wave starts paused only after explicit confirmation.",
+			"settings": "Every option here is presentation-only and remains separate from authoritative run state."
+		}.get(screen, "Tab/D-pad moves focus. Enter/A confirms.")
 	if screen_hint:
-		if screen == "preparation":
+		if screen == "setup":
+			screen_hint.text = "1 Briefing  ›  2 Prepare  ›  3 Battle  ›  4 Report"
+		elif screen == "preparation":
 			screen_hint.text = "Place and assign before opening the next doctrine."
 		elif screen == "battle":
 			screen_hint.text = "Advance one step; inspect enemies before spending Lockdown."
@@ -1320,9 +1570,12 @@ func _set_screen(next_screen: String) -> void:
 				screen_hint.text = "Repair or assign, then finish the interval to start the next wave automatically."
 			else:
 				screen_hint.text = "Read the report, repair what matters, then return to preparation."
+		elif screen == "settings":
+			screen_hint.text = "Presentation settings are saved separately from the run."
 		else:
 			screen_hint.text = "A compact two-floor defense about pressure and recovery."
 	_refresh_ui()
+	_refresh_navigation()
 	call_deferred("_focus_screen_control")
 	if screen == "results" and keep and keep.repair_interval_active:
 		call_deferred("_focus_recovery_controls")
@@ -1331,25 +1584,70 @@ func _focus_screen_control() -> void:
 	var target: Control
 	if screen == "title":
 		target = quick_test_button
+	elif screen == "setup":
+		target = commander_option
 	elif screen == "preparation":
-		target = pack_option
+		target = playtest_button if not playtest_button.disabled else pack_option
 	elif screen == "battle":
 		target = pause_button
 	elif screen == "results" and recovery_actions_panel.visible:
 		target = recovery_room_button
+	elif screen == "results":
+		target = playtest_button
+	elif screen == "settings":
+		target = ui_scale_button
 	else:
-		target = menu_buttons.get("preparation")
+		target = menu_buttons.get("title")
 	if target == null or not target.is_visible_in_tree():
 		return
 	target.grab_focus()
-	if command_scroll != null and target != quick_test_button and target != menu_buttons.get("preparation"):
+	if command_scroll != null and command_panel.is_ancestor_of(target):
 		command_scroll.ensure_control_visible(target)
 	if page_scroll != null:
-		page_scroll.ensure_control_visible(target)
+		if ui_scale_index >= 2 and command_panel.is_ancestor_of(target):
+			page_scroll.ensure_control_visible(target)
+		else:
+			page_scroll.scroll_horizontal = 0
+			page_scroll.scroll_vertical = 0
 
 func _focus_recovery_controls() -> void:
 	if command_scroll and recovery_actions_panel and recovery_actions_panel.visible:
 		command_scroll.scroll_vertical = 0
+
+func _set_group_visibility(nodes: Array[Control], visible: bool) -> void:
+	for node in nodes:
+		if node != null:
+			node.visible = visible
+
+func _refresh_navigation() -> void:
+	if menu_buttons.is_empty():
+		return
+	for target in menu_buttons.keys():
+		var available: bool = true
+		if target == "battle":
+			available = keep.wave_active
+		elif target == "results":
+			available = keep.repair_interval_active or not keep.wave_history.is_empty()
+		elif target == "preparation":
+			available = setup_confirmed and keep.scenario_active and not keep.wave_active and not keep.repair_interval_active
+		elif target == "setup":
+			available = not keep.wave_active and not keep.repair_interval_active
+		menu_buttons[target].disabled = not available or target == screen
+
+func _on_navigation_requested(target: String) -> void:
+	if target == "settings":
+		_on_open_settings()
+		return
+	if target == "setup" and screen == "title":
+		_on_start_custom_setup()
+		return
+	if target == "battle" and not keep.wave_active:
+		return
+	if target == "results" and keep.wave_history.is_empty() and not keep.repair_interval_active:
+		return
+	if target == "preparation" and (not setup_confirmed or not keep.scenario_active or keep.wave_active or keep.repair_interval_active):
+		return
+	_set_screen(target)
 
 func _labeled_control(label_text: String, control: Control) -> VBoxContainer:
 	var group: VBoxContainer = VBoxContainer.new()
@@ -1459,6 +1757,7 @@ func _refresh_authored_event() -> void:
 	if authored_event_panel == null:
 		return
 	authored_event_panel.render(keep.current_event())
+	_set_group_visibility(event_controls, screen in ["preparation", "results"] and not keep.active_event_id.is_empty())
 
 func _on_authored_event_choice(index: int) -> void:
 	if index < 0 or index >= authored_event_choice_buttons.size():
@@ -1821,7 +2120,7 @@ func _apply_recovery_action_card(title: Label, detail: Label, button: Button, ac
 func _refresh_recovery_action_cards() -> void:
 	if recovery_actions_panel == null:
 		return
-	recovery_actions_panel.visible = keep.repair_interval_active
+	recovery_actions_panel.visible = screen == "results" and keep.repair_interval_active
 	if not keep.repair_interval_active:
 		return
 	var action_number: int = 3 - keep.repair_actions_remaining
@@ -2015,34 +2314,82 @@ func _on_playtest_primary_action() -> void:
 			_on_finish_interval()
 		else:
 			_on_start_quick_playtest()
-	else:
-		_on_quick_test_action()
+	elif screen == "preparation":
+		_on_start_wave()
+	elif screen == "battle":
+		_on_advance_wave()
 
 func _on_start_quick_playtest() -> void:
+	_reset_for_setup()
+	guided_setup = true
+	_select_option_metadata(commander_option, "castellan")
+	keep.select_commander("castellan")
+	_select_option_metadata(scenario_option, "gatehouse_lock")
+	keep.select_scenario("gatehouse_lock")
+	_select_option_metadata(doctrine_option, "gate_assault")
+	_set_screen("setup")
+	_refresh_ui()
+
+func _on_start_custom_setup() -> void:
+	_reset_for_setup()
+	guided_setup = false
+	keep.select_commander(_selected_id(commander_option))
+	keep.select_scenario(_selected_id(scenario_option))
+	_set_screen("setup")
+	_refresh_ui()
+
+func _reset_for_setup() -> void:
 	keep.reset_run(3307)
+	setup_confirmed = false
 	focused_enemy_index = -1
 	battle_paused = true
 	last_auto_pause_wave_index = -1
 	last_log_size = 0
 	_clear_placement_mode()
 	selected_instance_id = ""
-	for index in range(scenario_option.item_count):
-		if String(scenario_option.get_item_metadata(index)) == "gatehouse_lock":
-			scenario_option.select(index)
-			break
-	keep.select_scenario("gatehouse_lock")
-	for index in range(doctrine_option.item_count):
-		if String(doctrine_option.get_item_metadata(index)) == "gate_assault":
-			doctrine_option.select(index)
-			break
-	_on_recommended_layout()
+
+func _on_confirm_setup() -> void:
+	keep.select_commander(_selected_id(commander_option))
+	keep.select_scenario(_selected_id(scenario_option))
+	if guided_setup and keep.pieces.is_empty():
+		_on_recommended_layout()
+	setup_confirmed = true
 	_set_screen("preparation")
-	_set_event("Quick playtest ready: Pike Squad and Narrow Gate are placed. Click Quick test: advance one battle step to stage the gate attack.")
+	_set_event(
+		"Guided preparation ready: inspect the recommended layout and forecast, then start the invasion."
+		if guided_setup else
+		"Custom preparation ready: open a pack, place a readable defense, then start the invasion."
+	)
 	_refresh_ui()
+
+func _on_open_settings() -> void:
+	if screen != "settings":
+		settings_return_screen = screen
+	_set_screen("settings")
+
+func _on_close_settings() -> void:
+	var target: String = settings_return_screen
+	if target == "battle" and not keep.wave_active:
+		target = "results" if not keep.wave_history.is_empty() else "preparation"
+	_set_screen(target)
+
+func _on_continue_saved_run() -> void:
+	_on_load()
+	setup_confirmed = keep.scenario_active
+	if keep.wave_active:
+		_set_screen("battle")
+	elif keep.repair_interval_active or not keep.wave_history.is_empty():
+		_set_screen("results")
+	elif keep.scenario_active:
+		_set_screen("preparation")
 
 func _on_quick_test_action() -> void:
 	if screen == "title":
 		_on_start_quick_playtest()
+		return
+	if screen == "setup":
+		_on_confirm_setup()
+		return
 	if screen == "battle":
 		if keep.wave_active:
 			_on_advance_wave()
@@ -2060,15 +2407,17 @@ func _on_quick_test_action() -> void:
 
 func _on_reset_run() -> void:
 	keep.reset_run(3307)
+	guided_setup = false
+	setup_confirmed = false
 	focused_enemy_index = -1
 	battle_paused = true
 	last_auto_pause_wave_index = -1
 	last_log_size = 0
 	_clear_placement_mode()
 	selected_instance_id = ""
-	inspected_text = "New Greywatch run started. Click a room or piece to inspect it."
-	_set_screen("preparation")
-	_set_event("New run started. Starter pieces are available and no save was overwritten.")
+	inspected_text = "New run ready. Choose the briefing before entering the keep."
+	_set_screen("setup")
+	_set_event("New run started. Choose a commander and scenario; no save was overwritten.")
 	_refresh_ui()
 
 func _set_event(text: String) -> void:
@@ -2133,6 +2482,26 @@ func _refresh_ui() -> void:
 	_refresh_scenario_preview()
 	_refresh_authored_event()
 	_refresh_campaign_ledger()
+	if setup_overview_label:
+		var selected_commander: Dictionary = keep.commander_definition(_selected_id(commander_option))
+		var selected_scenario: Dictionary = keep.scenario_preview(_selected_id(scenario_option))
+		var setup_mode: String = "GUIDED PLAYTEST" if guided_setup else "CUSTOM DEFENSE"
+		var modifier_name: String = "None"
+		if not keep.equipped_modifier_id.is_empty():
+			modifier_name = String(keep.modifier_definition(keep.equipped_modifier_id).get("name", keep.equipped_modifier_id))
+		setup_overview_label.text = "%s\nCOMMANDER — %s · %s\nSCENARIO — %s · %s\nMODIFIER — %s" % [
+			setup_mode,
+			String(selected_commander.get("name", "Commander")),
+			String(selected_commander.get("passive", "Choose a doctrine lens.")),
+			String(selected_scenario.get("name", "Scenario")),
+			String(selected_scenario.get("objective", "Choose the pressure to test.")),
+			modifier_name,
+		]
+	if setup_confirm_button:
+		setup_confirm_button.text = "Enter Keep — Recommended Layout" if guided_setup else "Enter Keep — Build Defense"
+		setup_confirm_button.tooltip_text = "Enter Preparation with the guided two-piece baseline." if guided_setup else "Enter Preparation with an empty board and the selected starting pieces available."
+	if title_continue_button:
+		title_continue_button.disabled = not FileAccess.file_exists(save_path) and not FileAccess.file_exists(save_backup_path)
 	var interval_text: String = "closed"
 	if keep.repair_interval_active:
 		interval_text = "%d action(s): %s" % [keep.repair_actions_remaining, keep.repair_interval_reason]
@@ -2197,13 +2566,13 @@ func _refresh_ui() -> void:
 	guidance_label.text = _first_battle_guidance()
 	if playtest_button:
 		if screen == "preparation":
-			playtest_button.text = "RUN QUICK TEST — ONE BATTLE STEP"
+			playtest_button.text = "START INVASION — PAUSED"
 			playtest_button.disabled = keep.pieces.is_empty() or keep.repair_interval_active or not keep.active_event_id.is_empty()
-			playtest_button.tooltip_text = "Start the preset invasion and leave Battle paused after one deterministic step."
+			playtest_button.tooltip_text = "Stage the selected invasion and enter Battle paused before the first step."
 			if not keep.active_event_id.is_empty():
 				playtest_status_label.text = "EVENT WAITING — choose an authored response before the invasion can begin."
 			else:
-				playtest_status_label.text = "TEST READY — %d starter piece(s) placed. One click starts the gate attack and leaves it paused." % keep.pieces.size() if not keep.pieces.is_empty() else "TEST WAITING — use the recommended layout or place at least one defender first."
+				playtest_status_label.text = "DEFENSE READY — %d piece(s) placed. Battle opens paused so the first pressure can be inspected." % keep.pieces.size() if not keep.pieces.is_empty() else "DEFENSE WAITING — use the recommended layout or place at least one defender first."
 		elif screen == "battle":
 			playtest_button.text = "ADVANCE ONE STEP — INSPECT"
 			playtest_button.disabled = not keep.wave_active
@@ -2216,9 +2585,9 @@ func _refresh_ui() -> void:
 				playtest_button.tooltip_text = "Close recovery and automatically start the next authored wave."
 				playtest_status_label.text = "RECOVERY — %d action(s) remain. Repair or assign, then continue. %s" % [keep.repair_actions_remaining, _scorecard_compact_text()]
 			else:
-				playtest_button.text = "RESTART QUICK PLAYTEST"
+				playtest_button.text = "REVIEW SETUP — PLAY AGAIN"
 				playtest_button.disabled = false
-				playtest_button.tooltip_text = "Reset seed 3307 and replay the preset Gatehouse Lock test."
+				playtest_button.tooltip_text = "Return to the guided briefing before replaying the deterministic candidate."
 				playtest_status_label.text = "FINAL RESULTS — %s | Replay %s" % [_scorecard_compact_text(), String(keep.scenario_scorecard().get("replay_key", ""))]
 	var recent: Array[String] = []
 	var start: int = maxi(0, keep.battle_report.size() - _event_feed_retention())
@@ -2245,6 +2614,7 @@ func _refresh_ui() -> void:
 	_refresh_recovery_priorities()
 	_refresh_recovery_action_cards()
 	_refresh_result_explanation()
+	_refresh_navigation()
 	keep_canvas.keep = keep
 	keep_canvas.call("set_focus", focused_enemy_index)
 	keep_canvas.call("set_accessibility", high_contrast)

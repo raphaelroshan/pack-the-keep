@@ -25,28 +25,38 @@ func _initialize() -> void:
 	else:
 		start_button.pressed.emit()
 		await process_frame
-	if ui.screen != "preparation":
-		failures.append("Start Game did not open preparation")
+	if ui.screen != "setup":
+		failures.append("Start Game did not open the briefing screen")
 	if not ui.keep.scenario_active:
 		failures.append("quick-playtest preset did not activate Gatehouse Lock")
+	if not ui.setup_overview_panel.visible or ui.keep_canvas.visible:
+		failures.append("briefing did not separate setup choices from the keep board")
+	if ui.keep.pieces.size() != 0:
+		failures.append("briefing placed pieces before setup confirmation")
+	var enter_button: Button = _find_button(ui, "Enter Keep — Recommended Layout")
+	if enter_button == null:
+		failures.append("guided briefing did not expose its enter-keep action")
+	else:
+		enter_button.pressed.emit()
+		await process_frame
+	if ui.screen != "preparation":
+		failures.append("confirming the briefing did not open preparation")
 	if ui.keep.pieces.size() != 2:
-		failures.append("quick-playtest preset did not place exactly two starter pieces")
+		failures.append("confirmed guided setup did not place exactly two starter pieces")
 	if not ui.keep.pieces.has("pike_squad_0") or not ui.keep.pieces.has("narrow_gate_1"):
 		failures.append("quick-playtest preset is missing Pike Squad or Narrow Gate")
-	var quick_action: Button = _find_button(ui, "RUN QUICK TEST — ONE BATTLE STEP")
+	var quick_action: Button = _find_button(ui, "START INVASION — PAUSED")
 	if quick_action == null:
-		failures.append("quick test action button is missing")
+		failures.append("preparation start action is missing")
 	else:
 		quick_action.pressed.emit()
 		await process_frame
 	if ui.screen != "battle":
-		failures.append("quick test action did not open battle")
+		failures.append("preparation action did not open battle")
 	if not ui.keep.wave_active:
-		failures.append("quick test action did not start an invasion")
-	if ui.keep.battle_step < 1:
-		failures.append("quick test action did not advance one readable step")
-	if not String(ui.event_label.text).contains("Battle step"):
-		failures.append("quick test action did not leave a battle-step event")
+		failures.append("preparation action did not start an invasion")
+	if ui.keep.battle_step != 0 or not ui.battle_paused:
+		failures.append("battle did not open paused before the first step")
 	var battle_step_before: int = ui.keep.battle_step
 	var advance_button: Button = _find_button(ui, "ADVANCE ONE STEP — INSPECT")
 	if advance_button == null:
@@ -93,14 +103,14 @@ func _initialize() -> void:
 		safety += 1
 	if ui.screen != "results":
 		failures.append("quick-playtest did not reach terminal Results after wave three")
-	var restart_button: Button = _find_button(ui, "RESTART QUICK PLAYTEST")
+	var restart_button: Button = _find_button(ui, "REVIEW SETUP — PLAY AGAIN")
 	if restart_button == null:
-		failures.append("terminal Results primary action did not change to restart")
+		failures.append("terminal Results primary action did not return to setup")
 	else:
 		restart_button.pressed.emit()
 		await process_frame
-	if ui.screen != "preparation" or ui.keep.pieces.size() != 2:
-		failures.append("restart quick-playtest did not restore the preset preparation state")
+	if ui.screen != "setup" or ui.keep.pieces.size() != 0:
+		failures.append("replay action did not return to a clean guided briefing")
 	ui.queue_free()
 	await process_frame
 	if failures.is_empty():

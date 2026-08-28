@@ -503,3 +503,11 @@
 **Reason:** Requiring observers to reconstruct the evidence schema creates avoidable transcription errors and makes the four-case matrix harder to execute from a downloaded artifact. Pre-building only the machine-owned structure makes the workflow portable without pretending that a session occurred.
 
 **Trade-off:** Templates intentionally fail evidence validation until a human fills their blank fields and performs the observations. They cannot count toward matrix coverage merely because CI generated them.
+
+## ADR-064: The playtest launch journey uses contextual screens
+
+**Decision:** Separate the title, briefing, preparation, battle, recovery/report, and settings concerns. The title offers guided, custom, saved-run, and settings routes; the briefing owns commander/scenario/modifier selection; the board screens show only phase-relevant command groups; and navigation disables phases that authoritative state has not reached.
+
+**Reason:** The previous single command rail exposed setup, placement, combat, recovery, persistence, and accessibility controls together. It proved functionality but made the first action hard to read and allowed presentation-only screen jumps that did not correspond to the run state.
+
+**Trade-off:** Some controls now require entering their dedicated screen, and the command rail remains scrollable for narrow windows. The clearer hierarchy is preferred over keeping every prototype action simultaneously visible.
