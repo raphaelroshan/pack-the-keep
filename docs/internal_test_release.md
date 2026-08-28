@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.13.0-workshop-recovery` — first bounded P13 content-integration slice; P12 human approval remains pending
+**Current build identity:** `0.13.1-event-ledger` — bounded P13 event history in Ledger and Results; P12 human approval remains pending
 
 ## Purpose
 
@@ -73,6 +73,10 @@ Run-save loading now preflights scalar types, nested piece/room/enemy/history sh
 ## v0.13.0 Workshop recovery event
 
 Gatehouse Lock now opens **The Workshop Can Wait** after wave two when sabotage leaves the Workshop at 70 condition or lower and Feint and Flank is next. The player may spend eight materials and one recovery action to repair the Workshop, or commit a valid placed Repair Station for one action. Both choices reuse the existing authoritative recovery commands, block ordinary recovery until resolved, persist through save/load, and appear in the existing Results event history.
+
+## v0.13.1 Event Ledger
+
+The existing Campaign Ledger now includes the five most recent authored-event consequences in newest-first order plus stable, explicit run flags. Results uses the same bounded read model, including an omission count when older entries exist. Reading either surface, refreshing it, or changing presentation-only contrast settings leaves serialized keep state unchanged.
 
 ## v0.8.2 testability additions
 

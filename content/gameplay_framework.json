@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.13.0-workshop-recovery",
+  "framework_version": "0.13.1-event-ledger",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -223,6 +223,13 @@
     "persistence": "active_and_resolved_event_state_round_trips_through_schema_4_saves",
     "determinism_rule": "stable_piece_instance_order_and_preflighted_choices_produce_identical_replays",
     "non_goals": ["random_scheduler", "campaign_map", "scenario_specific_ui", "new_combat_exception"]
+  },
+  "p13_event_history_ledger": {
+    "status": "implemented",
+    "projection": "read_only_newest_first_five_entry_snapshot_over_authoritative_event_history",
+    "surfaces": ["campaign_ledger", "results_event_consequences"],
+    "flags": "stable_id_sorted_explicit_boolean_run_flags",
+    "determinism_rule": "inspection_refresh_and_presentation_toggles_do_not_mutate_serialized_keep_state"
   },
   "v090_multi_wave": {
     "status": "implemented",

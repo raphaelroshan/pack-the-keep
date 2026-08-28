@@ -535,6 +535,37 @@ func event_definition(id: String) -> Dictionary:
 		return {}
 	return _event_definitions[id].duplicate(true)
 
+func event_ledger_snapshot(limit: int = 5) -> Dictionary:
+	var bounded_limit: int = clampi(limit, 0, 20)
+	var entries: Array[Dictionary] = []
+	var entry_count: int = mini(bounded_limit, event_history.size())
+	for offset in range(entry_count):
+		var source: Dictionary = event_history[event_history.size() - 1 - offset]
+		var event_id: String = String(source.get("event_id", ""))
+		var definition: Dictionary = _event_definitions.get(event_id, {})
+		entries.append({
+			"event_id": event_id,
+			"title": String(definition.get("title", event_id.replace("_", " ").capitalize())),
+			"choice_id": String(source.get("choice_id", "")),
+			"wave": int(source.get("wave", 0)),
+			"phase": String(source.get("phase", "")),
+			"visible_result": String(source.get("visible_result", ""))
+		})
+	var flag_ids: Array[String] = []
+	for flag_id_value in event_flags.keys():
+		flag_ids.append(String(flag_id_value))
+	flag_ids.sort()
+	var flags: Array[Dictionary] = []
+	for flag_id in flag_ids:
+		flags.append({"id": flag_id, "value": bool(event_flags.get(flag_id, false))})
+	return {
+		"total": event_history.size(),
+		"limit": bounded_limit,
+		"truncated": event_history.size() > entry_count,
+		"entries": entries,
+		"flags": flags
+	}
+
 func modifier_ids() -> Array[String]:
 	return content_catalog.modifier_ids()
 

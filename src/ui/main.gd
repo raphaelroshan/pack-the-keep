@@ -1482,15 +1482,17 @@ func _refresh_campaign_ledger() -> void:
 		return
 	var modifier_id: String = _selected_id(campaign_modifier_option)
 	var equipped: bool = keep.equipped_modifier_id == modifier_id
+	var ledger_text: String = ""
 	if modifier_id.is_empty():
 		var current_name: String = "None" if keep.equipped_modifier_id.is_empty() else String(keep.modifier_definition(keep.equipped_modifier_id).get("name", keep.equipped_modifier_id))
-		campaign_ledger_label.text = "CAMPAIGN LEDGER — EQUIPPED: %s\nSelected: No modifier\nRun the authored baseline without an information trade-off or challenge rule." % current_name
+		ledger_text = "CAMPAIGN LEDGER — EQUIPPED: %s\nSelected: No modifier\nRun the authored baseline without an information trade-off or challenge rule." % current_name
 	else:
 		var definition: Dictionary = keep.modifier_definition(modifier_id)
 		var unlocked: bool = keep.unlocked_modifier_ids.has(modifier_id)
 		var status: String = "EQUIPPED" if equipped else "UNLOCKED" if unlocked else "LOCKED"
 		var effect_text: String = _modifier_effect_text(definition)
-		campaign_ledger_label.text = "CAMPAIGN LEDGER — %s\n%s\n%s\nQuestion: %s\nLimitation: %s" % [status, String(definition.get("name", modifier_id)), effect_text, String(definition.get("question", "")), String(definition.get("limitation", ""))]
+		ledger_text = "CAMPAIGN LEDGER — %s\n%s\n%s\nQuestion: %s\nLimitation: %s" % [status, String(definition.get("name", modifier_id)), effect_text, String(definition.get("question", "")), String(definition.get("limitation", ""))]
+	campaign_ledger_label.text = "%s%s" % [ledger_text, _event_ledger_text()]
 	var target_id: String = "" if equipped else modifier_id
 	var preview: Dictionary = keep.modifier_equip_preview(target_id)
 	if modifier_id.is_empty():
@@ -1508,6 +1510,29 @@ func _modifier_effect_text(definition: Dictionary) -> String:
 	if effect == "enemy_health_bonus":
 		return "Challenge: every enemy begins each wave with +%d health. Starting morale is unchanged." % int(definition.get("enemy_health_bonus", 0))
 	return String(definition.get("short_role", "Unknown modifier effect."))
+
+func _event_ledger_text() -> String:
+	var snapshot: Dictionary = keep.event_ledger_snapshot(5)
+	var entries: Array = snapshot.get("entries", [])
+	var flags: Array = snapshot.get("flags", [])
+	if entries.is_empty() and flags.is_empty():
+		return "\nRECENT EVENTS — None resolved in this run."
+	var rows: Array[String] = []
+	if not entries.is_empty():
+		var history_heading: String = "RECENT EVENTS — newest %d of %d" % [entries.size(), int(snapshot.get("total", entries.size()))] if bool(snapshot.get("truncated", false)) else "RECENT EVENTS — newest first"
+		rows.append(history_heading)
+		for entry in entries:
+			rows.append("W%d %s → %s" % [int(entry.get("wave", 0)), _event_ledger_name(entry), String(entry.get("visible_result", ""))])
+	if not flags.is_empty():
+		rows.append("RUN FLAGS")
+		for flag in flags:
+			rows.append("%s: %s" % [String(flag.get("id", "flag")).replace("_", " ").capitalize(), "yes" if bool(flag.get("value", false)) else "no"])
+	return "\n%s" % "\n".join(rows)
+
+func _event_ledger_name(entry: Dictionary) -> String:
+	var stable_name: String = String(entry.get("event_id", "event")).replace("_", " ").capitalize()
+	var authored_title: String = String(entry.get("title", stable_name))
+	return stable_name if authored_title == stable_name else "%s — %s" % [stable_name, authored_title]
 
 func _on_toggle_campaign_modifier() -> void:
 	var selected_modifier_id: String = _selected_id(campaign_modifier_option)
@@ -2085,10 +2110,12 @@ func _refresh_result_explanation() -> void:
 	for wave in report.get("wave_rows", []):
 		score_rows.append("W%d — %s — %s\nPressure: %s | Defeated %d | Room %d | Piece %d | recovery actions %d" % [int(wave.get("wave", score_rows.size() + 1)), String(wave.get("doctrine", "")).replace("_", " ").capitalize(), String(wave.get("outcome", "")).replace("_", " ").to_upper(), String(wave.get("principal_pressure", "Unknown pressure")), int(wave.get("defeated_enemies", 0)), int(wave.get("room_damage", 0)), int(wave.get("piece_damage", 0)), int(wave.get("recovery_actions_used", 0))])
 	var report_heading: String = "SCENARIO REPORT" if String(report.get("status", "in_progress")) == "complete" else "RUN SO FAR"
+	var event_snapshot: Dictionary = keep.event_ledger_snapshot(5)
 	var event_rows: Array[String] = []
-	for event_entry in report.get("event_history", []):
-		event_rows.append("%s → %s" % [String(event_entry.get("event_id", "event")).replace("_", " ").capitalize(), String(event_entry.get("visible_result", ""))])
-	var event_report: String = "\nEVENT CONSEQUENCES\n%s" % "\n".join(event_rows) if not event_rows.is_empty() else ""
+	for event_entry in event_snapshot.get("entries", []):
+		event_rows.append("W%d %s → %s" % [int(event_entry.get("wave", 0)), _event_ledger_name(event_entry), String(event_entry.get("visible_result", ""))])
+	var event_heading: String = "EVENT CONSEQUENCES — newest %d of %d" % [event_rows.size(), int(event_snapshot.get("total", event_rows.size()))] if bool(event_snapshot.get("truncated", false)) else "EVENT CONSEQUENCES — newest first"
+	var event_report: String = "\n%s\n%s" % [event_heading, "\n".join(event_rows)] if not event_rows.is_empty() else ""
 	scorecard_label.text = "%s — %s | %s\n%s%s\nREPLAY KEY — %s" % [report_heading, String(report.get("scenario_name", keep.scenario_id)), String(report.get("commander_name", keep.commander_id)), "\n".join(score_rows) if not score_rows.is_empty() else "No resolved waves yet.", event_report, String(report.get("replay_key", ""))]
 
 func _refresh_ui() -> void:

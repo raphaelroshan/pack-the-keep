@@ -383,3 +383,11 @@
 **Reason:** Greywatch events should change a visible operational decision without duplicating repair costs, adjacency rules, assignment limits, or stable instance selection in UI or scenario-specific code.
 
 **Trade-off:** Recovery-command effects cannot be mixed with other event effects in one choice. Richer multi-effect transactions remain deferred until they can preserve atomic validation without creating a second recovery rules engine.
+
+## ADR-049: Event history has one bounded read projection
+
+**Decision:** Keep complete event history authoritative in `KeepState`, but expose Ledger and Results through one read-only newest-first projection capped to five entries. Run flags are sorted by stable ID and retain explicit boolean values.
+
+**Reason:** Players need a compact account of recent consequences in both existing surfaces, and both views should agree without duplicating sorting, title lookup, or truncation rules in presentation code.
+
+**Trade-off:** Older events remain in saved state and reports but are omitted from the compact UI projection. A searchable cross-run archive remains outside this slice.
