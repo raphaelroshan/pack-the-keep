@@ -917,7 +917,38 @@ func inspect_enemy(index: int) -> Dictionary:
 	if not _enemy_definitions.has(enemy_id):
 		return {"ok": false, "reason": "enemy definition is unavailable"}
 	var definition: Dictionary = _enemy_definitions[enemy_id]
-	return {"ok": true, "kind": "enemy", "id": enemy_id, "index": index, "name": String(definition.name), "doctrine": String(definition.doctrine), "route": String(definition.route), "counter": String(definition.counter), "target_mode": String(definition.get("target_mode", "room_destroyer")), "health": int(enemy.get("hp", 0)), "max_health": int(enemy.get("max_health", definition.health)), "damage": int(definition.damage), "armor": int(definition.get("armor", 0)), "armor_counter_tag": String(definition.get("armor_counter_tag", "")), "arrival_step": int(enemy.get("arrival_step", definition.arrival_step)), "base_arrival_step": int(definition.arrival_step), "has_signal_disruption": definition.get("disruption_profile") is Dictionary, "signal_disrupted": bool(enemy.get("signal_disrupted", false)), "ignores_protection": bool(definition.get("ignores_protection", false)), "target_piece_categories": definition.get("target_piece_categories", []).duplicate(), "target": String(enemy.get("target", "")), "defeated": bool(enemy.get("defeated", false))}
+	return {"ok": true, "kind": "enemy", "id": enemy_id, "index": index, "name": String(definition.name), "doctrine": String(definition.doctrine), "route": String(definition.route), "counter": String(definition.counter), "target_mode": String(definition.get("target_mode", "room_destroyer")), "health": int(enemy.get("hp", 0)), "max_health": int(enemy.get("max_health", definition.health)), "damage": int(definition.damage), "attack_interval": int(definition.get("attack_interval", 1)), "armor": int(definition.get("armor", 0)), "armor_counter_tag": String(definition.get("armor_counter_tag", "")), "arrival_step": int(enemy.get("arrival_step", definition.arrival_step)), "base_arrival_step": int(definition.arrival_step), "has_signal_disruption": definition.get("disruption_profile") is Dictionary, "signal_disrupted": bool(enemy.get("signal_disrupted", false)), "ignores_protection": bool(definition.get("ignores_protection", false)), "target_piece_categories": definition.get("target_piece_categories", []).duplicate(), "target": String(enemy.get("target", "")), "defeated": bool(enemy.get("defeated", false))}
+
+func enemy_attack_timing(index: int) -> Dictionary:
+	if index < 0 or index >= enemies.size():
+		return {"ok": false, "reason": "unknown enemy"}
+	var enemy: Dictionary = enemies[index]
+	var enemy_id: String = String(enemy.get("enemy_id", ""))
+	if not _enemy_definitions.has(enemy_id):
+		return {"ok": false, "reason": "enemy definition is unavailable"}
+	var definition: Dictionary = _enemy_definitions[enemy_id]
+	var arrival_step: int = int(enemy.get("arrival_step", definition.get("arrival_step", 1)))
+	var attack_interval: int = maxi(1, int(definition.get("attack_interval", 1)))
+	var current_time: float = float(battle_step) + battle_clock
+	var in_contact: bool = current_time >= float(arrival_step)
+	var next_attack_step: int = arrival_step
+	var cadence_progress: float = 0.0
+	if in_contact:
+		var completed_intervals: int = int(floor((current_time - float(arrival_step)) / float(attack_interval)))
+		var last_attack_step: int = arrival_step + completed_intervals * attack_interval
+		next_attack_step = last_attack_step + attack_interval
+		cadence_progress = clampf((current_time - float(last_attack_step)) / float(attack_interval), 0.0, 1.0)
+	return {
+		"ok": true,
+		"active": wave_active and not bool(enemy.get("defeated", false)),
+		"in_contact": in_contact,
+		"attack_interval": attack_interval,
+		"next_attack_step": next_attack_step,
+		"ticks_until_attack": maxf(0.0, float(next_attack_step) - current_time),
+		"cadence_progress": cadence_progress,
+		"within_wave": next_attack_step <= 6,
+		"has_target": _target_is_active(String(enemy.get("target", "")))
+	}
 
 func remove_piece(instance_id: String) -> Dictionary:
 	if wave_active or repair_interval_active:

@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.18.0-unit-first-combat` — the controlled playtest now makes defender-clearing attackers and explicit room destroyers visually distinct on a larger gridless board; human sessions and owner approval remain pending
+**Current build identity:** `0.18.1-combat-cadence` — the controlled playtest now exposes when each contacted threat will strike again as well as what it targets; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of nine authored scenarios, preview and reserve a limited pack offer, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, and recover during authored lulls.
+
+## v0.18.1 Combat-cadence additions
+
+Enemy hover details and the focused response card now identify each threat's attack interval and next valid strike tick. Once an attacker reaches contact, a thin cadence meter fills above its health bar using the fractional presentation clock. Raiders refill every tick, while Sappers, Siege Beasts, and Shieldbreakers visibly take two ticks between attacks. The timing projection is read-only and does not reserve targets, advance the clock, or change replay state.
 
 ## v0.18.0 Unit-first combat additions
 
@@ -279,6 +283,10 @@ Place defenders over several named rooms and confirm the unit names stay inside 
 Run Gate Assault with multiple defenders and confirm Raiders target a living defensive piece, its health bar decreases with each hit, and the Raider retargets after disabling it without damaging a room. Run Distributed Sabotage and confirm the Sapper prefers an exposed Repair Station or Supply Cache, then falls back to a named support room. Run Area Pressure and confirm Siege Beast still damages rooms rather than defenders.
 
 During Battle, verify the keep has no cell grid or placement boxes, both floors occupy the larger board, and room, defender, and enemy health bars remain legible. Pause before contact and confirm ready defenders face their projected attackers. Observe a Pike Squad melee lunge and a Fire Team or Crossbow Patrol projectile. Hover an occupied and unoccupied room and confirm full room details appear without changing the selected target or serialized state. Repeat at 1280×720 and 2560×1440.
+
+## v0.18.1 acceptance checks
+
+Hover a Raider before contact and confirm its tooltip names contact tick, one-tick cadence, and next strike. Hover a Sapper or Shieldbreaker and confirm the same surfaces show a two-tick cadence. Pause after its first contact and verify the focused response card names the next strike tick while the cadence meter begins empty, then fills smoothly as presentation time advances. Pause again and confirm the meter freezes without changing battle step, target, or serialized state.
 
 ## v0.16.6 acceptance checks
 

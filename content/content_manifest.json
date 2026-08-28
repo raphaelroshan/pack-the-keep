@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.18.0",
+  "content_version": "0.18.1",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -352,7 +352,15 @@
     "presentation": ["larger_gridless_keep", "preparation_only_placement_guides", "health_bars", "unit_target_lines", "room_hover_details", "idle_defender_facing", "melee_and_ranged_feedback"],
     "determinism": "role_selection_retargeting_damage_health_and_save_load_remain_authoritative_and_seed_replayable",
     "evidence": ["design/p24_unit_first_combat_board.md", "docs/p24_unit_first_combat_visual_verification.md", "tests/test_keep_state.gd", "tests/test_p2_ui.gd"],
-    "next_slice": "p24_human_combat_readability_sessions"
+    "next_slice": "p25_combat_cadence_readability"
+  },
+  "p25_combat_cadence_readability": {
+    "status": "implemented",
+    "read_model": ["attack_interval", "next_attack_step", "ticks_until_attack", "cadence_progress", "within_wave"],
+    "presentation": ["matching_map_and_timeline_cadence_tooltips", "focused_strike_line", "enemy_cadence_meter"],
+    "determinism": "cadence_queries_and_drawing_do_not_mutate_serialized_state_or_combat_order",
+    "evidence": ["design/p25_combat_cadence_readability.md", "docs/p25_combat_cadence_visual_verification.md", "tests/test_keep_state.gd", "tests/test_p2_ui.gd"],
+    "next_slice": "p25_human_combat_timing_sessions"
   },
   "campaign": {
     "title": "The Bell at Dusk",

@@ -583,3 +583,11 @@
 **Reason:** The previous model made most attackers repeatedly damage rooms, so defenders read as passive damage sources rather than combatants holding a keep. Unit-first pressure makes health, counter coverage, retargeting, melee attacks, and projectiles causally legible, while specialist demolition roles preserve the strategic need to protect rooms.
 
 **Trade-off:** Existing layouts take more piece damage and some automated scenario outcomes become harsher. The current implementation keeps authored routes and deterministic one-second resolution; movement AI, collision projectiles, continuous damage, and player-issued focus fire remain deferred.
+
+## ADR-074: Enemy cadence is projected, not separately simulated
+
+**Decision:** Derive each active enemy's next strike tick and fractional cadence progress from its data-driven attack interval, authored arrival, authoritative battle step, and existing fractional clock. Expose that read model to matching tooltips, the focused response card, and a presentation-only cadence meter above the enemy health bar.
+
+**Reason:** Slower demolition and heavy attacks improved balance but were invisible between impacts. A shared projection lets the player see when pressure will land without adding a second timer, new save state, or a player-issued interrupt system.
+
+**Trade-off:** The cadence meter anticipates deterministic tick resolution rather than physical wind-up animation. It does not represent stun, haste, or interruption; those mechanics remain deferred until the compact battle is validated by human playtests.

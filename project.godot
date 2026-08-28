@@ -6,7 +6,7 @@ config_version=5
 
 [application]
 config/name="Pack the Keep"
-config/version="0.18.0-unit-first-combat"
+config/version="0.18.1-combat-cadence"
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 boot_splash/bg_color=Color(0.045, 0.04, 0.055, 1)
