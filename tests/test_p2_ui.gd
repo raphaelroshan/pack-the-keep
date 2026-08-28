@@ -44,6 +44,15 @@ func _initialize() -> void:
 		var marker_board: Vector2 = ui.keep_canvas._timeline_marker_origin(int(first_arrival_key), 0, first_arrival_rows.size())
 		var marker_view: Vector2 = ui.keep_canvas._board_offset() + marker_board * ui.keep_canvas._board_scale()
 		var marker_enemy_index: int = int(first_arrival_rows[0].get("index", -1))
+		var enemy_board: Vector2 = ui.keep_canvas._enemy_origin(marker_enemy_index)
+		var enemy_view: Vector2 = ui.keep_canvas._board_offset() + enemy_board * ui.keep_canvas._board_scale()
+		var map_tooltip: String = ui.keep_canvas._get_tooltip(enemy_view)
+		var timeline_tooltip: String = ui.keep_canvas._get_tooltip(marker_view)
+		var marker_inspection: Dictionary = ui.keep.inspect_enemy(marker_enemy_index)
+		if map_tooltip != timeline_tooltip:
+			failures.append("map and timeline markers did not expose the same enemy tooltip")
+		if not map_tooltip.contains(String(marker_inspection.get("name", ""))) or not map_tooltip.contains("Route:") or not map_tooltip.contains("HP ") or not map_tooltip.contains("Contact T") or not map_tooltip.contains("Counter:"):
+			failures.append("enemy tooltip did not expose name, route, health, contact tick, and counter")
 		if ui.keep_canvas._timeline_enemy_hit(marker_view) != marker_enemy_index:
 			failures.append("timeline arrival marker hit testing did not resolve the matching enemy")
 		var timeline_click: InputEventMouseButton = InputEventMouseButton.new()
@@ -54,6 +63,8 @@ func _initialize() -> void:
 		if ui.focused_enemy_index != marker_enemy_index or not String(ui.event_label.text).contains("timeline marker"):
 			failures.append("timeline arrival click did not route through the dedicated focus source")
 	var focus_state_before: String = JSON.stringify(ui.keep.serialize())
+	if focus_state_before != serialized_before_timeline:
+		failures.append("timeline or enemy tooltip inspection mutated authoritative state")
 	if ui.keep.enemies.size() > 1:
 		ui._on_enemy_clicked(1)
 		ui._ensure_enemy_focus()

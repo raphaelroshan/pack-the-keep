@@ -3035,6 +3035,20 @@ class KeepCanvas extends Control:
 					return int(arrival_rows[marker_index].get("index", -1))
 		return -1
 
+	func _enemy_tooltip(index: int) -> String:
+		if keep == null or index < 0 or index >= keep.enemies.size() or bool(keep.enemies[index].get("defeated", false)):
+			return ""
+		var inspection: Dictionary = keep.inspect_enemy(index)
+		var counter_id: String = String(inspection.get("counter", ""))
+		var counter_name: String = String(keep.piece_definition(counter_id).get("name", counter_id.replace("_", " ").capitalize())) if not counter_id.is_empty() else "Read the forecast"
+		return "%s — %s\nRoute: %s | HP %d/%d | Contact T%d\nCounter: %s" % [String(inspection.get("name", "Threat")), String(inspection.get("doctrine", "unknown")).replace("_", " ").capitalize(), String(inspection.get("route", "unknown")).replace("_", " ").capitalize(), int(inspection.get("health", 0)), int(inspection.get("max_health", 0)), int(inspection.get("arrival_step", 0)), counter_name]
+
+	func _get_tooltip(at_position: Vector2) -> String:
+		var enemy_index: int = _enemy_hit(at_position)
+		if enemy_index < 0:
+			enemy_index = _timeline_enemy_hit(at_position)
+		return _enemy_tooltip(enemy_index)
+
 	func _map_hit(position: Vector2) -> Dictionary:
 		position = _view_to_board(position)
 		var hit_floor: String = ""
@@ -3404,6 +3418,9 @@ class KeepCanvas extends Control:
 				var marker_origin: Vector2 = _timeline_marker_origin(tick_number, marker_index, arrival_rows.size())
 				draw_circle(marker_origin, 5.0, _enemy_marker_color(enemy_id))
 				draw_circle(marker_origin, 5.0, Color("#fff4df"), false, 1.0)
+				if int(marker.get("index", -1)) == focused_enemy_index:
+					draw_circle(marker_origin, 8.0, Color("#fff4df"), false, 2.0)
+					draw_circle(marker_origin, 10.5, Color("#e2bd84"), false, 1.0)
 				draw_string(ThemeDB.fallback_font, marker_origin + Vector2(-2.5, 2.8), _enemy_marker_initial(enemy_id), HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("#211a24"))
 		var next_step: int = int(timeline.get("next_arrival_step", -1))
 		var next_names: Array[String] = []

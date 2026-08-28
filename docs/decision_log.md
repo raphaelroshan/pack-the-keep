@@ -551,3 +551,11 @@
 **Reason:** A live assault opened with an empty response panel and forced the player to find a small moving marker before the central tactical explanation became useful. Automatic focus makes the inspector immediately informative, while deterministic handoff prevents it from going stale as enemies fall.
 
 **Trade-off:** Automatic focus can draw attention toward one threat even when the player is watching another part of the keep. Preserving any living manual selection avoids fighting the player, and focus remains strictly observational rather than a focus-fire command.
+
+## ADR-070: Threat hover details share one read-only projection
+
+**Decision:** Use one tooltip projection for living enemy markers on both the fort and the assault timeline. Build it from authoritative enemy inspection plus the data-driven counter piece name, and mirror the map's double-outline focus language on the selected timeline marker.
+
+**Reason:** The timeline made attack cadence readable, but its initials still required a click or a trip to the command rail before a player could identify the threat. Matching hover details let the player compare timing, route, health, and counter without interrupting live observation or changing their deliberate focus.
+
+**Trade-off:** Native hover tooltips are compact and desktop-oriented; controller users still rely on focus cycling and the response card. A persistent or controller-specific tooltip surface remains deferred until human playtests show that the existing focused inspector is insufficient.
