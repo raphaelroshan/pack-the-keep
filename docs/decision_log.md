@@ -407,3 +407,11 @@
 **Reason:** Mara's arc needs earlier operational decisions to change a later conversation without introducing hidden reputation arithmetic or duplicating events for each commander.
 
 **Trade-off:** Variants alter framing, not combat math. More complex relationship thresholds and branching dialogue remain deferred.
+
+## ADR-052: Rare occurrence selection uses a named deterministic seed slot
+
+**Decision:** A rare authored event may declare a bounded modulus and eligible slots. `KeepState` derives the slot from the run seed plus scenario, event ID, and wave using a local stable stream; it never consumes global or presentation randomness.
+
+**Reason:** Rare events must replay reliably and vary across known seeds without introducing a general weighted scheduler before the event system needs one.
+
+**Trade-off:** The first occurrence has a fixed one-in-three cadence and flag-only consequences. Weighted pools, cooldowns, and combat-changing rare effects remain deferred.

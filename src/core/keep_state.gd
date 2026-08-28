@@ -441,7 +441,7 @@ func _current_event_phase() -> String:
 
 func _event_trigger_matches(definition: Dictionary) -> bool:
 	var trigger: Dictionary = definition.get("trigger", {})
-	return String(definition.get("scenario", "")) == scenario_id and String(trigger.get("phase", "")) == _current_event_phase() and _event_trigger_wave_matches(trigger.get("wave")) and _event_eligibility_matches(definition.get("eligibility", {}))
+	return String(definition.get("scenario", "")) == scenario_id and String(trigger.get("phase", "")) == _current_event_phase() and _event_trigger_wave_matches(trigger.get("wave")) and _event_eligibility_matches(definition.get("eligibility", {}), String(definition.get("id", "")))
 
 func _event_trigger_wave_matches(trigger_wave: Variant) -> bool:
 	if trigger_wave is Array:
@@ -451,7 +451,7 @@ func _event_trigger_wave_matches(trigger_wave: Variant) -> bool:
 		return false
 	return int(trigger_wave) == wave_index
 
-func _event_eligibility_matches(eligibility: Variant) -> bool:
+func _event_eligibility_matches(eligibility: Variant, event_id: String = "") -> bool:
 	if not eligibility is Dictionary:
 		return false
 	for eligibility_id in eligibility.keys():
@@ -476,6 +476,19 @@ func _event_eligibility_matches(eligibility: Variant) -> bool:
 					matched = true
 					break
 			if not matched:
+				return false
+		elif String(eligibility_id) == "seed_slot":
+			var slot: Dictionary = eligibility[eligibility_id]
+			var stream_value: int = seed
+			for byte_value in ("%s|%s|%d" % [scenario_id, event_id, wave_index]).to_utf8_buffer():
+				stream_value = posmod(stream_value * 31 + int(byte_value), 2147483647)
+			var selected_slot: int = posmod(stream_value, int(slot.get("mod", 2)))
+			var matched_slot: bool = false
+			for slot_value in slot.get("slots", []):
+				if int(slot_value) == selected_slot:
+					matched_slot = true
+					break
+			if not matched_slot:
 				return false
 		else:
 			return false

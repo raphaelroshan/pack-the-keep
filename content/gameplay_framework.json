@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.13.3-mara-second-door",
+  "framework_version": "0.13.4-old-drain-occurrence",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -247,6 +247,15 @@
     "commander_variants": ["castellan_compact_structure", "warden_open_response_lane"],
     "choice_flag_rule": "flags_apply_only_after_all_typed_effects_validate_and_succeed",
     "non_goals": ["relationship_score", "dialogue_tree", "combat_bonus"]
+  },
+  "p13_rare_occurrence": {
+    "status": "implemented",
+    "event": "old_drain_opens",
+    "scenario": "open_yard_net",
+    "selection": "stable_event_stream_selects_one_of_three_seed_slots",
+    "choices": ["seal_old_drain", "mark_escape_route"],
+    "safety_rule": "both_paths_preserve_existing_defensive_counters_and_change_only_visible_flags",
+    "non_goals": ["weighted_pool", "global_rng", "run_ending_randomness"]
   },
   "v090_multi_wave": {
     "status": "implemented",

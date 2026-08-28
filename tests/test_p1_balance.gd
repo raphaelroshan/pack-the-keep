@@ -87,6 +87,8 @@ func _resolve_active_event(keep: PackKeepState, label: String) -> bool:
 				choice_id = "defer_workshop"
 			"wrong_wall_report":
 				choice_id = "record_wrong_wall"
+			"old_drain_opens":
+				choice_id = "seal_old_drain"
 			_:
 				failures.append("%s: unhandled event %s" % [label, keep.active_event_id])
 				return false

@@ -7,6 +7,7 @@
   "starting_doctrine": "area_pressure",
   "doctrines": ["feint_and_flank", "distributed_sabotage", "area_pressure"],
   "wave_plans": [["raider", "climber"], ["raider", "climber", "sapper"], ["siege_beast", "raider", "climber"]],
+  "event_chain": ["old_drain_opens"],
   "variations": [
     {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
     {"id": "chapel_pressure", "materials": -4, "morale": 1, "target_room": "old_chapel"},

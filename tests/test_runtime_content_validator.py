@@ -181,6 +181,16 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         self.assertIn("must be a stable boolean", joined)
         self.assertIn("commander variant missing_commander is malformed", joined)
 
+    def test_rare_event_rejects_invalid_seed_slot(self) -> None:
+        event = copy.deepcopy(load("data/events/old_drain_opens.json"))
+        event["eligibility"]["seed_slot"] = {"mod": 3, "slots": [3]}
+        errors: list[str] = []
+        validator.validate_event(
+            Path("old_drain_opens.json"), event, {"open_yard_net"}, set(), set(), errors,
+            {"outer_wall"}, set(),
+        )
+        self.assertIn("seed_slot eligibility contains an out-of-range slot", "\n".join(errors))
+
     def test_modifier_rejects_unknown_unlock_effect_and_cost(self) -> None:
         modifier = copy.deepcopy(load("data/modifiers/roadside_intelligence.json"))
         modifier["unlock_event"] = "missing_event"

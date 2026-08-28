@@ -99,6 +99,8 @@ func _resolve_event(state: RefCounted, label: String) -> bool:
 			return _check_command(state.choose_event_option("record_wrong_wall"), "%s Wrong Wall report" % label)
 		"mara_second_door":
 			return _check_command(state.choose_event_option("keep_single_entry"), "%s Mara second door" % label)
+		"old_drain_opens":
+			return _check_command(state.choose_event_option("seal_old_drain"), "%s Old Drain" % label)
 	failures.append("%s reached unhandled event %s" % [label, state.active_event_id])
 	return false
 

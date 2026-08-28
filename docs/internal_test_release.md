@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.13.3-mara-second-door` — bounded Mara Venn arc with commander-specific framing; P12 human approval remains pending
+**Current build identity:** `0.13.4-old-drain-occurrence` — complete bounded P13 content-integration baseline; P12 human approval remains pending
 
 ## Purpose
 
@@ -85,6 +85,10 @@ The Wrong Wall now carries a preparation warning, a wave-one Workshop recovery d
 ## v0.13.3 Mara's Second Door
 
 Repairing the Workshop or trusting its Repair Station now records one of two visible Mara Venn arc flags. At Gatehouse Lock's conclusion, Mara proposes a second service door only after one of those choices; Castellan and Warden receive distinct compact-structure and response-lane framing. Opening or refusing the route records the third explicit flag, with no hidden relationship score or combat bonus.
+
+## v0.13.4 Old Drain occurrence
+
+Open Yard Net now has one deterministic rare occurrence after wave two. A stable named seed stream selects one of three slots, so identical seeds replay exactly and three consecutive matrix seeds demonstrate both selected and unselected outcomes. Sealing or marking the drain changes only explicit visible flags and preserves every existing defensive counter.
 
 ## v0.8.2 testability additions
 

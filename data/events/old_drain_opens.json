@@ -1,0 +1,29 @@
+{
+  "id": "old_drain_opens",
+  "content_version": 1,
+  "status": "active",
+  "title": "The Old Drain Opens",
+  "short_role": "Choose whether a newly exposed wall passage becomes masonry or an emergency route.",
+  "type": "recovery",
+  "scenario": "open_yard_net",
+  "trigger": {"phase": "recovery", "wave": 2},
+  "eligibility": {"seed_slot": {"mod": 3, "slots": [0]}},
+  "setup": "A loose stone beside the Outer Wall reveals a narrow drain. The wet marks prove where it runs; sealing it preserves certainty, while marking it keeps one visible escape route without removing any current defense.",
+  "choices": [
+    {
+      "id": "seal_old_drain",
+      "label": "Seal the drain",
+      "requirements": {},
+      "effects": [{"op": "set_flag", "flag": "old_drain_sealed", "value": true}],
+      "visible_result": "The drain is sealed and recorded as stable masonry."
+    },
+    {
+      "id": "mark_escape_route",
+      "label": "Mark the emergency route",
+      "requirements": {},
+      "effects": [{"op": "set_flag", "flag": "old_drain_escape_open", "value": true}],
+      "visible_result": "The drain remains a marked emergency route; every existing defensive counter stays available."
+    }
+  ],
+  "follow_up": ""
+}

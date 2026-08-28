@@ -78,7 +78,7 @@ func run(ui: Control) -> void:
 	replacement.pressed = true
 	var catalog_status: Dictionary = ui.keep.content_catalog_status()
 	_record_error(errors, bool(catalog_status.get("ok", false)), "runtime content catalog failed after export")
-	var expected_counts: Dictionary = {"commander_count": 2, "piece_count": 17, "pack_count": 9, "enemy_count": 7, "doctrine_count": 8, "scenario_count": 8, "event_count": 8, "modifier_count": 2}
+	var expected_counts: Dictionary = {"commander_count": 2, "piece_count": 17, "pack_count": 9, "enemy_count": 7, "doctrine_count": 8, "scenario_count": 8, "event_count": 9, "modifier_count": 2}
 	for count_key in expected_counts:
 		_record_error(errors, int(catalog_status.get(count_key, 0)) == int(expected_counts[count_key]), "exported runtime content has the wrong %s" % count_key)
 	var ui_scale_ready: bool = false

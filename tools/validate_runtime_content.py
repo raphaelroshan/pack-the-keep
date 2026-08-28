@@ -515,6 +515,17 @@ def validate_event(
                     errors.append(f"{path}: any_flag eligibility must be a non-empty array")
                 elif any(not isinstance(value, str) or not SNAKE_CASE.fullmatch(value) for value in constraint):
                     errors.append(f"{path}: any_flag eligibility contains an invalid flag")
+            elif eligibility_id == "seed_slot":
+                if (
+                    not isinstance(constraint, dict)
+                    or not is_integer(constraint.get("mod"))
+                    or not 2 <= constraint["mod"] <= 32
+                    or not isinstance(constraint.get("slots"), list)
+                    or not constraint["slots"]
+                ):
+                    errors.append(f"{path}: seed_slot eligibility needs mod 2 to 32 and non-empty slots")
+                elif any(not is_integer(value) or not 0 <= value < constraint["mod"] for value in constraint["slots"]):
+                    errors.append(f"{path}: seed_slot eligibility contains an out-of-range slot")
             else:
                 errors.append(f"{path}: unsupported eligibility: {eligibility_id}")
     choices = event.get("choices")

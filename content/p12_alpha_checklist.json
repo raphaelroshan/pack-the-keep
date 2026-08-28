@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.13.3-mara-second-door",
+  "build_version": "0.13.4-old-drain-occurrence",
   "status": "candidate",
   "checks": [
     {"id": "windows_launch", "status": "implemented", "evidence": ["tests/test_release_identity.py", "tools/run_packaged_smoke.py", ".github/workflows/ci.yml"]},

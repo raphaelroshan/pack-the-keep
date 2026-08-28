@@ -29,7 +29,7 @@ func _fixture(with_station: bool = true, workshop_condition: int = 55) -> RefCou
 func _initialize() -> void:
 	var catalog_state: RefCounted = PackKeepState.new(3307)
 	var catalog_status: Dictionary = catalog_state.content_catalog_status()
-	_check(bool(catalog_status.get("ok", false)) and int(catalog_status.get("event_count", 0)) == 8, "P13 should load eight runtime events")
+	_check(bool(catalog_status.get("ok", false)) and int(catalog_status.get("event_count", 0)) == 9, "P13 should load nine runtime events")
 	var event: Dictionary = catalog_state.event_definition("workshop_can_wait")
 	_check(String(event.get("scenario", "")) == "gatehouse_lock" and event.get("choices", []).size() == 2, "Workshop Can Wait should be a two-choice Gatehouse Lock event")
 

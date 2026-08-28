@@ -75,6 +75,7 @@ const EVENT_PATHS: Array[String] = [
 	"res://data/events/relief_road_report.json",
 	"res://data/events/workshop_can_wait.json",
 	"res://data/events/mara_second_door.json",
+	"res://data/events/old_drain_opens.json",
 	"res://data/events/the_bell_has_a_pattern.json",
 	"res://data/events/the_gate_is_not_the_keep.json",
 	"res://data/events/wrong_wall_report.json"
@@ -645,6 +646,14 @@ func validate_event_definition(event: Dictionary, expected_id: String, known_roo
 					for flag_id in flag_ids:
 						if not flag_id is String or not _is_snake_case_id(String(flag_id)):
 							validation_errors.append("event %s any_flag eligibility contains an invalid flag" % event_id)
+			elif String(eligibility_id) == "seed_slot":
+				var slot: Variant = eligibility[eligibility_id]
+				if not slot is Dictionary or not _is_integer_number(slot.get("mod")) or int(slot.get("mod", 0)) < 2 or int(slot.get("mod", 0)) > 32 or not slot.get("slots") is Array or slot.get("slots", []).is_empty():
+					validation_errors.append("event %s seed_slot eligibility needs mod 2 to 32 and non-empty slots" % event_id)
+				else:
+					for slot_value in slot.get("slots", []):
+						if not _is_integer_number(slot_value) or int(slot_value) < 0 or int(slot_value) >= int(slot.get("mod", 0)):
+							validation_errors.append("event %s seed_slot eligibility contains an out-of-range slot" % event_id)
 			else:
 				validation_errors.append("event %s has unsupported eligibility: %s" % [event_id, String(eligibility_id)])
 	var choices: Variant = event.get("choices", [])
