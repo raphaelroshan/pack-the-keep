@@ -495,3 +495,11 @@
 **Reason:** A provenance manifest proves which binary is present but does not make a downloaded candidate operational for an observer who is not browsing the repository. Generating the brief from the same protocol and manifest prevents instructions from drifting away from the tested build.
 
 **Trade-off:** The brief is deliberately read-only guidance, not a questionnaire or automatic result collector. Session JSON remains the durable evidence, and CI still cannot populate observations, recruit testers, or approve distribution.
+
+## ADR-063: Packaged candidates include unfilled matrix templates
+
+**Decision:** Generate one JSON template for every required commander/modifier combination after verifying the packaged executable. Bind each template to the exact build provenance, keep all observations `not_tested`, and leave every human-owned identity, environment, result, finding, summary, and completion field blank.
+
+**Reason:** Requiring observers to reconstruct the evidence schema creates avoidable transcription errors and makes the four-case matrix harder to execute from a downloaded artifact. Pre-building only the machine-owned structure makes the workflow portable without pretending that a session occurred.
+
+**Trade-off:** Templates intentionally fail evidence validation until a human fills their blank fields and performs the observations. They cannot count toward matrix coverage merely because CI generated them.

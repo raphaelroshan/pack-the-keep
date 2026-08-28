@@ -29,7 +29,7 @@ python3 tools/new_playtest_session.py \
   --output playtests/sessions/session_001.json
 ```
 
-The release-candidate artifact includes `artifacts/playtest-build.json` and `artifacts/PLAYTEST_README.md` beside the executable. CI creates the observer brief only after revalidating the exact binary; it repeats the build identity, required prompts, privacy rule, and pending approval boundary for use outside a repository checkout. The generator validates the manifest against the exact executable, then records its filename, byte size, SHA-256 digest, CI run ID, and 40-character source revision. The generated record contains only `not_tested` observations. A human observer updates it after the session. Use a non-identifying alias; do not include names, contact details, recordings, or unrelated device identifiers.
+The release-candidate artifact includes `artifacts/playtest-build.json`, `artifacts/PLAYTEST_README.md`, and `artifacts/playtest-templates/` beside the executable. CI creates the observer brief and four commander/modifier templates only after revalidating the exact binary. Copy the matching template and fill its blank session identity, timestamp, input, display, and scenario fields, or use the generator from the source snapshot. The generator validates the manifest against the exact executable, then records its filename, byte size, SHA-256 digest, CI run ID, and 40-character source revision. Every generated record or template contains only `not_tested` observations; templates are intentionally invalid evidence until a human observer fills the blank fields. Use a non-identifying alias; do not include names, contact details, recordings, or unrelated device identifiers.
 
 ## Required observations
 

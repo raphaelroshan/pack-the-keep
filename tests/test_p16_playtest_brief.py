@@ -33,6 +33,8 @@ class P16PlaytestBriefTests(unittest.TestCase):
             self.assertIn("`12345`", rendered)
             self.assertIn(manifest["artifact"]["sha256"], rendered)
             self.assertIn("human playtest gate remains pending", rendered.lower())
+            self.assertIn("playtest-templates", rendered)
+            self.assertIn("intentionally invalid evidence", rendered)
             self.assertNotIn('"completed": true', rendered.lower())
             self.assertNotIn('"status": "pass"', rendered.lower())
             for observation in self.protocol["required_observations"]:
