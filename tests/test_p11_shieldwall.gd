@@ -15,6 +15,7 @@ func _run_scenario(seed: int, commander_id: String) -> Dictionary:
 	state.select_scenario("the_splintered_gate")
 	state.open_pack("shieldwall")
 	state.place_piece("pike_squad", Vector2i(0, 3), "ground")
+	state.place_piece("pike_squad", Vector2i(0, 4), "ground")
 	state.place_piece("shield_wardens", Vector2i(3, 3), "ground")
 	state.place_piece("emergency_shutters", Vector2i(6, 2), "ground")
 	for _guard in range(100):

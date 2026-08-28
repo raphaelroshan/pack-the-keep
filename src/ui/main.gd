@@ -1218,7 +1218,7 @@ func _build_ui() -> void:
 	inspection_section.add_child(inspector_label)
 	response_preview_label = Label.new()
 	response_preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	response_preview_label.custom_minimum_size = Vector2(292, 90)
+	response_preview_label.custom_minimum_size = Vector2(292, 120)
 	response_preview_label.add_theme_color_override("font_color", Color("#d8c389"))
 	battle_section.add_child(response_preview_label)
 	recovery_priority_label = Label.new()
@@ -2047,7 +2047,14 @@ func _refresh_response_preview() -> void:
 		target_text = "APPROACHING"
 	var counter_id: String = String(inspection.get("counter", ""))
 	var counter_name: String = String(keep.piece_definition(counter_id).get("name", counter_id.replace("_", " ").capitalize())) if not counter_id.is_empty() else "Read the forecast"
-	response_preview_label.text = "RESPONSE — FOCUSED %d: %s\n%s\nTHREAT: %s | TARGET: %s\nCOUNTERS: %s\n%s: %s (%d command)" % [focused_enemy_index + 1, String(inspection.get("name", "enemy")), timing_text, String(inspection.get("doctrine", "approaching")).replace("_", " ").to_upper(), target_text, counter_name, ability_name, ability_state, keep.command_points]
+	var response: Dictionary = keep.defender_response_preview(focused_enemy_index)
+	var attacker_names: Array[String] = []
+	for attacker in response.get("attackers", []):
+		attacker_names.append("%s (%d)" % [String(attacker.get("name", "Defender")), int(attacker.get("damage", 0))])
+	var engagement_text: String = "NEXT STEP: no ready defender commits to this target"
+	if not attacker_names.is_empty():
+		engagement_text = "NEXT STEP: %s → %d damage · projected %d hp" % [", ".join(attacker_names), int(response.get("expected_damage", 0)), int(response.get("projected_health", 0))]
+	response_preview_label.text = "RESPONSE — FOCUSED %d: %s\n%s\nTHREAT: %s | TARGET: %s | %s\n%s\nCOUNTERS: %s\n%s: %s (%d command)" % [focused_enemy_index + 1, String(inspection.get("name", "enemy")), timing_text, String(inspection.get("doctrine", "approaching")).replace("_", " ").to_upper(), target_text, String(response.get("contact_state", "APPROACH")), engagement_text, counter_name, ability_name, ability_state, keep.command_points]
 
 func _refresh_layout_lens() -> void:
 	if layout_lens_label == null:
@@ -2539,7 +2546,7 @@ func _refresh_ui() -> void:
 	enemy_label.text = "ENEMIES — " + (" | ".join(enemy_lines) if not enemy_lines.is_empty() else "No active enemies. Start an invasion to see doctrine-driven actors.")
 	var metrics: Dictionary = keep.combat_metrics
 	metrics_label.text = "METRICS — steps %d | unit attacks %d | damage dealt %d | ammo spent %d | enemy attacks %d | room damage %d | piece damage %d | repairs %d | disabled %d | defeated %d" % [int(metrics.get("battle_steps", 0)), int(metrics.get("unit_attacks", 0)), int(metrics.get("damage_dealt", 0)), int(metrics.get("ammo_spent", 0)), int(metrics.get("enemy_attacks", 0)), int(metrics.get("room_damage", 0)), int(metrics.get("piece_damage", 0)), int(metrics.get("repairs", 0)), int(metrics.get("disabled_units", 0)), int(metrics.get("defeated_enemies", 0))]
-	combat_explain_label.text = "COMBAT — real-time auto-battle: enemies follow named routes toward behavior targets; defenders auto-attack when their style, floor, counter, cooldown, and ammunition allow. Pause to inspect; skills modify the next resolved step."
+	combat_explain_label.text = "COMBAT — defenders commit to one threat each step before surviving enemies make contact. Priority is deterministic: contact, arrival, effective counter damage, pressure, remaining health, then wave slot. Pause and focus an enemy to preview the next commitment."
 	var available_names: Array[String] = []
 	for available_id in keep.available_pieces:
 		available_names.append(String(keep.piece_definition(available_id).get("name", available_id)))

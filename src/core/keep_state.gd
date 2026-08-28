@@ -71,9 +71,6 @@ var event_history: Array[Dictionary] = []
 var unlocked_modifier_ids: Array[String] = []
 var equipped_modifier_id: String = ""
 var regional_state: Dictionary = {}
-var _last_attackers: Array[String] = []
-var _last_attack_damage: Dictionary = {}
-var _last_armor_blocked: int = 0
 var content_catalog: RefCounted
 var _keep_definitions: Dictionary = {}
 var _room_definitions: Dictionary = ROOMS.duplicate(true)
@@ -1357,79 +1354,166 @@ func _reload_ammunition() -> void:
 		instance.max_ammo = max_ammo
 		instance.ammo = max_ammo
 
-func _defender_damage(enemy_id: String) -> int:
+func _defender_attack_projection(instance_id: String, enemy_id: String) -> Dictionary:
+	if not pieces.has(instance_id) or not _enemy_definitions.has(enemy_id):
+		return {"damage": 0, "armor_blocked": 0}
+	var instance: Dictionary = pieces[instance_id]
+	if float(instance.get("condition", 0.0)) <= 0.0 or bool(instance.get("disabled", false)):
+		return {"damage": 0, "armor_blocked": 0}
+	var piece_id: String = String(instance.get("piece_id", ""))
+	if not _piece_definitions.has(piece_id):
+		return {"damage": 0, "armor_blocked": 0}
+	var piece: Dictionary = _piece_definitions[piece_id]
+	var combat_style: String = String(piece.get("combat_style", "support"))
+	if not ["melee", "ranged"].has(combat_style) or int(piece.get("attack", 0)) <= 0:
+		return {"damage": 0, "armor_blocked": 0}
+	var ammo: int = int(instance.get("ammo", piece.get("max_ammo", 0)))
+	if combat_style == "ranged" and ammo <= 0:
+		return {"damage": 0, "armor_blocked": 0}
+	if not piece.targets.has("all") and not piece.targets.has(enemy_id):
+		return {"damage": 0, "armor_blocked": 0}
 	var enemy: Dictionary = _enemy_definitions[enemy_id]
-	var damage: int = 0
-	_last_attackers.clear()
-	_last_attack_damage.clear()
-	_last_armor_blocked = 0
-	for instance_id in pieces.keys():
+	var zone: String = String(instance.get("placement_zone", placement_zone(instance.get("origin", Vector2i.ZERO), String(instance.get("floor", "ground")), piece.get("size", Vector2i.ONE))))
+	var contribution: int = int(piece.attack)
+	if piece_id == "pike_squad" and (String(enemy.route) != "gate_road" or String(instance.get("floor", "ground")) != "ground"):
+		contribution = 0
+	if piece_id == "fire_team" and enemy_id != "climber":
+		contribution = 1
+	if piece_id == "fire_team" and enemy_id == "climber" and String(instance.get("floor", "ground")) != "upper" and String(instance.get("assignment", "")) != "inner_yard":
+		contribution = 1
+	if piece_id == "fire_brazier" and String(instance.get("floor", "ground")) != "upper":
+		contribution = 0
+	if piece_id == "runner_pair":
+		contribution = 4 if _piece_has_open_lane(instance) and ["sapper", "climber"].has(enemy_id) else 0
+	if piece_id == "rear_guard" and _fallback_is_active():
+		contribution += 2
+		if String(instance.get("assignment", "")) == "barracks":
+			contribution += 1
+	if piece_id == "pike_squad" and zone == "keep":
+		contribution = 1
+	elif piece_id == "pike_squad" and zone == "courtyard":
+		contribution += 1
+	if piece_id == "fire_team" and zone == "keep":
+		contribution = 0
+	elif piece_id == "fire_team" and zone == "courtyard":
+		contribution = mini(contribution, 2)
+	if piece_id == "pike_squad" and String(instance.get("assignment", "")) == "gate" and enemy_id == "raider":
+		contribution += 2
+	if piece_id == "fire_team" and String(instance.get("assignment", "")) == "inner_yard" and enemy_id == "climber":
+		contribution += 1
+	if _castellan_adjacent(instance, String(enemy.target_rooms[0])):
+		contribution += 1
+	if _warden_open_lane(instance):
+		contribution += 1
+	if rally_pending and commander_id == "warden" and int(piece.attack) > 0:
+		contribution += 1
+	if combat_style == "ranged" and _has_nearby_ranged_support(instance):
+		contribution += 1
+	var armor_blocked: int = 0
+	var armor: int = int(enemy.get("armor", 0))
+	var armor_counter_tag: String = String(enemy.get("armor_counter_tag", ""))
+	if armor > 0 and (armor_counter_tag.is_empty() or not piece.get("strength_tags", []).has(armor_counter_tag)):
+		var unarmored_contribution: int = contribution
+		contribution = maxi(0, contribution - armor)
+		armor_blocked = unarmored_contribution - contribution
+	return {"damage": contribution, "armor_blocked": armor_blocked}
+
+func _defender_target_is_better(candidate_index: int, selected_index: int, candidate_damage: int, selected_damage: int, resolution_step: int, projected_health: Dictionary) -> bool:
+	if selected_index < 0:
+		return true
+	var candidate: Dictionary = enemies[candidate_index]
+	var selected: Dictionary = enemies[selected_index]
+	var candidate_arrival: int = int(candidate.get("arrival_step", 1))
+	var selected_arrival: int = int(selected.get("arrival_step", 1))
+	var candidate_contact: bool = resolution_step >= candidate_arrival
+	var selected_contact: bool = resolution_step >= selected_arrival
+	if candidate_contact != selected_contact:
+		return candidate_contact
+	if candidate_arrival != selected_arrival:
+		return candidate_arrival < selected_arrival
+	if candidate_damage != selected_damage:
+		return candidate_damage > selected_damage
+	var candidate_pressure: int = int(_enemy_definitions[String(candidate.get("enemy_id", ""))].get("damage", 0))
+	var selected_pressure: int = int(_enemy_definitions[String(selected.get("enemy_id", ""))].get("damage", 0))
+	if candidate_pressure != selected_pressure:
+		return candidate_pressure > selected_pressure
+	var candidate_health: int = int(projected_health.get(candidate_index, candidate.get("hp", 0)))
+	var selected_health: int = int(projected_health.get(selected_index, selected.get("hp", 0)))
+	if candidate_health != selected_health:
+		return candidate_health < selected_health
+	return int(candidate.get("slot", candidate_index)) < int(selected.get("slot", selected_index))
+
+func _planned_defender_engagements(resolution_step: int) -> Array[Dictionary]:
+	var engagements: Array[Dictionary] = []
+	var projected_health: Dictionary = {}
+	for enemy_index in range(enemies.size()):
+		projected_health[enemy_index] = int(enemies[enemy_index].get("hp", 0))
+	var instance_ids: Array = pieces.keys()
+	instance_ids.sort()
+	for instance_id_value in instance_ids:
+		var instance_id: String = String(instance_id_value)
 		var instance: Dictionary = pieces[instance_id]
-		if float(instance.get("condition", 0.0)) <= 0.0 or bool(instance.get("disabled", false)):
+		if float(instance.get("condition", 0.0)) <= 0.0 or bool(instance.get("disabled", false)) or int(instance.get("attack_cooldown", 0)) > 0:
 			continue
-		var piece_id: String = String(instance.get("piece_id", ""))
-		var piece: Dictionary = _piece_definitions[piece_id]
-		var combat_style: String = String(piece.get("combat_style", "support"))
-		var zone: String = String(instance.get("placement_zone", placement_zone(instance.get("origin", Vector2i.ZERO), String(instance.get("floor", "ground")), piece.get("size", Vector2i.ONE))))
-		var ammo: int = int(instance.get("ammo", piece.get("max_ammo", 0)))
-		if combat_style == "ranged" and ammo <= 0:
+		var selected_index: int = -1
+		var selected_projection: Dictionary = {"damage": 0, "armor_blocked": 0}
+		for enemy_index in range(enemies.size()):
+			var enemy: Dictionary = enemies[enemy_index]
+			if bool(enemy.get("defeated", false)) or int(projected_health.get(enemy_index, 0)) <= 0:
+				continue
+			var projection: Dictionary = _defender_attack_projection(instance_id, String(enemy.get("enemy_id", "")))
+			var projected_damage: int = int(projection.get("damage", 0))
+			if projected_damage <= 0:
+				continue
+			if _defender_target_is_better(enemy_index, selected_index, projected_damage, int(selected_projection.get("damage", 0)), resolution_step, projected_health):
+				selected_index = enemy_index
+				selected_projection = projection
+		if selected_index < 0:
 			continue
-		var valid: bool = piece.targets.has("all") or piece.targets.has(enemy_id)
-		if not valid:
+		var selected_enemy: Dictionary = enemies[selected_index]
+		var damage: int = int(selected_projection.get("damage", 0))
+		projected_health[selected_index] = maxi(0, int(projected_health[selected_index]) - damage)
+		engagements.append({
+			"attacker_id": instance_id,
+			"enemy_index": selected_index,
+			"enemy_id": String(selected_enemy.get("enemy_id", "")),
+			"damage": damage,
+			"armor_blocked": int(selected_projection.get("armor_blocked", 0))
+		})
+	return engagements
+
+func defender_response_preview(enemy_index: int) -> Dictionary:
+	if not wave_active:
+		return {"ok": false, "reason": "no active invasion"}
+	if enemy_index < 0 or enemy_index >= enemies.size():
+		return {"ok": false, "reason": "unknown enemy"}
+	if bool(enemies[enemy_index].get("defeated", false)):
+		return {"ok": false, "reason": "enemy already defeated"}
+	var next_step: int = mini(6, battle_step + 1)
+	var attackers: Array[Dictionary] = []
+	var expected_damage: int = 0
+	for engagement in _planned_defender_engagements(next_step):
+		if int(engagement.get("enemy_index", -1)) != enemy_index:
 			continue
-		var cooldown: int = int(instance.get("attack_cooldown", 0))
-		if cooldown > 0:
-			instance.attack_cooldown = cooldown - 1
-			continue
-		var contribution: int = int(piece.attack)
-		if piece_id == "pike_squad" and (String(enemy.route) != "gate_road" or String(instance.get("floor", "ground")) != "ground"):
-			contribution = 0
-		if piece_id == "fire_team" and enemy_id != "climber":
-			contribution = 1
-		if piece_id == "fire_team" and enemy_id == "climber" and String(instance.get("floor", "ground")) != "upper" and String(instance.get("assignment", "")) != "inner_yard":
-			contribution = 1
-		if piece_id == "fire_brazier" and String(instance.get("floor", "ground")) != "upper":
-			contribution = 0
-		if piece_id == "runner_pair":
-			contribution = 4 if _piece_has_open_lane(instance) and ["sapper", "climber"].has(enemy_id) else 0
-		if piece_id == "rear_guard" and _fallback_is_active():
-			contribution += 2
-			if String(instance.get("assignment", "")) == "barracks":
-				contribution += 1
-		if piece_id == "pike_squad" and zone == "keep":
-			contribution = 1
-		elif piece_id == "pike_squad" and zone == "courtyard":
-			contribution += 1
-		if piece_id == "fire_team" and zone == "keep":
-			contribution = 0
-		elif piece_id == "fire_team" and zone == "courtyard":
-			contribution = mini(contribution, 2)
-		if piece_id == "pike_squad" and String(instance.get("assignment", "")) == "gate" and enemy_id == "raider":
-			contribution += 2
-		if piece_id == "fire_team" and String(instance.get("assignment", "")) == "inner_yard" and enemy_id == "climber":
-			contribution += 1
-		if _castellan_adjacent(instance, String(enemy.target_rooms[0])):
-			contribution += 1
-		if _warden_open_lane(instance):
-			contribution += 1
-		if rally_pending and commander_id == "warden" and piece.attack > 0:
-			contribution += 1
-		if combat_style == "ranged" and _has_nearby_ranged_support(instance):
-			contribution += 1
-		var armor: int = int(enemy.get("armor", 0))
-		var armor_counter_tag: String = String(enemy.get("armor_counter_tag", ""))
-		if armor > 0 and (armor_counter_tag.is_empty() or not piece.get("strength_tags", []).has(armor_counter_tag)):
-			var unarmored_contribution: int = contribution
-			contribution = maxi(0, contribution - armor)
-			_last_armor_blocked += unarmored_contribution - contribution
-		if contribution > 0:
-			_last_attackers.append(String(instance_id))
-			_last_attack_damage[String(instance_id)] = contribution
-			if combat_style == "ranged":
-				instance.ammo = maxi(0, ammo - 1)
-				combat_metrics["ammo_spent"] = int(combat_metrics.get("ammo_spent", 0)) + 1
-			damage += contribution
-	return damage
+		var attacker_id: String = String(engagement.get("attacker_id", ""))
+		var piece_id: String = String(pieces.get(attacker_id, {}).get("piece_id", ""))
+		var damage: int = int(engagement.get("damage", 0))
+		expected_damage += damage
+		attackers.append({"id": attacker_id, "piece_id": piece_id, "name": String(_piece_definitions.get(piece_id, {}).get("name", piece_id)), "damage": damage})
+	var enemy: Dictionary = enemies[enemy_index]
+	var remaining_health: int = maxi(0, int(enemy.get("hp", 0)) - expected_damage)
+	var contact_step: int = int(enemy.get("arrival_step", 1))
+	return {
+		"ok": true,
+		"step": next_step,
+		"enemy_index": enemy_index,
+		"attackers": attackers,
+		"expected_damage": expected_damage,
+		"projected_health": remaining_health,
+		"stopped_before_contact": remaining_health <= 0 and next_step < contact_step,
+		"contact_state": "CONTACT" if next_step >= contact_step else "APPROACH",
+		"priority_rule": "contact, arrival, effective counter damage, pressure, remaining health, wave slot"
+	}
 
 func _choose_target(enemy_id: String) -> String:
 	var enemy: Dictionary = _enemy_definitions[enemy_id]
@@ -1594,31 +1678,71 @@ func _battle_step() -> Dictionary:
 	var lockdown_contact: bool = false
 	var rally_contact: bool = rally_pending
 	_battle_log("Step %d: forecast says %s; the keep executes its prepared routine." % [battle_step, enemy_doctrine.replace("_", " ")])
+	var engagements: Array[Dictionary] = _planned_defender_engagements(battle_step)
+	var instance_ids: Array = pieces.keys()
+	instance_ids.sort()
+	for instance_id_value in instance_ids:
+		var instance_id: String = String(instance_id_value)
+		var cooldown: int = int(pieces[instance_id].get("attack_cooldown", 0))
+		if cooldown > 0:
+			pieces[instance_id].attack_cooldown = cooldown - 1
+	var attackers_by_enemy: Dictionary = {}
+	var damage_by_enemy: Dictionary = {}
+	var armor_blocked_by_enemy: Dictionary = {}
+	for engagement in engagements:
+		var attacker_id: String = String(engagement.get("attacker_id", ""))
+		var enemy_index: int = int(engagement.get("enemy_index", -1))
+		if not pieces.has(attacker_id) or enemy_index < 0 or enemy_index >= enemies.size() or bool(enemies[enemy_index].get("defeated", false)):
+			continue
+		var damage: int = int(engagement.get("damage", 0))
+		if damage <= 0:
+			continue
+		var instance: Dictionary = pieces[attacker_id]
+		var piece_id: String = String(instance.get("piece_id", ""))
+		var piece: Dictionary = _piece_definitions[piece_id]
+		var enemy: Dictionary = enemies[enemy_index]
+		enemy.hp = maxi(0, int(enemy.get("hp", 0)) - damage)
+		enemy.damage_taken = int(enemy.get("damage_taken", 0)) + damage
+		instance.attacks = int(instance.get("attacks", 0)) + 1
+		instance.damage_dealt = int(instance.get("damage_dealt", 0)) + damage
+		instance.last_target = String(enemy.get("enemy_id", ""))
+		instance.attack_cooldown = maxi(0, int(piece.get("attack_interval", 1)) - 1)
+		if String(piece.get("combat_style", "support")) == "ranged":
+			instance.ammo = maxi(0, int(instance.get("ammo", piece.get("max_ammo", 0))) - 1)
+			combat_metrics["ammo_spent"] = int(combat_metrics.get("ammo_spent", 0)) + 1
+		combat_metrics["unit_attacks"] = int(combat_metrics.get("unit_attacks", 0)) + 1
+		combat_metrics["damage_dealt"] = int(combat_metrics.get("damage_dealt", 0)) + damage
+		if not attackers_by_enemy.has(enemy_index):
+			attackers_by_enemy[enemy_index] = []
+			damage_by_enemy[enemy_index] = 0
+			armor_blocked_by_enemy[enemy_index] = 0
+		attackers_by_enemy[enemy_index].append(String(piece.get("name", piece_id)))
+		damage_by_enemy[enemy_index] = int(damage_by_enemy.get(enemy_index, 0)) + damage
+		armor_blocked_by_enemy[enemy_index] = int(armor_blocked_by_enemy.get(enemy_index, 0)) + int(engagement.get("armor_blocked", 0))
+	var engaged_enemy_indices: Array = attackers_by_enemy.keys()
+	engaged_enemy_indices.sort()
+	for enemy_index_value in engaged_enemy_indices:
+		var enemy_index: int = int(enemy_index_value)
+		var enemy: Dictionary = enemies[enemy_index]
+		var enemy_id: String = String(enemy.get("enemy_id", ""))
+		var attacker_names: Array[String] = []
+		for attacker_name in attackers_by_enemy[enemy_index]:
+			attacker_names.append(String(attacker_name))
+		if int(armor_blocked_by_enemy.get(enemy_index, 0)) > 0:
+			_battle_log("%s armor absorbed %d damage from non-piercing defenders." % [_enemy_definitions[enemy_id].name, int(armor_blocked_by_enemy[enemy_index])])
+		_battle_log("%s committed to %s for %d damage using %s counterplay." % [", ".join(attacker_names), _enemy_definitions[enemy_id].name, int(damage_by_enemy.get(enemy_index, 0)), _enemy_definitions[enemy_id].counter])
+		if int(enemy.get("hp", 0)) <= 0 and not bool(enemy.get("defeated", false)):
+			enemy.defeated = true
+			combat_metrics["defeated_enemies"] = int(combat_metrics.get("defeated_enemies", 0)) + 1
+			for engagement in engagements:
+				if int(engagement.get("enemy_index", -1)) == enemy_index:
+					var attacker_id: String = String(engagement.get("attacker_id", ""))
+					pieces[attacker_id].targets_stopped = int(pieces[attacker_id].get("targets_stopped", 0)) + 1
+			_battle_log("%s was stopped before its doctrine could complete." % _enemy_definitions[enemy_id].name)
 	for enemy in enemies:
 		if bool(enemy.get("defeated", false)):
 			continue
 		var enemy_id: String = String(enemy.get("enemy_id", ""))
-		var damage: int = _defender_damage(enemy_id)
-		if _last_armor_blocked > 0:
-			_battle_log("%s armor absorbed %d damage from non-piercing defenders." % [_enemy_definitions[enemy_id].name, _last_armor_blocked])
-		if damage > 0:
-			enemy.hp = maxi(0, int(enemy.get("hp", 0)) - damage)
-			combat_metrics["unit_attacks"] = int(combat_metrics.get("unit_attacks", 0)) + _last_attackers.size()
-			combat_metrics["damage_dealt"] = int(combat_metrics.get("damage_dealt", 0)) + damage
-			enemy.damage_taken = int(enemy.get("damage_taken", 0)) + damage
-			for attacker_id in _last_attackers:
-				var attacker_damage: int = int(_last_attack_damage.get(attacker_id, 0))
-				pieces[attacker_id].attacks = int(pieces[attacker_id].get("attacks", 0)) + 1
-				pieces[attacker_id].damage_dealt = int(pieces[attacker_id].get("damage_dealt", 0)) + attacker_damage
-				pieces[attacker_id].last_target = enemy_id
-			_battle_log("Defenders dealt %d to %s using %s counterplay." % [damage, _enemy_definitions[enemy_id].name, _enemy_definitions[enemy_id].counter])
-		if int(enemy.get("hp", 0)) <= 0:
-			enemy.defeated = true
-			combat_metrics["defeated_enemies"] = int(combat_metrics.get("defeated_enemies", 0)) + 1
-			for attacker_id in _last_attackers:
-				pieces[attacker_id].targets_stopped = int(pieces[attacker_id].get("targets_stopped", 0)) + 1
-			_battle_log("%s was stopped before its doctrine could complete." % _enemy_definitions[enemy_id].name)
-			continue
 		if battle_step >= int(enemy.get("arrival_step", _enemy_definitions[enemy_id].arrival_step)):
 			if String(enemy.get("target", "")).is_empty():
 				enemy.target = _choose_target(enemy_id)

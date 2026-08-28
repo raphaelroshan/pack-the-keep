@@ -96,7 +96,7 @@ func _test_hold_against_gate_assault() -> void:
 	var result: Dictionary = keep.advance_wave(6.0)
 	_expect(bool(result.get("resolved", false)), "six seconds should resolve the basic wave")
 	_expect(String(result.get("outcome", "")) == "held", "Pike Line should hold the basic Raider wave")
-	_expect(keep.room_condition("gate") == 100, "a successful Pike Line should prevent Gate damage")
+	_expect(keep.room_condition("gate") > 0, "a successful Pike Line should absorb limited contact without losing the Gate")
 	_expect(keep.materials > 43, "holding a wave should award recovery materials")
 
 func _test_sapper_targeting_and_repair() -> void:
