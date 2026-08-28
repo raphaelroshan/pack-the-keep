@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
 **Document status:** Active planning contract for post-v0.10.0 development
-**Current release baseline:** `v0.12.6-alpha-persistence-recovery`
+**Current release baseline:** `v0.12.7-alpha-scenario-matrix`
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
 **Primary keep:** Greywatch Keep
@@ -19,7 +19,7 @@ Pack the Keep currently has a playable Greywatch vertical slice. The authoritati
 
 The current slice supports two commanders, seventeen active defender pieces/equipment, nine packs, seven enemy types, eight invasion doctrines, eight authored scenarios, two mutually exclusive run modifiers, a two-floor square fort, deterministic six-step combat waves, repair and assignment intervals, finite ranged ammunition, authored armor and armor-piercing counters, nearby ranged support, linked signal redundancy, bounded forecast disruption, adjacent room/piece protection, protection-piercing target selection, commander abilities, pause/speed/manual-step controls, controller navigation/remapping, persistent presentation settings, map-first enemy focus, placement previews, save/load, a quick-playtest flow, and three-wave authored sequences that advance only after explicit recovery completion.
 
-P11 content breadth is complete. Three teaching pairs are implemented: Crossbow Watch versus Shielded Advance, Bell Guard versus Smoke and Signal, and Shieldwall versus Break the Line. Three Bells at Dusk composes all three questions across two viable two-pack baselines. The Campaign Ledger offers Roadside Intelligence or the Hardened Vanguard durability challenge through one data-driven selection boundary. P12 alpha hardening now has machine-readable evidence for Windows launch, offline play, persistence location, malformed saves, migration, controller, scaling, remapping, pause, close, and clean reinstall. Run saves and presentation settings both validate primary/backup candidates without promoting stranded temporary files. Automated status remains a candidate pending human alpha approval.
+P11 content breadth is complete. Three teaching pairs are implemented: Crossbow Watch versus Shielded Advance, Bell Guard versus Smoke and Signal, and Shieldwall versus Break the Line. Three Bells at Dusk composes all three questions across two viable two-pack baselines. The Campaign Ledger offers Roadside Intelligence or the Hardened Vanguard durability challenge through one data-driven selection boundary. P12 alpha hardening now has machine-readable evidence for Windows launch, offline play, persistence location, malformed saves, migration, controller, scaling, remapping, pause, close, and clean reinstall. Run saves and presentation settings both validate primary/backup candidates without promoting stranded temporary files. A local all-scenario matrix now runs all eight scenarios for both commanders across three seeds twice, proving 48 viable cases and 96 deterministic simulations without treating automation as a human playtest. Automated status remains a candidate pending human alpha approval.
 
 The next objective is not to add a large roster. The next objective is to make Greywatch feel like a complete, legible, replayable game loop and to establish safe extension points so new content can be added without turning the core simulation into an opaque collection of special cases.
 
@@ -1029,7 +1029,7 @@ Add content in teaching pairs: one new friendly doctrine and one enemy question 
 
 ## Slice K — P12 alpha hardening
 
-Build Windows smoke tests for launch, offline play, save location, malformed saves, migration, controller, scaling, input remapping, pause, crash-safe close, and clean uninstall/reinstall behavior. Add platform adapters only around the simulation.
+Build Windows smoke tests for launch, offline play, save location, malformed saves, migration, controller, scaling, input remapping, pause, crash-safe close, and clean uninstall/reinstall behavior. Maintain a local deterministic viability matrix across every authored scenario and commander. Add platform adapters only around the simulation.
 
 ---
 

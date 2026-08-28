@@ -359,3 +359,11 @@
 **Reason:** Settings use the same atomic primary/temp/backup replacement shape as run saves. A close between renaming the primary to backup and committing the temporary file must not discard accessibility, scale, display, audio, or remapping preferences.
 
 **Trade-off:** Invalid individual fields inside an otherwise supported settings document still fall back to their documented defaults. A recovered backup is not promoted until a later explicit preference save.
+
+## ADR-046: Alpha viability is an all-scenario deterministic matrix
+
+**Decision:** Run one documented viable baseline through every authored scenario for both commanders and three fixed seeds. Execute each case twice, require identical serialization, three completed waves, a non-collapse outcome, closed final recovery/event state, and the canonical replay key.
+
+**Reason:** Isolated mechanic tests can remain green while an older scenario becomes unwinnable, a final event remains unresolved, or a commander-specific path drifts. A compact cross-product gate catches those release-wide regressions locally without depending on hosted CI.
+
+**Trade-off:** The matrix proves only that a known answer remains viable and deterministic. It does not establish that all layouts are balanced, that partial breaches feel fair, or that the human alpha playtest is complete.

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.12.6",
+  "content_version": "0.12.7",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -175,7 +175,17 @@
     "status": "implemented",
     "selection": "validate_primary_then_backup_before_applying_presentation_preferences",
     "temporary_file_rule": "never_promote_temporary_settings_during_load",
-    "coverage": ["malformed_primary", "missing_primary", "valid_primary_with_stranded_temp", "temp_only", "invalid_primary_and_backup"]
+    "coverage": ["malformed_primary", "missing_primary", "valid_primary_with_stranded_temp", "temp_only", "invalid_primary_and_backup"],
+    "next_slice": "p12_alpha_scenario_matrix"
+  },
+  "p12_alpha_scenario_matrix": {
+    "status": "implemented",
+    "scenarios": 8,
+    "commanders": 2,
+    "seeds_per_pair": 3,
+    "simulation_executions": 96,
+    "contract": "deterministic_three_wave_non_collapse_baselines_with_closed_terminal_recovery_and_event_state",
+    "evidence": ["design/p12_alpha_scenario_matrix.md", "tests/test_p12_alpha_scenario_matrix.gd"]
   },
   "campaign": {
     "title": "The Bell at Dusk",

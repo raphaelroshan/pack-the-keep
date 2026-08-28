@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.12.6-alpha-persistence-recovery` — machine-audited P12 candidate evidence pending human approval
+**Current build identity:** `0.12.7-alpha-scenario-matrix` — machine-audited P12 candidate evidence pending human approval
 
 ## Purpose
 
@@ -57,6 +57,10 @@ The repository now carries a versioned checklist for all eleven P12 hardening re
 ## v0.12.6 Persistence recovery
 
 Presentation settings now use the same validated primary/backup candidate discipline as run saves. A malformed or missing primary can recover the last valid backup, a valid primary outranks a stranded temporary file, and a temporary file alone restores documented defaults rather than being promoted.
+
+## v0.12.7 Alpha scenario matrix
+
+Local headless verification now runs a documented viable baseline for every combination of eight authored scenarios, both commanders, and three seeds. Each of the 48 cases runs twice, producing 96 simulations that must serialize identically, resolve all three waves without collapse, close final recovery and event state, and retain the canonical replay key. This is deterministic viability evidence only; human playtest and presentation approval remain pending.
 
 ## v0.8.2 testability additions
 
