@@ -1,5 +1,7 @@
 extends Control
 
+const AuthoredEventPanelView = preload("res://src/ui/authored_event_panel.gd")
+
 const PackKeepState = preload("res://src/core/keep_state.gd")
 const PackagedSmoke = preload("res://src/platform/packaged_smoke.gd")
 const GREYWATCH_BACKGROUND = preload("res://assets/greywatch_background.png")
@@ -84,6 +86,7 @@ var page_scroll: ScrollContainer
 var command_scroll: ScrollContainer
 var command_panel: PanelContainer
 var title_card: PanelContainer
+var build_identity_label: Label
 var screen_label: Label
 var screen_hint: Label
 var art_banner: TextureRect
@@ -168,7 +171,8 @@ func _ready() -> void:
 		_load_preferences()
 	else:
 		_apply_ui_scale()
-	_setup_audio()
+	if DisplayServer.get_name() != "headless":
+		_setup_audio()
 	_build_ui()
 	_set_screen("title")
 	if OS.get_cmdline_user_args().has("--packaged-smoke") and OS.get_environment("PACK_THE_KEEP_PACKAGED_SMOKE") == "1":
@@ -628,29 +632,15 @@ func _load_preferences() -> void:
 	event_feed_retention_index = 0
 	auto_pause_on_threat = false
 	_restore_default_input_bindings()
-	if not FileAccess.file_exists(settings_path):
+	var selected: Dictionary = _load_preferences_candidate(settings_path)
+	if not bool(selected.get("ok", false)):
+		selected = _load_preferences_candidate(settings_backup_path)
+	if not bool(selected.get("ok", false)):
 		_apply_ui_scale()
 		_apply_display_settings()
 		return
-	var parser: JSON = JSON.new()
-	if parser.parse(FileAccess.get_file_as_string(settings_path)) != OK:
-		_apply_ui_scale()
-		return
-	var payload: Variant = parser.data
-	if not payload is Dictionary:
-		_apply_ui_scale()
-		_apply_display_settings()
-		return
-	var schema_value: Variant = payload.get("schema_version")
-	if not (schema_value is int or schema_value is float) or float(schema_value) != floor(float(schema_value)):
-		_apply_ui_scale()
-		_apply_display_settings()
-		return
-	var schema_version: int = int(schema_value)
-	if schema_version < 1 or schema_version > SETTINGS_SCHEMA_VERSION:
-		_apply_ui_scale()
-		_apply_display_settings()
-		return
+	var payload: Dictionary = selected.payload
+	var schema_version: int = int(selected.schema_version)
 	var saved_speed: Variant = payload.get("battle_speed_index")
 	if (saved_speed is int or saved_speed is float) and float(saved_speed) == floor(float(saved_speed)) and int(saved_speed) >= 0 and int(saved_speed) <= 2:
 		battle_speed_index = int(saved_speed)
@@ -682,6 +672,21 @@ func _load_preferences() -> void:
 			auto_pause_on_threat = bool(payload.auto_pause_on_threat)
 	_apply_ui_scale()
 	_apply_display_settings()
+
+func _load_preferences_candidate(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {"ok": false, "reason": "is missing"}
+	var parser: JSON = JSON.new()
+	if parser.parse(FileAccess.get_file_as_string(path)) != OK or not parser.data is Dictionary:
+		return {"ok": false, "reason": "is not valid JSON settings"}
+	var payload: Dictionary = parser.data
+	var schema_value: Variant = payload.get("schema_version")
+	if not (schema_value is int or schema_value is float) or float(schema_value) != floor(float(schema_value)):
+		return {"ok": false, "reason": "has an invalid schema version"}
+	var schema_version: int = int(schema_value)
+	if schema_version < 1 or schema_version > SETTINGS_SCHEMA_VERSION:
+		return {"ok": false, "reason": "uses an unsupported schema version"}
+	return {"ok": true, "payload": payload, "schema_version": schema_version}
 
 func _save_preferences() -> bool:
 	if not preferences_persistence_enabled:
@@ -792,7 +797,7 @@ func _build_ui() -> void:
 	left.add_child(title)
 
 	var subtitle: Label = Label.new()
-	subtitle.text = "The Castellan’s first defense: connect the floors, read the doctrine, hold what matters."
+	subtitle.text = "Greywatch’s defense: connect the floors, read the doctrine, hold what matters."
 	subtitle.add_theme_color_override("font_color", Color("#c0b2c8"))
 	left.add_child(subtitle)
 
@@ -935,34 +940,20 @@ func _build_ui() -> void:
 	for scenario_id in keep.scenario_ids():
 		scenario_option.add_item(String(keep.scenario_definition(scenario_id).get("name", scenario_id)))
 		scenario_option.set_item_metadata(scenario_option.item_count - 1, scenario_id)
-	controls.add_child(_labeled_control("Greywatch scenario", scenario_option))
+	controls.add_child(_labeled_control("Defensive scenario", scenario_option))
 	scenario_preview_label = Label.new()
 	scenario_preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	scenario_preview_label.custom_minimum_size = Vector2(292, 82)
 	scenario_preview_label.add_theme_color_override("font_color", Color("#d8c389"))
 	controls.add_child(scenario_preview_label)
-	authored_event_panel = VBoxContainer.new()
-	authored_event_panel.add_theme_constant_override("separation", 4)
+	authored_event_panel = AuthoredEventPanelView.new()
+	authored_event_panel.build(2)
+	authored_event_panel.choice_requested.connect(_on_authored_event_choice_id)
 	controls.add_child(authored_event_panel)
-	authored_event_title = Label.new()
-	authored_event_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	authored_event_title.add_theme_font_size_override("font_size", 16)
-	authored_event_title.add_theme_color_override("font_color", Color("#e2bd84"))
-	authored_event_panel.add_child(authored_event_title)
-	authored_event_setup = Label.new()
-	authored_event_setup.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	authored_event_setup.add_theme_color_override("font_color", Color("#c9bfd0"))
-	authored_event_panel.add_child(authored_event_setup)
-	for choice_index in range(2):
-		var choice_detail: Label = Label.new()
-		choice_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		choice_detail.add_theme_color_override("font_color", Color("#aab1b2"))
-		authored_event_panel.add_child(choice_detail)
-		authored_event_choice_details.append(choice_detail)
-		var choice_button: Button = Button.new()
-		choice_button.pressed.connect(_on_authored_event_choice.bind(choice_index))
-		authored_event_panel.add_child(choice_button)
-		authored_event_choice_buttons.append(choice_button)
+	authored_event_title = authored_event_panel.title_label
+	authored_event_setup = authored_event_panel.setup_label
+	authored_event_choice_details = authored_event_panel.choice_details
+	authored_event_choice_buttons = authored_event_panel.choice_buttons
 	campaign_ledger_panel = VBoxContainer.new()
 	campaign_ledger_panel.add_theme_constant_override("separation", 4)
 	controls.add_child(campaign_ledger_panel)
@@ -1038,9 +1029,7 @@ func _build_ui() -> void:
 	controls.add_child(_labeled_control("Floor", floor_option))
 	room_option = OptionButton.new()
 	room_option.item_selected.connect(func(_index: int) -> void: _refresh_recovery_action_cards())
-	for room_id in PackKeepState.ROOMS.keys():
-		room_option.add_item(String(PackKeepState.ROOMS[room_id].get("name", room_id)))
-		room_option.set_item_metadata(room_option.item_count - 1, room_id)
+	_refresh_room_options()
 	controls.add_child(_labeled_control("Room", room_option))
 	var map_place_button: Button = Button.new()
 	map_place_button.text = "Arm selected piece for map"
@@ -1271,6 +1260,12 @@ func _build_title_card() -> PanelContainer:
 	copy.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	copy.add_theme_color_override("font_color", Color("#c0b2c8"))
 	content.add_child(copy)
+	build_identity_label = Label.new()
+	build_identity_label.name = "BuildIdentityLabel"
+	build_identity_label.text = "PRE-ALPHA • BUILD %s • HUMAN EVIDENCE PENDING" % String(ProjectSettings.get_setting("application/config/version", "unknown"))
+	build_identity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	build_identity_label.add_theme_color_override("font_color", Color("#aab1b2"))
+	content.add_child(build_identity_label)
 	quick_test_button = Button.new()
 	quick_test_button.text = "Start Game — Quick Playtest"
 	quick_test_button.tooltip_text = "Open a deterministic preset Greywatch state with Pike Squad and Narrow Gate already placed."
@@ -1426,6 +1421,7 @@ func _on_select_commander() -> void:
 func _on_select_scenario() -> void:
 	var result: Dictionary = keep.select_scenario(_selected_id(scenario_option))
 	_run_result(result, "Scenario")
+	_refresh_room_options()
 	_refresh_scenario_preview()
 	if bool(result.get("ok", false)):
 		var preview: Dictionary = keep.scenario_preview()
@@ -1442,37 +1438,35 @@ func _refresh_scenario_preview() -> void:
 	if not bool(preview.get("ok", false)):
 		scenario_preview_label.text = "SCENARIO — %s" % String(preview.get("reason", "unavailable"))
 		return
-	scenario_preview_label.text = "SCENARIO — %s\nObjective: %s\nLesson: %s\nWaves: %d | Seed variation: %s" % [String(preview.get("name", "")), String(preview.get("objective", "")), String(preview.get("lesson", "")), int(preview.get("wave_count", 0)), String(preview.get("variation_id", "standard"))]
+	var pack_names: Array[String] = []
+	for pack_id in preview.get("recommended_packs", []):
+		pack_names.append(String(keep.pack_definition(String(pack_id)).get("name", pack_id)))
+	scenario_preview_label.text = "SCENARIO — %s / %s\nObjective: %s\nLesson: %s\nRecommended doctrine: %s\nWaves: %d | Seed variation: %s" % [String(preview.get("keep_name", "Keep")), String(preview.get("name", "")), String(preview.get("objective", "")), String(preview.get("lesson", "")), " + ".join(pack_names), int(preview.get("wave_count", 0)), String(preview.get("variation_id", "standard"))]
+
+func _refresh_room_options() -> void:
+	if room_option == null:
+		return
+	var selected_room_id: String = _selected_id(room_option)
+	room_option.clear()
+	for room_id in keep.room_definitions().keys():
+		var definition: Dictionary = keep.room_definition(String(room_id))
+		room_option.add_item(String(definition.get("name", room_id)))
+		room_option.set_item_metadata(room_option.item_count - 1, String(room_id))
+	if not selected_room_id.is_empty():
+		_select_option_metadata(room_option, selected_room_id)
 
 func _refresh_authored_event() -> void:
 	if authored_event_panel == null:
 		return
-	var event: Dictionary = keep.current_event()
-	authored_event_panel.visible = bool(event.get("ok", false))
-	if not authored_event_panel.visible:
-		return
-	authored_event_title.text = "AUTHORED EVENT — %s | %s" % [String(event.get("title", "")), String(event.get("phase", "")).to_upper()]
-	authored_event_setup.text = String(event.get("setup", ""))
-	var choices: Array = event.get("choices", [])
-	for index in range(authored_event_choice_buttons.size()):
-		var button: Button = authored_event_choice_buttons[index]
-		var detail: Label = authored_event_choice_details[index]
-		var has_choice: bool = index < choices.size()
-		button.visible = has_choice
-		detail.visible = has_choice
-		if not has_choice:
-			continue
-		var choice: Dictionary = choices[index]
-		button.text = String(choice.get("label", "Choose"))
-		button.disabled = not bool(choice.get("available", false))
-		button.set_meta("choice_id", String(choice.get("id", "")))
-		var reason: String = String(choice.get("reason", ""))
-		detail.text = "%s%s" % [String(choice.get("visible_result", "")), "\nBLOCKED — %s" % reason.replace("_", " ") if not reason.is_empty() else ""]
+	authored_event_panel.render(keep.current_event())
 
 func _on_authored_event_choice(index: int) -> void:
 	if index < 0 or index >= authored_event_choice_buttons.size():
 		return
 	var choice_id: String = String(authored_event_choice_buttons[index].get_meta("choice_id", ""))
+	_on_authored_event_choice_id(choice_id)
+
+func _on_authored_event_choice_id(choice_id: String) -> void:
 	_run_result(keep.choose_event_option(choice_id), "Event")
 
 func _refresh_campaign_ledger() -> void:
@@ -1480,15 +1474,17 @@ func _refresh_campaign_ledger() -> void:
 		return
 	var modifier_id: String = _selected_id(campaign_modifier_option)
 	var equipped: bool = keep.equipped_modifier_id == modifier_id
+	var ledger_text: String = ""
 	if modifier_id.is_empty():
 		var current_name: String = "None" if keep.equipped_modifier_id.is_empty() else String(keep.modifier_definition(keep.equipped_modifier_id).get("name", keep.equipped_modifier_id))
-		campaign_ledger_label.text = "CAMPAIGN LEDGER — EQUIPPED: %s\nSelected: No modifier\nRun the authored baseline without an information trade-off or challenge rule." % current_name
+		ledger_text = "CAMPAIGN LEDGER — EQUIPPED: %s\nSelected: No modifier\nRun the authored baseline without an information trade-off or challenge rule." % current_name
 	else:
 		var definition: Dictionary = keep.modifier_definition(modifier_id)
 		var unlocked: bool = keep.unlocked_modifier_ids.has(modifier_id)
 		var status: String = "EQUIPPED" if equipped else "UNLOCKED" if unlocked else "LOCKED"
 		var effect_text: String = _modifier_effect_text(definition)
-		campaign_ledger_label.text = "CAMPAIGN LEDGER — %s\n%s\n%s\nQuestion: %s\nLimitation: %s" % [status, String(definition.get("name", modifier_id)), effect_text, String(definition.get("question", "")), String(definition.get("limitation", ""))]
+		ledger_text = "CAMPAIGN LEDGER — %s\n%s\n%s\nQuestion: %s\nLimitation: %s" % [status, String(definition.get("name", modifier_id)), effect_text, String(definition.get("question", "")), String(definition.get("limitation", ""))]
+	campaign_ledger_label.text = "%s%s%s" % [ledger_text, _event_ledger_text(), _regional_report_text()]
 	var target_id: String = "" if equipped else modifier_id
 	var preview: Dictionary = keep.modifier_equip_preview(target_id)
 	if modifier_id.is_empty():
@@ -1506,6 +1502,43 @@ func _modifier_effect_text(definition: Dictionary) -> String:
 	if effect == "enemy_health_bonus":
 		return "Challenge: every enemy begins each wave with +%d health. Starting morale is unchanged." % int(definition.get("enemy_health_bonus", 0))
 	return String(definition.get("short_role", "Unknown modifier effect."))
+
+func _event_ledger_text() -> String:
+	var snapshot: Dictionary = keep.event_ledger_snapshot(5)
+	var entries: Array = snapshot.get("entries", [])
+	var flags: Array = snapshot.get("flags", [])
+	if entries.is_empty() and flags.is_empty():
+		return "\nRECENT EVENTS — None resolved in this run."
+	var rows: Array[String] = []
+	if not entries.is_empty():
+		var history_heading: String = "RECENT EVENTS — newest %d of %d" % [entries.size(), int(snapshot.get("total", entries.size()))] if bool(snapshot.get("truncated", false)) else "RECENT EVENTS — newest first"
+		rows.append(history_heading)
+		for entry in entries:
+			rows.append("W%d %s → %s" % [int(entry.get("wave", 0)), _event_ledger_name(entry), String(entry.get("visible_result", ""))])
+	if not flags.is_empty():
+		rows.append("RUN FLAGS")
+		for flag in flags:
+			rows.append("%s: %s" % [String(flag.get("id", "flag")).replace("_", " ").capitalize(), "yes" if bool(flag.get("value", false)) else "no"])
+	return "\n%s" % "\n".join(rows)
+
+func _event_ledger_name(entry: Dictionary) -> String:
+	var stable_name: String = String(entry.get("event_id", "event")).replace("_", " ").capitalize()
+	var authored_title: String = String(entry.get("title", stable_name))
+	return stable_name if authored_title == stable_name else "%s — %s" % [stable_name, authored_title]
+
+func _regional_report_text(current_run_only: bool = false) -> String:
+	var consequence: Dictionary = keep.current_regional_consequence() if current_run_only else keep.regional_consequence()
+	if current_run_only and consequence.is_empty():
+		return "\nREGIONAL REPORT — resolves when this defense reaches a terminal state."
+	if consequence.is_empty() or String(consequence.get("consequence_id", "")).is_empty():
+		return "\nREGIONAL REPORT — Low Mill is waiting for a proven route."
+	var support_materials: int = int(consequence.get("next_run_materials", 0))
+	var support_status: String = "No material support follows this route state."
+	if support_materials > 0 and bool(consequence.get("pending_support", false)):
+		support_status = "Next scenario: +%d starting materials pending." % support_materials
+	elif support_materials > 0:
+		support_status = "Support applied to %s: +%d starting materials." % [String(consequence.get("applied_to_scenario_id", "the next defense")).replace("_", " ").capitalize(), support_materials]
+	return "\nREGIONAL REPORT — %s [%s]\n%s: %s\n%s\n%s" % [String(consequence.get("settlement_name", "Low Mill")), String(consequence.get("settlement_status", "unknown")).to_upper(), String(consequence.get("route_name", "Miller's Road")), String(consequence.get("route_status", "unknown")).to_upper(), String(consequence.get("summary", "")), support_status]
 
 func _on_toggle_campaign_modifier() -> void:
 	var selected_modifier_id: String = _selected_id(campaign_modifier_option)
@@ -1730,7 +1763,9 @@ func _refresh_layout_lens() -> void:
 		warnings.append(String(warning))
 	var castellan_marker: String = "CURRENT" if keep.commander_id == "castellan" else "COMPARE"
 	var warden_marker: String = "CURRENT" if keep.commander_id == "warden" else "COMPARE"
-	layout_lens_label.text = "LAYOUT SUMMARY — Ground %d | Upper %d | Wall %d | Courtyard %d | Keep %d\nCoverage — room edge %d | open lane %d | support %d | assigned %d\nCASTELLAN [%s] — %s Risk: %s\nWARDEN [%s] — %s Risk: %s\nWARNINGS — %s" % [int(counts.get("ground", 0)), int(counts.get("upper", 0)), int(counts.get("wall", 0)), int(counts.get("courtyard", 0)), int(counts.get("keep", 0)), int(summary.get("room_edge_count", 0)), int(summary.get("open_lane_count", 0)), int(summary.get("support_piece_count", 0)), int(summary.get("assigned_specialist_count", 0)), castellan_marker, String(castellan.get("summary", "")), String(castellan.get("risk", "")), warden_marker, String(warden.get("summary", "")), String(warden.get("risk", "")), " | ".join(warnings)]
+	var spatial_rule: Dictionary = summary.get("spatial_rule", {})
+	var spatial_state: String = "ACTIVE" if bool(spatial_rule.get("active", false)) else "INACTIVE" if String(spatial_rule.get("id", "")) == "clear_causeway" else "BASELINE"
+	layout_lens_label.text = "LAYOUT SUMMARY — %s | Ground %d | Upper %d | Wall %d | Courtyard %d | Keep %d\nSpatial rule [%s] — %s\nCoverage — room edge %d | open lane %d | support %d | assigned %d\nCASTELLAN [%s] — %s Risk: %s\nWARDEN [%s] — %s Risk: %s\nWARNINGS — %s" % [String(summary.get("keep_name", keep.keep_id)), int(counts.get("ground", 0)), int(counts.get("upper", 0)), int(counts.get("wall", 0)), int(counts.get("courtyard", 0)), int(counts.get("keep", 0)), spatial_state, String(spatial_rule.get("label", "No special spatial rule.")), int(summary.get("room_edge_count", 0)), int(summary.get("open_lane_count", 0)), int(summary.get("support_piece_count", 0)), int(summary.get("assigned_specialist_count", 0)), castellan_marker, String(castellan.get("summary", "")), String(castellan.get("risk", "")), warden_marker, String(warden.get("summary", "")), String(warden.get("risk", "")), " | ".join(warnings)]
 
 func _refresh_recovery_priorities() -> void:
 	if recovery_priority_label == null:
@@ -1743,7 +1778,8 @@ func _refresh_recovery_priorities() -> void:
 		var id: String = String(room_id)
 		var state: String = keep.room_state(id)
 		var condition: int = keep.room_condition(id)
-		var critical: bool = bool(PackKeepState.ROOMS[id].get("critical", false))
+		var room_definition: Dictionary = keep.room_definition(id)
+		var critical: bool = bool(room_definition.get("critical", false))
 		var score: int = 0
 		if state == "breached":
 			score = 400 if critical else 300
@@ -1752,7 +1788,7 @@ func _refresh_recovery_priorities() -> void:
 		elif state == "strained":
 			score = 50
 		score += 100 - condition
-		priorities.append({"id": id, "name": String(PackKeepState.ROOMS[id].get("name", id)), "state": state.to_upper(), "condition": condition, "score": score})
+		priorities.append({"id": id, "name": String(room_definition.get("name", id)), "state": state.to_upper(), "condition": condition, "score": score})
 	for outer in range(priorities.size()):
 		for inner in range(outer + 1, priorities.size()):
 			var left: Dictionary = priorities[outer]
@@ -2083,13 +2119,16 @@ func _refresh_result_explanation() -> void:
 	for wave in report.get("wave_rows", []):
 		score_rows.append("W%d — %s — %s\nPressure: %s | Defeated %d | Room %d | Piece %d | recovery actions %d" % [int(wave.get("wave", score_rows.size() + 1)), String(wave.get("doctrine", "")).replace("_", " ").capitalize(), String(wave.get("outcome", "")).replace("_", " ").to_upper(), String(wave.get("principal_pressure", "Unknown pressure")), int(wave.get("defeated_enemies", 0)), int(wave.get("room_damage", 0)), int(wave.get("piece_damage", 0)), int(wave.get("recovery_actions_used", 0))])
 	var report_heading: String = "SCENARIO REPORT" if String(report.get("status", "in_progress")) == "complete" else "RUN SO FAR"
+	var event_snapshot: Dictionary = keep.event_ledger_snapshot(5)
 	var event_rows: Array[String] = []
-	for event_entry in report.get("event_history", []):
-		event_rows.append("%s → %s" % [String(event_entry.get("event_id", "event")).replace("_", " ").capitalize(), String(event_entry.get("visible_result", ""))])
-	var event_report: String = "\nEVENT CONSEQUENCES\n%s" % "\n".join(event_rows) if not event_rows.is_empty() else ""
-	scorecard_label.text = "%s — %s | %s\n%s%s\nREPLAY KEY — %s" % [report_heading, String(report.get("scenario_name", keep.scenario_id)), String(report.get("commander_name", keep.commander_id)), "\n".join(score_rows) if not score_rows.is_empty() else "No resolved waves yet.", event_report, String(report.get("replay_key", ""))]
+	for event_entry in event_snapshot.get("entries", []):
+		event_rows.append("W%d %s → %s" % [int(event_entry.get("wave", 0)), _event_ledger_name(event_entry), String(event_entry.get("visible_result", ""))])
+	var event_heading: String = "EVENT CONSEQUENCES — newest %d of %d" % [event_rows.size(), int(event_snapshot.get("total", event_rows.size()))] if bool(event_snapshot.get("truncated", false)) else "EVENT CONSEQUENCES — newest first"
+	var event_report: String = "\n%s\n%s" % [event_heading, "\n".join(event_rows)] if not event_rows.is_empty() else ""
+	scorecard_label.text = "%s — %s | %s\n%s%s%s\nREPLAY KEY — %s" % [report_heading, String(report.get("scenario_name", keep.scenario_id)), String(report.get("commander_name", keep.commander_id)), "\n".join(score_rows) if not score_rows.is_empty() else "No resolved waves yet.", event_report, _regional_report_text(true), String(report.get("replay_key", ""))]
 
 func _refresh_ui() -> void:
+	_refresh_room_options()
 	_refresh_pack_preview()
 	_refresh_scenario_preview()
 	_refresh_authored_event()
@@ -2097,7 +2136,7 @@ func _refresh_ui() -> void:
 	var interval_text: String = "closed"
 	if keep.repair_interval_active:
 		interval_text = "%d action(s): %s" % [keep.repair_actions_remaining, keep.repair_interval_reason]
-	status_label.text = "%s | %s | Materials %d | Command %d | Morale %d | Pieces %d | Wave %d | Step %d | Breach %d | %s | Repair %s" % [keep.summary().get("commander", "Commander"), String(keep.scenario_preview().get("name", "Free drill")), keep.materials, keep.command_points, keep.morale, keep.pieces.size(), keep.wave_index, keep.battle_step, keep.breach_level, "PAUSED" if battle_paused else "RUNNING %.1fx" % _battle_speed(), interval_text]
+	status_label.text = "%s | %s / %s | Materials %d | Command %d | Morale %d | Pieces %d | Wave %d | Step %d | Breach %d | %s | Repair %s" % [keep.summary().get("commander", "Commander"), String(keep.keep_definition().get("name", keep.keep_id)), String(keep.scenario_preview().get("name", "Free drill")), keep.materials, keep.command_points, keep.morale, keep.pieces.size(), keep.wave_index, keep.battle_step, keep.breach_level, "PAUSED" if battle_paused else "RUNNING %.1fx" % _battle_speed(), interval_text]
 	var commander: Dictionary = keep.commander_definition(keep.commander_id)
 	commander_profile_label.text = "%s\nPassive: %s\nAbility: %s — %s\nLimitation: %s" % [String(commander.get("name", keep.commander_id)), String(commander.get("passive", "")), String(commander.get("ability_name", "")), String(commander.get("ability_text", "")), String(commander.get("limitation", ""))]
 	commander_portrait.modulate = Color("#9fb9c3") if keep.commander_id == "warden" else Color.WHITE
@@ -2325,11 +2364,11 @@ class KeepCanvas extends Control:
 				emit_signal("map_clicked", String(hit.get("floor", "")), hit.get("cell", Vector2i.ZERO))
 
 	func _room_rect(room_id: String, origin: Vector2) -> Rect2:
-		var room: Dictionary = PackKeepState.ROOMS[room_id]
+		var room: Dictionary = keep.room_definition(room_id)
 		return Rect2(origin + Vector2(room.origin.x * CELL_X, room.origin.y * CELL_Y), Vector2(room.size.x * CELL_X, room.size.y * CELL_Y))
 
 	func _placement_box_rect(room_id: String, origin: Vector2) -> Rect2:
-		var room: Dictionary = PackKeepState.ROOMS[room_id]
+		var room: Dictionary = keep.room_definition(room_id)
 		var box_width: int = mini(2, int(room.size.x))
 		var box_height: int = mini(1, int(room.size.y))
 		var box_origin: Vector2i = room.origin
@@ -2352,8 +2391,8 @@ class KeepCanvas extends Control:
 		return false
 
 	func _draw_placement_boxes(floor_name: String, origin: Vector2, outline_only: bool = false) -> void:
-		for room_id in PackKeepState.ROOMS.keys():
-			var room: Dictionary = PackKeepState.ROOMS[room_id]
+		for room_id in keep.room_definitions().keys():
+			var room: Dictionary = keep.room_definition(String(room_id))
 			if String(room.get("floor", "ground")) != floor_name:
 				continue
 			var box: Rect2 = _placement_box_rect(String(room_id), origin)
@@ -2384,6 +2423,11 @@ class KeepCanvas extends Control:
 		return Color("#3d4b55")
 
 	func _draw_fort_backdrop(origin: Vector2) -> void:
+		var keep_definition: Dictionary = keep.keep_definition()
+		var visual: Dictionary = keep_definition.get("visual", {})
+		if String(visual.get("terrain", "fort")) == "river":
+			_draw_river_backdrop(origin, visual)
+			return
 		var outer: Rect2 = Rect2(origin + Vector2(CELL_X, CELL_Y), MAP_SIZE - Vector2(CELL_X * 2.0, CELL_Y * 2.0))
 		var courtyard: Rect2 = Rect2(origin + Vector2(CELL_X * 3.0, CELL_Y * 2.0), Vector2(CELL_X * 6.0, CELL_Y * 4.0))
 		draw_rect(outer, Color("#514451"), true)
@@ -2408,12 +2452,31 @@ class KeepCanvas extends Control:
 			draw_rect(Rect2(tower_position, tower_size), Color("#665562"), true)
 			draw_rect(Rect2(tower_position, tower_size), Color("#edbd79"), false, 2.0)
 			draw_circle(tower_position + tower_size * 0.5, 4.0, Color("#f3bf6b"))
-		draw_string(ThemeDB.fallback_font, courtyard.position + Vector2(8, courtyard.size.y - 8), "KEEP ROOMS / DEFENSE BOARD", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#a68f9e"))
+		draw_string(ThemeDB.fallback_font, courtyard.position + Vector2(8, courtyard.size.y - 8), String(visual.get("board_label", "KEEP ROOMS / DEFENSE BOARD")), HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#a68f9e"))
 		var gate: Rect2 = Rect2(origin + Vector2(CELL_X * 5.0, MAP_SIZE.y - CELL_Y + 4.0), Vector2(CELL_X * 2.0, CELL_Y - 8.0))
 		draw_rect(gate, Color("#211b27"), true)
 		draw_line(gate.position + Vector2(0, 5), gate.position + Vector2(gate.size.x, 5), Color("#e89270"), 3.0)
 		draw_string(ThemeDB.fallback_font, origin + Vector2(MAP_SIZE.x * 0.5 - 22, MAP_SIZE.y - 8), "OPEN GATE", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#ffd19d"))
 		draw_string(ThemeDB.fallback_font, courtyard.position + Vector2(12, courtyard.size.y * 0.5), "OPEN COURTYARD", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#8bd1b4"))
+
+	func _draw_river_backdrop(origin: Vector2, visual: Dictionary) -> void:
+		draw_rect(Rect2(origin, MAP_SIZE), Color("#263745"), true)
+		for y in range(PackKeepState.GRID_SIZE.y):
+			var wave_y: float = origin.y + float(y) * CELL_Y + CELL_Y * 0.5
+			draw_line(origin + Vector2(0, wave_y - origin.y), origin + Vector2(MAP_SIZE.x, wave_y - origin.y), Color(0.36, 0.63, 0.69, 0.18), 1.0)
+		draw_string(ThemeDB.fallback_font, origin + Vector2(8, 16), String(visual.get("board_label", "ASH FORD / CROSSING DEFENSE")), HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#bcdbe0"))
+
+	func _draw_spatial_overlay(floor_name: String, origin: Vector2) -> void:
+		if floor_name != "ground":
+			return
+		var rule: Dictionary = keep.spatial_rule_state()
+		if String(rule.get("id", "")) != "clear_causeway":
+			return
+		for lane_cell in rule.get("lane_cells", []):
+			var lane_rect: Rect2 = Rect2(origin + Vector2(lane_cell.x * CELL_X, lane_cell.y * CELL_Y), Vector2(CELL_X, CELL_Y)).grow(-2)
+			draw_rect(lane_rect, Color(0.71, 0.49, 0.25, 0.38) if bool(rule.get("active", false)) else Color(0.61, 0.25, 0.28, 0.46), true)
+			draw_rect(lane_rect, Color("#e6c98b"), false, 1.0)
+		draw_string(ThemeDB.fallback_font, origin + Vector2(58, 108), "CLEAR CAUSEWAY" if bool(rule.get("active", false)) else "CAUSEWAY BLOCKED", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#f3d39c"))
 
 	func _draw_floor(label_text: String, floor_name: String, origin: Vector2) -> void:
 		draw_string(ThemeDB.fallback_font, origin + Vector2(0, -10), label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#e2bd84"))
@@ -2428,8 +2491,16 @@ class KeepCanvas extends Control:
 			draw_line(origin + Vector2(x * CELL_X, 0), origin + Vector2(x * CELL_X, MAP_SIZE.y), Color(0.4, 0.32, 0.42, 0.35), 1.0)
 		for y in range(PackKeepState.GRID_SIZE.y + 1):
 			draw_line(origin + Vector2(0, y * CELL_Y), origin + Vector2(MAP_SIZE.x, y * CELL_Y), Color(0.4, 0.32, 0.42, 0.35), 1.0)
-		for room_id in PackKeepState.ROOMS.keys():
-			var room: Dictionary = PackKeepState.ROOMS[room_id]
+		for connection in keep.keep_definition().get("connections", []):
+			var first_room: Dictionary = keep.room_definition(String(connection[0]))
+			var second_room: Dictionary = keep.room_definition(String(connection[1]))
+			if String(first_room.get("floor", "ground")) != floor_name or String(second_room.get("floor", "ground")) != floor_name:
+				continue
+			var first_center: Vector2 = _room_rect(String(connection[0]), origin).get_center()
+			var second_center: Vector2 = _room_rect(String(connection[1]), origin).get_center()
+			draw_line(first_center, second_center, Color(0.9, 0.77, 0.52, 0.48), 3.0)
+		for room_id in keep.room_definitions().keys():
+			var room: Dictionary = keep.room_definition(String(room_id))
 			if String(room.get("floor", "ground")) != floor_name:
 				continue
 			var rect: Rect2 = _room_rect(String(room_id), origin)
@@ -2440,6 +2511,7 @@ class KeepCanvas extends Control:
 			var state_text: String = keep.room_state(String(room_id)).to_upper()
 			draw_rect(Rect2(rect.position + Vector2(2, rect.size.y - 12), Vector2(maxf(4.0, (rect.size.x - 4.0) * float(condition) / 100.0), 4)), Color("#bfe8cf") if condition >= 70 else Color("#d7a35b") if condition >= 35 else Color("#d26155"), true)
 			draw_string(ThemeDB.fallback_font, rect.position + Vector2(2, rect.size.y - 3), "%s %d%%" % [state_text, condition], HORIZONTAL_ALIGNMENT_LEFT, rect.size.x - 4, 8, Color("#fff4df"))
+		_draw_spatial_overlay(floor_name, origin)
 		_draw_placement_boxes(floor_name, origin)
 		for instance in keep.pieces.values():
 			if String(instance.get("floor", "ground")) != floor_name:
@@ -2580,8 +2652,8 @@ class KeepCanvas extends Control:
 				draw_line(enemy_origin + Vector2(2, -8), enemy_origin + Vector2(8, -2), Color("#f1dfb8"), 3.0)
 				draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(-18, -18), "BREAK", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#fff4df"))
 			var target_id: String = String(enemy.get("target", ""))
-			if not target_id.is_empty() and PackKeepState.ROOMS.has(target_id):
-				var target_room: Dictionary = PackKeepState.ROOMS[target_id]
+			if not target_id.is_empty() and keep.room_definitions().has(target_id):
+				var target_room: Dictionary = keep.room_definition(target_id)
 				var target_origin: Vector2 = UPPER_ORIGIN if String(target_room.get("floor", "ground")) == "upper" else MAP_ORIGIN
 				var target_rect: Rect2 = _room_rect(target_id, target_origin)
 				draw_line(enemy_origin, target_rect.get_center(), Color("#fff4df") if index == focused_enemy_index else Color(0.95, 0.38, 0.28, 0.7), 2.5 if index == focused_enemy_index else 1.5)
@@ -2594,8 +2666,9 @@ class KeepCanvas extends Control:
 	func _draw() -> void:
 		if keep == null:
 			return
-		_draw_floor("GROUND FLOOR — Gate, Yard, Workshop, Supply", "ground", MAP_ORIGIN)
-		_draw_floor("UPPER FLOOR — Outer Wall, North Tower, Chapel", "upper", UPPER_ORIGIN)
+		var visual: Dictionary = keep.keep_definition().get("visual", {})
+		_draw_floor(String(visual.get("ground_label", "GROUND FLOOR")), "ground", MAP_ORIGIN)
+		_draw_floor(String(visual.get("upper_label", "UPPER FLOOR")), "upper", UPPER_ORIGIN)
 		if preview_active and not keep.piece_definition(preview_piece_id).is_empty():
 			var preview_size: Vector2i = keep.piece_definition(preview_piece_id).size
 			var preview_origin_pixel: Vector2 = MAP_ORIGIN if preview_floor == "ground" else UPPER_ORIGIN

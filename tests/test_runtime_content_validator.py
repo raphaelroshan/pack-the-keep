@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Negative-path regression tests for the P6 runtime content validator."""
+"""Negative-path regression tests for the runtime content validator."""
 from __future__ import annotations
 
 import copy
@@ -20,6 +20,40 @@ def load(relative_path: str) -> dict:
 
 
 class RuntimeContentValidatorTests(unittest.TestCase):
+    def test_keep_rejects_overlaps_and_unbounded_profiles(self) -> None:
+        keep = copy.deepcopy(load("data/keeps/ash_ford_redoubt.json"))
+        keep["rooms"]["gate"]["origin"] = [3, 3]
+        keep["spatial_rule"]["room_damage_reduction"] = 9
+        keep["recovery_profile"]["room_repair_condition"] = 0
+        errors: list[str] = []
+        validator.validate_keep(Path("ash_ford_redoubt.json"), keep, set(), errors)
+        joined = "\n".join(errors)
+        self.assertIn("overlap", joined)
+        self.assertIn("room_damage_reduction", joined)
+        self.assertIn("room_repair_condition", joined)
+
+    def test_region_rejects_unknown_route_anchors_and_unbounded_support(self) -> None:
+        region = copy.deepcopy(load("data/regions/low_mill.json"))
+        region["route"]["anchor_rooms"] = ["gate", "missing_room"]
+        region["consequences"][0]["next_run_materials"] = 99
+        region["consequences"][1]["minimum_anchor_condition"] = 80
+        errors: list[str] = []
+        validator.validate_region(Path("low_mill.json"), region, {"gate", "supply_room"}, set(), errors)
+        joined = "\n".join(errors)
+        self.assertIn("anchor_rooms", joined)
+        self.assertIn("next_run_materials", joined)
+        self.assertIn("descending anchor thresholds", joined)
+
+    def test_event_schema_contract_rejects_validator_drift(self) -> None:
+        schema = load("content/event_schema.json")
+        schema["selection"]["repeat_policies"].append("forever")
+        schema["effects"]["set_flag"] = ["prose"]
+        errors: list[str] = []
+        validator.validate_event_schema_contract(Path("event_schema.json"), schema, errors)
+        joined = "\n".join(errors)
+        self.assertIn("repeat_policies differ", joined)
+        self.assertIn("set_flag fields differ", joined)
+
     def test_piece_reports_all_reference_and_shape_failures(self) -> None:
         piece = copy.deepcopy(load("data/pieces/fire_team.json"))
         piece["footprint"] = [0, 1]
@@ -109,7 +143,7 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         scenario["variations"] = [{"id": "bad id", "materials": 0.5, "morale": 0, "target_room": "missing_room"}]
         errors: list[str] = []
         validator.validate_scenario(
-            Path("gatehouse_lock.json"), scenario, {"gate"}, {"raider"}, {"gate_assault"}, set(), errors
+            Path("gatehouse_lock.json"), scenario, {"gate"}, {"raider"}, {"gate_assault"}, {"greywatch_keep"}, {"pike_line", "field_engineers"}, set(), errors
         )
         joined = "\n".join(errors)
         for expected in ("exactly three", "variation id", "materials", "target_room", "standard_bell"):
@@ -126,6 +160,181 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         joined = "\n".join(errors)
         for expected in ("does not match filename", "unsupported trigger phase", "trigger wave", "unsupported effect", "duplicate choice", "follow itself"):
             self.assertIn(expected, joined)
+
+    def test_event_requires_explicit_bounded_selection_policy(self) -> None:
+        event = copy.deepcopy(load("data/events/relief_road_warning.json"))
+        event.pop("selection", None)
+        errors: list[str] = []
+        validator.validate_event(Path("relief_road_warning.json"), event, {"relief_road"}, set(), set(), errors)
+        self.assertIn("missing required field: selection", "\n".join(errors))
+
+        event["selection"] = {
+            "stream": "Not Stable",
+            "repeat_policy": "repeat_after_cooldown",
+            "cooldown_waves": 0,
+            "max_occurrences": 4,
+            "surprise": True,
+        }
+        errors = []
+        validator.validate_event(Path("relief_road_warning.json"), event, {"relief_road"}, set(), set(), errors)
+        joined = "\n".join(errors)
+        for expected in ("stream must be snake_case", "repeat_after_cooldown", "max_occurrences", "unsupported field: surprise"):
+            self.assertIn(expected, joined)
+
+        malformed_cases = (
+            (None, "selection must be an object"),
+            ({"stream": "valid_stream"}, "selection is missing required field: repeat_policy"),
+            ({"stream": "valid_stream", "repeat_policy": "forever", "cooldown_waves": 0, "max_occurrences": 1}, "repeat_policy is unsupported"),
+            ({"stream": "valid_stream", "repeat_policy": "once_per_run", "cooldown_waves": 4, "max_occurrences": 1}, "cooldown_waves must be an integer from 0 to 3"),
+            ({"stream": "valid_stream", "repeat_policy": "repeat_after_cooldown", "cooldown_waves": 1, "max_occurrences": 1}, "requires max_occurrences of at least 2"),
+        )
+        for selection, expected in malformed_cases:
+            with self.subTest(expected=expected):
+                candidate = copy.deepcopy(load("data/events/relief_road_warning.json"))
+                candidate["selection"] = selection
+                errors = []
+                validator.validate_event(Path("relief_road_warning.json"), candidate, {"relief_road"}, set(), set(), errors)
+                self.assertIn(expected, "\n".join(errors))
+
+    def test_once_per_run_selection_rejects_cooldown_or_multiple_occurrences(self) -> None:
+        event = copy.deepcopy(load("data/events/relief_road_warning.json"))
+        event["selection"] = {
+            "stream": "relief_road_warning",
+            "repeat_policy": "once_per_run",
+            "cooldown_waves": 1,
+            "max_occurrences": 2,
+        }
+        errors: list[str] = []
+        validator.validate_event(Path("relief_road_warning.json"), event, {"relief_road"}, set(), set(), errors)
+        self.assertIn("once_per_run requires cooldown_waves 0 and max_occurrences 1", "\n".join(errors))
+
+    def test_event_choice_requires_complete_fields_and_bounded_requirement(self) -> None:
+        event = copy.deepcopy(load("data/events/relief_road_warning.json"))
+        event["choices"][0].pop("visible_result")
+        event["choices"][0]["requirements"] = {"materials": {"gte": -1}}
+        errors: list[str] = []
+        validator.validate_event(Path("relief_road_warning.json"), event, {"relief_road"}, set(), set(), errors)
+        joined = "\n".join(errors)
+        self.assertIn("missing required field: visible_result", joined)
+        self.assertIn("must use a non-negative integer", joined)
+
+        event = copy.deepcopy(load("data/events/relief_road_warning.json"))
+        event["choices"][0]["requirements"] = {"materials": {"equals": 8}, "luck": {"gte": 1}}
+        errors = []
+        validator.validate_event(Path("relief_road_warning.json"), event, {"relief_road"}, set(), set(), errors)
+        joined = "\n".join(errors)
+        self.assertIn("requirement materials has invalid constraint", joined)
+        self.assertIn("unsupported requirement: luck", joined)
+
+    def test_event_effect_rejects_missing_and_extra_payload_fields(self) -> None:
+        event = copy.deepcopy(load("data/events/relief_road_warning.json"))
+        event["choices"][0]["effects"] = [
+            {"op": "set_flag", "flag": "safe_flag", "prose": "true"},
+            {"op": "add_materials"},
+        ]
+        errors: list[str] = []
+        validator.validate_event(Path("relief_road_warning.json"), event, {"relief_road"}, set(), set(), errors)
+        joined = "\n".join(errors)
+        self.assertIn("set_flag is missing required field: value", joined)
+        self.assertIn("set_flag has unsupported field: prose", joined)
+        self.assertIn("add_materials is missing required field: amount", joined)
+
+        for operation, required_fields in validator.EVENT_EFFECT_FIELDS.items():
+            with self.subTest(operation=operation):
+                candidate = copy.deepcopy(load("data/events/relief_road_warning.json"))
+                candidate["choices"][0]["effects"] = [{"op": operation}]
+                errors = []
+                validator.validate_event(Path("relief_road_warning.json"), candidate, {"relief_road"}, set(), set(), errors)
+                for field in required_fields:
+                    self.assertIn(f"effect {operation} is missing required field: {field}", "\n".join(errors))
+
+    def test_event_graph_rejects_unknown_cross_scenario_and_cyclic_links(self) -> None:
+        runtime_events = {
+            "first": ("one", "second"),
+            "second": ("two", "first"),
+            "orphan": ("one", "missing"),
+        }
+        runtime_scenarios = {
+            "one": {"event_chain": ["first", "orphan"]},
+            "two": {"event_chain": ["second"]},
+        }
+        errors: list[str] = []
+        validator.validate_event_graph(runtime_events, runtime_scenarios, errors)
+        joined = "\n".join(errors)
+        self.assertIn("references unknown follow_up: missing", joined)
+        self.assertIn("follow_up crosses scenarios", joined)
+        self.assertIn("follow_up cycle", joined)
+
+    def test_manifest_parity_reports_missing_and_unlisted_runtime_events(self) -> None:
+        errors: list[str] = []
+        validator.validate_id_parity("event", {"manifest_only"}, {"runtime_only"}, errors)
+        joined = "\n".join(errors)
+        self.assertIn("runtime event file missing for manifest event: manifest_only", joined)
+        self.assertIn("runtime event is missing from active-slice manifest: runtime_only", joined)
+
+    def test_recovery_event_rejects_unknown_spatial_references(self) -> None:
+        event = copy.deepcopy(load("data/events/workshop_can_wait.json"))
+        event["eligibility"]["room_condition"]["room"] = "missing_room"
+        event["choices"][0]["effects"] = [{"op": "repair_room", "room": "missing_room"}]
+        event["choices"][1]["requirements"]["piece_available"] = "missing_piece"
+        errors: list[str] = []
+        validator.validate_event(
+            Path("workshop_can_wait.json"),
+            event,
+            {"gatehouse_lock"},
+            set(),
+            set(),
+            errors,
+            {"workshop"},
+            {"repair_station"},
+        )
+        joined = "\n".join(errors)
+        self.assertIn("room_condition eligibility", joined)
+        self.assertIn("repair_room references unknown room", joined)
+        self.assertIn("piece_available must reference a known piece", joined)
+
+    def test_event_trigger_wave_array_rejects_duplicates_and_range(self) -> None:
+        event = copy.deepcopy(load("data/events/wrong_wall_report.json"))
+        event["trigger"]["wave"] = [1, 1, 4]
+        errors: list[str] = []
+        validator.validate_event(
+            Path("wrong_wall_report.json"),
+            event,
+            {"wrong_wall"},
+            set(),
+            set(),
+            errors,
+            {"workshop"},
+            {"repair_station"},
+        )
+        joined = "\n".join(errors)
+        self.assertIn("trigger waves must be integers from 0 to 3", joined)
+        self.assertIn("trigger wave array contains a duplicate", joined)
+
+    def test_event_rejects_invalid_choice_flags_and_commander_variants(self) -> None:
+        event = copy.deepcopy(load("data/events/mara_second_door.json"))
+        event["eligibility"]["any_flag"] = ["Not Stable"]
+        event["choices"][0]["flags"] = {"bad.flag": "yes"}
+        event["commander_variants"]["missing_commander"] = event["commander_variants"].pop("castellan")
+        errors: list[str] = []
+        validator.validate_event(
+            Path("mara_second_door.json"), event, {"gatehouse_lock"}, set(), set(), errors,
+            {"workshop"}, {"repair_station"},
+        )
+        joined = "\n".join(errors)
+        self.assertIn("any_flag eligibility contains an invalid flag", joined)
+        self.assertIn("must be a stable boolean", joined)
+        self.assertIn("commander variant missing_commander is malformed", joined)
+
+    def test_rare_event_rejects_invalid_seed_slot(self) -> None:
+        event = copy.deepcopy(load("data/events/old_drain_opens.json"))
+        event["eligibility"]["seed_slot"] = {"mod": 3, "slots": [3]}
+        errors: list[str] = []
+        validator.validate_event(
+            Path("old_drain_opens.json"), event, {"open_yard_net"}, set(), set(), errors,
+            {"outer_wall"}, set(),
+        )
+        self.assertIn("seed_slot eligibility contains an out-of-range slot", "\n".join(errors))
 
     def test_modifier_rejects_unknown_unlock_effect_and_cost(self) -> None:
         modifier = copy.deepcopy(load("data/modifiers/roadside_intelligence.json"))

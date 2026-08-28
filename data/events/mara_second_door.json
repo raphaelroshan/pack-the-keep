@@ -1,0 +1,46 @@
+{
+  "id": "mara_second_door",
+  "content_version": 1,
+  "status": "active",
+  "title": "A Second Door",
+  "short_role": "Decide whether Mara's repaired Workshop should gain a service route or remain compact.",
+  "type": "scenario_conclusion",
+  "scenario": "gatehouse_lock",
+  "trigger": {"phase": "results", "wave": 3},
+  "selection": {"stream": "gatehouse_mara_results", "repeat_policy": "once_per_run", "cooldown_waves": 0, "max_occurrences": 1},
+  "eligibility": {"any_flag": ["mara_workshop_repaired", "mara_station_trusted"]},
+  "setup": "Mara proposes a narrow service door between the Workshop lane and the yard.",
+  "commander_variants": {
+    "castellan": {
+      "setup": "Mara proposes cutting a service door through the compact support line. The Castellan sees faster repair access and one more opening to control.",
+      "choice_labels": {
+        "open_second_door": "Open one controlled service door",
+        "keep_single_entry": "Keep the compact support line"
+      }
+    },
+    "warden": {
+      "setup": "Mara proposes a service door into the yard. The Warden sees a deliberate response lane that must remain clear.",
+      "choice_labels": {
+        "open_second_door": "Open the Workshop response lane",
+        "keep_single_entry": "Keep movement outside the Workshop"
+      }
+    }
+  },
+  "choices": [
+    {
+      "id": "open_second_door",
+      "label": "Open the service door",
+      "requirements": {},
+      "effects": [{"op": "set_flag", "flag": "mara_second_door_open", "value": true}],
+      "visible_result": "Mara leaves a second repair route open; future plans must treat it as both access and exposure."
+    },
+    {
+      "id": "keep_single_entry",
+      "label": "Keep one Workshop entry",
+      "requirements": {},
+      "effects": [{"op": "set_flag", "flag": "mara_second_door_open", "value": false}],
+      "visible_result": "Mara keeps the Workshop compact and records that repair access must come through the existing lane."
+    }
+  ],
+  "follow_up": ""
+}

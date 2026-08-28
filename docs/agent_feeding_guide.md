@@ -9,7 +9,7 @@ Give the coding agent the persistent prompt once, then feed it one risk slice at
 ## Persistent context prompt
 
 ```text
-You are the lead implementation agent for Pack the Keep. Read `design/design_prompt.md`, `README.md`, `AGENTS.md`, `docs/decision_log.md`, `docs/agent_handoff_roadmap.md`, and the relevant design card before editing. The current baseline is remote `main` at `0.12.3-alpha-packaged-pause-close`: two commanders, nine packs, eight scenarios, seven enemy types, authored multi-wave combat, runtime JSON content under `data/`, typed Relief Road events, bounded Campaign Ledger modifiers, controller/scaling/accessibility settings, and packaged Windows smoke coverage. The core promise remains commander-and-pack-driven top-down fort defense: choose a doctrine, arrange a compact keep, and adapt to invasions. Keep simulation separate from UI. Work in small reversible slices, preserve deterministic seeded outcomes and save compatibility, add tests before polish, and report intent, plan, changed files, exact verification, risks, and one next task. The next work should start with one complete event/occurrence slice from `design/events_occurrences_bible.md`, not a large roster or campaign map.
+You are the lead implementation agent for Pack the Keep. Read `design/design_prompt.md`, `README.md`, `AGENTS.md`, `docs/decision_log.md`, `docs/agent_handoff_roadmap.md`, and the relevant design card before editing. The current baseline is `0.16.2-playtest-provenance`: two commanders, nine packs, nine scenarios across Greywatch and Ash Ford, one Low Mill/Miller's Road consequence, seven enemy types, authored multi-wave combat, runtime JSON content under `data/`, bounded authored events, Campaign Ledger modifiers, controller/scaling/accessibility settings, packaged Windows lifecycle smoke coverage, and a human-authored P16 evidence protocol with repeated-finding triage and exact artifact provenance. The core promise remains commander-and-pack-driven top-down fort defense: choose a doctrine, arrange a readable keep, and adapt when an invasion tests it. Keep simulation separate from UI. Work in small reversible slices, preserve deterministic seeded outcomes and save compatibility, add tests before polish, and report intent, plan, changed files, exact verification, risks, and one next task. P16 work must remain controlled human-playtest hardening; never fabricate human observations or infer approval for public distribution or storefront release.
 ```
 
 ## Current post-P12 feed order
@@ -46,10 +46,16 @@ Choose Mara Venn or Jory Pike. Add three bounded relationship/arc flags, two com
 Extract one self-contained panel/controller from src/ui/main.gd, preferably event cards, the Campaign Ledger, or settings. Preserve all existing signals, mouse/keyboard/controller paths, pause semantics, and authoritative command boundaries. Add regression coverage before changing layout or copy.
 ```
 
-### Current feed 6 — finish packaged alpha hardening
+### Completed feed 6 — finish packaged alpha hardening
 
 ```text
 Complete the remaining clean-install, upgrade, missing-profile, and stale-backup Windows smoke cases. Keep platform behavior behind adapters, preserve offline operation, and verify that no packaged setting changes authoritative combat outcomes.
+```
+
+### Current feed 7 — add a second defensive identity
+
+```text
+Add one bounded second defensive identity with a distinct spatial rule, one compatible pack pairing, one teaching scenario, and deterministic balance/save/UI coverage. Do not begin the regional map until this identity is playable and legible.
 ```
 
 ## Historical feeds: prototype build sequence

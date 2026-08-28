@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "build_version": "0.16.2-playtest-provenance",
+  "status": "ready_for_human_sessions",
+  "release_ready": false,
+  "minimum_completed_sessions": 4,
+  "required_matrix": {
+    "commanders": ["castellan", "warden"],
+    "run_types": ["baseline", "hardened_vanguard"]
+  },
+  "required_observations": [
+    {"id": "onboarding", "prompt": "Could the tester start and prepare a run without outside explanation?", "success_signal": "The tester identifies commander, scenario, packs, placement, and the primary action."},
+    {"id": "first_successful_hold", "prompt": "Could the tester explain why their first hold succeeded?", "success_signal": "The tester names at least one visible counter, route, room, or layout decision."},
+    {"id": "partial_breach_recovery", "prompt": "Could the tester recover from a partial breach with a deliberate trade-off?", "success_signal": "The tester understands the two-action budget and what they gave up."},
+    {"id": "event_comprehension", "prompt": "Could the tester predict the effect of an authored event choice?", "success_signal": "The tester distinguishes requirement, immediate effect, and later consequence."},
+    {"id": "replay_motivation", "prompt": "Did the final report suggest a meaningful experiment?", "success_signal": "The tester can name one commander, pack, or layout change they want to retry."},
+    {"id": "controller_scaling", "prompt": "Were controller navigation and the chosen UI scale usable?", "success_signal": "The tester completes the run without an inaccessible control or unreadable required fact."},
+    {"id": "pause_trust", "prompt": "Did pause, resume, and manual step behave predictably?", "success_signal": "The tester trusts that paused simulation does not advance and one step advances once."},
+    {"id": "save_recovery", "prompt": "Could the tester save, reload, and understand any recovery message?", "success_signal": "The restored run matches the expected phase and invalid state does not replace valid progress."},
+    {"id": "packaged_close", "prompt": "Did the packaged build close cleanly and preserve the documented profile state?", "success_signal": "The process exits without a hang and the next launch reads the expected profile."}
+  ],
+  "allowed_observation_statuses": ["pass", "friction", "blocked", "not_tested"],
+  "allowed_finding_severities": ["critical", "high", "medium", "low"],
+  "required_finding_fields": ["id", "issue_key", "observation_id", "severity", "summary", "reproduction", "suggested_action"],
+  "required_provenance_fields": ["source_revision", "artifact.name", "artifact.sha256", "artifact.size_bytes"],
+  "repeat_threshold": 2,
+  "privacy_rule": "Use a non-identifying tester alias. Do not record names, email addresses, voice, video, or unrelated device identifiers in session JSON.",
+  "completion_rule": "Only a human observer may mark a session completed after directly recording every required observation and an observer summary.",
+  "finding_rule": "Every friction or blocked observation must link to one actionable finding; a repeated task candidate requires the same issue_key in at least two distinct session records.",
+  "approval_rule": "Automated validation may prove protocol completeness but cannot change the human_playtest gate or release_ready flag."
+}

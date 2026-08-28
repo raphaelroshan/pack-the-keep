@@ -4,6 +4,8 @@
   "question": "Can one deliberate firing line break armor before mixed pressure reaches the keep?",
   "objective": "Preserve Barracks and Gate while the Shield Guard advances under a red banner.",
   "lesson": "Armor punishes scattered low-damage responses; protected high-ground fire creates a clean answer.",
+  "keep_id": "greywatch_keep",
+  "recommended_packs": ["crossbow_watch", "field_engineers"],
   "starting_doctrine": "shielded_advance",
   "doctrines": ["shielded_advance", "gate_assault", "shielded_advance"],
   "wave_plans": [["shield_guard"], ["shield_guard", "raider"], ["shield_guard", "sapper", "climber"]],

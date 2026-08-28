@@ -1,10 +1,10 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.12.3-alpha-packaged-pause-close` — packaged Windows pause, input, scaling, persistence, and recovery validation
+**Current build identity:** `0.16.2-playtest-provenance` — P16 evidence, triage, and artifact provenance are ready; human sessions and owner approval remain pending
 
 ## Purpose
 
-This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch supports more than one viable strategic lens and whether the battle now communicates decisions clearly: choose the Castellan or Warden, select one of eight authored scenarios, preview and reserve a limited pack offer, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, pause or run the wave at three presentation speeds, advance manually, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, and recover after pressure.
+This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of nine authored scenarios, preview and reserve a limited pack offer, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, pause or run the wave at three presentation speeds, advance manually, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, and recover after pressure.
 
 ## v0.11.0 Crossbow Watch additions
 
@@ -45,6 +45,82 @@ The exported Windows smoke now verifies controller navigation defaults, all game
 ## v0.12.3 Packaged pause and close additions
 
 The Windows artifact now proves battle begins paused, paused presentation cannot advance simulation, the persisted controller binding toggles pause/resume, a manual step advances exactly once, and the main scene tears down before a zero process exit.
+
+## v0.12.4 Clean reinstall additions
+
+CI copies the embedded Windows executable to a fresh install directory and launches that relocated copy against the same isolated profile. The reinstalled build must restore active battle step one, 125% scale, and the remapped pause binding; the uploaded smoke artifact records both phases.
+
+## v0.12.5 Alpha readiness audit
+
+The repository now carries a versioned checklist for all eleven P12 hardening requirements. Source CI verifies unique implemented entries and durable evidence paths; Windows packaging validates the combined lifecycle report. Passing remains candidate evidence, not automatic release approval.
+
+## v0.12.6 Persistence recovery
+
+Presentation settings now use the same validated primary/backup candidate discipline as run saves. A malformed or missing primary can recover the last valid backup, a valid primary outranks a stranded temporary file, and a temporary file alone restores documented defaults rather than being promoted.
+
+## v0.12.7 Alpha scenario matrix
+
+Local headless verification now runs a documented viable baseline for every combination of nine authored scenarios, both commanders, and three seeds. Each of the 54 cases runs twice, producing 108 simulations that must serialize identically, resolve all three waves without collapse, close final recovery and event state, and retain the canonical replay key. This is deterministic viability evidence only; human playtest and presentation approval remain pending.
+
+## v0.12.8 Scenario resume matrix
+
+The second execution of every alpha scenario case now crosses a save/load boundary in a fresh `KeepState`. Seeds distribute checkpoints across wave-one setup, first recovery before event resolution, and wave-two setup. Each checkpoint must round-trip byte-for-byte, and its resumed terminal state must match the uninterrupted run exactly.
+
+## v0.12.9 Save integrity validation
+
+Run-save loading now preflights scalar types, nested piece/room/enemy/history shapes, catalog IDs, metrics, and assignment references before assigning any candidate state. Nested primary corruption is rejected cleanly and can fall back to a valid backup without script errors or partial mutation; JSON-decoded position data and legacy schema defaults remain supported.
+
+## v0.13.0 Workshop recovery event
+
+Gatehouse Lock now opens **The Workshop Can Wait** after wave two when sabotage leaves the Workshop at 70 condition or lower and Feint and Flank is next. The player may spend eight materials and one recovery action to repair the Workshop, or commit a valid placed Repair Station for one action. Both choices reuse the existing authoritative recovery commands, block ordinary recovery until resolved, persist through save/load, and appear in the existing Results event history.
+
+## v0.13.1 Event Ledger
+
+The existing Campaign Ledger now includes the five most recent authored-event consequences in newest-first order plus stable, explicit run flags. Results uses the same bounded read model, including an omission count when older entries exist. Reading either surface, refreshing it, or changing presentation-only contrast settings leaves serialized keep state unchanged.
+
+## v0.13.2 The Wrong Wall chain
+
+The Wrong Wall now carries a preparation warning, a wave-one Workshop recovery decision, and a terminal consequence report. Players may explicitly decline the warning, preserve scarce resources when Workshop repair is unavailable, or spend the normal eight materials and one recovery action to repair it. The conclusion event can open after normal completion or early collapse, and an active recovery choice round-trips through save/load.
+
+## v0.13.3 Mara's Second Door
+
+Repairing the Workshop or trusting its Repair Station now records one of two visible Mara Venn arc flags. At Gatehouse Lock's conclusion, Mara proposes a second service door only after one of those choices; Castellan and Warden receive distinct compact-structure and response-lane framing. Opening or refusing the route records the third explicit flag, with no hidden relationship score or combat bonus.
+
+## v0.13.4 Old Drain occurrence
+
+Open Yard Net now has one deterministic rare occurrence after wave two. A stable named seed stream selects one of three slots, so identical seeds replay exactly and three consecutive matrix seeds demonstrate both selected and unselected outcomes. Sealing or marking the drain changes only explicit visible flags and preserves every existing defensive counter.
+
+## v0.14.0 Authored event panel extraction
+
+The event card now lives in a dedicated presentation-only component that owns its labels, two-choice rendering, blocked reasons, and stable choice-ID signal. The main controller still obtains event read models from `KeepState` and dispatches every choice back through the authoritative command boundary. Existing UI handles and visual behavior remain compatible.
+
+## v0.14.1 Event authoring safety
+
+Every runtime event now declares a stable deterministic stream, repeat policy, cooldown, and occurrence bound. A machine-readable event schema is checked against both the offline validator and Godot catalog contract. Validation rejects incomplete choice records, negative requirement thresholds, missing or extra typed-effect fields, unknown or cross-scenario follow-ups, follow-up cycles, chain-order drift, and bidirectional manifest drift. Runtime scheduling derives repeat eligibility from authoritative event history and keeps legacy resolved IDs unique for save compatibility.
+
+## v0.14.2 Packaged lifecycle safety
+
+The Windows release-candidate smoke now runs five isolated lifecycle phases: clean install, relocated reinstall, stale-backup precedence, missing profile, and schema-3 upgrade. The runner prepares filesystem fixtures outside the executable, while the packaged Godot adapter verifies profile discovery, primary-over-backup selection, legacy migration and schema-4 rewrite, documented defaults, unchanged authoritative state during presentation-setting operations, offline guards, and clean shutdown.
+
+## v0.15.0 Second defensive identity
+
+Ash Ford Redoubt adds a distinct room graph, river-board presentation, and an explicit clear-causeway rule: leaving the marked ground cells free reduces incoming room damage by one. Ash Ford Crossing teaches Runner Network plus Field Engineers, while its five-material repairs restore only twenty condition, creating a distributed shallow-repair problem distinct from Greywatch's eight-material deep repairs. Keep topology, room labels, recovery profile, and spatial rules are runtime content; save/load derives the active keep from the selected scenario.
+
+## v0.15.1 Low Mill regional consequence
+
+Terminal defenses now produce one authored Low Mill report from the Gate and Supply Room conditions. Miller's Road can remain open, become contested, or close; the council correspondingly commits grain, guards its stores, or turns inward. Open and contested outcomes persist a one-shot three- or one-material contribution to the next selected scenario. Ledger and Results show the same read-only state, while save validation rejects unknown or content-mismatched regional records. No map, shop, stockpile, reputation score, or procedural regional system is introduced.
+
+## v0.16.0 Controlled playtest readiness
+
+The title screen now names the exact pre-alpha build under observation. A versioned P16 protocol defines the four commander/modifier matrix sessions and nine required observations, while a generator creates privacy-light unfilled records and a validator checks record completeness, actionable findings, build parity, and matrix coverage. Automation cannot write successful observations, complete the human gate, set `release_ready`, or approve distribution.
+
+## v0.16.1 Repeated-finding triage
+
+Session findings now carry stable issue keys. A deterministic summary reports matrix coverage, observation-status counts, and any issue observed in at least two records as a candidate for a small reversible improvement. The tool repeats only human-authored summaries and suggested actions; it does not manufacture findings or change the pending human gate.
+
+## v0.16.2 Playtest artifact provenance
+
+Every generated session now records the exact source commit and hashes the packaged executable under test. Matrix completion is calculated separately for each revision-and-artifact cohort, preventing four sessions from different binaries from being combined into false release-candidate coverage.
 
 ## v0.8.2 testability additions
 

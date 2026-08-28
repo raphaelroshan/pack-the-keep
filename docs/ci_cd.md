@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The three game repositories use the same validation contract so AI-generated changes are checked consistently. Each pull request and push to `main` runs repository policy checks, deterministic Godot tests on Ubuntu and Windows, independent AI review roles, and a release-candidate packaging job. Version tags or manual dispatch run a stricter Windows release workflow that requires export presets.
+The game repositories use the same validation contract so AI-generated changes are checked consistently. Each pull request and push to `main` runs repository policy checks, deterministic Godot tests on Ubuntu and Windows, independent AI review roles, and a release-candidate packaging job. Version tags or manual dispatch run a stricter Windows release workflow that requires export presets.
 
 The pipeline is designed to catch defects before visual polish or storefront packaging hides them. It does not treat an AI reviewer as a substitute for deterministic tests. The AI layer produces a report and can block only at the configured severity threshold.
 
@@ -43,9 +43,9 @@ Reviewers should read the artifact, fix blocking findings, and either resolve wa
 
 Pushes to `main` produce a release-candidate artifact containing a source snapshot, a Windows build, and `packaged-smoke.json`. Pull requests run the same packaged smoke before their artifact is accepted. Version tags such as `v0.1.0` invoke the guarded release workflow, repeat the smoke against the tagged executable, and upload the Windows candidate and release manifest.
 
-The packaged smoke uses a CI-owned profile root and unreachable proxy endpoints. It launches the actual exported main scene, executes a guarded smoke path through normal gameplay and persistence APIs, verifies controller navigation/remapping, 125% stacked scaling, initial pause, frozen paused ticks, and deterministic manual stepping, confirms save/settings files remain inside the isolated profile, then requires clean teardown and process exit within 30 seconds.
+The package and verification jobs use Godot's blocking `--import` command before UI tests or export, so a fresh checkout cannot race an unfinished asset scan. The packaged smoke then uses CI-owned profile roots and unreachable proxy endpoints. It launches the actual exported main scene and runs five guarded lifecycle phases through normal gameplay and persistence APIs: clean install, relocated reinstall, valid-primary precedence over stale backups, a genuinely missing profile, and schema-3-to-4 upgrade. The matrix also verifies controller navigation/remapping, 125% stacked scaling, initial pause, frozen paused ticks, deterministic manual stepping, presentation-state isolation, clean teardown, and bounded zero exit.
 
-Godot 4.4.1 can intermittently return exit 139 on Windows after a headless UI test has already printed PASS. CI retries the complete deterministic suite once only for that Windows-specific exit code. Any ordinary assertion failure, non-Windows failure, or repeated shutdown fault still blocks the build.
+Headless runs do not initialize the procedural audio player; they still validate semantic cue profiles and visible cue state. Interactive and packaged non-headless builds retain normal audio initialization.
 
 Publishing to Steam or Epic Games Store remains a deliberate human-controlled step. Add store upload credentials only after the build has passed a release review, and use protected environments with required reviewers for actual deployment.
 
@@ -83,9 +83,9 @@ The workflow deliberately does not provide an automatic production deploy. Store
 
 ## All-games validation
 
-Market of Ash also contains an `All games validation` workflow. It is available by manual dispatch and runs weekly. It checks out the pinned ref from all three private repositories, runs the same policy and Godot checks, and creates one artifact bundle containing each repository’s diff and AI report.
+Market of Ash also contains an `All games validation` workflow. It is available by manual dispatch and runs weekly. It checks out the pinned ref from all configured repositories, runs the same policy and Godot checks, and creates one artifact bundle containing each repository’s diff and AI report.
 
-For this cross-repository workflow, create a read-only or least-privilege GitHub token with access to the three private repositories and save it as the `CROSS_REPO_READ_TOKEN` secret in Market of Ash. If this secret is not configured, the per-repository workflows remain fully usable, but the consolidated workflow cannot read private sibling repositories. The token must never be printed or passed into the AI prompt.
+For this cross-repository workflow, create a read-only or least-privilege GitHub token with access to any private sibling repositories and save it as the `CROSS_REPO_READ_TOKEN` secret in Market of Ash. Public repositories need no elevated token, but private siblings remain unavailable to the consolidated workflow without one. The token must never be printed or passed into the AI prompt.
 
 The equivalent local command is:
 

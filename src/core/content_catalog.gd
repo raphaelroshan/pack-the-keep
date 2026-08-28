@@ -1,5 +1,14 @@
 extends RefCounted
 
+const KEEP_PATHS: Array[String] = [
+	"res://data/keeps/greywatch_keep.json",
+	"res://data/keeps/ash_ford_redoubt.json"
+]
+
+const REGION_PATHS: Array[String] = [
+	"res://data/regions/low_mill.json"
+]
+
 const PACK_PATHS: Array[String] = [
 	"res://data/packs/pike_line.json",
 	"res://data/packs/field_engineers.json",
@@ -66,13 +75,20 @@ const SCENARIO_PATHS: Array[String] = [
 	"res://data/scenarios/red_banner_road.json",
 	"res://data/scenarios/ash_at_the_bell.json",
 	"res://data/scenarios/the_splintered_gate.json",
-	"res://data/scenarios/three_bells_at_dusk.json"
+	"res://data/scenarios/three_bells_at_dusk.json",
+	"res://data/scenarios/ash_ford_crossing.json"
 ]
 
 const EVENT_PATHS: Array[String] = [
 	"res://data/events/relief_road_warning.json",
 	"res://data/events/relief_road_recovery.json",
-	"res://data/events/relief_road_report.json"
+	"res://data/events/relief_road_report.json",
+	"res://data/events/workshop_can_wait.json",
+	"res://data/events/mara_second_door.json",
+	"res://data/events/old_drain_opens.json",
+	"res://data/events/the_bell_has_a_pattern.json",
+	"res://data/events/the_gate_is_not_the_keep.json",
+	"res://data/events/wrong_wall_report.json"
 ]
 
 const MODIFIER_PATHS: Array[String] = [
@@ -179,15 +195,38 @@ const REQUIRED_DOCTRINE_FIELDS: Array[String] = [
 	"counter_families"
 ]
 
-const REQUIRED_SCENARIO_FIELDS: Array[String] = ["id", "content_version", "status", "name", "short_role", "question", "objective", "lesson", "starting_doctrine", "doctrines", "wave_plans", "variations"]
-const REQUIRED_EVENT_FIELDS: Array[String] = ["id", "content_version", "status", "title", "short_role", "type", "scenario", "trigger", "setup", "choices", "follow_up"]
+const REQUIRED_KEEP_FIELDS: Array[String] = ["id", "content_version", "status", "name", "short_role", "question", "grid_size", "rooms", "connections", "spatial_rule", "recovery_profile", "visual"]
+const REQUIRED_ROOM_FIELDS: Array[String] = ["name", "floor", "origin", "size", "critical", "role"]
+const REQUIRED_REGION_FIELDS: Array[String] = ["id", "content_version", "status", "name", "need", "route", "consequences"]
+const REQUIRED_REGION_CONSEQUENCE_FIELDS: Array[String] = ["id", "settlement_status", "route_status", "minimum_anchor_condition", "requires_non_collapse", "next_run_materials", "summary"]
+const REQUIRED_SCENARIO_FIELDS: Array[String] = ["id", "content_version", "status", "name", "short_role", "question", "objective", "lesson", "keep_id", "recommended_packs", "starting_doctrine", "doctrines", "wave_plans", "variations"]
+const REQUIRED_EVENT_FIELDS: Array[String] = ["id", "content_version", "status", "title", "short_role", "type", "scenario", "trigger", "selection", "setup", "choices", "follow_up"]
+const REQUIRED_EVENT_CHOICE_FIELDS: Array[String] = ["id", "label", "requirements", "effects", "visible_result"]
+const REQUIRED_EVENT_SELECTION_FIELDS: Array[String] = ["stream", "repeat_policy", "cooldown_waves", "max_occurrences"]
 const SUPPORTED_EVENT_TYPES: Array[String] = ["forecast", "recovery", "scenario_conclusion"]
 const SUPPORTED_EVENT_PHASES: Array[String] = ["preparation", "recovery", "results"]
-const SUPPORTED_EVENT_REQUIREMENTS: Array[String] = ["command_points", "recovery_actions", "morale"]
-const SUPPORTED_EVENT_EFFECTS: Array[String] = ["spend_command_points", "spend_recovery_action", "add_materials", "add_morale", "set_flag", "record_outcome", "unlock_modifier"]
+const SUPPORTED_EVENT_REQUIREMENTS: Array[String] = ["command_points", "recovery_actions", "morale", "materials", "piece_available"]
+const SUPPORTED_EVENT_REQUIREMENT_OPERATORS: Array[String] = ["gte", "lt"]
+const SUPPORTED_EVENT_EFFECTS: Array[String] = ["spend_command_points", "spend_recovery_action", "add_materials", "add_morale", "set_flag", "record_outcome", "unlock_modifier", "repair_room", "assign_piece"]
+const EVENT_EFFECT_FIELDS: Dictionary = {
+	"spend_command_points": ["amount"],
+	"spend_recovery_action": ["amount"],
+	"add_materials": ["amount"],
+	"add_morale": ["amount"],
+	"set_flag": ["flag", "value"],
+	"record_outcome": ["tag"],
+	"unlock_modifier": ["modifier"],
+	"repair_room": ["room"],
+	"assign_piece": ["piece", "room"]
+}
+const SUPPORTED_EVENT_REPEAT_POLICIES: Array[String] = ["once_per_run", "repeat_after_cooldown"]
+const MAX_EVENT_COOLDOWN_WAVES: int = 3
+const MAX_EVENT_OCCURRENCES: int = 3
 const REQUIRED_MODIFIER_FIELDS: Array[String] = ["id", "content_version", "status", "name", "short_role", "question", "unlock_event", "effect", "starting_morale_cost", "limitation"]
 const SUPPORTED_MODIFIER_EFFECTS: Array[String] = ["reveal_wave_composition", "enemy_health_bonus"]
 
+var _keeps: Dictionary = {}
+var _regions: Dictionary = {}
 var _packs: Dictionary = {}
 var _commanders: Dictionary = {}
 var _pieces: Dictionary = {}
@@ -199,6 +238,8 @@ var _modifiers: Dictionary = {}
 var errors: Array[String] = []
 
 func load_default(known_room_ids: Array = []) -> Dictionary:
+	_keeps.clear()
+	_regions.clear()
 	_packs.clear()
 	_commanders.clear()
 	_pieces.clear()
@@ -208,28 +249,72 @@ func load_default(known_room_ids: Array = []) -> Dictionary:
 	_events.clear()
 	_modifiers.clear()
 	errors.clear()
+	for path in KEEP_PATHS:
+		_load_keep(path)
+	var runtime_room_ids: Array = room_ids()
+	for room_id in known_room_ids:
+		if not runtime_room_ids.has(String(room_id)):
+			runtime_room_ids.append(String(room_id))
+	for path in REGION_PATHS:
+		_load_region(path, runtime_room_ids)
 	for path in DOCTRINE_PATHS:
 		_load_doctrine(path)
 	for path in PIECE_PATHS:
-		_load_piece(path, known_room_ids, _known_piece_targets())
+		_load_piece(path, runtime_room_ids, _known_piece_targets())
 	for path in PACK_PATHS:
 		_load_pack(path, piece_ids())
 	for path in COMMANDER_PATHS:
 		_load_commander(path)
 	for path in ENEMY_PATHS:
-		_load_enemy(path, known_room_ids, doctrine_ids())
+		_load_enemy(path, runtime_room_ids, doctrine_ids())
 	for path in SCENARIO_PATHS:
-		_load_scenario(path, known_room_ids)
+		_load_scenario(path, runtime_room_ids)
 	for path in MODIFIER_PATHS:
 		_load_modifier(path)
 	for path in EVENT_PATHS:
-		_load_event(path)
+		_load_event(path, runtime_room_ids)
 	_validate_piece_availability()
 	_validate_doctrine_enemy_references()
 	_validate_event_follow_ups()
 	_validate_scenario_event_references()
 	_validate_modifier_unlock_events()
-	return {"ok": errors.is_empty(), "commanders": _commanders.duplicate(true), "pieces": _pieces.duplicate(true), "packs": _packs.duplicate(true), "enemies": _enemies.duplicate(true), "doctrines": _doctrines.duplicate(true), "scenarios": _scenarios.duplicate(true), "events": _events.duplicate(true), "modifiers": _modifiers.duplicate(true), "errors": errors.duplicate()}
+	return {"ok": errors.is_empty(), "keeps": _keeps.duplicate(true), "regions": _regions.duplicate(true), "commanders": _commanders.duplicate(true), "pieces": _pieces.duplicate(true), "packs": _packs.duplicate(true), "enemies": _enemies.duplicate(true), "doctrines": _doctrines.duplicate(true), "scenarios": _scenarios.duplicate(true), "events": _events.duplicate(true), "modifiers": _modifiers.duplicate(true), "errors": errors.duplicate()}
+
+func keep_ids() -> Array[String]:
+	var result: Array[String] = []
+	for path in KEEP_PATHS:
+		var expected_id: String = path.get_file().get_basename()
+		if _keeps.has(expected_id):
+			result.append(expected_id)
+	return result
+
+func keep_definition(keep_id: String) -> Dictionary:
+	return _keeps.get(keep_id, {}).duplicate(true)
+
+func region_ids() -> Array[String]:
+	var result: Array[String] = []
+	for path in REGION_PATHS:
+		var expected_id: String = path.get_file().get_basename()
+		if _regions.has(expected_id):
+			result.append(expected_id)
+	return result
+
+func region_definition(region_id: String) -> Dictionary:
+	return _regions.get(region_id, {}).duplicate(true)
+
+func room_ids() -> Array[String]:
+	var result: Array[String] = []
+	for keep in _keeps.values():
+		for room_id in keep.get("rooms", {}).keys():
+			if not result.has(String(room_id)):
+				result.append(String(room_id))
+	return result
+
+func _room_ids_for_keep(keep_id: String) -> Array[String]:
+	var result: Array[String] = []
+	for room_id in _keeps.get(keep_id, {}).get("rooms", {}).keys():
+		result.append(String(room_id))
+	return result
 
 func commander_ids() -> Array[String]:
 	var result: Array[String] = []
@@ -296,6 +381,21 @@ func event_ids() -> Array[String]:
 
 func event_definition(event_id: String) -> Dictionary:
 	return _events.get(event_id, {}).duplicate(true)
+
+func event_schema_contract() -> Dictionary:
+	return {
+		"required_event_fields": REQUIRED_EVENT_FIELDS.duplicate(),
+		"required_choice_fields": REQUIRED_EVENT_CHOICE_FIELDS.duplicate(),
+		"selection": {
+			"required_fields": REQUIRED_EVENT_SELECTION_FIELDS.duplicate(),
+			"repeat_policies": SUPPORTED_EVENT_REPEAT_POLICIES.duplicate(),
+			"maximum_cooldown_waves": MAX_EVENT_COOLDOWN_WAVES,
+			"maximum_occurrences": MAX_EVENT_OCCURRENCES
+		},
+		"requirements": SUPPORTED_EVENT_REQUIREMENTS.duplicate(),
+		"requirement_operators": SUPPORTED_EVENT_REQUIREMENT_OPERATORS.duplicate(),
+		"effects": EVENT_EFFECT_FIELDS.duplicate(true)
+	}
 
 func modifier_ids() -> Array[String]:
 	var result: Array[String] = []
@@ -519,7 +619,159 @@ func validate_doctrine_definition(doctrine: Dictionary, expected_id: String, kno
 				validation_errors.append("doctrine %s counter families must be non-empty strings" % doctrine_id)
 	return validation_errors
 
-func validate_scenario_definition(scenario: Dictionary, expected_id: String, known_room_ids: Array) -> Array[String]:
+func validate_keep_definition(keep: Dictionary, expected_id: String) -> Array[String]:
+	var validation_errors: Array[String] = []
+	for field in REQUIRED_KEEP_FIELDS:
+		if not keep.has(field):
+			validation_errors.append("%s is missing required field: %s" % [expected_id, field])
+	var keep_id: String = String(keep.get("id", ""))
+	if keep_id != expected_id:
+		validation_errors.append("keep id %s does not match filename %s" % [keep_id, expected_id])
+	if not _is_snake_case_id(keep_id):
+		validation_errors.append("keep id %s must be snake_case" % keep_id)
+	if String(keep.get("status", "")) != "active":
+		validation_errors.append("keep %s must have active status" % keep_id)
+	_validate_integer_minimum(keep, "content_version", keep_id, "keep", 1, validation_errors)
+	for field in ["name", "short_role", "question"]:
+		if not keep.get(field) is String or String(keep.get(field, "")).strip_edges().is_empty():
+			validation_errors.append("keep %s must have non-empty text for %s" % [keep_id, field])
+	var grid_size: Variant = keep.get("grid_size")
+	if not grid_size is Array or grid_size.size() != 2 or not _is_integer_number(grid_size[0]) or not _is_integer_number(grid_size[1]) or int(grid_size[0]) != 12 or int(grid_size[1]) != 8:
+		validation_errors.append("keep %s grid_size must be [12, 8] for the current board" % keep_id)
+	var rooms: Variant = keep.get("rooms")
+	var room_rects: Dictionary = {}
+	if not rooms is Dictionary or rooms.is_empty():
+		validation_errors.append("keep %s rooms must be a non-empty object" % keep_id)
+	else:
+		for room_id_value in rooms.keys():
+			var room_id: String = String(room_id_value)
+			var room: Variant = rooms[room_id_value]
+			if not _is_snake_case_id(room_id) or not room is Dictionary:
+				validation_errors.append("keep %s has malformed room: %s" % [keep_id, room_id])
+				continue
+			for field in REQUIRED_ROOM_FIELDS:
+				if not room.has(field):
+					validation_errors.append("keep %s room %s is missing required field: %s" % [keep_id, room_id, field])
+			for field in ["name", "role"]:
+				if not room.get(field) is String or String(room.get(field, "")).strip_edges().is_empty():
+					validation_errors.append("keep %s room %s needs non-empty %s" % [keep_id, room_id, field])
+			if not ["ground", "upper"].has(String(room.get("floor", ""))):
+				validation_errors.append("keep %s room %s has unsupported floor" % [keep_id, room_id])
+			if not room.get("critical") is bool:
+				validation_errors.append("keep %s room %s critical must be boolean" % [keep_id, room_id])
+			var origin: Variant = room.get("origin")
+			var size: Variant = room.get("size")
+			if not origin is Array or origin.size() != 2 or not _is_integer_number(origin[0]) or not _is_integer_number(origin[1]) or not size is Array or size.size() != 2 or not _is_integer_number(size[0]) or not _is_integer_number(size[1]) or int(size[0]) < 1 or int(size[1]) < 1 or int(origin[0]) < 0 or int(origin[1]) < 0 or int(origin[0]) + int(size[0]) > 12 or int(origin[1]) + int(size[1]) > 8:
+				validation_errors.append("keep %s room %s must fit the 12x8 grid" % [keep_id, room_id])
+			else:
+				var rect: Rect2i = Rect2i(Vector2i(int(origin[0]), int(origin[1])), Vector2i(int(size[0]), int(size[1])))
+				for other_id in room_rects.keys():
+					if String(rooms[other_id].get("floor", "")) == String(room.get("floor", "")) and rect.intersects(room_rects[other_id]):
+						validation_errors.append("keep %s rooms %s and %s overlap" % [keep_id, String(other_id), room_id])
+				room_rects[room_id] = rect
+	var connections: Variant = keep.get("connections")
+	var connection_keys: Array[String] = []
+	if not connections is Array or connections.is_empty():
+		validation_errors.append("keep %s connections must be a non-empty array" % keep_id)
+	else:
+		for connection in connections:
+			if not connection is Array or connection.size() != 2 or not rooms is Dictionary or not rooms.has(String(connection[0])) or not rooms.has(String(connection[1])) or String(connection[0]) == String(connection[1]):
+				validation_errors.append("keep %s has an invalid room connection" % keep_id)
+				continue
+			var pair: Array[String] = [String(connection[0]), String(connection[1])]
+			pair.sort()
+			var key: String = "%s|%s" % pair
+			if connection_keys.has(key):
+				validation_errors.append("keep %s has duplicate room connection: %s" % [keep_id, key])
+			else:
+				connection_keys.append(key)
+	var spatial_rule: Variant = keep.get("spatial_rule")
+	if not spatial_rule is Dictionary or not ["compact_adjacency", "clear_causeway"].has(String(spatial_rule.get("id", ""))) or not spatial_rule.get("lane_cells") is Array or not _is_integer_number(spatial_rule.get("room_damage_reduction")) or int(spatial_rule.get("room_damage_reduction", -1)) < 0 or int(spatial_rule.get("room_damage_reduction", -1)) > 3 or not spatial_rule.get("label") is String or String(spatial_rule.get("label", "")).strip_edges().is_empty():
+		validation_errors.append("keep %s has an invalid spatial_rule" % keep_id)
+	elif String(spatial_rule.get("id", "")) == "clear_causeway":
+		if spatial_rule.get("lane_cells", []).is_empty() or int(spatial_rule.get("room_damage_reduction", 0)) < 1:
+			validation_errors.append("keep %s clear_causeway needs lane cells and positive room damage reduction" % keep_id)
+		for cell in spatial_rule.get("lane_cells", []):
+			if not cell is Array or cell.size() != 2 or not _is_integer_number(cell[0]) or not _is_integer_number(cell[1]) or int(cell[0]) < 0 or int(cell[0]) >= 12 or int(cell[1]) < 0 or int(cell[1]) >= 8:
+				validation_errors.append("keep %s clear_causeway contains an invalid cell" % keep_id)
+	var recovery: Variant = keep.get("recovery_profile")
+	if not recovery is Dictionary or not _is_integer_number(recovery.get("room_repair_materials")) or int(recovery.get("room_repair_materials", 0)) < 1 or not _is_integer_number(recovery.get("room_repair_condition")) or int(recovery.get("room_repair_condition", 0)) < 1 or int(recovery.get("room_repair_condition", 0)) > 100 or not recovery.get("question") is String or String(recovery.get("question", "")).strip_edges().is_empty():
+		validation_errors.append("keep %s has an invalid recovery_profile" % keep_id)
+	var visual: Variant = keep.get("visual")
+	if not visual is Dictionary or not ["fort", "river"].has(String(visual.get("terrain", ""))):
+		validation_errors.append("keep %s has an invalid visual profile" % keep_id)
+	else:
+		for field in ["ground_label", "upper_label", "board_label"]:
+			if not visual.get(field) is String or String(visual.get(field, "")).strip_edges().is_empty():
+				validation_errors.append("keep %s visual %s must be non-empty text" % [keep_id, field])
+	return validation_errors
+
+func validate_region_definition(region: Dictionary, expected_id: String, known_room_ids: Array) -> Array[String]:
+	var validation_errors: Array[String] = []
+	for field in REQUIRED_REGION_FIELDS:
+		if not region.has(field):
+			validation_errors.append("%s is missing required field: %s" % [expected_id, field])
+	var region_id: String = String(region.get("id", ""))
+	if region_id != expected_id:
+		validation_errors.append("region id %s does not match filename %s" % [region_id, expected_id])
+	if not _is_snake_case_id(region_id):
+		validation_errors.append("region id %s must be snake_case" % region_id)
+	if String(region.get("status", "")) != "active":
+		validation_errors.append("region %s must have active status" % region_id)
+	_validate_integer_minimum(region, "content_version", region_id, "region", 1, validation_errors)
+	for field in ["name", "need"]:
+		if not region.get(field) is String or String(region.get(field, "")).strip_edges().is_empty():
+			validation_errors.append("region %s must have non-empty text for %s" % [region_id, field])
+	var route: Variant = region.get("route")
+	if not route is Dictionary or not _is_snake_case_id(String(route.get("id", ""))) or not route.get("name") is String or String(route.get("name", "")).strip_edges().is_empty() or not route.get("anchor_rooms") is Array or route.get("anchor_rooms", []).size() != 2:
+		validation_errors.append("region %s has an invalid route" % region_id)
+	else:
+		var seen_anchors: Array[String] = []
+		for room_id_value in route.get("anchor_rooms", []):
+			var room_id: String = String(room_id_value)
+			if not room_id_value is String or not known_room_ids.has(room_id) or seen_anchors.has(room_id):
+				validation_errors.append("region %s route has an invalid anchor room" % region_id)
+			else:
+				seen_anchors.append(room_id)
+	var consequences: Variant = region.get("consequences")
+	var consequence_ids: Array[String] = []
+	var previous_threshold: int = 101
+	if not consequences is Array or consequences.is_empty() or consequences.size() > 3:
+		validation_errors.append("region %s consequences must contain one to three entries" % region_id)
+	else:
+		for consequence in consequences:
+			if not consequence is Dictionary:
+				validation_errors.append("region %s consequence must be an object" % region_id)
+				continue
+			for field in REQUIRED_REGION_CONSEQUENCE_FIELDS:
+				if not consequence.has(field):
+					validation_errors.append("region %s consequence is missing required field: %s" % [region_id, field])
+			var consequence_id: String = String(consequence.get("id", ""))
+			if not _is_snake_case_id(consequence_id) or consequence_ids.has(consequence_id):
+				validation_errors.append("region %s has an invalid or duplicate consequence id" % region_id)
+			else:
+				consequence_ids.append(consequence_id)
+			for field in ["settlement_status", "route_status", "summary"]:
+				if not consequence.get(field) is String or String(consequence.get(field, "")).strip_edges().is_empty():
+					validation_errors.append("region %s consequence %s needs non-empty %s" % [region_id, consequence_id, field])
+			var threshold: Variant = consequence.get("minimum_anchor_condition")
+			if not _is_integer_number(threshold) or int(threshold) < 0 or int(threshold) > 100:
+				validation_errors.append("region %s consequence %s has an invalid anchor threshold" % [region_id, consequence_id])
+			elif int(threshold) >= previous_threshold:
+				validation_errors.append("region %s consequences must use descending anchor thresholds" % region_id)
+			else:
+				previous_threshold = int(threshold)
+			if not consequence.get("requires_non_collapse") is bool:
+				validation_errors.append("region %s consequence %s requires_non_collapse must be boolean" % [region_id, consequence_id])
+			var next_materials: Variant = consequence.get("next_run_materials")
+			if not _is_integer_number(next_materials) or int(next_materials) < 0 or int(next_materials) > 5:
+				validation_errors.append("region %s consequence %s next_run_materials must be from 0 to 5" % [region_id, consequence_id])
+		var fallback: Variant = consequences[consequences.size() - 1]
+		if fallback is Dictionary and (int(fallback.get("minimum_anchor_condition", -1)) != 0 or bool(fallback.get("requires_non_collapse", true))):
+			validation_errors.append("region %s final consequence must be an unconditional zero-threshold fallback" % region_id)
+	return validation_errors
+
+func validate_scenario_definition(scenario: Dictionary, expected_id: String, known_room_ids: Array, known_keep_ids: Array = [], known_pack_ids: Array = []) -> Array[String]:
 	var validation_errors: Array[String] = []
 	for field in REQUIRED_SCENARIO_FIELDS:
 		if not scenario.has(field):
@@ -535,6 +787,21 @@ func validate_scenario_definition(scenario: Dictionary, expected_id: String, kno
 	for field in ["name", "short_role", "question", "objective", "lesson", "starting_doctrine"]:
 		if not scenario.get(field) is String or String(scenario.get(field, "")).strip_edges().is_empty():
 			validation_errors.append("scenario %s must have non-empty text for %s" % [scenario_id, field])
+	if not known_keep_ids.is_empty() and not known_keep_ids.has(String(scenario.get("keep_id", ""))):
+		validation_errors.append("scenario %s references an unknown keep" % scenario_id)
+	var recommended_packs: Variant = scenario.get("recommended_packs")
+	if not recommended_packs is Array or recommended_packs.is_empty() or recommended_packs.size() > 2:
+		validation_errors.append("scenario %s recommended_packs must contain one or two pack IDs" % scenario_id)
+	else:
+		var seen_recommended: Array[String] = []
+		for pack_id_value in recommended_packs:
+			var pack_id: String = String(pack_id_value)
+			if not pack_id_value is String or (not known_pack_ids.is_empty() and not known_pack_ids.has(pack_id)):
+				validation_errors.append("scenario %s references unknown recommended pack: %s" % [scenario_id, pack_id])
+			elif seen_recommended.has(pack_id):
+				validation_errors.append("scenario %s recommended_packs contains duplicates" % scenario_id)
+			else:
+				seen_recommended.append(pack_id)
 	var doctrines: Variant = scenario.get("doctrines", [])
 	var wave_plans: Variant = scenario.get("wave_plans", [])
 	if not doctrines is Array or doctrines.size() != 3 or not wave_plans is Array or wave_plans.size() != 3:
@@ -575,7 +842,7 @@ func validate_scenario_definition(scenario: Dictionary, expected_id: String, kno
 		validation_errors.append("scenario %s must include standard_bell variation" % scenario_id)
 	return validation_errors
 
-func validate_event_definition(event: Dictionary, expected_id: String) -> Array[String]:
+func validate_event_definition(event: Dictionary, expected_id: String, known_room_ids: Array = []) -> Array[String]:
 	var validation_errors: Array[String] = []
 	for field in REQUIRED_EVENT_FIELDS:
 		if not event.has(field):
@@ -601,8 +868,56 @@ func validate_event_definition(event: Dictionary, expected_id: String) -> Array[
 	else:
 		if not SUPPORTED_EVENT_PHASES.has(String(trigger.get("phase", ""))):
 			validation_errors.append("event %s trigger phase is unsupported" % event_id)
-		if not _is_integer_number(trigger.get("wave")) or int(trigger.get("wave", -1)) < 0 or int(trigger.get("wave", -1)) > 3:
-			validation_errors.append("event %s trigger wave must be an integer from 0 to 3" % event_id)
+		var trigger_wave: Variant = trigger.get("wave")
+		if trigger_wave is Array:
+			var seen_waves: Array[int] = []
+			if trigger_wave.is_empty():
+				validation_errors.append("event %s trigger wave array must not be empty" % event_id)
+			for wave_value in trigger_wave:
+				if not _is_integer_number(wave_value) or int(wave_value) < 0 or int(wave_value) > 3:
+					validation_errors.append("event %s trigger waves must be integers from 0 to 3" % event_id)
+				elif seen_waves.has(int(wave_value)):
+					validation_errors.append("event %s trigger wave array contains a duplicate" % event_id)
+				else:
+					seen_waves.append(int(wave_value))
+		elif not _is_integer_number(trigger_wave) or int(trigger_wave) < 0 or int(trigger_wave) > 3:
+			validation_errors.append("event %s trigger wave must be an integer or array from 0 to 3" % event_id)
+	_validate_event_selection(event_id, event.get("selection"), validation_errors)
+	var eligibility: Variant = event.get("eligibility", {})
+	if not eligibility is Dictionary:
+		validation_errors.append("event %s eligibility must be an object" % event_id)
+	else:
+		for eligibility_id in eligibility.keys():
+			if String(eligibility_id) == "room_condition":
+				var condition: Variant = eligibility[eligibility_id]
+				if not condition is Dictionary or not condition.get("room") is String or (not known_room_ids.is_empty() and not known_room_ids.has(String(condition.get("room", "")))) or not _is_integer_number(condition.get("lte")) or int(condition.get("lte", -1)) < 0 or int(condition.get("lte", -1)) > 100:
+					validation_errors.append("event %s room_condition eligibility needs a known room and lte from 0 to 100" % event_id)
+			elif String(eligibility_id) == "next_doctrine":
+				var doctrines: Variant = eligibility[eligibility_id]
+				if not doctrines is Array or doctrines.is_empty():
+					validation_errors.append("event %s next_doctrine eligibility must be a non-empty array" % event_id)
+				else:
+					for doctrine_id in doctrines:
+						if not doctrine_id is String or not doctrine_ids().has(String(doctrine_id)):
+							validation_errors.append("event %s next_doctrine eligibility references an unknown doctrine" % event_id)
+			elif String(eligibility_id) == "any_flag":
+				var flag_ids: Variant = eligibility[eligibility_id]
+				if not flag_ids is Array or flag_ids.is_empty():
+					validation_errors.append("event %s any_flag eligibility must be a non-empty array" % event_id)
+				else:
+					for flag_id in flag_ids:
+						if not flag_id is String or not _is_snake_case_id(String(flag_id)):
+							validation_errors.append("event %s any_flag eligibility contains an invalid flag" % event_id)
+			elif String(eligibility_id) == "seed_slot":
+				var slot: Variant = eligibility[eligibility_id]
+				if not slot is Dictionary or not _is_integer_number(slot.get("mod")) or int(slot.get("mod", 0)) < 2 or int(slot.get("mod", 0)) > 32 or not slot.get("slots") is Array or slot.get("slots", []).is_empty():
+					validation_errors.append("event %s seed_slot eligibility needs mod 2 to 32 and non-empty slots" % event_id)
+				else:
+					for slot_value in slot.get("slots", []):
+						if not _is_integer_number(slot_value) or int(slot_value) < 0 or int(slot_value) >= int(slot.get("mod", 0)):
+							validation_errors.append("event %s seed_slot eligibility contains an out-of-range slot" % event_id)
+			else:
+				validation_errors.append("event %s has unsupported eligibility: %s" % [event_id, String(eligibility_id)])
 	var choices: Variant = event.get("choices", [])
 	var choice_ids: Array[String] = []
 	if not choices is Array or choices.is_empty():
@@ -619,17 +934,64 @@ func validate_event_definition(event: Dictionary, expected_id: String) -> Array[
 				validation_errors.append("event %s has duplicate choice id: %s" % [event_id, choice_id])
 			else:
 				choice_ids.append(choice_id)
+			for required_field in REQUIRED_EVENT_CHOICE_FIELDS:
+				if not choice.has(required_field):
+					validation_errors.append("event %s choice %s is missing required field: %s" % [event_id, choice_id, required_field])
 			for field in ["label", "visible_result"]:
 				if not choice.get(field) is String or String(choice.get(field, "")).strip_edges().is_empty():
 					validation_errors.append("event %s choice %s must have non-empty %s" % [event_id, choice_id, field])
 			_validate_event_requirements(event_id, choice_id, choice.get("requirements", {}), validation_errors)
-			_validate_event_effects(event_id, choice_id, choice.get("effects", []), validation_errors)
+			_validate_event_effects(event_id, choice_id, choice.get("effects", []), known_room_ids, validation_errors)
+			_validate_event_choice_flags(event_id, choice_id, choice.get("flags", {}), validation_errors)
+	var commander_variants: Variant = event.get("commander_variants", {})
+	if not commander_variants is Dictionary:
+		validation_errors.append("event %s commander_variants must be an object" % event_id)
+	else:
+		for commander_id_value in commander_variants.keys():
+			var commander_id: String = String(commander_id_value)
+			var variant: Variant = commander_variants[commander_id_value]
+			if not commander_ids().has(commander_id) or not variant is Dictionary or not variant.get("setup") is String or String(variant.get("setup", "")).strip_edges().is_empty() or not variant.get("choice_labels", {}) is Dictionary:
+				validation_errors.append("event %s commander variant %s is malformed" % [event_id, commander_id])
+				continue
+			for variant_choice_id in variant.get("choice_labels", {}).keys():
+				if not choice_ids.has(String(variant_choice_id)) or not variant.choice_labels[variant_choice_id] is String or String(variant.choice_labels[variant_choice_id]).strip_edges().is_empty():
+					validation_errors.append("event %s commander variant %s references an invalid choice label" % [event_id, commander_id])
 	var follow_up: Variant = event.get("follow_up", "")
 	if not follow_up is String or (not String(follow_up).is_empty() and not _is_snake_case_id(String(follow_up))):
 		validation_errors.append("event %s follow_up must be empty or snake_case" % event_id)
 	if String(follow_up) == event_id:
 		validation_errors.append("event %s cannot follow itself" % event_id)
 	return validation_errors
+
+func _validate_event_selection(event_id: String, selection: Variant, validation_errors: Array[String]) -> void:
+	if not selection is Dictionary:
+		validation_errors.append("event %s selection must be an object" % event_id)
+		return
+	for field in REQUIRED_EVENT_SELECTION_FIELDS:
+		if not selection.has(field):
+			validation_errors.append("event %s selection is missing required field: %s" % [event_id, field])
+	for field_value in selection.keys():
+		var field: String = String(field_value)
+		if not REQUIRED_EVENT_SELECTION_FIELDS.has(field):
+			validation_errors.append("event %s selection has unsupported field: %s" % [event_id, field])
+	var stream: String = String(selection.get("stream", ""))
+	if not selection.get("stream") is String or not _is_snake_case_id(stream):
+		validation_errors.append("event %s selection stream must be snake_case" % event_id)
+	var repeat_policy: String = String(selection.get("repeat_policy", ""))
+	if not SUPPORTED_EVENT_REPEAT_POLICIES.has(repeat_policy):
+		validation_errors.append("event %s selection repeat_policy is unsupported" % event_id)
+	var cooldown_waves: Variant = selection.get("cooldown_waves")
+	if not _is_integer_number(cooldown_waves) or int(cooldown_waves) < 0 or int(cooldown_waves) > MAX_EVENT_COOLDOWN_WAVES:
+		validation_errors.append("event %s selection cooldown_waves must be an integer from 0 to %d" % [event_id, MAX_EVENT_COOLDOWN_WAVES])
+	var max_occurrences: Variant = selection.get("max_occurrences")
+	if not _is_integer_number(max_occurrences) or int(max_occurrences) < 1 or int(max_occurrences) > MAX_EVENT_OCCURRENCES:
+		validation_errors.append("event %s selection max_occurrences must be an integer from 1 to %d" % [event_id, MAX_EVENT_OCCURRENCES])
+	if repeat_policy == "once_per_run" and (cooldown_waves != 0 or max_occurrences != 1):
+		validation_errors.append("event %s selection once_per_run requires cooldown_waves 0 and max_occurrences 1" % event_id)
+	if repeat_policy == "repeat_after_cooldown" and (not _is_integer_number(cooldown_waves) or int(cooldown_waves) < 1):
+		validation_errors.append("event %s selection repeat_after_cooldown requires at least one cooldown wave" % event_id)
+	if repeat_policy == "repeat_after_cooldown" and (not _is_integer_number(max_occurrences) or int(max_occurrences) < 2):
+		validation_errors.append("event %s selection repeat_after_cooldown requires max_occurrences of at least 2" % event_id)
 
 func _validate_event_requirements(event_id: String, choice_id: String, requirements: Variant, validation_errors: Array[String]) -> void:
 	if not requirements is Dictionary:
@@ -639,15 +1001,29 @@ func _validate_event_requirements(event_id: String, choice_id: String, requireme
 		if not SUPPORTED_EVENT_REQUIREMENTS.has(String(requirement_id)):
 			validation_errors.append("event %s choice %s has unsupported requirement: %s" % [event_id, choice_id, String(requirement_id)])
 			continue
+		if String(requirement_id) == "piece_available":
+			if not requirements[requirement_id] is String or not piece_ids().has(String(requirements[requirement_id])):
+				validation_errors.append("event %s choice %s piece_available must reference a known piece" % [event_id, choice_id])
+			continue
 		var constraint: Variant = requirements[requirement_id]
 		if not constraint is Dictionary or constraint.size() != 1:
 			validation_errors.append("event %s choice %s requirement %s must contain one constraint" % [event_id, choice_id, String(requirement_id)])
 			continue
 		var operator_id: String = String(constraint.keys()[0])
-		if not ["gte", "lt"].has(operator_id) or not _is_integer_number(constraint[operator_id]):
+		if not SUPPORTED_EVENT_REQUIREMENT_OPERATORS.has(operator_id) or not _is_integer_number(constraint[operator_id]):
 			validation_errors.append("event %s choice %s requirement %s has invalid constraint" % [event_id, choice_id, String(requirement_id)])
+		elif int(constraint[operator_id]) < 0:
+			validation_errors.append("event %s choice %s requirement %s must use a non-negative integer" % [event_id, choice_id, String(requirement_id)])
 
-func _validate_event_effects(event_id: String, choice_id: String, effects: Variant, validation_errors: Array[String]) -> void:
+func _validate_event_choice_flags(event_id: String, choice_id: String, flags: Variant, validation_errors: Array[String]) -> void:
+	if not flags is Dictionary:
+		validation_errors.append("event %s choice %s flags must be an object" % [event_id, choice_id])
+		return
+	for flag_id in flags.keys():
+		if not _is_snake_case_id(String(flag_id)) or not flags[flag_id] is bool:
+			validation_errors.append("event %s choice %s flag %s must be a stable boolean" % [event_id, choice_id, String(flag_id)])
+
+func _validate_event_effects(event_id: String, choice_id: String, effects: Variant, known_room_ids: Array, validation_errors: Array[String]) -> void:
 	if not effects is Array or effects.is_empty():
 		validation_errors.append("event %s choice %s must define typed effects" % [event_id, choice_id])
 		return
@@ -659,6 +1035,14 @@ func _validate_event_effects(event_id: String, choice_id: String, effects: Varia
 		if not SUPPORTED_EVENT_EFFECTS.has(operation):
 			validation_errors.append("event %s choice %s has unsupported effect: %s" % [event_id, choice_id, operation])
 			continue
+		var expected_fields: Array = EVENT_EFFECT_FIELDS.get(operation, [])
+		for required_field in expected_fields:
+			if not effect.has(required_field):
+				validation_errors.append("event %s choice %s effect %s is missing required field: %s" % [event_id, choice_id, operation, String(required_field)])
+		for field_value in effect.keys():
+			var field: String = String(field_value)
+			if field != "op" and not expected_fields.has(field):
+				validation_errors.append("event %s choice %s effect %s has unsupported field: %s" % [event_id, choice_id, operation, field])
 		if ["spend_command_points", "spend_recovery_action", "add_materials", "add_morale"].has(operation):
 			if not _is_integer_number(effect.get("amount")) or int(effect.get("amount", 0)) <= 0:
 				validation_errors.append("event %s choice %s effect %s needs a positive integer amount" % [event_id, choice_id, operation])
@@ -669,6 +1053,19 @@ func _validate_event_effects(event_id: String, choice_id: String, effects: Varia
 			validation_errors.append("event %s choice %s record_outcome needs a snake_case tag" % [event_id, choice_id])
 		elif operation == "unlock_modifier" and not _known_modifier_ids().has(String(effect.get("modifier", ""))):
 			validation_errors.append("event %s choice %s references unknown modifier" % [event_id, choice_id])
+		elif operation == "repair_room":
+			if not effect.get("room") is String or not known_room_ids.has(String(effect.get("room", ""))):
+				validation_errors.append("event %s choice %s repair_room references unknown room" % [event_id, choice_id])
+		elif operation == "assign_piece":
+			if not effect.get("piece") is String or not piece_ids().has(String(effect.get("piece", ""))):
+				validation_errors.append("event %s choice %s assign_piece references unknown piece" % [event_id, choice_id])
+			if not effect.get("room") is String or not known_room_ids.has(String(effect.get("room", ""))):
+				validation_errors.append("event %s choice %s assign_piece references unknown room" % [event_id, choice_id])
+	if effects is Array and effects.size() > 1:
+		for effect in effects:
+			if effect is Dictionary and ["repair_room", "assign_piece"].has(String(effect.get("op", ""))):
+				validation_errors.append("event %s choice %s authoritative recovery effects must be the only effect" % [event_id, choice_id])
+				break
 
 func validate_modifier_definition(modifier: Dictionary, expected_id: String) -> Array[String]:
 	var validation_errors: Array[String] = []
@@ -774,6 +1171,50 @@ func _load_commander(path: String) -> void:
 	if validation_errors.is_empty():
 		_commanders[commander_id] = commander.duplicate(true)
 
+func _load_keep(path: String) -> void:
+	if not FileAccess.file_exists(path):
+		errors.append("missing keep file: %s" % path)
+		return
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		errors.append("could not open keep file: %s" % path)
+		return
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		errors.append("keep file must contain one JSON object: %s" % path)
+		return
+	var authored: Dictionary = parsed
+	var keep_id: String = String(authored.get("id", ""))
+	var validation_errors: Array[String] = validate_keep_definition(authored, path.get_file().get_basename())
+	if _keeps.has(keep_id):
+		validation_errors.append("duplicate keep id: %s" % keep_id)
+	for validation_error in validation_errors:
+		errors.append("%s: %s" % [path, validation_error])
+	if validation_errors.is_empty():
+		_keeps[keep_id] = _normalize_keep(authored)
+
+func _load_region(path: String, known_room_ids: Array) -> void:
+	if not FileAccess.file_exists(path):
+		errors.append("missing region file: %s" % path)
+		return
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		errors.append("could not open region file: %s" % path)
+		return
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		errors.append("region file must contain one JSON object: %s" % path)
+		return
+	var region: Dictionary = parsed
+	var region_id: String = String(region.get("id", ""))
+	var validation_errors: Array[String] = validate_region_definition(region, path.get_file().get_basename(), known_room_ids)
+	if _regions.has(region_id):
+		validation_errors.append("duplicate region id: %s" % region_id)
+	for validation_error in validation_errors:
+		errors.append("%s: %s" % [path, validation_error])
+	if validation_errors.is_empty():
+		_regions[region_id] = region.duplicate(true)
+
 func _load_piece(path: String, known_room_ids: Array, known_enemy_ids: Array) -> void:
 	if not FileAccess.file_exists(path):
 		errors.append("missing piece file: %s" % path)
@@ -854,7 +1295,10 @@ func _load_scenario(path: String, known_room_ids: Array) -> void:
 		return
 	var scenario: Dictionary = parsed
 	var scenario_id: String = String(scenario.get("id", ""))
-	var validation_errors: Array[String] = validate_scenario_definition(scenario, path.get_file().get_basename(), known_room_ids)
+	var scenario_room_ids: Array[String] = _room_ids_for_keep(String(scenario.get("keep_id", "")))
+	if scenario_room_ids.is_empty():
+		scenario_room_ids.assign(known_room_ids)
+	var validation_errors: Array[String] = validate_scenario_definition(scenario, path.get_file().get_basename(), scenario_room_ids, keep_ids(), pack_ids())
 	if _scenarios.has(scenario_id):
 		validation_errors.append("duplicate scenario id: %s" % scenario_id)
 	for validation_error in validation_errors:
@@ -862,7 +1306,7 @@ func _load_scenario(path: String, known_room_ids: Array) -> void:
 	if validation_errors.is_empty():
 		_scenarios[scenario_id] = scenario.duplicate(true)
 
-func _load_event(path: String) -> void:
+func _load_event(path: String, known_room_ids: Array) -> void:
 	if not FileAccess.file_exists(path):
 		errors.append("missing event file: %s" % path)
 		return
@@ -876,7 +1320,12 @@ func _load_event(path: String) -> void:
 		return
 	var event: Dictionary = parsed
 	var event_id: String = String(event.get("id", ""))
-	var validation_errors: Array[String] = validate_event_definition(event, path.get_file().get_basename())
+	var event_scenario_id: String = String(event.get("scenario", ""))
+	var event_keep_id: String = String(_scenarios.get(event_scenario_id, {}).get("keep_id", ""))
+	var event_room_ids: Array[String] = _room_ids_for_keep(event_keep_id)
+	if event_room_ids.is_empty():
+		event_room_ids.assign(known_room_ids)
+	var validation_errors: Array[String] = validate_event_definition(event, path.get_file().get_basename(), event_room_ids)
 	if _events.has(event_id):
 		validation_errors.append("duplicate event id: %s" % event_id)
 	for validation_error in validation_errors:
@@ -949,6 +1398,16 @@ func _validate_event_follow_ups() -> void:
 		var follow_up: String = String(_events[event_id].get("follow_up", ""))
 		if not follow_up.is_empty() and not _events.has(follow_up):
 			errors.append("event %s references unavailable follow_up: %s" % [event_id, follow_up])
+		elif not follow_up.is_empty() and String(_events[follow_up].get("scenario", "")) != String(_events[event_id].get("scenario", "")):
+			errors.append("event %s follow_up crosses scenarios: %s" % [event_id, follow_up])
+		var visited: Array[String] = []
+		var current_id: String = event_id
+		while not current_id.is_empty() and _events.has(current_id):
+			if visited.has(current_id):
+				errors.append("event follow_up cycle includes: %s" % current_id)
+				break
+			visited.append(current_id)
+			current_id = String(_events[current_id].get("follow_up", ""))
 
 func _validate_scenario_event_references() -> void:
 	for scenario_id in scenario_ids():
@@ -1024,6 +1483,25 @@ func _normalize_piece(authored: Dictionary) -> Dictionary:
 	runtime.defense = int(attack_profile.get("defense", 0))
 	runtime.max_ammo = int(attack_profile.get("ammo_capacity", 0))
 	runtime.targets = attack_profile.get("targets", []).duplicate()
+	return runtime
+
+func _normalize_keep(authored: Dictionary) -> Dictionary:
+	var runtime: Dictionary = authored.duplicate(true)
+	var normalized_rooms: Dictionary = {}
+	for room_id_value in authored.get("rooms", {}).keys():
+		var room: Dictionary = authored.rooms[room_id_value].duplicate(true)
+		var origin: Array = room.get("origin", [0, 0])
+		var size: Array = room.get("size", [1, 1])
+		room.origin = Vector2i(int(origin[0]), int(origin[1]))
+		room.size = Vector2i(int(size[0]), int(size[1]))
+		normalized_rooms[String(room_id_value)] = room
+	runtime.rooms = normalized_rooms
+	var spatial_rule: Dictionary = authored.get("spatial_rule", {}).duplicate(true)
+	var lane_cells: Array[Vector2i] = []
+	for cell in spatial_rule.get("lane_cells", []):
+		lane_cells.append(Vector2i(int(cell[0]), int(cell[1])))
+	spatial_rule.lane_cells = lane_cells
+	runtime.spatial_rule = spatial_rule
 	return runtime
 
 func _is_integer_number(value: Variant) -> bool:

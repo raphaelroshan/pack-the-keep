@@ -7,6 +7,7 @@
   "type": "scenario_conclusion",
   "scenario": "relief_road",
   "trigger": {"phase": "results", "wave": 3},
+  "selection": {"stream": "relief_road_results", "repeat_policy": "once_per_run", "cooldown_waves": 0, "max_occurrences": 1},
   "setup": "The last bell carries beyond Greywatch. Record the keep that survived, including its damage and remaining reserve.",
   "choices": [
     {

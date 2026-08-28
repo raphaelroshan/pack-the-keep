@@ -4,6 +4,8 @@
   "question": "Can the keep preserve distinct answers as armored, obscured, and protection-piercing pressure overlap?",
   "objective": "Complete three mixed waves without collapsing the keep's response network.",
   "lesson": "A resilient plan layers direct counters, reliable warning, and a secondary line instead of overinvesting in one answer.",
+  "keep_id": "greywatch_keep",
+  "recommended_packs": ["bell_guard", "crossbow_watch"],
   "starting_doctrine": "shielded_advance",
   "doctrines": ["shielded_advance", "smoke_and_signal", "break_the_line"],
   "wave_plans": [["shield_guard", "ash_slinger"], ["ash_slinger", "shieldbreaker"], ["shield_guard", "ash_slinger", "shieldbreaker"]],

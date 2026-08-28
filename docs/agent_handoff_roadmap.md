@@ -1,12 +1,12 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
-**Document status:** Active planning contract for post-v0.12.3 development
-**Current release baseline:** `0.12.3-alpha-packaged-pause-close` on remote `main` (`63a3a2d`)
-**Release posture:** CI-verified private/internal alpha-hardening branch; no v0.12.3 tag or public release yet
+**Document status:** Active planning contract for post-v0.14.2 development
+**Current release baseline:** `0.16.2-playtest-provenance` on PR #26; remote `main` remains owner-controlled
+**Release posture:** CI-verified public repository with owner-controlled merges; no public alpha release or storefront claim yet
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
 **Primary keep:** Greywatch Keep
-**Authoring posture:** Agent-first, deterministic, private/internal until a human-approved alpha release
+**Authoring posture:** Agent-first, deterministic, public-source development with owner-controlled pre-alpha releases
 
 > **Core promise:** Choose a commander, open coherent equipment-and-soldier packs, arrange a readable top-down keep, and adapt when an invasion tests the doctrine that the player built.
 
@@ -18,9 +18,9 @@ This document is intended to be handed to a GPT coding agent together with `AGEN
 
 Pack the Keep currently has a playable Greywatch vertical slice. The authoritative simulation is in `src/core/keep_state.gd`; the runtime-built presentation and fort renderer are in `src/ui/main.gd`; the main scene is `scenes/Main.tscn`; machine-readable capability declarations are in `content/content_manifest.json` and `content/gameplay_framework.json`.
 
-The current slice supports two commanders, seventeen active defender pieces/equipment, nine packs, seven enemy types, eight invasion doctrines, eight authored scenarios, two mutually exclusive run modifiers, a two-floor square fort, deterministic six-step combat waves, repair and assignment intervals, finite ranged ammunition, authored armor and armor-piercing counters, nearby ranged support, linked signal redundancy, bounded forecast disruption, adjacent room/piece protection, protection-piercing target selection, commander abilities, pause/speed/manual-step controls, controller navigation/remapping, persistent presentation settings, map-first enemy focus, placement previews, save/load, a quick-playtest flow, and three-wave authored sequences that advance only after explicit recovery completion.
+The current slice supports two commanders, seventeen active defender pieces/equipment, nine packs, seven enemy types, eight invasion doctrines, nine authored scenarios across two defensive identities, two mutually exclusive run modifiers, two-floor boards, deterministic six-step combat waves, repair and assignment intervals, finite ranged ammunition, authored armor and armor-piercing counters, nearby ranged support, linked signal redundancy, bounded forecast disruption, adjacent room/piece protection, protection-piercing target selection, commander abilities, pause/speed/manual-step controls, controller navigation/remapping, persistent presentation settings, map-first enemy focus, placement previews, save/load, a quick-playtest flow, and three-wave authored sequences that advance only after explicit recovery completion.
 
-P11 content breadth is complete. Three teaching pairs are implemented: Crossbow Watch versus Shielded Advance, Bell Guard versus Smoke and Signal, and Shieldwall versus Break the Line. Three Bells at Dusk composes all three questions across two viable two-pack baselines. The Campaign Ledger offers Roadside Intelligence or the Hardened Vanguard durability challenge through one data-driven selection boundary. P12 packaged alpha hardening is implemented through Windows smoke coverage for offline launch, runtime content loading, persistence, malformed-save recovery, controller paths, remapping, scaling, pause/manual-step behavior, and clean teardown. The next bounded platform objective is clean reinstall behavior.
+P11 content breadth is complete. Three teaching pairs are implemented: Crossbow Watch versus Shielded Advance, Bell Guard versus Smoke and Signal, and Shieldwall versus Break the Line. Three Bells at Dusk composes all three questions across two viable two-pack baselines. The Campaign Ledger offers Roadside Intelligence or the Hardened Vanguard durability challenge through one data-driven selection boundary. P12 alpha hardening now has machine-readable evidence for Windows launch, offline play, persistence location, malformed saves, migration, controller, scaling, remapping, pause, close, and clean reinstall. Run saves and presentation settings both validate primary/backup candidates without promoting stranded temporary files; run-save loading also validates nested identities and collection shapes before mutating candidate state. P15 adds Ash Ford Redoubt as a second isolated defensive identity with a different room graph, clear-causeway spatial rule, Runner Network plus Field Engineers doctrine, and shallow distributed repairs. Terminal runs now also produce one persisted Low Mill/Miller's Road consequence and bounded one-shot support for the next scenario, without a map or economy. A local all-scenario matrix runs all nine scenarios for both commanders across three seeds both uninterrupted and through active-wave or recovery/event save checkpoints, proving 54 viable cases and 108 deterministic simulations without treating automation as a human playtest. P16 readiness now supplies a privacy-light four-session matrix, exact observation contract, record generator, validator, visible pre-alpha build identity, deterministic repeated-finding triage, and exact executable/source provenance. No human session has been fabricated or inferred; automated status remains a candidate pending human alpha approval.
 
 The next objective is no longer to complete P5–P12. Those milestones are historical implementation contracts and should be treated as regression requirements. The next objective is to make the now-expanded content breadth coherent, to implement the strongest portion of the event/occurrence bible, and to reduce UX/core maintainability risk before adding a large campaign layer or more combat exceptions.
 
@@ -98,11 +98,11 @@ Milestones must be completed in order. An agent may split a milestone into small
 | P9 | Implemented baseline | Campaign Ledger supports bounded modifiers such as Roadside Intelligence and Hardened Vanguard. | Avoid grind; add only unlocks that create new decisions. |
 | P10 | Implemented | Accessibility preferences, controller/scaling, event-feed retention, auto-pause, and semantic feedback exist. | Reduce UI density and extract maintainable presentation components. |
 | P11 | Implemented | Crossbow Watch, Bell Guard, Shieldwall, Three Bells, and Hardened Vanguard are tested teaching content. | Add breadth only through isolated counter questions. |
-| P12 | Implemented baseline; clean reinstall pending | Packaged Windows smoke validates launch, offline behavior, saves, recovery, input, scaling, pause, and teardown. | Finish reinstall/upgrade safety before public alpha claims. |
-| P13 | Next | Greywatch content integration: implement selected events from `design/events_occurrences_bible.md`, deepen character arcs, and connect event consequences to existing rooms and reports. | Prefer one complete event chain over a broad random catalog. |
-| P14 | Planned | UX decomposition and authoring tools: split the UI monolith, improve event/ledger inspection, and make content validation agent-friendly. | Lower maintenance cost before campaign expansion. |
-| P15 | Planned | Multi-keep or regional structure with two genuinely distinct defensive identities. | Only begin after Greywatch’s event loop and replay value are proven. |
-| P16 | Planned | Private alpha readiness and human playtest hardening. | Requires explicit owner approval; not an automatic storefront release. |
+| P12 | Implemented baseline | Packaged Windows smoke validates launch, offline behavior, saves, nested recovery, input, scaling, pause, teardown, clean reinstall, and deterministic scenario resume. | Preserve as an alpha regression gate while human approval remains pending. |
+| P13 | Implemented baseline | Gatehouse recovery, bounded Ledger/Results history, The Wrong Wall chain, Mara Venn's Second Door arc, and one deterministic Old Drain occurrence are integrated and tested. | Begin P14 by extracting one presentation panel without redesigning it. |
+| P14 | Implemented baseline | The authored-event panel is extracted; event definitions have explicit bounded scheduling and schema validation; packaged Windows smoke covers clean install, relocated reinstall, stale backups, missing profiles, and schema upgrades. | Preserve these boundaries while extending P15. |
+| P15 | Implemented | Greywatch and Ash Ford provide distinct defense identities; completed runs now produce one persisted Low Mill/Miller's Road political consequence and bounded next-run support. | Preserve the no-map/no-economy boundary and begin only controlled P16 human playtest hardening. |
+| P16 | Readiness, triage, and provenance implemented; sessions pending | Controlled alpha protocol, exact artifact identity, evidence schema, validation, and repeated-finding summaries are in place. | Run all four human-observed combinations against one artifact cohort, implement repeated friction tasks, and require explicit owner approval before release preparation. |
 
 P13 onward are planning identifiers, not permission to release automatically. Every milestone still requires local validation, CI, visual review, and explicit human approval before external distribution. The existing P5–P12 sections below remain useful as acceptance contracts, but agents must not re-implement them unless a regression or refactor explicitly requires it.
 
@@ -508,13 +508,15 @@ Events must be structured data with validated requirements, choices, effects, vi
 {
   "id": "repair_station_argument",
   "type": "recovery",
-  "trigger": {"phase": "recovery", "scenario": "gatehouse_lock", "wave": 2},
+  "scenario": "gatehouse_lock",
+  "trigger": {"phase": "recovery", "wave": 2},
+  "selection": {"stream": "recovery_event_wave_2", "repeat_policy": "once_per_run", "cooldown_waves": 0, "max_occurrences": 1},
   "setup": "The repair crew can stabilize the Workshop or reinforce the upper response lane, but not both.",
   "choices": [
     {
       "id": "stabilize_workshop",
       "requirements": {"materials": {"gte": 8}},
-      "effects": [{"op": "repair_room", "room": "workshop", "amount": 30}],
+      "effects": [{"op": "repair_room", "room": "workshop"}],
       "visible_result": "The support chain is safer, but the climber lane remains thin."
     },
     {
@@ -944,9 +946,9 @@ Bad tasks are things such as:
 
 ---
 
-# 15. Release and private prerelease discipline
+# 15. Release and prerelease discipline
 
-The repository is private and should remain internal until the human owner approves broader distribution.
+The repository is public, but builds remain explicitly pre-alpha until the human owner approves broader distribution. Public source visibility is not release approval.
 
 ## Local gate
 
@@ -977,7 +979,7 @@ A transient job failure may be rerun only after inspecting the log. Do not hide 
 
 ## Tag/release gate
 
-Create a new immutable annotated tag only after main CI succeeds. Never move or reuse a previous tag. The release workflow must complete successfully and the private prerelease must contain:
+Create a new immutable annotated tag only after main CI succeeds. Never move or reuse a previous tag. The release workflow must complete successfully and the prerelease must contain:
 
 - Windows executable.
 - Source archive.
@@ -1032,13 +1034,15 @@ Only after Greywatch’s event loop is stable, prototype a second keep or substa
 
 Represent one settlement, one route, and one political consequence as a bounded report/state change. Do not build a shop, economy, faction reputation tree, or large map until the player can understand how the previous keep run caused the regional change.
 
-## Slice K — P16 private alpha playtest hardening
+## Slice K — P16 controlled alpha playtest hardening
 
 Run structured human playtests for onboarding, first successful hold, partial breach recovery, event comprehension, replay motivation, controller/scaling use, pause trust, save recovery, and packaged close. Convert repeated observations into small reversible tasks.
 
+Readiness tooling is implemented in `content/p16_playtest_protocol.json`, `tools/new_playtest_session.py`, `tools/validate_p16_playtests.py`, `tools/summarize_p16_playtests.py`, and `playtests/sessions/`. The title screen exposes the pre-alpha version, while every session records the exact source revision, executable filename, size, and SHA-256 digest. Matrix completion is evaluated per artifact cohort so evidence from different builds cannot be combined. Stable issue keys appearing in two or more human records become deterministic task candidates; automation must never invent findings, populate successful observations, or complete the human gate. The four human-observed matrix sessions and resulting friction fixes remain pending.
+
 ## Slice L — P16 release preparation
 
-Finish clean reinstall behavior, review Windows artifacts, create the first post-P12 immutable tag only after main CI passes, and keep the release private/internal until the human owner approves broader distribution.
+Review Windows artifacts, create the first post-P12 immutable tag only after main CI passes, and keep any public prerelease clearly labeled as pre-alpha until the human owner approves broader distribution.
 ---
 
 # 17. Definition of a successful future build

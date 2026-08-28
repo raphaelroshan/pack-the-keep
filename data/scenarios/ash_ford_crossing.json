@@ -1,0 +1,18 @@
+{
+  "id": "ash_ford_crossing", "content_version": 1, "status": "active", "name": "Ash Ford Crossing",
+  "short_role": "Defend two banks without blocking the only reliable crossing.",
+  "question": "Can mobile relief and shallow repairs keep the causeway functioning under shifting pressure?",
+  "objective": "Preserve the West Bridgehead, Sluice House, and Grain Store while leaving the marked causeway open.",
+  "lesson": "At Ash Ford, empty crossing space is active protection and recovery must be spread across exposed functions.",
+  "keep_id": "ash_ford_redoubt",
+  "recommended_packs": ["runner_network", "field_engineers"],
+  "starting_doctrine": "rolling_breach",
+  "doctrines": ["rolling_breach", "distributed_sabotage", "area_pressure"],
+  "wave_plans": [["raider", "sapper"], ["raider", "sapper", "climber"], ["siege_beast", "sapper"]],
+  "event_chain": [],
+  "variations": [
+    {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
+    {"id": "high_water", "materials": -2, "morale": 1, "target_room": "workshop"},
+    {"id": "grain_convoy", "materials": 3, "morale": -1, "target_room": "supply_room"}
+  ]
+}

@@ -88,7 +88,7 @@ The first implementation should use **one primary event per phase**. Optional ev
 
 ### Eligibility and deterministic selection
 
-Each event has a stable ID, a type, an eligibility predicate, a weight, a cooldown, a repeat policy, and a seed stream. The selector should first filter by hard requirements, then choose from the eligible pool using the run seed and a named stream such as `preparation_occurrence_02`.
+Each event has a stable ID, a type, an eligibility predicate, a cooldown, a repeat policy, an occurrence bound, and a seed stream. The current authored-chain runtime declares those fields even for once-per-run events. A future pooled selector may add weights; it should first filter by hard requirements, then choose from the eligible pool using the run seed and a named stream such as `preparation_occurrence_02`.
 
 The selector must not choose an event that:
 
@@ -930,7 +930,7 @@ Non-goals:
       "id": "repair_workshop",
       "label": "Repair Workshop",
       "requirements": {"materials": {"gte": 8}, "recovery_actions": {"gte": 1}},
-      "effects": [{"op": "repair_room", "room": "workshop", "amount": 30}],
+      "effects": [{"op": "repair_room", "room": "workshop"}],
       "visible_result": "The Workshop can support the next defense again.",
       "future_hooks": ["mara_second_door"]
     },
@@ -942,7 +942,7 @@ Non-goals:
       "visible_result": "Repair reach improves, but the unit is committed to the Workshop."
     }
   ],
-  "selection": {"stream": "recovery_event_wave_2", "repeat_policy": "once_per_run"}
+  "selection": {"stream": "recovery_event_wave_2", "repeat_policy": "once_per_run", "cooldown_waves": 0, "max_occurrences": 1}
 }
 ```
 

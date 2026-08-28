@@ -1,0 +1,35 @@
+{
+  "id": "workshop_can_wait",
+  "content_version": 1,
+  "status": "active",
+  "title": "The Workshop Can Wait",
+  "short_role": "Choose whether to restore the support chain or staff it before the flank arrives.",
+  "type": "recovery",
+  "scenario": "gatehouse_lock",
+  "trigger": {"phase": "recovery", "wave": 2},
+  "selection": {"stream": "gatehouse_workshop_recovery", "repeat_policy": "once_per_run", "cooldown_waves": 0, "max_occurrences": 1},
+  "eligibility": {
+    "room_condition": {"room": "workshop", "lte": 70},
+    "next_doctrine": ["feint_and_flank"]
+  },
+  "setup": "Sabotage has left the Workshop strained. The masons can rebuild it now, or a nearby Repair Station can commit its crew before the flank arrives.",
+  "choices": [
+    {
+      "id": "repair_workshop",
+      "label": "Repair Workshop (8 materials, 1 action)",
+      "requirements": {"materials": {"gte": 8}, "recovery_actions": {"gte": 1}},
+      "effects": [{"op": "repair_room", "room": "workshop"}],
+      "flags": {"mara_workshop_repaired": true},
+      "visible_result": "The Workshop can support the next defense again, at the cost of materials and one recovery action."
+    },
+    {
+      "id": "assign_repair_station",
+      "label": "Assign Repair Station to Workshop (1 action)",
+      "requirements": {"piece_available": "repair_station", "recovery_actions": {"gte": 1}},
+      "effects": [{"op": "assign_piece", "piece": "repair_station", "room": "workshop"}],
+      "flags": {"mara_station_trusted": true},
+      "visible_result": "The Repair Station crew commits to the Workshop, preserving materials but giving up another recovery action."
+    }
+  ],
+  "follow_up": "mara_second_door"
+}

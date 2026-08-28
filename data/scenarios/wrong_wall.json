@@ -4,9 +4,12 @@
   "question": "Which function fails when the obvious wall is not the real target?",
   "objective": "Keep Workshop and North Tower functional through the mixed pressure.",
   "lesson": "Protect the dependency, not only the obvious wall.",
+  "keep_id": "greywatch_keep",
+  "recommended_packs": ["pike_line", "field_engineers"],
   "starting_doctrine": "distributed_sabotage",
   "doctrines": ["distributed_sabotage", "feint_and_flank", "distributed_sabotage"],
   "wave_plans": [["raider", "sapper"], ["raider", "climber", "sapper"], ["climber", "sapper", "raider", "sapper"]],
+  "event_chain": ["the_bell_has_a_pattern", "the_gate_is_not_the_keep", "wrong_wall_report"],
   "variations": [
     {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
     {"id": "workshop_first", "materials": -3, "morale": 1, "target_room": "workshop"},

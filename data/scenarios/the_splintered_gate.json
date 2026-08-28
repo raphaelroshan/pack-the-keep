@@ -4,6 +4,8 @@
   "question": "Can the keep absorb ordinary pressure without trusting protection against every threat?",
   "objective": "Preserve a secondary response after Shieldbreakers strike the strongest frontline piece.",
   "lesson": "Protection is valuable against ordinary pressure, but a visible breaker demands direct damage or another line.",
+  "keep_id": "greywatch_keep",
+  "recommended_packs": ["shieldwall", "pike_line"],
   "starting_doctrine": "break_the_line",
   "doctrines": ["break_the_line", "gate_assault", "break_the_line"],
   "wave_plans": [["shieldbreaker"], ["shieldbreaker", "raider"], ["shieldbreaker", "shield_guard", "sapper"]],

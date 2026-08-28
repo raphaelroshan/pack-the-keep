@@ -327,3 +327,155 @@
 **Reason:** Pause is a core strategic and accessibility promise. Testing it after export confirms that input, UI state, and deterministic simulation remain correctly separated in the shipped boundary.
 
 **Trade-off:** Headless teardown verifies a clean Godot scene/process path, not forced termination or desktop window-manager behavior.
+
+## ADR-042: Reinstall continuity is profile-owned
+
+**Decision:** Relocate the exported single-file executable and relaunch it against the same isolated profile. Require the new install location to restore the previous run and presentation settings.
+
+**Reason:** Saves and preferences belong to the user profile, not the installation directory. A relocation test catches accidental executable-relative persistence before installer/storefront work begins.
+
+**Trade-off:** This models a portable reinstall and does not yet validate a signed installer, registry cleanup, or storefront-specific uninstall semantics.
+
+## ADR-043: Headless validation does not initialize audio playback
+
+**Decision:** Preserve semantic cue IDs and profiles in headless mode, but do not create or play an `AudioStreamGenerator` when no display/audio presentation is active.
+
+**Reason:** Headless tests validate cue meaning rather than sound output, and Godot 4.4.1 can crash during Windows shutdown while releasing unnecessary audio playback resources.
+
+**Trade-off:** Actual sample generation remains covered by interactive builds and manual audio checks, while headless automation covers the presentation-independent cue contract.
+
+## ADR-044: Alpha readiness has a machine-readable evidence index
+
+**Decision:** Maintain one versioned P12 checklist that maps every required hardening item to repository evidence and validate it both statically and against the combined Windows packaged-smoke report.
+
+**Reason:** A green collection of unrelated jobs is weaker than an explicit requirement-to-evidence map. The checklist makes omissions, stale versions, and missing artifacts fail before a candidate is presented for human review.
+
+**Trade-off:** Automated readiness remains `candidate` status. Human playtesting, signing, storefront review, and release approval stay outside this gate.
+
+## ADR-045: Presentation settings recover through validated candidates
+
+**Decision:** Load presentation settings from a validated primary candidate, then fall back to the backup candidate when the primary is missing, malformed, or uses an unsupported schema. Temporary files are never promoted during load.
+
+**Reason:** Settings use the same atomic primary/temp/backup replacement shape as run saves. A close between renaming the primary to backup and committing the temporary file must not discard accessibility, scale, display, audio, or remapping preferences.
+
+**Trade-off:** Invalid individual fields inside an otherwise supported settings document still fall back to their documented defaults. A recovered backup is not promoted until a later explicit preference save.
+
+## ADR-046: Alpha viability is an all-scenario deterministic matrix
+
+**Decision:** Run one documented viable baseline through every authored scenario for both commanders and three fixed seeds. Execute each case once uninterrupted and once through a fresh-state save/load checkpoint, require byte-identical checkpoint and terminal serialization, three completed waves, a non-collapse outcome, closed final recovery/event state, and the canonical replay key.
+
+**Reason:** Isolated mechanic tests can remain green while an older scenario becomes unwinnable, a final event remains unresolved, a commander-specific path drifts, or persistence changes the continuation. A compact cross-product gate catches those release-wide regressions locally without depending on hosted CI.
+
+**Trade-off:** The matrix proves only that a known answer remains viable and deterministic. It does not establish that all layouts are balanced, that partial breaches feel fair, or that the human alpha playtest is complete.
+
+## ADR-047: Save payloads are preflighted before candidate mutation
+
+**Decision:** Validate top-level scalar types and the nested shape and catalog identity of pieces, rooms, enemies, assignments, metrics, logs, and wave history before copying any saved field into `KeepState`.
+
+**Reason:** Candidate isolation protects the live UI state, but malformed nested data could still trigger script errors or produce a candidate that looked successful while containing unknown gameplay objects. A single preflight boundary makes rejection explicit and keeps backup fallback reliable.
+
+**Trade-off:** Save validation is stricter and adds maintenance when the runtime schema grows. Missing fields remain compatible for older schemas, while present fields must be structurally valid.
+
+## ADR-048: Authored events may invoke bounded recovery commands
+
+**Decision:** Allow validated event effects to invoke one authoritative room-repair or piece-assignment command as the complete effect of a choice. Event eligibility remains data-driven, while `KeepState` performs the same preview and mutation used by ordinary recovery controls.
+
+**Reason:** Greywatch events should change a visible operational decision without duplicating repair costs, adjacency rules, assignment limits, or stable instance selection in UI or scenario-specific code.
+
+**Trade-off:** Recovery-command effects cannot be mixed with other event effects in one choice. Richer multi-effect transactions remain deferred until they can preserve atomic validation without creating a second recovery rules engine.
+
+## ADR-049: Event history has one bounded read projection
+
+**Decision:** Keep complete event history authoritative in `KeepState`, but expose Ledger and Results through one read-only newest-first projection capped to five entries. Run flags are sorted by stable ID and retain explicit boolean values.
+
+**Reason:** Players need a compact account of recent consequences in both existing surfaces, and both views should agree without duplicating sorting, title lookup, or truncation rules in presentation code.
+
+**Trade-off:** Older events remain in saved state and reports but are omitted from the compact UI projection. A searchable cross-run archive remains outside this slice.
+
+## ADR-050: Terminal event triggers may name several authored waves
+
+**Decision:** Event trigger `wave` accepts either one integer or a bounded non-empty array of unique wave indices. The Wrong Wall conclusion uses `[1, 2, 3]` so the same resource-free report can resolve a normal finish or an early collapse.
+
+**Reason:** Collapse ends the authored sequence immediately and skips recovery. A terminal report should explain that outcome without requiring duplicate event definitions or pretending the player reached wave three.
+
+**Trade-off:** Multi-wave triggers remain explicit authored lists, not wildcard scheduling. Validation rejects empty, duplicate, or out-of-range arrays.
+
+## ADR-051: Character arcs use explicit choice flags and authored variants
+
+**Decision:** Event choices may set validated boolean flags only after their typed effects succeed. A future event may require any named flag and may provide commander-specific setup and labels while preserving identical underlying choices and effects.
+
+**Reason:** Mara's arc needs earlier operational decisions to change a later conversation without introducing hidden reputation arithmetic or duplicating events for each commander.
+
+**Trade-off:** Variants alter framing, not combat math. More complex relationship thresholds and branching dialogue remain deferred.
+
+## ADR-052: Rare occurrence selection uses a named deterministic seed slot
+
+**Decision:** A rare authored event may declare a bounded modulus and eligible slots. `KeepState` derives the slot from the run seed plus scenario, the event's named selection stream, and wave; it never consumes global or presentation randomness.
+
+**Reason:** Rare events must replay reliably and vary across known seeds without introducing a general weighted scheduler before the event system needs one.
+
+**Trade-off:** The first occurrence has a fixed one-in-three cadence and flag-only consequences. Weighted pools and combat-changing rare effects remain deferred; bounded cooldown metadata is introduced separately in ADR-054.
+
+## ADR-053: Event-card presentation is a stateless component
+
+**Decision:** Extract authored-event label and button construction into `AuthoredEventPanel`. It accepts an event read model and emits only a stable choice ID; `main.gd` remains responsible for invoking `KeepState` commands.
+
+**Reason:** Event breadth increased enough that construction and rendering obscured the main controller. A narrow component boundary lowers maintenance cost without moving gameplay authority or redesigning the interface.
+
+**Trade-off:** Compatibility aliases remain in `main.gd` for current tests and neighboring UI code. Further panel extraction should remove those only through a separately tested migration.
+
+## ADR-054: Event scheduling is explicit, bounded, and schema-checked
+
+**Decision:** Require every runtime event to declare a stable selection stream, repeat policy, cooldown, and maximum occurrence count. Keep the machine-readable contract in `content/event_schema.json`, mirror it in both validators, derive repeat eligibility from authoritative event history, and use `active_slice.event_ids` as the canonical manifest inventory.
+
+**Reason:** Implicit once-only behavior hid scheduling assumptions in control flow and made content drift difficult to diagnose. Closed choice/effect payloads and explicit graph checks now reject typos, unknown links, cycles, cross-scenario chains, unbounded repetition, and missing manifest entries before gameplay mutation.
+
+**Trade-off:** The current runtime supports only `once_per_run` and bounded `repeat_after_cooldown`; weighted pools and broader campaign scheduling remain deferred. Adding an operation or policy now requires coordinated schema, offline-validator, runtime-validator, and negative-fixture changes.
+
+## ADR-055: Packaged persistence uses a five-phase lifecycle gate
+
+**Decision:** Expand the Windows packaged smoke artifact to include clean-install, relocated-reinstall, stale-backup, missing-profile, and schema-upgrade reports. Keep profile/install setup in the Python runner and application-state assertions in the Godot smoke adapter.
+
+**Reason:** A successful reinstall proves only one persistence path. Release candidates also need evidence that absent profiles retain defaults, valid primaries outrank stale backups, legacy schema-3 data migrates and rewrites cleanly, and presentation settings do not alter deterministic simulation state.
+
+**Trade-off:** CI now launches the exported executable several additional times. Signed installer, registry, shortcut, storefront, and forced-termination behavior still require explicit human or later release validation.
+
+## ADR-056: Scenarios select data-driven defensive identities
+
+**Decision:** Add runtime keep definitions as a validated content type. A scenario names one `keep_id`; `KeepState` derives room geometry, labels, graph, recovery profile, visual profile, and spatial rule from that keep while preserving stable functional room IDs for existing enemy and piece references. Ash Ford's marked causeway reduces room damage by one only while no ground-floor defender footprint occupies it.
+
+**Reason:** P15 needs a genuinely different defensive identity without duplicating enemies, inventing scenario-only UI authority, or forcing every existing room reference through a migration. Scenario-owned keep selection keeps the defense loop isolated and deterministic while making layout and recovery meaningfully different.
+
+**Trade-off:** Both current keeps share the same nine semantic room IDs, so wholly different future functions will require scoped aliases or broader content-reference validation. The second keep remains an isolated scenario; regional travel, economy, and faction systems stay deferred to the next bounded slice.
+
+## ADR-057: Regional consequence is one authored state projection
+
+**Decision:** Represent Low Mill and Miller's Road as one validated runtime region definition. At terminal scenario closure, `KeepState` selects one authored consequence from the run outcome and the lower condition of Gate and Supply Room. The state persists, appears in Ledger and Results, and may contribute zero to three materials exactly once when the next scenario is selected.
+
+**Reason:** P15 needs proof that a keep defense can cause something legible beyond its walls before a map or campaign economy is justified. Named anchors make the cause inspectable, and one-shot support makes the consequence operational without creating a stockpile or hidden reputation score.
+
+**Trade-off:** Low Mill has no player-selected regional action and only one route. The contribution is intentionally small, non-negative, and consumed on scenario selection; travel, shops, settlement inventories, relationship trees, and procedural regional scheduling remain out of scope.
+
+## ADR-058: Human playtest evidence stays human-authored
+
+**Decision:** Define P16 playtest coverage as privacy-light JSON session records generated empty, completed only by a human observer, validated against the exact build identity and four-case commander/modifier matrix, and stored as durable repository evidence. The running title screen displays the same pre-alpha build identity.
+
+**Reason:** Automated simulations prove determinism and known-path viability but cannot establish comprehension, trust, readability, or replay motivation. Explicit records make observations reproducible without allowing CI to impersonate a tester or silently turn readiness into approval.
+
+**Trade-off:** A green validator can report that the matrix is structurally complete, but the `human_playtest` gate and `release_ready` flag remain pending until the owner reviews the evidence. External recruitment, recordings, public distribution, signing, and storefront work remain outside this slice.
+
+## ADR-059: Repeated playtest findings use stable issue keys
+
+**Decision:** Require each finding to carry a stable snake-case issue key. Deterministic summary tooling groups matching keys across records and promotes a task candidate only after the same key appears in at least two sessions, retaining every human-authored summary and suggested action.
+
+**Reason:** The roadmap asks repeated observations to become small reversible work. Stable keys distinguish repetition from coincidental wording while keeping automation limited to counting and presentation.
+
+**Trade-off:** Observers must classify the same problem consistently. The summary can surface evidence but cannot decide product priority, rewrite the finding, create an external ticket, or approve release.
+
+## ADR-060: Playtest matrices are artifact cohorts
+
+**Decision:** Bind every P16 session record to one 40-character source revision and one packaged executable name, byte size, and SHA-256 digest. Count a completed commander/modifier matrix only within a single revision-and-digest cohort.
+
+**Reason:** A version label alone does not prove which binary a person tested, and combining sessions from different fixes can make an untested candidate appear covered. Content-addressed provenance keeps feedback reproducible and the final matrix honest.
+
+**Trade-off:** Rebuilding after a fix starts a new artifact cohort, so the four-case matrix may need to be repeated. The stronger evidence is worth that cost before any owner-approved alpha release.

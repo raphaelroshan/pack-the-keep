@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.12.3-alpha-packaged-pause-close",
+  "framework_version": "0.16.2-playtest-provenance",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -180,6 +180,135 @@
     "input_rule": "persisted_controller_pause_binding_toggles_resume_and_pause",
     "manual_rule": "one_manual_step_advances_exactly_once_while_presentation_remains_paused",
     "close_rule": "main_scene_frees_before_zero_process_exit"
+  },
+  "p12_clean_reinstall_smoke": {
+    "status": "implemented",
+    "install_rule": "embedded_executable_runs_from_a_new_install_directory",
+    "profile_rule": "relocated_build_reuses_user_profile_without_executable_relative_state",
+    "continuity": ["battle_step_one", "125_percent_scale", "remapped_pause_button"]
+  },
+  "p12_release_candidate_audit": {
+    "status": "implemented",
+    "checklist": "all_required_p12_items_have_unique_ids_and_existing_evidence_paths",
+    "package_gate": "combined_windows_five_phase_lifecycle_report_must_satisfy_dynamic_fields",
+    "human_boundary": "automated_success_does_not_publish_or_approve_alpha"
+  },
+  "p12_settings_recovery": {
+    "status": "implemented",
+    "candidate_rule": "primary_and_backup_settings_load_into_validated_candidates_before_preferences_are_applied",
+    "temporary_rule": "stranded_temporary_settings_are_never_promoted_during_load",
+    "fallback_rule": "invalid_individual_fields_use_documented_defaults_and_invalid_documents_may_recover_a_valid_backup"
+  },
+  "p12_alpha_scenario_matrix": {
+    "status": "implemented",
+    "coverage": "nine_scenarios_by_two_commanders_by_three_seeds_run_uninterrupted_and_resumed",
+    "resume_boundaries": ["wave_one_pre_step", "first_recovery_before_event_resolution", "wave_two_pre_step"],
+    "viability_rule": "every_baseline_resolves_three_waves_without_collapse_and_closes_final_recovery_and_events",
+    "determinism_rule": "checkpoint_round_trips_and_uninterrupted_resumed_terminal_states_produce_byte_identical_serialized_json",
+    "human_boundary": "automated_viability_does_not_replace_human_playtest_or_presentation_approval"
+  },
+  "p12_nested_save_validation": {
+    "status": "implemented",
+    "preflight_rule": "validate_identity_scalar_and_nested_collection_shapes_before_mutating_keep_state",
+    "catalog_rule": "saved_piece_enemy_pack_doctrine_scenario_commander_room_and_modifier_ids_must_exist",
+    "fallback_rule": "nested_primary_corruption_is_a_clean_rejection_and_can_recover_the_valid_backup",
+    "compatibility": "missing_legacy_fields_keep_their_existing_defaults_and_schema_migrations"
+  },
+  "p13_workshop_recovery_event": {
+    "status": "implemented",
+    "event": "workshop_can_wait",
+    "trigger": "gatehouse_lock_wave_two_recovery_with_strained_workshop_and_feint_and_flank_next",
+    "choices": ["repair_workshop", "assign_repair_station"],
+    "command_boundary": "typed_event_effects_reuse_authoritative_room_repair_and_piece_assignment_mutations",
+    "persistence": "active_and_resolved_event_state_round_trips_through_schema_4_saves",
+    "determinism_rule": "stable_piece_instance_order_and_preflighted_choices_produce_identical_replays",
+    "non_goals": ["random_scheduler", "campaign_map", "scenario_specific_ui", "new_combat_exception"]
+  },
+  "p13_event_history_ledger": {
+    "status": "implemented",
+    "projection": "read_only_newest_first_five_entry_snapshot_over_authoritative_event_history",
+    "surfaces": ["campaign_ledger", "results_event_consequences"],
+    "flags": "stable_id_sorted_explicit_boolean_run_flags",
+    "determinism_rule": "inspection_refresh_and_presentation_toggles_do_not_mutate_serialized_keep_state"
+  },
+  "p13_wrong_wall_chain": {
+    "status": "implemented",
+    "scenario": "wrong_wall",
+    "chain": ["the_bell_has_a_pattern", "the_gate_is_not_the_keep", "wrong_wall_report"],
+    "paths": ["command_spend", "explicit_decline", "scarce_repair_fallback", "normal_completion", "early_collapse_report"],
+    "trigger_rule": "terminal_result_events_may_list_bounded_authored_wave_indices",
+    "persistence": "active_recovery_event_round_trips_before_choice",
+    "non_goals": ["random_scheduler", "campaign_map", "new_combat_rule", "unbounded_branching"]
+  },
+  "p13_mara_arc": {
+    "status": "implemented",
+    "flags": ["mara_workshop_repaired", "mara_station_trusted", "mara_second_door_open"],
+    "future_event": "mara_second_door",
+    "commander_variants": ["castellan_compact_structure", "warden_open_response_lane"],
+    "choice_flag_rule": "flags_apply_only_after_all_typed_effects_validate_and_succeed",
+    "non_goals": ["relationship_score", "dialogue_tree", "combat_bonus"]
+  },
+  "p13_rare_occurrence": {
+    "status": "implemented",
+    "event": "old_drain_opens",
+    "scenario": "open_yard_net",
+    "selection": "stable_event_stream_selects_one_of_three_seed_slots",
+    "choices": ["seal_old_drain", "mark_escape_route"],
+    "safety_rule": "both_paths_preserve_existing_defensive_counters_and_change_only_visible_flags",
+    "non_goals": ["weighted_pool", "global_rng", "run_ending_randomness"]
+  },
+  "p14_authored_event_panel": {
+    "status": "implemented",
+    "component": "src/ui/authored_event_panel.gd",
+    "ownership": "component_renders_event_read_models_and_emits_choice_ids_only",
+    "authority": "main_controller_dispatches_choices_to_keep_state",
+    "compatibility": "existing_labels_buttons_focus_paths_and_visual_states_preserved"
+  },
+  "p14_event_authoring_safety": {
+    "status": "implemented",
+    "schema": "content/event_schema.json",
+    "selection": "stable_named_stream_plus_explicit_once_or_bounded_cooldown_policy",
+    "choice_validation": "required_fields_bounded_requirements_and_closed_typed_effect_payloads",
+    "graph_validation": "known_same_scenario_acyclic_follow_ups_match_scenario_chain_order",
+    "manifest_parity": "active_event_ids_match_runtime_files_in_both_directions",
+    "runtime_rule": "event_history_enforces_occurrence_limits_and_cooldown_without_duplicating_resolved_ids"
+  },
+  "p14_packaged_lifecycle_safety": {
+    "status": "implemented",
+    "phases": ["clean_install", "reinstall", "stale_backup", "missing_profile", "upgrade"],
+    "adapter_boundary": "python_owns_profile_and_install_layout_godot_reports_application_behavior",
+    "upgrade_contract": "schema_3_profile_restores_then_rewrites_at_schema_4",
+    "backup_contract": "valid_primary_state_outranks_valid_but_stale_backup_state",
+    "simulation_boundary": "presentation_settings_are_proven_not_to_mutate_authoritative_keep_state"
+  },
+  "p15_second_defensive_identity": {
+    "status": "implemented",
+    "keeps": ["greywatch_keep", "ash_ford_redoubt"],
+    "scenario_owned_keep_selection": true,
+    "ash_ford_spatial_rule": "clear_marked_causeway_reduces_room_damage_by_one",
+    "recovery_profiles": ["greywatch_deep_repair", "ash_ford_shallow_distributed_repair"],
+    "non_goals": ["new_unit_roster", "scenario_only_ui_authority", "regional_map"]
+  },
+  "p15_minimal_regional_consequence": {
+    "status": "implemented",
+    "settlement": "low_mill",
+    "route": "mill_road",
+    "derivation": "terminal_outcome_plus_minimum_gate_and_supply_room_condition",
+    "outcomes": ["connected_open", "cautious_contested", "withdrawn_closed"],
+    "next_run_effect": "one_shot_bounded_starting_material_support",
+    "surfaces": ["campaign_ledger", "scenario_results"],
+    "non_goals": ["map", "shop", "stockpile", "reputation_score", "procedural_region_scheduler"]
+  },
+  "p16_playtest_readiness": {
+    "status": "ready_for_human_sessions",
+    "session_contract": "one_privacy_light_human_authored_record_per_observed_session",
+    "matrix": ["castellan_baseline", "castellan_hardened_vanguard", "warden_baseline", "warden_hardened_vanguard"],
+    "observation_contract": ["onboarding", "first_successful_hold", "partial_breach_recovery", "event_comprehension", "replay_motivation", "controller_scaling", "pause_trust", "save_recovery", "packaged_close"],
+    "triage_contract": "human_authored_issue_keys_repeated_in_two_or_more_records_become_deterministic_task_candidates",
+    "provenance_contract": "completed_matrix_coverage_is_counted_per_exact_source_revision_and_artifact_sha256_cohort",
+    "presentation": "title_screen_names_the_exact_pre_alpha_build_identity",
+    "automation_boundary": "validators_may_report_matrix_coverage_but_human_playtest_and_release_gates_remain_pending_until_owner_approval",
+    "non_goals": ["fabricated_sessions", "automatic_release_approval", "external_distribution", "storefront_submission"]
   },
   "v090_multi_wave": {
     "status": "implemented",

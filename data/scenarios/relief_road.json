@@ -4,6 +4,8 @@
   "question": "Can the keep answer a second failure without abandoning the first defense?",
   "objective": "Keep Workshop or Supply Room functional while preserving an interior response lane.",
   "lesson": "A reserve only matters when space, supplies, and a fallback survive together.",
+  "keep_id": "greywatch_keep",
+  "recommended_packs": ["runner_network", "fallback_convoy"],
   "starting_doctrine": "feint_and_flank",
   "doctrines": ["feint_and_flank", "distributed_sabotage", "rolling_breach"],
   "wave_plans": [["raider", "climber"], ["raider", "sapper", "climber"], ["raider", "sapper", "siege_beast"]],
