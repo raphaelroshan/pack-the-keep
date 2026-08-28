@@ -2740,6 +2740,7 @@ class KeepCanvas extends Control:
 	const CELL_Y := 28.0
 	const BASE_CANVAS_SIZE := Vector2(810, 292)
 	const COMBAT_EFFECT_DURATION := 0.52
+	const ASSAULT_TICK_COUNT := 6
 	const MAP_ORIGIN := Vector2(12, 28)
 	const UPPER_ORIGIN := Vector2(436, 28)
 	const MAP_SIZE := Vector2(12 * CELL_X, 8 * CELL_Y)
@@ -2904,6 +2905,38 @@ class KeepCanvas extends Control:
 	func _enemy_contact_is_imminent(index: int) -> bool:
 		var remaining: float = _enemy_contact_remaining(index)
 		return remaining > 0.0 and remaining <= 1.0
+
+	func assault_timeline_snapshot() -> Dictionary:
+		var arrivals: Dictionary = {}
+		var next_arrival_step: int = -1
+		var next_arrival_names: Array[String] = []
+		var continuous_time: float = float(keep.battle_step) + keep.battle_clock if keep != null else 0.0
+		if keep != null:
+			for index in range(keep.enemies.size()):
+				var enemy: Dictionary = keep.enemies[index]
+				if bool(enemy.get("defeated", false)):
+					continue
+				var arrival_step: int = clampi(int(enemy.get("arrival_step", 1)), 1, ASSAULT_TICK_COUNT)
+				var arrival_key: String = str(arrival_step)
+				if not arrivals.has(arrival_key):
+					arrivals[arrival_key] = []
+				var enemy_id: String = String(enemy.get("enemy_id", ""))
+				arrivals[arrival_key].append({"index": index, "enemy_id": enemy_id, "name": String(keep.enemy_definition(enemy_id).get("name", enemy_id))})
+				if float(arrival_step) > continuous_time:
+					if next_arrival_step < 0 or arrival_step < next_arrival_step:
+						next_arrival_step = arrival_step
+						next_arrival_names = [String(keep.enemy_definition(enemy_id).get("name", enemy_id))]
+					elif arrival_step == next_arrival_step:
+						next_arrival_names.append(String(keep.enemy_definition(enemy_id).get("name", enemy_id)))
+		return {
+			"tick_count": ASSAULT_TICK_COUNT,
+			"resolved_ticks": keep.battle_step if keep != null else 0,
+			"fractional_tick": keep.battle_clock if keep != null else 0.0,
+			"progress": clampf(continuous_time / float(ASSAULT_TICK_COUNT), 0.0, 1.0),
+			"arrivals": arrivals,
+			"next_arrival_step": next_arrival_step,
+			"next_arrival_names": next_arrival_names
+		}
 
 	func _enemy_hit(position: Vector2) -> int:
 		if keep == null or not keep.wave_active:
@@ -3205,6 +3238,12 @@ class KeepCanvas extends Control:
 		draw_circle(gate_point, 5.0, Color("#ffd19d"), false, 2.0)
 		draw_string(ThemeDB.fallback_font, gate_point + Vector2(8, -4), "GATE ENTRY", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#ffd19d"))
 
+	func _enemy_marker_color(enemy_id: String) -> Color:
+		return Color("#d26155") if enemy_id == "raider" else Color("#d7a35b") if enemy_id == "sapper" else Color("#a77bd1") if enemy_id == "climber" else Color("#9e3f48") if enemy_id == "shield_guard" else Color("#77727b") if enemy_id == "ash_slinger" else Color("#78453c") if enemy_id == "shieldbreaker" else Color("#b36c45")
+
+	func _enemy_marker_initial(enemy_id: String) -> String:
+		return "R" if enemy_id == "raider" else "S" if enemy_id == "sapper" else "C" if enemy_id == "climber" else "G" if enemy_id == "shield_guard" else "A" if enemy_id == "ash_slinger" else "X" if enemy_id == "shieldbreaker" else "B"
+
 	func _draw_enemies() -> void:
 		if keep == null or not keep.wave_active:
 			return
@@ -3216,7 +3255,7 @@ class KeepCanvas extends Control:
 			var enemy_id: String = String(enemy.get("enemy_id", ""))
 			var enemy_def: Dictionary = keep.enemy_definition(enemy_id)
 			var enemy_origin: Vector2 = _enemy_origin(index) + _enemy_reaction_offset(index)
-			var enemy_color: Color = Color("#d26155") if enemy_id == "raider" else Color("#d7a35b") if enemy_id == "sapper" else Color("#a77bd1") if enemy_id == "climber" else Color("#9e3f48") if enemy_id == "shield_guard" else Color("#77727b") if enemy_id == "ash_slinger" else Color("#78453c") if enemy_id == "shieldbreaker" else Color("#b36c45")
+			var enemy_color: Color = _enemy_marker_color(enemy_id)
 			var marker_radius: float = 12.0 if enemy_id == "siege_beast" else 9.0 if enemy_id == "shield_guard" else 8.0
 			draw_circle(enemy_origin, marker_radius, enemy_color)
 			draw_circle(enemy_origin, marker_radius, Color("#f1dfb8"), false, 1.5)
@@ -3248,8 +3287,47 @@ class KeepCanvas extends Control:
 				draw_circle(target_rect.get_center(), 8.0, Color("#fff4df") if index == focused_enemy_index else Color("#ffb0a6"), false, 2.0)
 				if index == focused_enemy_index:
 					draw_string(ThemeDB.fallback_font, target_rect.position + Vector2(2, -4), "TARGET", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#fff4df"))
-			var doctrine_initial: String = "R" if enemy_id == "raider" else "S" if enemy_id == "sapper" else "C" if enemy_id == "climber" else "G" if enemy_id == "shield_guard" else "A" if enemy_id == "ash_slinger" else "X" if enemy_id == "shieldbreaker" else "B"
+			var doctrine_initial: String = _enemy_marker_initial(enemy_id)
 			draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(-3, 4), doctrine_initial, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#271b22"))
+
+	func _draw_assault_timeline() -> void:
+		if keep == null or not keep.wave_active:
+			return
+		var timeline: Dictionary = assault_timeline_snapshot()
+		var left: float = MAP_ORIGIN.x
+		var right: float = UPPER_ORIGIN.x + MAP_SIZE.x
+		var top: float = MAP_ORIGIN.y + MAP_SIZE.y + 12.0
+		var gap: float = 3.0
+		var segment_width: float = (right - left - gap * float(ASSAULT_TICK_COUNT - 1)) / float(ASSAULT_TICK_COUNT)
+		var resolved_ticks: int = int(timeline.get("resolved_ticks", 0))
+		var fractional_tick: float = float(timeline.get("fractional_tick", 0.0))
+		var completed_color: Color = Color("#77c7a0") if high_contrast_mode else Color("#4f9278")
+		var active_color: Color = Color("#ffd166") if high_contrast_mode else Color("#d26155")
+		for tick_index in range(ASSAULT_TICK_COUNT):
+			var tick_number: int = tick_index + 1
+			var segment: Rect2 = Rect2(Vector2(left + float(tick_index) * (segment_width + gap), top), Vector2(segment_width, 11.0))
+			draw_rect(segment, Color("#342936"), true)
+			draw_rect(segment, Color("#8c7286"), false, 1.0)
+			if tick_number <= resolved_ticks:
+				draw_rect(segment.grow(-1.0), completed_color, true)
+			elif tick_number == resolved_ticks + 1 and resolved_ticks < ASSAULT_TICK_COUNT:
+				draw_rect(Rect2(segment.position + Vector2.ONE, Vector2(maxf(0.0, (segment.size.x - 2.0) * fractional_tick), segment.size.y - 2.0)), active_color, true)
+			draw_string(ThemeDB.fallback_font, segment.position + Vector2(4, 9), "T%d" % tick_number, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#fff4df"))
+			var arrival_rows: Array = timeline.get("arrivals", {}).get(str(tick_number), [])
+			for marker_index in range(arrival_rows.size()):
+				var marker: Dictionary = arrival_rows[marker_index]
+				var enemy_id: String = String(marker.get("enemy_id", ""))
+				var marker_x: float = segment.get_center().x + (float(marker_index) - float(arrival_rows.size() - 1) * 0.5) * 10.0
+				var marker_origin: Vector2 = Vector2(marker_x, top - 5.0)
+				draw_circle(marker_origin, 5.0, _enemy_marker_color(enemy_id))
+				draw_circle(marker_origin, 5.0, Color("#fff4df"), false, 1.0)
+				draw_string(ThemeDB.fallback_font, marker_origin + Vector2(-2.5, 2.8), _enemy_marker_initial(enemy_id), HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color("#211a24"))
+		var next_step: int = int(timeline.get("next_arrival_step", -1))
+		var next_names: Array[String] = []
+		for enemy_name in timeline.get("next_arrival_names", []):
+			next_names.append(String(enemy_name))
+		var summary: String = "ALL ACTIVE THREATS IN CONTACT" if next_step < 0 else "NEXT CONTACT — T%d %s" % [next_step, " + ".join(next_names)]
+		draw_string(ThemeDB.fallback_font, Vector2(left, top + 28.0), "%s | TICKS RESOLVE DETERMINISTICALLY" % summary, HORIZONTAL_ALIGNMENT_LEFT, right - left, 9, Color("#c8b6a0"))
 
 	func _draw_contact_telegraphs() -> void:
 		if keep == null or not keep.wave_active:
@@ -3329,11 +3407,7 @@ class KeepCanvas extends Control:
 		_draw_contact_telegraphs()
 		_draw_enemies()
 		_draw_engagement_traces()
-		if keep.wave_active:
-			var progress_width: float = 2.0 * MAP_SIZE.x * keep.wave_progress
-			draw_rect(Rect2(MAP_ORIGIN + Vector2(0, MAP_SIZE.y + 12), Vector2(2.0 * MAP_SIZE.x, 8)), Color("#402630"), true)
-			draw_rect(Rect2(MAP_ORIGIN + Vector2(0, MAP_SIZE.y + 12), Vector2(progress_width, 8)), Color("#d26155"), true)
-			draw_string(ThemeDB.fallback_font, MAP_ORIGIN + Vector2(0, MAP_SIZE.y + 34), "RED = active invasion | Lines = declared target | AREA = Siege Beast pressure | State text is authoritative", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#bfaeaa"))
+		_draw_assault_timeline()
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		if feedback_ttl > 0.0:
 			var feedback_alpha: float = minf(0.32, feedback_ttl * 0.9)

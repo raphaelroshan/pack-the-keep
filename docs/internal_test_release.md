@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.16.9-combat-impact` — the controlled playtest now presents readable melee, ranged, contact, and structural-impact exchanges over deterministic combat; human sessions and owner approval remain pending
+**Current build identity:** `0.17.0-assault-timeline` — the controlled playtest now exposes deterministic assault cadence and authored arrivals directly beneath the fort; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of nine authored scenarios, preview and reserve a limited pack offer, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, and recover during authored lulls.
+
+## v0.17.0 Assault timeline additions
+
+The footer beneath the two-floor fort now contains six labelled deterministic ticks instead of a generic progress bar. Completed ticks fill fully, the active tick fills from the fractional presentation clock, active enemies place stable colored initials above their authored arrival ticks, and a plain-language line names the next contact. The timeline is read-only and remains inside the existing board surface.
 
 ## v0.16.9 Combat impact additions
 
@@ -227,6 +231,10 @@ Start a guided run and confirm **BEGIN ASSAULT — REAL TIME** opens Battle at t
 ## v0.16.9 acceptance checks
 
 Run a Pike Squad defense and confirm its response is a compact melee lunge rather than a projectile. Run Crossbow Patrol or Fire Team and confirm a projectile travels toward the committed target before the damage ring appears. Watch an enemy's final approach second for the `CONTACT` label, then confirm room or defender damage produces a red target impact with the exact net damage. Pause immediately after a tick and verify the short effect finishes without advancing simulation. Enable reduced motion and confirm the same exchange uses a static impact mark without travel or enemy jitter.
+
+## v0.17.0 acceptance checks
+
+Start Three Bells at Dusk and confirm the footer shows six labelled ticks with enemy initials at their authored arrival points. Before tick one resolves, verify `T1` fills fractionally while the status remains tick zero and the next-contact summary names the earliest unresolved threat. Pause and confirm the fill freezes. Resume through contact and confirm completed segments remain filled while the next-contact summary advances without changing enemy timing or serialized state.
 
 ## v0.16.6 acceptance checks
 

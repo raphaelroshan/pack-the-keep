@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.16.9-combat-impact",
+  "build_version": "0.17.0-assault-timeline",
   "status": "ready_for_human_sessions",
   "release_ready": false,
   "minimum_completed_sessions": 4,

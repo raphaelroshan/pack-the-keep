@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.16.9",
+  "content_version": "0.17.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -292,7 +292,18 @@
     "reduced_motion": "static_short_lived_impact_marks_preserve_damage_and_contact_information",
     "determinism": "combat_effect_progress_audio_and_target_impact_comparison_do_not_mutate_keep_state",
     "evidence": ["design/p18_combat_impact_and_pacing.md", "docs/p18_combat_impact_visual_verification.md", "tests/test_p2_ui.gd", "tests/test_p10_game_feel_cues.gd", "tests/test_p11_crossbow_watch_ui.gd"],
-    "next_slice": "p18_human_combat_pacing_sessions"
+    "next_slice": "p19_assault_timeline"
+  },
+  "p19_assault_timeline": {
+    "status": "implemented",
+    "segments": 6,
+    "progress": "resolved_ticks_plus_fractional_battle_clock",
+    "arrival_markers": "one_stable_colored_initial_per_active_enemy_at_its_authored_contact_tick",
+    "next_contact": "earliest_unresolved_arrival_step_and_enemy_names",
+    "layout": "compact_footer_beneath_the_existing_two_floor_board",
+    "determinism": "timeline_snapshot_and_drawing_are_read_only",
+    "evidence": ["design/p19_assault_timeline.md", "docs/p19_assault_timeline_visual_verification.md", "tests/test_p2_ui.gd"],
+    "next_slice": "p19_human_pacing_and_forecast_sessions"
   },
   "campaign": {
     "title": "The Bell at Dusk",
