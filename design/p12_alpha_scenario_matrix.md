@@ -2,11 +2,11 @@
 
 ## Intent
 
-Keep every authored Greywatch scenario locally reproducible and demonstrably viable across both commanders before human alpha playtesting. This is a regression contract for the current content set, not a claim that every strategy is balanced or that the human playtest gate is complete.
+Keep every authored defensive scenario locally reproducible and demonstrably viable across both commanders before human alpha playtesting. This is a regression contract for the current content set, not a claim that every strategy is balanced or that the human playtest gate is complete.
 
 ## Matrix
 
-The automated matrix covers all eight scenarios, both commanders, and seeds `3307`, `3308`, and `3309`: 48 cases. Every case is executed once continuously and once with a save/load checkpoint, for 96 total deterministic simulations.
+The automated matrix covers all nine scenarios, both commanders, and seeds `3307`, `3308`, and `3309`: 54 cases. Every case is executed once continuously and once with a save/load checkpoint, for 108 total deterministic simulations.
 
 The three seeds deliberately exercise distinct persistence boundaries:
 
@@ -26,6 +26,7 @@ Each scenario uses one documented baseline that expresses its intended answer:
 | Ash at the Bell | Pike Squad plus Bell Guard |
 | The Splintered Gate | Pike Squad plus Shieldwall |
 | Three Bells at Dusk | Pike Squad plus Bell Guard and Crossbow Watch |
+| Ash Ford Crossing | Pike Squad plus Runner Network and Field Engineers while the marked causeway remains clear |
 
 ## Acceptance criteria
 

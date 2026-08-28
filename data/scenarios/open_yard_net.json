@@ -4,6 +4,8 @@
   "question": "Can a scarred perimeter still protect movement and refuge?",
   "objective": "Preserve Old Chapel and response space while area pressure lands.",
   "lesson": "A scarred perimeter can be a successful refuge if movement survives.",
+  "keep_id": "greywatch_keep",
+  "recommended_packs": ["scouts", "firekeepers"],
   "starting_doctrine": "area_pressure",
   "doctrines": ["feint_and_flank", "distributed_sabotage", "area_pressure"],
   "wave_plans": [["raider", "climber"], ["raider", "climber", "sapper"], ["siege_beast", "raider", "climber"]],

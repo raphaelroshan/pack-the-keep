@@ -44,7 +44,7 @@ func _initialize() -> void:
 	var catalog_state = PackKeepState.new(4407)
 	var status: Dictionary = catalog_state.content_catalog_status()
 	_check(bool(status.get("ok", false)), "P11 Bell Guard catalog should validate")
-	_check(int(status.get("pack_count", 0)) == 9 and int(status.get("piece_count", 0)) == 17 and int(status.get("enemy_count", 0)) == 7 and int(status.get("doctrine_count", 0)) == 8 and int(status.get("scenario_count", 0)) == 8, "P11 catalog counts should include all teaching pairs and the challenge")
+	_check(int(status.get("pack_count", 0)) == 9 and int(status.get("piece_count", 0)) == 17 and int(status.get("enemy_count", 0)) == 7 and int(status.get("doctrine_count", 0)) == 8 and int(status.get("scenario_count", 0)) >= 8, "P11 catalog counts should retain all teaching pairs and the challenge")
 	var catalog = ContentCatalog.new()
 	catalog.load_default(PackKeepState.ROOMS.keys())
 	var malformed_disruption: Dictionary = catalog.enemy_definition("ash_slinger")

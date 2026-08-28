@@ -1,7 +1,7 @@
 {
   "slug": "pack-the-keep",
   "display_name": "Pack the Keep",
-  "build_version": "0.14.2-packaged-lifecycle-safety",
+  "build_version": "0.15.0-second-defensive-identity",
   "godot_test": "res://tests/test_keep_state.gd",
   "primary_repo": "raphaelroshan/pack-the-keep",
   "release_platforms": ["steam", "epic-games-store"],

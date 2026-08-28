@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-python3 tools/validate_runtime_content.py --pieces data/pieces --packs data/packs --commanders data/commanders --enemies data/enemies --doctrines data/doctrines --scenarios data/scenarios --events data/events --modifiers data/modifiers --manifest content/content_manifest.json --event-schema content/event_schema.json
+python3 tools/validate_runtime_content.py --keeps data/keeps --pieces data/pieces --packs data/packs --commanders data/commanders --enemies data/enemies --doctrines data/doctrines --scenarios data/scenarios --events data/events --modifiers data/modifiers --manifest content/content_manifest.json --event-schema content/event_schema.json
 python3 tests/test_runtime_content_validator.py
 python3 tools/validate_offline_boundary.py
 python3 tests/test_packaged_smoke_runner.py
@@ -63,6 +63,8 @@ if command -v godot >/dev/null 2>&1; then
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p13_old_drain_occurrence_ui.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p14_authored_event_panel.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p14_event_authoring_safety.gd
+  godot --headless --audio-driver Dummy --path . --script res://tests/test_p15_ash_ford_identity.gd
+  godot --headless --audio-driver Dummy --path . --script res://tests/test_p15_ash_ford_identity_ui.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_initial_combat.gd
 elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --import
@@ -115,6 +117,8 @@ elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p13_old_drain_occurrence_ui.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p14_authored_event_panel.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p14_event_authoring_safety.gd
+  godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p15_ash_ford_identity.gd
+  godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p15_ash_ford_identity_ui.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_initial_combat.gd
 else
   echo "Godot 4.x is not installed or not on PATH."

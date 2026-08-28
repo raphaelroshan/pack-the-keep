@@ -439,3 +439,11 @@
 **Reason:** A successful reinstall proves only one persistence path. Release candidates also need evidence that absent profiles retain defaults, valid primaries outrank stale backups, legacy schema-3 data migrates and rewrites cleanly, and presentation settings do not alter deterministic simulation state.
 
 **Trade-off:** CI now launches the exported executable several additional times. Signed installer, registry, shortcut, storefront, and forced-termination behavior still require explicit human or later release validation.
+
+## ADR-056: Scenarios select data-driven defensive identities
+
+**Decision:** Add runtime keep definitions as a validated content type. A scenario names one `keep_id`; `KeepState` derives room geometry, labels, graph, recovery profile, visual profile, and spatial rule from that keep while preserving stable functional room IDs for existing enemy and piece references. Ash Ford's marked causeway reduces room damage by one only while no ground-floor defender footprint occupies it.
+
+**Reason:** P15 needs a genuinely different defensive identity without duplicating enemies, inventing scenario-only UI authority, or forcing every existing room reference through a migration. Scenario-owned keep selection keeps the defense loop isolated and deterministic while making layout and recovery meaningfully different.
+
+**Trade-off:** Both current keeps share the same nine semantic room IDs, so wholly different future functions will require scoped aliases or broader content-reference validation. The second keep remains an isolated scenario; regional travel, economy, and faction systems stay deferred to the next bounded slice.

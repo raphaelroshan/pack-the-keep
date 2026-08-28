@@ -1,5 +1,10 @@
 extends RefCounted
 
+const KEEP_PATHS: Array[String] = [
+	"res://data/keeps/greywatch_keep.json",
+	"res://data/keeps/ash_ford_redoubt.json"
+]
+
 const PACK_PATHS: Array[String] = [
 	"res://data/packs/pike_line.json",
 	"res://data/packs/field_engineers.json",
@@ -66,7 +71,8 @@ const SCENARIO_PATHS: Array[String] = [
 	"res://data/scenarios/red_banner_road.json",
 	"res://data/scenarios/ash_at_the_bell.json",
 	"res://data/scenarios/the_splintered_gate.json",
-	"res://data/scenarios/three_bells_at_dusk.json"
+	"res://data/scenarios/three_bells_at_dusk.json",
+	"res://data/scenarios/ash_ford_crossing.json"
 ]
 
 const EVENT_PATHS: Array[String] = [
@@ -185,7 +191,9 @@ const REQUIRED_DOCTRINE_FIELDS: Array[String] = [
 	"counter_families"
 ]
 
-const REQUIRED_SCENARIO_FIELDS: Array[String] = ["id", "content_version", "status", "name", "short_role", "question", "objective", "lesson", "starting_doctrine", "doctrines", "wave_plans", "variations"]
+const REQUIRED_KEEP_FIELDS: Array[String] = ["id", "content_version", "status", "name", "short_role", "question", "grid_size", "rooms", "connections", "spatial_rule", "recovery_profile", "visual"]
+const REQUIRED_ROOM_FIELDS: Array[String] = ["name", "floor", "origin", "size", "critical", "role"]
+const REQUIRED_SCENARIO_FIELDS: Array[String] = ["id", "content_version", "status", "name", "short_role", "question", "objective", "lesson", "keep_id", "recommended_packs", "starting_doctrine", "doctrines", "wave_plans", "variations"]
 const REQUIRED_EVENT_FIELDS: Array[String] = ["id", "content_version", "status", "title", "short_role", "type", "scenario", "trigger", "selection", "setup", "choices", "follow_up"]
 const REQUIRED_EVENT_CHOICE_FIELDS: Array[String] = ["id", "label", "requirements", "effects", "visible_result"]
 const REQUIRED_EVENT_SELECTION_FIELDS: Array[String] = ["stream", "repeat_policy", "cooldown_waves", "max_occurrences"]
@@ -211,6 +219,7 @@ const MAX_EVENT_OCCURRENCES: int = 3
 const REQUIRED_MODIFIER_FIELDS: Array[String] = ["id", "content_version", "status", "name", "short_role", "question", "unlock_event", "effect", "starting_morale_cost", "limitation"]
 const SUPPORTED_MODIFIER_EFFECTS: Array[String] = ["reveal_wave_composition", "enemy_health_bonus"]
 
+var _keeps: Dictionary = {}
 var _packs: Dictionary = {}
 var _commanders: Dictionary = {}
 var _pieces: Dictionary = {}
@@ -222,6 +231,7 @@ var _modifiers: Dictionary = {}
 var errors: Array[String] = []
 
 func load_default(known_room_ids: Array = []) -> Dictionary:
+	_keeps.clear()
 	_packs.clear()
 	_commanders.clear()
 	_pieces.clear()
@@ -231,28 +241,59 @@ func load_default(known_room_ids: Array = []) -> Dictionary:
 	_events.clear()
 	_modifiers.clear()
 	errors.clear()
+	for path in KEEP_PATHS:
+		_load_keep(path)
+	var runtime_room_ids: Array = room_ids()
+	for room_id in known_room_ids:
+		if not runtime_room_ids.has(String(room_id)):
+			runtime_room_ids.append(String(room_id))
 	for path in DOCTRINE_PATHS:
 		_load_doctrine(path)
 	for path in PIECE_PATHS:
-		_load_piece(path, known_room_ids, _known_piece_targets())
+		_load_piece(path, runtime_room_ids, _known_piece_targets())
 	for path in PACK_PATHS:
 		_load_pack(path, piece_ids())
 	for path in COMMANDER_PATHS:
 		_load_commander(path)
 	for path in ENEMY_PATHS:
-		_load_enemy(path, known_room_ids, doctrine_ids())
+		_load_enemy(path, runtime_room_ids, doctrine_ids())
 	for path in SCENARIO_PATHS:
-		_load_scenario(path, known_room_ids)
+		_load_scenario(path, runtime_room_ids)
 	for path in MODIFIER_PATHS:
 		_load_modifier(path)
 	for path in EVENT_PATHS:
-		_load_event(path, known_room_ids)
+		_load_event(path, runtime_room_ids)
 	_validate_piece_availability()
 	_validate_doctrine_enemy_references()
 	_validate_event_follow_ups()
 	_validate_scenario_event_references()
 	_validate_modifier_unlock_events()
-	return {"ok": errors.is_empty(), "commanders": _commanders.duplicate(true), "pieces": _pieces.duplicate(true), "packs": _packs.duplicate(true), "enemies": _enemies.duplicate(true), "doctrines": _doctrines.duplicate(true), "scenarios": _scenarios.duplicate(true), "events": _events.duplicate(true), "modifiers": _modifiers.duplicate(true), "errors": errors.duplicate()}
+	return {"ok": errors.is_empty(), "keeps": _keeps.duplicate(true), "commanders": _commanders.duplicate(true), "pieces": _pieces.duplicate(true), "packs": _packs.duplicate(true), "enemies": _enemies.duplicate(true), "doctrines": _doctrines.duplicate(true), "scenarios": _scenarios.duplicate(true), "events": _events.duplicate(true), "modifiers": _modifiers.duplicate(true), "errors": errors.duplicate()}
+
+func keep_ids() -> Array[String]:
+	var result: Array[String] = []
+	for path in KEEP_PATHS:
+		var expected_id: String = path.get_file().get_basename()
+		if _keeps.has(expected_id):
+			result.append(expected_id)
+	return result
+
+func keep_definition(keep_id: String) -> Dictionary:
+	return _keeps.get(keep_id, {}).duplicate(true)
+
+func room_ids() -> Array[String]:
+	var result: Array[String] = []
+	for keep in _keeps.values():
+		for room_id in keep.get("rooms", {}).keys():
+			if not result.has(String(room_id)):
+				result.append(String(room_id))
+	return result
+
+func _room_ids_for_keep(keep_id: String) -> Array[String]:
+	var result: Array[String] = []
+	for room_id in _keeps.get(keep_id, {}).get("rooms", {}).keys():
+		result.append(String(room_id))
+	return result
 
 func commander_ids() -> Array[String]:
 	var result: Array[String] = []
@@ -557,7 +598,94 @@ func validate_doctrine_definition(doctrine: Dictionary, expected_id: String, kno
 				validation_errors.append("doctrine %s counter families must be non-empty strings" % doctrine_id)
 	return validation_errors
 
-func validate_scenario_definition(scenario: Dictionary, expected_id: String, known_room_ids: Array) -> Array[String]:
+func validate_keep_definition(keep: Dictionary, expected_id: String) -> Array[String]:
+	var validation_errors: Array[String] = []
+	for field in REQUIRED_KEEP_FIELDS:
+		if not keep.has(field):
+			validation_errors.append("%s is missing required field: %s" % [expected_id, field])
+	var keep_id: String = String(keep.get("id", ""))
+	if keep_id != expected_id:
+		validation_errors.append("keep id %s does not match filename %s" % [keep_id, expected_id])
+	if not _is_snake_case_id(keep_id):
+		validation_errors.append("keep id %s must be snake_case" % keep_id)
+	if String(keep.get("status", "")) != "active":
+		validation_errors.append("keep %s must have active status" % keep_id)
+	_validate_integer_minimum(keep, "content_version", keep_id, "keep", 1, validation_errors)
+	for field in ["name", "short_role", "question"]:
+		if not keep.get(field) is String or String(keep.get(field, "")).strip_edges().is_empty():
+			validation_errors.append("keep %s must have non-empty text for %s" % [keep_id, field])
+	var grid_size: Variant = keep.get("grid_size")
+	if not grid_size is Array or grid_size.size() != 2 or not _is_integer_number(grid_size[0]) or not _is_integer_number(grid_size[1]) or int(grid_size[0]) != 12 or int(grid_size[1]) != 8:
+		validation_errors.append("keep %s grid_size must be [12, 8] for the current board" % keep_id)
+	var rooms: Variant = keep.get("rooms")
+	var room_rects: Dictionary = {}
+	if not rooms is Dictionary or rooms.is_empty():
+		validation_errors.append("keep %s rooms must be a non-empty object" % keep_id)
+	else:
+		for room_id_value in rooms.keys():
+			var room_id: String = String(room_id_value)
+			var room: Variant = rooms[room_id_value]
+			if not _is_snake_case_id(room_id) or not room is Dictionary:
+				validation_errors.append("keep %s has malformed room: %s" % [keep_id, room_id])
+				continue
+			for field in REQUIRED_ROOM_FIELDS:
+				if not room.has(field):
+					validation_errors.append("keep %s room %s is missing required field: %s" % [keep_id, room_id, field])
+			for field in ["name", "role"]:
+				if not room.get(field) is String or String(room.get(field, "")).strip_edges().is_empty():
+					validation_errors.append("keep %s room %s needs non-empty %s" % [keep_id, room_id, field])
+			if not ["ground", "upper"].has(String(room.get("floor", ""))):
+				validation_errors.append("keep %s room %s has unsupported floor" % [keep_id, room_id])
+			if not room.get("critical") is bool:
+				validation_errors.append("keep %s room %s critical must be boolean" % [keep_id, room_id])
+			var origin: Variant = room.get("origin")
+			var size: Variant = room.get("size")
+			if not origin is Array or origin.size() != 2 or not _is_integer_number(origin[0]) or not _is_integer_number(origin[1]) or not size is Array or size.size() != 2 or not _is_integer_number(size[0]) or not _is_integer_number(size[1]) or int(size[0]) < 1 or int(size[1]) < 1 or int(origin[0]) < 0 or int(origin[1]) < 0 or int(origin[0]) + int(size[0]) > 12 or int(origin[1]) + int(size[1]) > 8:
+				validation_errors.append("keep %s room %s must fit the 12x8 grid" % [keep_id, room_id])
+			else:
+				var rect: Rect2i = Rect2i(Vector2i(int(origin[0]), int(origin[1])), Vector2i(int(size[0]), int(size[1])))
+				for other_id in room_rects.keys():
+					if String(rooms[other_id].get("floor", "")) == String(room.get("floor", "")) and rect.intersects(room_rects[other_id]):
+						validation_errors.append("keep %s rooms %s and %s overlap" % [keep_id, String(other_id), room_id])
+				room_rects[room_id] = rect
+	var connections: Variant = keep.get("connections")
+	var connection_keys: Array[String] = []
+	if not connections is Array or connections.is_empty():
+		validation_errors.append("keep %s connections must be a non-empty array" % keep_id)
+	else:
+		for connection in connections:
+			if not connection is Array or connection.size() != 2 or not rooms is Dictionary or not rooms.has(String(connection[0])) or not rooms.has(String(connection[1])) or String(connection[0]) == String(connection[1]):
+				validation_errors.append("keep %s has an invalid room connection" % keep_id)
+				continue
+			var pair: Array[String] = [String(connection[0]), String(connection[1])]
+			pair.sort()
+			var key: String = "%s|%s" % pair
+			if connection_keys.has(key):
+				validation_errors.append("keep %s has duplicate room connection: %s" % [keep_id, key])
+			else:
+				connection_keys.append(key)
+	var spatial_rule: Variant = keep.get("spatial_rule")
+	if not spatial_rule is Dictionary or not ["compact_adjacency", "clear_causeway"].has(String(spatial_rule.get("id", ""))) or not spatial_rule.get("lane_cells") is Array or not _is_integer_number(spatial_rule.get("room_damage_reduction")) or int(spatial_rule.get("room_damage_reduction", -1)) < 0 or int(spatial_rule.get("room_damage_reduction", -1)) > 3 or not spatial_rule.get("label") is String or String(spatial_rule.get("label", "")).strip_edges().is_empty():
+		validation_errors.append("keep %s has an invalid spatial_rule" % keep_id)
+	elif String(spatial_rule.get("id", "")) == "clear_causeway":
+		if spatial_rule.get("lane_cells", []).is_empty() or int(spatial_rule.get("room_damage_reduction", 0)) < 1:
+			validation_errors.append("keep %s clear_causeway needs lane cells and positive room damage reduction" % keep_id)
+		for cell in spatial_rule.get("lane_cells", []):
+			if not cell is Array or cell.size() != 2 or not _is_integer_number(cell[0]) or not _is_integer_number(cell[1]) or int(cell[0]) < 0 or int(cell[0]) >= 12 or int(cell[1]) < 0 or int(cell[1]) >= 8:
+				validation_errors.append("keep %s clear_causeway contains an invalid cell" % keep_id)
+	var recovery: Variant = keep.get("recovery_profile")
+	if not recovery is Dictionary or not _is_integer_number(recovery.get("room_repair_materials")) or int(recovery.get("room_repair_materials", 0)) < 1 or not _is_integer_number(recovery.get("room_repair_condition")) or int(recovery.get("room_repair_condition", 0)) < 1 or int(recovery.get("room_repair_condition", 0)) > 100 or not recovery.get("question") is String or String(recovery.get("question", "")).strip_edges().is_empty():
+		validation_errors.append("keep %s has an invalid recovery_profile" % keep_id)
+	var visual: Variant = keep.get("visual")
+	if not visual is Dictionary or not ["fort", "river"].has(String(visual.get("terrain", ""))):
+		validation_errors.append("keep %s has an invalid visual profile" % keep_id)
+	else:
+		for field in ["ground_label", "upper_label", "board_label"]:
+			if not visual.get(field) is String or String(visual.get(field, "")).strip_edges().is_empty():
+				validation_errors.append("keep %s visual %s must be non-empty text" % [keep_id, field])
+	return validation_errors
+
+func validate_scenario_definition(scenario: Dictionary, expected_id: String, known_room_ids: Array, known_keep_ids: Array = [], known_pack_ids: Array = []) -> Array[String]:
 	var validation_errors: Array[String] = []
 	for field in REQUIRED_SCENARIO_FIELDS:
 		if not scenario.has(field):
@@ -573,6 +701,21 @@ func validate_scenario_definition(scenario: Dictionary, expected_id: String, kno
 	for field in ["name", "short_role", "question", "objective", "lesson", "starting_doctrine"]:
 		if not scenario.get(field) is String or String(scenario.get(field, "")).strip_edges().is_empty():
 			validation_errors.append("scenario %s must have non-empty text for %s" % [scenario_id, field])
+	if not known_keep_ids.is_empty() and not known_keep_ids.has(String(scenario.get("keep_id", ""))):
+		validation_errors.append("scenario %s references an unknown keep" % scenario_id)
+	var recommended_packs: Variant = scenario.get("recommended_packs")
+	if not recommended_packs is Array or recommended_packs.is_empty() or recommended_packs.size() > 2:
+		validation_errors.append("scenario %s recommended_packs must contain one or two pack IDs" % scenario_id)
+	else:
+		var seen_recommended: Array[String] = []
+		for pack_id_value in recommended_packs:
+			var pack_id: String = String(pack_id_value)
+			if not pack_id_value is String or (not known_pack_ids.is_empty() and not known_pack_ids.has(pack_id)):
+				validation_errors.append("scenario %s references unknown recommended pack: %s" % [scenario_id, pack_id])
+			elif seen_recommended.has(pack_id):
+				validation_errors.append("scenario %s recommended_packs contains duplicates" % scenario_id)
+			else:
+				seen_recommended.append(pack_id)
 	var doctrines: Variant = scenario.get("doctrines", [])
 	var wave_plans: Variant = scenario.get("wave_plans", [])
 	if not doctrines is Array or doctrines.size() != 3 or not wave_plans is Array or wave_plans.size() != 3:
@@ -942,6 +1085,28 @@ func _load_commander(path: String) -> void:
 	if validation_errors.is_empty():
 		_commanders[commander_id] = commander.duplicate(true)
 
+func _load_keep(path: String) -> void:
+	if not FileAccess.file_exists(path):
+		errors.append("missing keep file: %s" % path)
+		return
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		errors.append("could not open keep file: %s" % path)
+		return
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		errors.append("keep file must contain one JSON object: %s" % path)
+		return
+	var authored: Dictionary = parsed
+	var keep_id: String = String(authored.get("id", ""))
+	var validation_errors: Array[String] = validate_keep_definition(authored, path.get_file().get_basename())
+	if _keeps.has(keep_id):
+		validation_errors.append("duplicate keep id: %s" % keep_id)
+	for validation_error in validation_errors:
+		errors.append("%s: %s" % [path, validation_error])
+	if validation_errors.is_empty():
+		_keeps[keep_id] = _normalize_keep(authored)
+
 func _load_piece(path: String, known_room_ids: Array, known_enemy_ids: Array) -> void:
 	if not FileAccess.file_exists(path):
 		errors.append("missing piece file: %s" % path)
@@ -1022,7 +1187,10 @@ func _load_scenario(path: String, known_room_ids: Array) -> void:
 		return
 	var scenario: Dictionary = parsed
 	var scenario_id: String = String(scenario.get("id", ""))
-	var validation_errors: Array[String] = validate_scenario_definition(scenario, path.get_file().get_basename(), known_room_ids)
+	var scenario_room_ids: Array[String] = _room_ids_for_keep(String(scenario.get("keep_id", "")))
+	if scenario_room_ids.is_empty():
+		scenario_room_ids.assign(known_room_ids)
+	var validation_errors: Array[String] = validate_scenario_definition(scenario, path.get_file().get_basename(), scenario_room_ids, keep_ids(), pack_ids())
 	if _scenarios.has(scenario_id):
 		validation_errors.append("duplicate scenario id: %s" % scenario_id)
 	for validation_error in validation_errors:
@@ -1044,7 +1212,12 @@ func _load_event(path: String, known_room_ids: Array) -> void:
 		return
 	var event: Dictionary = parsed
 	var event_id: String = String(event.get("id", ""))
-	var validation_errors: Array[String] = validate_event_definition(event, path.get_file().get_basename(), known_room_ids)
+	var event_scenario_id: String = String(event.get("scenario", ""))
+	var event_keep_id: String = String(_scenarios.get(event_scenario_id, {}).get("keep_id", ""))
+	var event_room_ids: Array[String] = _room_ids_for_keep(event_keep_id)
+	if event_room_ids.is_empty():
+		event_room_ids.assign(known_room_ids)
+	var validation_errors: Array[String] = validate_event_definition(event, path.get_file().get_basename(), event_room_ids)
 	if _events.has(event_id):
 		validation_errors.append("duplicate event id: %s" % event_id)
 	for validation_error in validation_errors:
@@ -1202,6 +1375,25 @@ func _normalize_piece(authored: Dictionary) -> Dictionary:
 	runtime.defense = int(attack_profile.get("defense", 0))
 	runtime.max_ammo = int(attack_profile.get("ammo_capacity", 0))
 	runtime.targets = attack_profile.get("targets", []).duplicate()
+	return runtime
+
+func _normalize_keep(authored: Dictionary) -> Dictionary:
+	var runtime: Dictionary = authored.duplicate(true)
+	var normalized_rooms: Dictionary = {}
+	for room_id_value in authored.get("rooms", {}).keys():
+		var room: Dictionary = authored.rooms[room_id_value].duplicate(true)
+		var origin: Array = room.get("origin", [0, 0])
+		var size: Array = room.get("size", [1, 1])
+		room.origin = Vector2i(int(origin[0]), int(origin[1]))
+		room.size = Vector2i(int(size[0]), int(size[1]))
+		normalized_rooms[String(room_id_value)] = room
+	runtime.rooms = normalized_rooms
+	var spatial_rule: Dictionary = authored.get("spatial_rule", {}).duplicate(true)
+	var lane_cells: Array[Vector2i] = []
+	for cell in spatial_rule.get("lane_cells", []):
+		lane_cells.append(Vector2i(int(cell[0]), int(cell[1])))
+	spatial_rule.lane_cells = lane_cells
+	runtime.spatial_rule = spatial_rule
 	return runtime
 
 func _is_integer_number(value: Variant) -> bool:

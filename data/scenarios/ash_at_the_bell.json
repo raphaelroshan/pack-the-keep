@@ -4,6 +4,8 @@
   "question": "Can a connected warning chain preserve enough time for the keep to respond?",
   "objective": "Preserve Gate and Barracks while Ash Slingers obscure the warning route.",
   "lesson": "A lone information piece is fragile; a short Bellkeeper-to-Beacon link preserves timing.",
+  "keep_id": "greywatch_keep",
+  "recommended_packs": ["bell_guard", "scouts"],
   "starting_doctrine": "smoke_and_signal",
   "doctrines": ["smoke_and_signal", "feint_and_flank", "smoke_and_signal"],
   "wave_plans": [["ash_slinger"], ["ash_slinger", "climber"], ["ash_slinger", "sapper", "raider"]],

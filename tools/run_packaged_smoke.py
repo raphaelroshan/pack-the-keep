@@ -137,7 +137,8 @@ def validate_report(report_path: Path, profile_root: Path, expected_version: str
             "pack_count": 9,
             "enemy_count": 7,
             "doctrine_count": 8,
-            "scenario_count": 8,
+            "keep_count": 2,
+            "scenario_count": 9,
             "event_count": 9,
             "modifier_count": 2,
         }

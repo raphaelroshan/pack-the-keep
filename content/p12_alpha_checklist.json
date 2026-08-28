@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.14.2-packaged-lifecycle-safety",
+  "build_version": "0.15.0-second-defensive-identity",
   "status": "candidate",
   "checks": [
     {"id": "windows_launch", "status": "implemented", "evidence": ["tests/test_release_identity.py", "tools/run_packaged_smoke.py", ".github/workflows/ci.yml"]},

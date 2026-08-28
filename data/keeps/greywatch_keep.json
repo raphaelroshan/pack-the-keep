@@ -1,0 +1,24 @@
+{
+  "id": "greywatch_keep",
+  "content_version": 1,
+  "status": "active",
+  "name": "Greywatch Keep",
+  "short_role": "A compact two-floor fort whose rooms reinforce one another.",
+  "question": "Which adjacent functions must survive together?",
+  "grid_size": [12, 8],
+  "rooms": {
+    "gate": {"name": "Gate", "floor": "ground", "origin": [1, 3], "size": [2, 2], "critical": true, "role": "shortest entrance"},
+    "outer_wall": {"name": "Outer Wall", "floor": "upper", "origin": [1, 2], "size": [4, 1], "critical": false, "role": "time-buying boundary"},
+    "inner_yard": {"name": "Inner Yard", "floor": "ground", "origin": [4, 3], "size": [3, 2], "critical": false, "role": "response space"},
+    "armory": {"name": "Armory", "floor": "ground", "origin": [7, 3], "size": [2, 2], "critical": true, "role": "pack staging"},
+    "workshop": {"name": "Workshop", "floor": "ground", "origin": [4, 6], "size": [2, 2], "critical": true, "role": "repair support"},
+    "barracks": {"name": "Barracks", "floor": "ground", "origin": [7, 6], "size": [2, 2], "critical": false, "role": "defender assignment"},
+    "supply_room": {"name": "Supply Room", "floor": "ground", "origin": [10, 5], "size": [2, 2], "critical": true, "role": "materials reserve"},
+    "north_tower": {"name": "North Tower", "floor": "upper", "origin": [8, 1], "size": [2, 2], "critical": false, "role": "information"},
+    "old_chapel": {"name": "Old Chapel", "floor": "upper", "origin": [8, 5], "size": [3, 2], "critical": false, "role": "refuge and evacuation"}
+  },
+  "connections": [["gate", "inner_yard"], ["inner_yard", "armory"], ["inner_yard", "workshop"], ["armory", "barracks"], ["workshop", "barracks"], ["barracks", "supply_room"], ["outer_wall", "north_tower"], ["north_tower", "old_chapel"]],
+  "spatial_rule": {"id": "compact_adjacency", "lane_cells": [], "room_damage_reduction": 0, "label": "Compact rooms reward layered adjacency."},
+  "recovery_profile": {"room_repair_materials": 8, "room_repair_condition": 30, "question": "Which damaged function is worth a deep repair?"},
+  "visual": {"terrain": "fort", "ground_label": "GROUND FLOOR", "upper_label": "UPPER WALL", "board_label": "KEEP ROOMS / DEFENSE BOARD"}
+}

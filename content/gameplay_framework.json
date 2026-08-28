@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.14.2-packaged-lifecycle-safety",
+  "framework_version": "0.15.0-second-defensive-identity",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -201,7 +201,7 @@
   },
   "p12_alpha_scenario_matrix": {
     "status": "implemented",
-    "coverage": "eight_scenarios_by_two_commanders_by_three_seeds_run_uninterrupted_and_resumed",
+    "coverage": "nine_scenarios_by_two_commanders_by_three_seeds_run_uninterrupted_and_resumed",
     "resume_boundaries": ["wave_one_pre_step", "first_recovery_before_event_resolution", "wave_two_pre_step"],
     "viability_rule": "every_baseline_resolves_three_waves_without_collapse_and_closes_final_recovery_and_events",
     "determinism_rule": "checkpoint_round_trips_and_uninterrupted_resumed_terminal_states_produce_byte_identical_serialized_json",

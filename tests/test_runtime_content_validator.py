@@ -20,6 +20,18 @@ def load(relative_path: str) -> dict:
 
 
 class RuntimeContentValidatorTests(unittest.TestCase):
+    def test_keep_rejects_overlaps_and_unbounded_profiles(self) -> None:
+        keep = copy.deepcopy(load("data/keeps/ash_ford_redoubt.json"))
+        keep["rooms"]["gate"]["origin"] = [3, 3]
+        keep["spatial_rule"]["room_damage_reduction"] = 9
+        keep["recovery_profile"]["room_repair_condition"] = 0
+        errors: list[str] = []
+        validator.validate_keep(Path("ash_ford_redoubt.json"), keep, set(), errors)
+        joined = "\n".join(errors)
+        self.assertIn("overlap", joined)
+        self.assertIn("room_damage_reduction", joined)
+        self.assertIn("room_repair_condition", joined)
+
     def test_event_schema_contract_rejects_validator_drift(self) -> None:
         schema = load("content/event_schema.json")
         schema["selection"]["repeat_policies"].append("forever")
@@ -119,7 +131,7 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         scenario["variations"] = [{"id": "bad id", "materials": 0.5, "morale": 0, "target_room": "missing_room"}]
         errors: list[str] = []
         validator.validate_scenario(
-            Path("gatehouse_lock.json"), scenario, {"gate"}, {"raider"}, {"gate_assault"}, set(), errors
+            Path("gatehouse_lock.json"), scenario, {"gate"}, {"raider"}, {"gate_assault"}, {"greywatch_keep"}, {"pike_line", "field_engineers"}, set(), errors
         )
         joined = "\n".join(errors)
         for expected in ("exactly three", "variation id", "materials", "target_room", "standard_bell"):

@@ -1,10 +1,10 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.14.2-packaged-lifecycle-safety` — complete P14 presentation, content-authoring, and packaged-profile hardening baseline; P12 human approval remains pending
+**Current build identity:** `0.15.0-second-defensive-identity` — P15 adds Ash Ford as a second isolated defense identity; P12 human approval remains pending
 
 ## Purpose
 
-This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch supports more than one viable strategic lens and whether the battle now communicates decisions clearly: choose the Castellan or Warden, select one of eight authored scenarios, preview and reserve a limited pack offer, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, pause or run the wave at three presentation speeds, advance manually, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, and recover after pressure.
+This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of nine authored scenarios, preview and reserve a limited pack offer, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, pause or run the wave at three presentation speeds, advance manually, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, and recover after pressure.
 
 ## v0.11.0 Crossbow Watch additions
 
@@ -60,7 +60,7 @@ Presentation settings now use the same validated primary/backup candidate discip
 
 ## v0.12.7 Alpha scenario matrix
 
-Local headless verification now runs a documented viable baseline for every combination of eight authored scenarios, both commanders, and three seeds. Each of the 48 cases runs twice, producing 96 simulations that must serialize identically, resolve all three waves without collapse, close final recovery and event state, and retain the canonical replay key. This is deterministic viability evidence only; human playtest and presentation approval remain pending.
+Local headless verification now runs a documented viable baseline for every combination of nine authored scenarios, both commanders, and three seeds. Each of the 54 cases runs twice, producing 108 simulations that must serialize identically, resolve all three waves without collapse, close final recovery and event state, and retain the canonical replay key. This is deterministic viability evidence only; human playtest and presentation approval remain pending.
 
 ## v0.12.8 Scenario resume matrix
 
@@ -101,6 +101,10 @@ Every runtime event now declares a stable deterministic stream, repeat policy, c
 ## v0.14.2 Packaged lifecycle safety
 
 The Windows release-candidate smoke now runs five isolated lifecycle phases: clean install, relocated reinstall, stale-backup precedence, missing profile, and schema-3 upgrade. The runner prepares filesystem fixtures outside the executable, while the packaged Godot adapter verifies profile discovery, primary-over-backup selection, legacy migration and schema-4 rewrite, documented defaults, unchanged authoritative state during presentation-setting operations, offline guards, and clean shutdown.
+
+## v0.15.0 Second defensive identity
+
+Ash Ford Redoubt adds a distinct room graph, river-board presentation, and an explicit clear-causeway rule: leaving the marked ground cells free reduces incoming room damage by one. Ash Ford Crossing teaches Runner Network plus Field Engineers, while its five-material repairs restore only twenty condition, creating a distributed shallow-repair problem distinct from Greywatch's eight-material deep repairs. Keep topology, room labels, recovery profile, and spatial rules are runtime content; save/load derives the active keep from the selected scenario.
 
 ## v0.8.2 testability additions
 

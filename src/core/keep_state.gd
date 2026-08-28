@@ -29,6 +29,7 @@ var commander_id: String = ACTIVE_COMMANDER
 var materials: int = 60
 var command_points: int = 3
 var morale: int = 6
+var keep_id: String = "greywatch_keep"
 var scenario_id: String = "gatehouse_lock"
 var scenario_active: bool = false
 var scenario_variation_id: String = "standard_bell"
@@ -73,6 +74,8 @@ var _last_attackers: Array[String] = []
 var _last_attack_damage: Dictionary = {}
 var _last_armor_blocked: int = 0
 var content_catalog: RefCounted
+var _keep_definitions: Dictionary = {}
+var _room_definitions: Dictionary = ROOMS.duplicate(true)
 var _commander_definitions: Dictionary = {}
 var _piece_definitions: Dictionary = {}
 var _pack_definitions: Dictionary = {}
@@ -86,6 +89,7 @@ var content_catalog_errors: Array[String] = []
 func _init(keep_seed: int = 3307) -> void:
 	content_catalog = ContentCatalog.new()
 	var catalog_result: Dictionary = content_catalog.load_default(ROOMS.keys())
+	_keep_definitions = catalog_result.get("keeps", {}).duplicate(true)
 	_commander_definitions = catalog_result.get("commanders", {}).duplicate(true)
 	_piece_definitions = catalog_result.get("pieces", {}).duplicate(true)
 	_pack_definitions = catalog_result.get("packs", {}).duplicate(true)
@@ -100,9 +104,17 @@ func _init(keep_seed: int = 3307) -> void:
 		push_error("Runtime content catalog failed validation: %s" % "; ".join(content_catalog_errors))
 	reset_run(keep_seed)
 
+func _activate_keep(selected_keep_id: String) -> void:
+	keep_id = selected_keep_id if _keep_definitions.has(selected_keep_id) else "greywatch_keep"
+	_room_definitions = _keep_definitions.get(keep_id, {"rooms": ROOMS}).get("rooms", ROOMS).duplicate(true)
+
+func _room_definitions_for_scenario(selected_scenario_id: String) -> Dictionary:
+	var selected_keep_id: String = String(_scenario_definitions.get(selected_scenario_id, {}).get("keep_id", "greywatch_keep"))
+	return _keep_definitions.get(selected_keep_id, {"rooms": ROOMS}).get("rooms", ROOMS)
+
 func _reset_rooms() -> void:
 	rooms.clear()
-	for room_id in ROOMS.keys():
+	for room_id in _room_definitions.keys():
 		rooms[room_id] = {"condition": 100, "state": "stable"}
 
 func reset_run(new_seed: int = 3307) -> void:
@@ -116,6 +128,7 @@ func reset_run(new_seed: int = 3307) -> void:
 	equipped_modifier_id = preserved_equipped if preserved_unlocks.has(preserved_equipped) and _modifier_definitions.has(preserved_equipped) else ""
 	morale = _starting_morale()
 	scenario_id = "gatehouse_lock"
+	_activate_keep(String(_scenario_definitions.get(scenario_id, {}).get("keep_id", "greywatch_keep")))
 	scenario_active = false
 	scenario_variation_id = "standard_bell"
 	variation_target_room = ""
@@ -153,7 +166,7 @@ func reset_run(new_seed: int = 3307) -> void:
 	resolved_event_ids.clear()
 	event_flags.clear()
 	event_history.clear()
-	_log("Greywatch Keep is quiet. The Castellan waits for a first doctrine.")
+	_log("%s is quiet. The Castellan waits for a first doctrine." % String(_keep_definitions.get(keep_id, {}).get("name", "The keep")))
 
 func _reset_combat_metrics() -> void:
 	combat_metrics = {
@@ -229,7 +242,7 @@ func _variation_for_scenario(id: String) -> Dictionary:
 
 func select_scenario(id: String) -> Dictionary:
 	if not _scenario_definitions.has(id):
-		return {"ok": false, "reason": "unknown Greywatch scenario"}
+		return {"ok": false, "reason": "unknown defensive scenario"}
 	if wave_active or repair_interval_active:
 		return {"ok": false, "reason": "scenario cannot change during an invasion or repair interval"}
 	if not pieces.is_empty() or wave_index > 0:
@@ -239,6 +252,8 @@ func select_scenario(id: String) -> Dictionary:
 	event_flags.clear()
 	event_history.clear()
 	scenario_id = id
+	_activate_keep(String(_scenario_definitions[id].get("keep_id", "greywatch_keep")))
+	_reset_rooms()
 	scenario_active = true
 	enemy_doctrine = String(_scenario_definitions[id].get("starting_doctrine", "gate_assault"))
 	var variation: Dictionary = _variation_for_scenario(id)
@@ -255,9 +270,10 @@ func select_scenario(id: String) -> Dictionary:
 func scenario_preview(id: String = "") -> Dictionary:
 	var selected_id: String = scenario_id if id.is_empty() else id
 	if not _scenario_definitions.has(selected_id):
-		return {"ok": false, "reason": "unknown Greywatch scenario"}
+		return {"ok": false, "reason": "unknown defensive scenario"}
 	var scenario: Dictionary = _scenario_definitions[selected_id]
-	return {"ok": true, "scenario_id": selected_id, "name": String(scenario.name), "objective": String(scenario.objective), "lesson": String(scenario.lesson), "starting_doctrine": String(scenario.starting_doctrine), "wave_count": scenario.wave_plans.size(), "variation_id": scenario_variation_id if selected_id == scenario_id else String(_variation_for_scenario(selected_id).get("id", "standard_bell"))}
+	var scenario_keep_id: String = String(scenario.get("keep_id", "greywatch_keep"))
+	return {"ok": true, "scenario_id": selected_id, "name": String(scenario.name), "objective": String(scenario.objective), "lesson": String(scenario.lesson), "keep_id": scenario_keep_id, "keep_name": String(_keep_definitions.get(scenario_keep_id, {}).get("name", scenario_keep_id)), "recommended_packs": scenario.get("recommended_packs", []).duplicate(), "starting_doctrine": String(scenario.starting_doctrine), "wave_count": scenario.wave_plans.size(), "variation_id": scenario_variation_id if selected_id == scenario_id else String(_variation_for_scenario(selected_id).get("id", "standard_bell"))}
 
 func current_event() -> Dictionary:
 	if active_event_id.is_empty() or not _event_definitions.has(active_event_id):
@@ -589,6 +605,21 @@ func scenario_definition(id: String) -> Dictionary:
 		return {}
 	return _scenario_definitions[id].duplicate(true)
 
+func keep_ids() -> Array[String]:
+	return content_catalog.keep_ids()
+
+func keep_definition(id: String = "") -> Dictionary:
+	var selected_id: String = keep_id if id.is_empty() else id
+	if not _keep_definitions.has(selected_id):
+		return {}
+	return _keep_definitions[selected_id].duplicate(true)
+
+func room_definitions() -> Dictionary:
+	return _room_definitions.duplicate(true)
+
+func room_definition(id: String) -> Dictionary:
+	return _room_definitions.get(id, {}).duplicate(true)
+
 func event_ids() -> Array[String]:
 	return content_catalog.event_ids()
 
@@ -677,7 +708,7 @@ func pack_definition(pack_id: String) -> Dictionary:
 	return _pack_definitions[pack_id].duplicate(true)
 
 func content_catalog_status() -> Dictionary:
-	return {"ok": content_catalog_errors.is_empty(), "commander_count": _commander_definitions.size(), "piece_count": _piece_definitions.size(), "pack_count": _pack_definitions.size(), "enemy_count": _enemy_definitions.size(), "doctrine_count": _doctrine_definitions.size(), "scenario_count": _scenario_definitions.size(), "event_count": _event_definitions.size(), "modifier_count": _modifier_definitions.size(), "errors": content_catalog_errors.duplicate()}
+	return {"ok": content_catalog_errors.is_empty(), "keep_count": _keep_definitions.size(), "commander_count": _commander_definitions.size(), "piece_count": _piece_definitions.size(), "pack_count": _pack_definitions.size(), "enemy_count": _enemy_definitions.size(), "doctrine_count": _doctrine_definitions.size(), "scenario_count": _scenario_definitions.size(), "event_count": _event_definitions.size(), "modifier_count": _modifier_definitions.size(), "errors": content_catalog_errors.duplicate()}
 
 func pack_preview(pack_id: String) -> Dictionary:
 	if not _pack_definitions.has(pack_id):
@@ -796,8 +827,8 @@ func _set_piece_health(instance_id: String, value: int) -> void:
 		combat_metrics["disabled_units"] = int(combat_metrics.get("disabled_units", 0)) + 1
 
 func room_at_cell(floor: String, cell: Vector2i) -> String:
-	for room_id in ROOMS.keys():
-		var room: Dictionary = ROOMS[room_id]
+	for room_id in _room_definitions.keys():
+		var room: Dictionary = _room_definitions[room_id]
 		if String(room.get("floor", "ground")) == floor and Rect2i(room.origin, room.size).has_point(cell):
 			return String(room_id)
 	return ""
@@ -815,9 +846,9 @@ func piece_at_cell(floor: String, cell: Vector2i) -> String:
 	return ""
 
 func inspect_room(room_id: String) -> Dictionary:
-	if not ROOMS.has(room_id):
+	if not _room_definitions.has(room_id):
 		return {"ok": false, "reason": "unknown keep room"}
-	var room: Dictionary = ROOMS[room_id]
+	var room: Dictionary = _room_definitions[room_id]
 	return {"ok": true, "kind": "room", "id": room_id, "name": String(room.name), "floor": String(room.floor), "role": String(room.role), "critical": bool(room.critical), "condition": room_condition(room_id), "state": room_state(room_id)}
 
 func inspect_piece(instance_id: String) -> Dictionary:
@@ -854,6 +885,28 @@ func remove_piece(instance_id: String) -> Dictionary:
 	pieces.erase(instance_id)
 	return {"ok": true, "message": "Removed defensive piece; materials are not refunded during an active run."}
 
+func recovery_profile() -> Dictionary:
+	return _keep_definitions.get(keep_id, {}).get("recovery_profile", {"room_repair_materials": 8, "room_repair_condition": 30, "question": "Which damaged function is worth a deep repair?"}).duplicate(true)
+
+func spatial_rule_state() -> Dictionary:
+	var rule: Dictionary = _keep_definitions.get(keep_id, {}).get("spatial_rule", {}).duplicate(true)
+	var active: bool = String(rule.get("id", "")) == "clear_causeway" and _is_causeway_clear(rule.get("lane_cells", []))
+	rule.active = active
+	return rule
+
+func _is_causeway_clear(lane_cells: Array) -> bool:
+	for instance in pieces.values():
+		if String(instance.get("floor", "ground")) != "ground":
+			continue
+		var piece_id: String = String(instance.get("piece_id", ""))
+		if not _piece_definitions.has(piece_id):
+			continue
+		var footprint: Rect2i = Rect2i(instance.get("origin", Vector2i.ZERO), _piece_definitions[piece_id].size)
+		for lane_cell in lane_cells:
+			if footprint.has_point(lane_cell):
+				return false
+	return true
+
 func recovery_action_preview(action_id: String, instance_id: String = "", room_id: String = "", allow_active_event: bool = false) -> Dictionary:
 	var preview: Dictionary = {
 		"action_id": action_id,
@@ -867,11 +920,14 @@ func recovery_action_preview(action_id: String, instance_id: String = "", room_i
 		"tradeoff": "Consumes one of the two recovery actions."
 	}
 	if action_id == "repair_room":
-		preview.material_cost = 8
+		var keep_recovery: Dictionary = recovery_profile()
+		var room_repair_cost: int = int(keep_recovery.get("room_repair_materials", 8))
+		var room_repair_amount: int = int(keep_recovery.get("room_repair_condition", 30))
+		preview.material_cost = room_repair_cost
 		preview.target_id = room_id
-		preview.target_name = String(ROOMS.get(room_id, {}).get("name", "Select a room"))
-		preview.benefit = "Restore up to 30 condition to the selected keep function."
-		preview.tradeoff = "Spend 8 materials and one recovery action instead of changing an assignment."
+		preview.target_name = String(_room_definitions.get(room_id, {}).get("name", "Select a room"))
+		preview.benefit = "Restore up to %d condition to the selected keep function." % room_repair_amount
+		preview.tradeoff = "Spend %d materials and one recovery action instead of changing an assignment." % room_repair_cost
 	elif action_id == "repair_piece":
 		preview.material_cost = 6
 		preview.target_id = instance_id
@@ -883,7 +939,7 @@ func recovery_action_preview(action_id: String, instance_id: String = "", room_i
 		preview.target_id = instance_id
 		var assign_piece_id: String = String(pieces.get(instance_id, {}).get("piece_id", ""))
 		var assign_piece_name: String = String(_piece_definitions.get(assign_piece_id, {}).get("name", "Select a placed piece"))
-		var assign_room_name: String = String(ROOMS.get(room_id, {}).get("name", "Select a room"))
+		var assign_room_name: String = String(_room_definitions.get(room_id, {}).get("name", "Select a room"))
 		preview.target_name = "%s -> %s" % [assign_piece_name, assign_room_name]
 		preview.benefit = String(_piece_assignment_rule(assign_piece_id).get("effect", "Activate the piece's specialist room behavior."))
 		preview.tradeoff = "Spend one recovery action and commit this piece to one room."
@@ -906,9 +962,10 @@ func recovery_action_preview(action_id: String, instance_id: String = "", room_i
 		return preview
 	match action_id:
 		"repair_room":
+			var room_repair_cost: int = int(recovery_profile().get("room_repair_materials", 8))
 			if not rooms.has(room_id):
 				preview.reason = "select a keep room"
-			elif materials < 8:
+			elif materials < room_repair_cost:
 				preview.reason = "not enough materials"
 			elif room_condition(room_id) >= 100:
 				preview.reason = "room is already stable"
@@ -937,17 +994,17 @@ func recovery_action_preview(action_id: String, instance_id: String = "", room_i
 					preview.reason = "%s has no room assignment behavior" % _piece_definitions[piece_id].name
 				else:
 					if String(rule.get("room", "")) != room_id:
-						preview.reason = "%s can only be assigned to %s" % [_piece_definitions[piece_id].name, ROOMS[String(rule.get("room", ""))].name]
-					elif String(pieces[instance_id].get("floor", "ground")) != String(ROOMS[room_id].get("floor", "ground")):
+						preview.reason = "%s can only be assigned to %s" % [_piece_definitions[piece_id].name, _room_definitions[String(rule.get("room", ""))].name]
+					elif String(pieces[instance_id].get("floor", "ground")) != String(_room_definitions[room_id].get("floor", "ground")):
 						preview.reason = "piece and assigned room must share a floor"
 					elif not _piece_is_adjacent_to_room(pieces[instance_id], room_id):
 						preview.reason = "piece must be inside or adjacent to its assigned room"
 					elif assigned_rooms.has(room_id) and String(assigned_rooms[room_id]) != instance_id:
-						preview.reason = "%s already has an assigned piece" % ROOMS[room_id].name
+						preview.reason = "%s already has an assigned piece" % _room_definitions[room_id].name
 					else:
 						var existing_assignment: String = String(pieces[instance_id].get("assignment", ""))
 						if not existing_assignment.is_empty():
-							preview.reason = "piece is already assigned to %s; clear it during the interval first" % ROOMS[existing_assignment].name
+							preview.reason = "piece is already assigned to %s; clear it during the interval first" % _room_definitions[existing_assignment].name
 						else:
 							preview.ok = true
 							preview.reason = ""
@@ -959,7 +1016,7 @@ func recovery_action_preview(action_id: String, instance_id: String = "", room_i
 				if assignment.is_empty():
 					preview.reason = "piece has no room assignment"
 				else:
-					preview.target_name = "%s <- %s" % [String(_piece_definitions[String(pieces[instance_id].get("piece_id", ""))].name), String(ROOMS[assignment].name)]
+					preview.target_name = "%s <- %s" % [String(_piece_definitions[String(pieces[instance_id].get("piece_id", ""))].name), String(_room_definitions[assignment].name)]
 					preview.ok = true
 					preview.reason = ""
 	return preview
@@ -976,8 +1033,8 @@ func _commit_piece_assignment(instance_id: String, room_id: String) -> Dictionar
 	assigned_rooms[room_id] = instance_id
 	pieces[instance_id].assignment = room_id
 	repair_actions_remaining -= 1
-	_log("Assigned %s to %s: %s." % [_piece_definitions[piece_id].name, ROOMS[room_id].name, rule.effect])
-	return {"ok": true, "message": "Assigned %s to %s: %s." % [_piece_definitions[piece_id].name, ROOMS[room_id].name, rule.effect], "actions_remaining": repair_actions_remaining, "state_changes": [{"op": "assign_piece", "piece": instance_id, "room": room_id}]}
+	_log("Assigned %s to %s: %s." % [_piece_definitions[piece_id].name, _room_definitions[room_id].name, rule.effect])
+	return {"ok": true, "message": "Assigned %s to %s: %s." % [_piece_definitions[piece_id].name, _room_definitions[room_id].name, rule.effect], "actions_remaining": repair_actions_remaining, "state_changes": [{"op": "assign_piece", "piece": instance_id, "room": room_id}]}
 
 func clear_piece_assignment(instance_id: String) -> Dictionary:
 	var preview: Dictionary = recovery_action_preview("clear_assignment", instance_id)
@@ -987,7 +1044,7 @@ func clear_piece_assignment(instance_id: String) -> Dictionary:
 	assigned_rooms.erase(assignment)
 	pieces[instance_id].assignment = ""
 	repair_actions_remaining -= 1
-	return {"ok": true, "message": "Cleared %s from %s." % [_piece_definitions[String(pieces[instance_id].get("piece_id", ""))].name, ROOMS[assignment].name], "actions_remaining": repair_actions_remaining, "state_changes": [{"op": "clear_assignment", "piece": instance_id, "room": assignment}]}
+	return {"ok": true, "message": "Cleared %s from %s." % [_piece_definitions[String(pieces[instance_id].get("piece_id", ""))].name, _room_definitions[assignment].name], "actions_remaining": repair_actions_remaining, "state_changes": [{"op": "clear_assignment", "piece": instance_id, "room": assignment}]}
 
 func _piece_assignment_rule(piece_id: String) -> Dictionary:
 	if not _piece_definitions.has(piece_id):
@@ -1019,11 +1076,11 @@ func _update_room_state(room_id: String) -> void:
 	rooms[room_id].state = state
 
 func _piece_is_adjacent_to_room(instance: Dictionary, room_id: String) -> bool:
-	if not ROOMS.has(room_id) or String(instance.get("floor", "ground")) != String(ROOMS[room_id].floor):
+	if not _room_definitions.has(room_id) or String(instance.get("floor", "ground")) != String(_room_definitions[room_id].floor):
 		return false
 	var piece_id: String = String(instance.get("piece_id", ""))
 	var piece_rect: Rect2i = Rect2i(instance.get("origin", Vector2i.ZERO), _piece_definitions[piece_id].size)
-	var room_rect: Rect2i = Rect2i(ROOMS[room_id].origin, ROOMS[room_id].size)
+	var room_rect: Rect2i = Rect2i(_room_definitions[room_id].origin, _room_definitions[room_id].size)
 	return piece_rect.grow(1).intersects(room_rect)
 
 func _pieces_are_adjacent(first: Dictionary, second: Dictionary) -> bool:
@@ -1098,6 +1155,7 @@ func layout_summary() -> Dictionary:
 	var support_piece_count: int = 0
 	var signal_piece_count: int = 0
 	var assigned_specialist_count: int = 0
+	var active_spatial_rule: Dictionary = spatial_rule_state()
 	for instance in pieces.values():
 		var piece_id: String = String(instance.get("piece_id", ""))
 		if not _piece_definitions.has(piece_id):
@@ -1116,7 +1174,7 @@ func layout_summary() -> Dictionary:
 			assigned_specialist_count += 1
 		if _piece_has_open_lane(instance):
 			open_lane_count += 1
-		for room_id in ROOMS.keys():
+		for room_id in _room_definitions.keys():
 			if _piece_is_adjacent_to_room(instance, String(room_id)):
 				room_edge_count += 1
 				break
@@ -1129,6 +1187,8 @@ func layout_summary() -> Dictionary:
 		warnings.append("No support piece protects recovery or information.")
 	if not pieces.is_empty() and open_lane_count == 0:
 		warnings.append("No placed piece has an open adjacent response cell.")
+	if String(active_spatial_rule.get("id", "")) == "clear_causeway" and not bool(active_spatial_rule.get("active", false)):
+		warnings.append("A placed piece blocks the causeway, so its room-damage reduction is inactive.")
 	var role_ids: Array = role_counts.keys()
 	role_ids.sort()
 	for role_id in role_ids:
@@ -1147,6 +1207,9 @@ func layout_summary() -> Dictionary:
 	if total > 0 and open_lane_count == total and int(counts.ground) > 0 and int(counts.upper) > 0:
 		warden_risk = "Movement is preserved; verify that the lighter formation can absorb direct pressure."
 	return {
+		"keep_id": keep_id,
+		"keep_name": String(_keep_definitions.get(keep_id, {}).get("name", keep_id)),
+		"spatial_rule": active_spatial_rule,
 		"counts": counts,
 		"open_lane_count": open_lane_count,
 		"room_edge_count": room_edge_count,
@@ -1422,11 +1485,17 @@ func _apply_enemy_damage(enemy_id: String, target_id: String) -> void:
 func _apply_room_damage(enemy_id: String, room_id: String, damage: int, reduced: bool, area_impact: bool) -> void:
 	if not rooms.has(room_id):
 		return
+	var spatial_rule: Dictionary = spatial_rule_state()
+	if bool(spatial_rule.get("active", false)):
+		var causeway_reduction: int = int(spatial_rule.get("room_damage_reduction", 0))
+		if causeway_reduction > 0:
+			damage = maxi(0, damage - causeway_reduction)
+			_battle_log("The clear causeway dispersed the response and reduced room damage by %d." % causeway_reduction)
 	var ignores_protection: bool = bool(_enemy_definitions[enemy_id].get("ignores_protection", false))
 	var room_protection: int = _room_protection(room_id)
 	if room_protection > 0:
 		if ignores_protection:
-			_battle_log("%s ignored %d static protection at %s." % [_enemy_definitions[enemy_id].name, room_protection, ROOMS[room_id].name])
+			_battle_log("%s ignored %d static protection at %s." % [_enemy_definitions[enemy_id].name, room_protection, _room_definitions[room_id].name])
 		else:
 			damage = maxi(0, damage - room_protection)
 	if not ignores_protection:
@@ -1435,17 +1504,17 @@ func _apply_room_damage(enemy_id: String, room_id: String, damage: int, reduced:
 			if String(instance.get("piece_id", "")) == "breakaway_barricade" and not bool(instance.get("disabled", false)) and _piece_is_adjacent_to_room(instance, room_id):
 				damage = maxi(0, damage - 2)
 				_set_piece_health(String(instance_id), 0)
-				_battle_log("Breakaway Barricade absorbed 2 contact damage for %s and broke as planned." % ROOMS[room_id].name)
+				_battle_log("Breakaway Barricade absorbed 2 contact damage for %s and broke as planned." % _room_definitions[room_id].name)
 				break
 	var was_breached: bool = rooms[room_id].state == "breached"
 	combat_metrics["room_damage"] = int(combat_metrics.get("room_damage", 0)) + damage * 15
 	rooms[room_id].condition = maxi(0, int(rooms[room_id].condition) - damage * 15)
 	_update_room_state(room_id)
-	_battle_log("%s %s %s and dealt %d room damage%s; room is %s." % [_enemy_definitions[enemy_id].name, "impacted" if area_impact else "reached", ROOMS[room_id].name, damage, " under response mitigation" if reduced else "", rooms[room_id].state])
+	_battle_log("%s %s %s and dealt %d room damage%s; room is %s." % [_enemy_definitions[enemy_id].name, "impacted" if area_impact else "reached", _room_definitions[room_id].name, damage, " under response mitigation" if reduced else "", rooms[room_id].state])
 	if rooms[room_id].state == "breached" and not was_breached:
 		breach_level += 1
 		morale = maxi(0, morale - 1)
-		_battle_log("%s breached. Morale falls because its named function is offline." % ROOMS[room_id].name)
+		_battle_log("%s breached. Morale falls because its named function is offline." % _room_definitions[room_id].name)
 
 func _repair_after_defenders() -> void:
 	for instance_id in pieces.keys():
@@ -1468,7 +1537,7 @@ func _repair_after_defenders() -> void:
 			rooms[best_room].condition = mini(100, room_condition(best_room) + repair_amount)
 			_update_room_state(best_room)
 			combat_metrics["repairs"] = int(combat_metrics.get("repairs", 0)) + repair_amount
-			_battle_log("Repair Station restored %s by %d; it is now %s." % [ROOMS[best_room].name, repair_amount, rooms[best_room].state])
+			_battle_log("Repair Station restored %s by %d; it is now %s." % [_room_definitions[best_room].name, repair_amount, rooms[best_room].state])
 			break
 
 func _battle_step() -> Dictionary:
@@ -1506,8 +1575,8 @@ func _battle_step() -> Dictionary:
 			if String(enemy.get("target", "")).is_empty():
 				enemy.target = _choose_target(enemy_id)
 				var target_name: String = "none"
-				if ROOMS.has(enemy.target):
-					target_name = String(ROOMS[enemy.target].name)
+				if _room_definitions.has(enemy.target):
+					target_name = String(_room_definitions[enemy.target].name)
 				elif pieces.has(enemy.target):
 					target_name = String(_piece_definitions[String(pieces[enemy.target].piece_id)].name)
 				_battle_log("%s arrived by %s; target forecast resolves to %s." % [_enemy_definitions[enemy_id].name, _enemy_definitions[enemy_id].route, target_name])
@@ -1545,7 +1614,7 @@ func _all_enemies_defeated() -> bool:
 func _critical_breach_count() -> int:
 	var count: int = 0
 	for room_id in rooms.keys():
-		if bool(ROOMS[room_id].critical) and room_state(String(room_id)) == "breached":
+		if bool(_room_definitions[room_id].critical) and room_state(String(room_id)) == "breached":
 			count += 1
 	return count
 
@@ -1573,7 +1642,7 @@ func _open_repair_interval(outcome: String) -> void:
 		repair_interval_reason = "The breach is quiet for now. Stabilize one function, then choose who takes the next post."
 	else:
 		repair_interval_reason = "The bells stop. Assign the crew before the next warning."
-	_log("Greywatch repair interval opened: %s" % repair_interval_reason)
+	_log("%s repair interval opened: %s" % [String(_keep_definitions.get(keep_id, {}).get("name", "Keep")), repair_interval_reason])
 	for instance_id in pieces.keys():
 		var instance: Dictionary = pieces[instance_id]
 		if String(instance.get("piece_id", "")) == "supply_cache" and not bool(instance.get("disabled", false)) and not bool(instance.get("supply_spent", false)):
@@ -1593,7 +1662,7 @@ func _fallback_is_active() -> bool:
 
 func finish_repair_interval() -> Dictionary:
 	if not repair_interval_active:
-		return {"ok": false, "reason": "no Greywatch repair interval is open"}
+		return {"ok": false, "reason": "no keep repair interval is open"}
 	if not active_event_id.is_empty():
 		return {"ok": false, "reason": "active_event_unresolved", "message": "Resolve the active event before closing recovery.", "state_changes": []}
 	var unused: int = repair_actions_remaining
@@ -1641,7 +1710,7 @@ func start_wave(doctrine: String) -> Dictionary:
 	if not _doctrine_definitions.has(doctrine):
 		return {"ok": false, "reason": "unknown invasion doctrine"}
 	if repair_interval_active:
-		return {"ok": false, "reason": "finish the Greywatch repair interval before starting the next wave"}
+		return {"ok": false, "reason": "finish the keep repair interval before starting the next wave"}
 	if wave_active:
 		return {"ok": false, "reason": "an invasion is already active"}
 	if not active_event_id.is_empty():
@@ -1748,12 +1817,15 @@ func repair_room(room_id: String) -> Dictionary:
 	return _commit_room_repair(room_id)
 
 func _commit_room_repair(room_id: String) -> Dictionary:
-	materials -= 8
-	rooms[room_id].condition = mini(100, room_condition(room_id) + 30)
+	var keep_recovery: Dictionary = recovery_profile()
+	var room_repair_cost: int = int(keep_recovery.get("room_repair_materials", 8))
+	var room_repair_amount: int = int(keep_recovery.get("room_repair_condition", 30))
+	materials -= room_repair_cost
+	rooms[room_id].condition = mini(100, room_condition(room_id) + room_repair_amount)
 	_update_room_state(room_id)
-	combat_metrics["repairs"] = int(combat_metrics.get("repairs", 0)) + 30
+	combat_metrics["repairs"] = int(combat_metrics.get("repairs", 0)) + room_repair_amount
 	repair_actions_remaining -= 1
-	return {"ok": true, "actions_remaining": repair_actions_remaining, "message": "Repaired %s to %s." % [ROOMS[room_id].name, rooms[room_id].state], "state_changes": [{"op": "repair_room", "room": room_id, "condition": room_condition(room_id), "state": room_state(room_id)}]}
+	return {"ok": true, "actions_remaining": repair_actions_remaining, "message": "Repaired %s to %s." % [_room_definitions[room_id].name, rooms[room_id].state], "state_changes": [{"op": "repair_room", "room": room_id, "condition": room_condition(room_id), "state": room_state(room_id)}]}
 
 func recovery_advice() -> Dictionary:
 	if not repair_interval_active:
@@ -1790,7 +1862,7 @@ func scenario_scorecard() -> Dictionary:
 		total_room_damage += int(row.get("room_damage", 0))
 		total_piece_damage += int(row.get("piece_damage", 0))
 		total_recovery_actions += int(row.get("recovery_actions_used", 0))
-	return {"scenario_id": scenario_id, "scenario_name": String(_scenario_definitions.get(scenario_id, {}).get("name", scenario_id)), "completed_waves": wave_history.size(), "wave_count": authored_wave_count(), "outcomes": outcomes, "total_defeated": total_defeated, "total_room_damage": total_room_damage, "total_piece_damage": total_piece_damage, "recovery_actions_used": total_recovery_actions, "final_outcome": last_outcome, "replay_key": "%s/%s/%d" % [scenario_id, commander_id, seed]}
+	return {"keep_id": keep_id, "keep_name": String(_keep_definitions.get(keep_id, {}).get("name", keep_id)), "scenario_id": scenario_id, "scenario_name": String(_scenario_definitions.get(scenario_id, {}).get("name", scenario_id)), "completed_waves": wave_history.size(), "wave_count": authored_wave_count(), "outcomes": outcomes, "total_defeated": total_defeated, "total_room_damage": total_room_damage, "total_piece_damage": total_piece_damage, "recovery_actions_used": total_recovery_actions, "final_outcome": last_outcome, "replay_key": "%s/%s/%d" % [scenario_id, commander_id, seed]}
 
 func scenario_report() -> Dictionary:
 	var scorecard: Dictionary = scenario_scorecard()
@@ -1849,7 +1921,7 @@ func scenario_report() -> Dictionary:
 		what_failed.append("%d wave%s breached at least one keep function." % [breached_waves, "" if breached_waves == 1 else "s"])
 	if not damaged_rooms.is_empty():
 		var weakest: Dictionary = damaged_rooms[0]
-		what_failed.append("%s finished at %d%% condition." % [String(ROOMS[String(weakest.id)].name), int(weakest.condition)])
+		what_failed.append("%s finished at %d%% condition." % [String(_room_definitions[String(weakest.id)].name), int(weakest.condition)])
 	if disabled_pieces > 0:
 		what_failed.append("%d defensive piece%s finished disabled." % [disabled_pieces, "" if disabled_pieces == 1 else "s"])
 	if what_failed.is_empty():
@@ -1943,6 +2015,8 @@ func forecast() -> Dictionary:
 
 func summary() -> Dictionary:
 	return {
+		"keep_id": keep_id,
+		"keep": keep_definition(),
 		"commander": _commander_definitions[commander_id].name,
 		"commander_id": commander_id,
 		"commander_passive": String(_commander_definitions[commander_id].passive),
@@ -1992,6 +2066,7 @@ func summary() -> Dictionary:
 func serialize() -> Dictionary:
 	return {
 		"seed": seed,
+		"keep_id": keep_id,
 		"commander_id": commander_id,
 		"materials": materials,
 		"command_points": command_points,
@@ -2097,7 +2172,7 @@ func _validate_serialized_payload(data: Dictionary) -> String:
 	for field_name in ["scenario_active", "wave_active", "lockdown_pending", "lockdown_used", "rally_pending", "rally_used", "repair_interval_active"]:
 		if data.has(field_name) and not data.get(field_name) is bool:
 			return "save %s value is malformed" % String(field_name).replace("_", " ")
-	for field_name in ["commander_id", "scenario_id", "scenario_variation_id", "variation_target_room", "enemy_doctrine", "last_outcome", "repair_interval_reason", "reserved_pack_id"]:
+	for field_name in ["commander_id", "keep_id", "scenario_id", "scenario_variation_id", "variation_target_room", "enemy_doctrine", "last_outcome", "repair_interval_reason", "reserved_pack_id"]:
 		if data.has(field_name) and not data.get(field_name) is String:
 			return "save %s value is malformed" % String(field_name).replace("_", " ")
 	var saved_commander_id: String = String(data.get("commander_id", ACTIVE_COMMANDER))
@@ -2106,6 +2181,11 @@ func _validate_serialized_payload(data: Dictionary) -> String:
 	var saved_scenario_id: String = String(data.get("scenario_id", scenario_id))
 	if not _scenario_definitions.has(saved_scenario_id):
 		return "save contains an unknown scenario"
+	var expected_keep_id: String = String(_scenario_definitions[saved_scenario_id].get("keep_id", "greywatch_keep"))
+	var saved_keep_id: String = String(data.get("keep_id", expected_keep_id))
+	if not _keep_definitions.has(saved_keep_id) or saved_keep_id != expected_keep_id:
+		return "save keep does not match its scenario"
+	var saved_room_definitions: Dictionary = _room_definitions_for_scenario(saved_scenario_id)
 	var saved_doctrine_id: String = String(data.get("enemy_doctrine", enemy_doctrine))
 	if not _doctrine_definitions.has(saved_doctrine_id):
 		return "save contains an unknown invasion doctrine"
@@ -2113,7 +2193,7 @@ func _validate_serialized_payload(data: Dictionary) -> String:
 	if not saved_outcome.is_empty() and not ["held", "partial_breach", "collapse"].has(saved_outcome):
 		return "save contains an unknown outcome"
 	var saved_variation_target: String = String(data.get("variation_target_room", ""))
-	if not saved_variation_target.is_empty() and not ROOMS.has(saved_variation_target):
+	if not saved_variation_target.is_empty() and not saved_room_definitions.has(saved_variation_target):
 		return "save variation target room is unknown"
 	var saved_reserved_pack: String = String(data.get("reserved_pack_id", ""))
 	if not saved_reserved_pack.is_empty() and not _pack_definitions.has(saved_reserved_pack):
@@ -2148,7 +2228,7 @@ func _validate_serialized_payload(data: Dictionary) -> String:
 			if not instance.get("assignment") is String:
 				return "save piece assignment is malformed"
 			var assignment: String = String(instance.get("assignment"))
-			if not assignment.is_empty() and not ROOMS.has(assignment):
+			if not assignment.is_empty() and not saved_room_definitions.has(assignment):
 				return "save piece assignment room is unknown"
 		for field_name in ["max_health", "health", "condition", "attack_cooldown", "attacks", "damage_dealt", "targets_stopped", "max_ammo", "ammo"]:
 			if instance.has(field_name) and not _is_saved_number(instance.get(field_name)):
@@ -2163,11 +2243,11 @@ func _validate_serialized_payload(data: Dictionary) -> String:
 		if not data.get("rooms") is Dictionary:
 			return "save rooms collection is malformed"
 		var saved_rooms: Dictionary = data.get("rooms", {})
-		for room_id in ROOMS.keys():
+		for room_id in saved_room_definitions.keys():
 			if not saved_rooms.has(room_id):
 				return "save rooms collection is incomplete"
 		for room_id_value in saved_rooms.keys():
-			if not room_id_value is String or not ROOMS.has(String(room_id_value)):
+			if not room_id_value is String or not saved_room_definitions.has(String(room_id_value)):
 				return "save contains an unknown room"
 			var room_value: Variant = saved_rooms[room_id_value]
 			if not room_value is Dictionary:
@@ -2196,7 +2276,7 @@ func _validate_serialized_payload(data: Dictionary) -> String:
 				if not enemy.get("target") is String:
 					return "save enemy target is malformed"
 				var target: String = String(enemy.get("target"))
-				if not target.is_empty() and not ROOMS.has(target) and not saved_pieces.has(target):
+				if not target.is_empty() and not saved_room_definitions.has(target) and not saved_pieces.has(target):
 					return "save enemy target is unknown"
 	if data.has("assigned_rooms"):
 		if not data.get("assigned_rooms") is Dictionary:
@@ -2204,7 +2284,7 @@ func _validate_serialized_payload(data: Dictionary) -> String:
 		var saved_assignments: Dictionary = data.get("assigned_rooms", {})
 		var assigned_instances: Array[String] = []
 		for room_id_value in saved_assignments.keys():
-			if not room_id_value is String or not ROOMS.has(String(room_id_value)):
+			if not room_id_value is String or not saved_room_definitions.has(String(room_id_value)):
 				return "save assignment room is unknown"
 			var instance_id_value: Variant = saved_assignments[room_id_value]
 			if not instance_id_value is String or not saved_pieces.has(String(instance_id_value)):
@@ -2308,6 +2388,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	scenario_id = String(data.get("scenario_id", scenario_id))
 	if not _scenario_definitions.has(scenario_id):
 		return {"ok": false, "reason": "save contains an unknown scenario"}
+	_activate_keep(String(_scenario_definitions[scenario_id].get("keep_id", "greywatch_keep")))
 	scenario_active = bool(data.get("scenario_active", scenario_active))
 	scenario_variation_id = String(data.get("scenario_variation_id", scenario_variation_id))
 	variation_target_room = String(data.get("variation_target_room", variation_target_room))

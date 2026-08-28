@@ -14,6 +14,11 @@ PACK_FIELDS = {
     "contents", "doctrine", "cost", "strength", "weakness", "choice",
     "commander_affinity", "spatial_demand",
 }
+KEEP_FIELDS = {
+    "id", "content_version", "status", "name", "short_role", "question", "grid_size",
+    "rooms", "connections", "spatial_rule", "recovery_profile", "visual",
+}
+ROOM_FIELDS = {"name", "floor", "origin", "size", "critical", "role"}
 COMMANDER_FIELDS = {
     "id", "content_version", "status", "name", "short_role", "question", "passive",
     "ability", "ability_name", "ability_text", "limitation", "starting_materials",
@@ -52,7 +57,7 @@ DOCTRINE_TEXT_FIELDS = {
 }
 SCENARIO_FIELDS = {
     "id", "content_version", "status", "name", "short_role", "question", "objective",
-    "lesson", "starting_doctrine", "doctrines", "wave_plans", "variations",
+    "lesson", "keep_id", "recommended_packs", "starting_doctrine", "doctrines", "wave_plans", "variations",
 }
 EVENT_FIELDS = {
     "id", "content_version", "status", "title", "short_role", "type", "scenario",
@@ -244,6 +249,114 @@ def validate_string_array(
             if item not in supported:
                 errors.append(f"{path}: {field} contains unsupported value: {item}")
     return strings
+
+
+def validate_keep(
+    path: Path,
+    keep: dict[str, Any],
+    seen: set[str],
+    errors: list[str],
+) -> tuple[str | None, set[str]]:
+    for field in sorted(KEEP_FIELDS - keep.keys()):
+        errors.append(f"{path}: missing required field: {field}")
+    keep_id = keep.get("id")
+    if not isinstance(keep_id, str) or not SNAKE_CASE.fullmatch(keep_id):
+        errors.append(f"{path}: id must be non-empty snake_case")
+        return None, set()
+    if keep_id != path.stem:
+        errors.append(f"{path}: id {keep_id} does not match filename")
+    if keep_id in seen:
+        errors.append(f"duplicate runtime keep id: {keep_id}")
+    seen.add(keep_id)
+    if keep.get("status") != "active":
+        errors.append(f"{path}: runtime keep status must be active")
+    if not is_integer(keep.get("content_version")) or keep["content_version"] < 1:
+        errors.append(f"{path}: content_version must be a positive integer")
+    for field in ("name", "short_role", "question"):
+        if not isinstance(keep.get(field), str) or not keep[field].strip():
+            errors.append(f"{path}: {field} must be non-empty text")
+    if keep.get("grid_size") != [12, 8]:
+        errors.append(f"{path}: grid_size must be [12, 8] for the current board")
+    rooms = keep.get("rooms")
+    room_ids: set[str] = set()
+    room_rects: dict[str, tuple[str, int, int, int, int]] = {}
+    if not isinstance(rooms, dict) or not rooms:
+        errors.append(f"{path}: rooms must be a non-empty object")
+        rooms = {}
+    for room_id, room in rooms.items():
+        if not isinstance(room_id, str) or not SNAKE_CASE.fullmatch(room_id) or not isinstance(room, dict):
+            errors.append(f"{path}: malformed room: {room_id}")
+            continue
+        room_ids.add(room_id)
+        for field in sorted(ROOM_FIELDS - room.keys()):
+            errors.append(f"{path}: room {room_id} missing required field: {field}")
+        if room.get("floor") not in SUPPORTED_FLOORS:
+            errors.append(f"{path}: room {room_id} floor is unsupported")
+        if not isinstance(room.get("critical"), bool):
+            errors.append(f"{path}: room {room_id} critical must be boolean")
+        for field in ("name", "role"):
+            if not isinstance(room.get(field), str) or not room[field].strip():
+                errors.append(f"{path}: room {room_id} {field} must be non-empty text")
+        origin = room.get("origin")
+        size = room.get("size")
+        valid_rect = (
+            isinstance(origin, list) and len(origin) == 2 and all(is_integer(value) and value >= 0 for value in origin)
+            and isinstance(size, list) and len(size) == 2 and all(is_integer(value) and value >= 1 for value in size)
+            and origin[0] + size[0] <= 12 and origin[1] + size[1] <= 8
+        )
+        if not valid_rect:
+            errors.append(f"{path}: room {room_id} must fit the 12x8 grid")
+            continue
+        rect = (str(room.get("floor")), origin[0], origin[1], size[0], size[1])
+        for other_id, other in room_rects.items():
+            same_floor = rect[0] == other[0]
+            overlaps = rect[1] < other[1] + other[3] and other[1] < rect[1] + rect[3] and rect[2] < other[2] + other[4] and other[2] < rect[2] + rect[4]
+            if same_floor and overlaps:
+                errors.append(f"{path}: rooms {other_id} and {room_id} overlap")
+        room_rects[room_id] = rect
+    connections = keep.get("connections")
+    seen_connections: set[tuple[str, str]] = set()
+    if not isinstance(connections, list) or not connections:
+        errors.append(f"{path}: connections must be a non-empty array")
+    else:
+        for connection in connections:
+            if not isinstance(connection, list) or len(connection) != 2 or any(not isinstance(value, str) or value not in room_ids for value in connection) or connection[0] == connection[1]:
+                errors.append(f"{path}: invalid room connection")
+                continue
+            key = tuple(sorted(connection))
+            if key in seen_connections:
+                errors.append(f"{path}: duplicate room connection: {'|'.join(key)}")
+            seen_connections.add(key)
+    spatial = keep.get("spatial_rule")
+    if not isinstance(spatial, dict) or spatial.get("id") not in {"compact_adjacency", "clear_causeway"}:
+        errors.append(f"{path}: invalid spatial_rule")
+    else:
+        lane_cells = spatial.get("lane_cells")
+        reduction = spatial.get("room_damage_reduction")
+        if not isinstance(spatial.get("label"), str) or not spatial["label"].strip():
+            errors.append(f"{path}: spatial_rule label must be non-empty text")
+        if not isinstance(lane_cells, list) or any(not isinstance(cell, list) or len(cell) != 2 or any(not is_integer(value) for value in cell) or not 0 <= cell[0] < 12 or not 0 <= cell[1] < 8 for cell in lane_cells):
+            errors.append(f"{path}: spatial_rule lane_cells are invalid")
+        if not is_integer(reduction) or not 0 <= reduction <= 3:
+            errors.append(f"{path}: spatial_rule room_damage_reduction must be from 0 to 3")
+        if spatial.get("id") == "clear_causeway" and (not lane_cells or not is_integer(reduction) or reduction < 1):
+            errors.append(f"{path}: clear_causeway needs lane cells and positive room damage reduction")
+    recovery = keep.get("recovery_profile")
+    if not isinstance(recovery, dict):
+        errors.append(f"{path}: recovery_profile must be an object")
+    else:
+        if not is_integer(recovery.get("room_repair_materials")) or recovery["room_repair_materials"] < 1:
+            errors.append(f"{path}: room_repair_materials must be positive")
+        if not is_integer(recovery.get("room_repair_condition")) or not 1 <= recovery["room_repair_condition"] <= 100:
+            errors.append(f"{path}: room_repair_condition must be from 1 to 100")
+        if not isinstance(recovery.get("question"), str) or not recovery["question"].strip():
+            errors.append(f"{path}: recovery question must be non-empty text")
+    visual = keep.get("visual")
+    if not isinstance(visual, dict) or visual.get("terrain") not in {"fort", "river"}:
+        errors.append(f"{path}: invalid visual profile")
+    elif any(not isinstance(visual.get(field), str) or not visual[field].strip() for field in ("ground_label", "upper_label", "board_label")):
+        errors.append(f"{path}: visual labels must be non-empty text")
+    return keep_id, room_ids
 
 
 def validate_piece(
@@ -497,6 +610,8 @@ def validate_scenario(
     room_ids: set[str],
     enemy_ids: set[str],
     doctrine_ids: set[str],
+    keep_ids: set[str],
+    pack_ids: set[str],
     seen: set[str],
     errors: list[str],
 ) -> str | None:
@@ -519,6 +634,13 @@ def validate_scenario(
         value = scenario.get(field)
         if not isinstance(value, str) or not value.strip():
             errors.append(f"{path}: {field} must be non-empty text")
+    if scenario.get("keep_id") not in keep_ids:
+        errors.append(f"{path}: keep_id references an unknown keep")
+    recommended_packs = scenario.get("recommended_packs")
+    if not isinstance(recommended_packs, list) or not 1 <= len(recommended_packs) <= 2:
+        errors.append(f"{path}: recommended_packs must contain one or two pack IDs")
+    elif len(recommended_packs) != len(set(recommended_packs)) or any(not isinstance(pack_id, str) or pack_id not in pack_ids for pack_id in recommended_packs):
+        errors.append(f"{path}: recommended_packs contains duplicate or unknown pack IDs")
     doctrines = scenario.get("doctrines")
     wave_plans = scenario.get("wave_plans")
     if not isinstance(doctrines, list) or len(doctrines) != 3:
@@ -975,6 +1097,7 @@ def validate_commander(
 
 def main() -> int:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--keeps", required=True)
     parser.add_argument("--packs", required=True)
     parser.add_argument("--commanders", required=True)
     parser.add_argument("--pieces", required=True)
@@ -1013,7 +1136,7 @@ def main() -> int:
         item.get("id"): item for item in manifest.get("enemies", [])
         if isinstance(item, dict) and isinstance(item.get("id"), str)
     }
-    room_ids = {
+    manifest_room_ids = {
         item.get("id") for item in manifest.get("rooms", [])
         if isinstance(item, dict) and isinstance(item.get("id"), str)
     }
@@ -1021,6 +1144,29 @@ def main() -> int:
         item.get("id") for item in manifest.get("enemies", [])
         if isinstance(item, dict) and isinstance(item.get("id"), str)
     }
+
+    manifest_keep_values = manifest.get("active_slice", {}).get("keep_ids")
+    if not isinstance(manifest_keep_values, list) or any(not isinstance(value, str) for value in manifest_keep_values):
+        errors.append(f"{manifest_path}: active_slice.keep_ids must be an array of keep IDs")
+        manifest_keep_values = []
+    manifest_keep_ids = set(manifest_keep_values)
+    if len(manifest_keep_ids) != len(manifest_keep_values):
+        errors.append(f"{manifest_path}: active_slice.keep_ids contains duplicates")
+    seen_keeps: set[str] = set()
+    runtime_keep_rooms: dict[str, set[str]] = {}
+    room_ids: set[str] = set()
+    for path in json_files(Path(args.keeps), "keep", errors):
+        keep = load_json(path, errors)
+        if not isinstance(keep, dict):
+            errors.append(f"{path}: root must be an object")
+            continue
+        keep_id, keep_room_ids = validate_keep(path, keep, seen_keeps, errors)
+        if keep_id is not None:
+            runtime_keep_rooms[keep_id] = keep_room_ids
+            room_ids.update(keep_room_ids)
+    validate_id_parity("keep", manifest_keep_ids, seen_keeps, errors)
+    if room_ids != manifest_room_ids:
+        errors.append(f"{manifest_path}: room IDs differ from runtime keep room IDs")
 
     seen_doctrines: set[str] = set()
     for path in json_files(Path(args.doctrines), "doctrine", errors):
@@ -1085,7 +1231,9 @@ def main() -> int:
         if not isinstance(scenario, dict):
             errors.append(f"{path}: root must be an object")
             continue
-        scenario_id = validate_scenario(path, scenario, room_ids, seen_enemies, seen_doctrines, seen_scenarios, errors)
+        scenario_keep_id = scenario.get("keep_id") if isinstance(scenario.get("keep_id"), str) else ""
+        scenario_room_ids = runtime_keep_rooms.get(scenario_keep_id, room_ids)
+        scenario_id = validate_scenario(path, scenario, scenario_room_ids, seen_enemies, seen_doctrines, seen_keeps, set(manifest_packs), seen_scenarios, errors)
         if scenario_id is not None:
             runtime_scenarios[scenario_id] = scenario
     for scenario_id in sorted(manifest_scenario_ids - seen_scenarios):
@@ -1180,7 +1328,7 @@ def main() -> int:
         return 1
     print(
         "runtime content catalog: PASS "
-        f"({len(seen_pieces)} pieces, {len(seen_packs)} packs, "
+        f"({len(seen_keeps)} keeps, {len(seen_pieces)} pieces, {len(seen_packs)} packs, "
         f"{len(seen_commanders)} commanders, {len(seen_enemies)} enemies, "
         f"{len(seen_doctrines)} doctrines, {len(seen_scenarios)} scenarios, "
         f"{len(seen_events)} events, {len(seen_modifiers)} modifiers)"

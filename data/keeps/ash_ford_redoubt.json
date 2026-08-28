@@ -1,0 +1,24 @@
+{
+  "id": "ash_ford_redoubt",
+  "content_version": 1,
+  "status": "active",
+  "name": "Ash Ford Redoubt",
+  "short_role": "A divided river defense joined by one exposed causeway.",
+  "question": "Can the crossing stay open while both banks remain defensible?",
+  "grid_size": [12, 8],
+  "rooms": {
+    "gate": {"name": "West Bridgehead", "floor": "ground", "origin": [0, 3], "size": [2, 2], "critical": true, "role": "western approach"},
+    "outer_wall": {"name": "River Wall", "floor": "upper", "origin": [1, 1], "size": [4, 1], "critical": false, "role": "raised river screen"},
+    "inner_yard": {"name": "Open Causeway", "floor": "ground", "origin": [3, 3], "size": [6, 2], "critical": false, "role": "crossing and response lane"},
+    "armory": {"name": "Toll House", "floor": "ground", "origin": [9, 1], "size": [2, 2], "critical": true, "role": "equipment staging"},
+    "workshop": {"name": "Sluice House", "floor": "ground", "origin": [3, 6], "size": [2, 2], "critical": true, "role": "water control and repair"},
+    "barracks": {"name": "Ferry Barracks", "floor": "ground", "origin": [6, 6], "size": [2, 2], "critical": false, "role": "mobile reserve"},
+    "supply_room": {"name": "Grain Store", "floor": "ground", "origin": [9, 5], "size": [2, 2], "critical": true, "role": "food and repair stores"},
+    "north_tower": {"name": "Signal Mast", "floor": "upper", "origin": [9, 1], "size": [2, 2], "critical": false, "role": "cross-river warning"},
+    "old_chapel": {"name": "East Refuge", "floor": "upper", "origin": [7, 5], "size": [3, 2], "critical": false, "role": "evacuation shelter"}
+  },
+  "connections": [["gate", "inner_yard"], ["inner_yard", "armory"], ["inner_yard", "workshop"], ["inner_yard", "barracks"], ["armory", "supply_room"], ["workshop", "barracks"], ["barracks", "supply_room"], ["outer_wall", "north_tower"], ["north_tower", "old_chapel"]],
+  "spatial_rule": {"id": "clear_causeway", "lane_cells": [[3, 3], [4, 3], [5, 3], [6, 3], [7, 3], [8, 3]], "room_damage_reduction": 1, "label": "Keep the marked causeway clear to reduce room damage by 1."},
+  "recovery_profile": {"room_repair_materials": 5, "room_repair_condition": 20, "question": "Which exposed bank needs a shallow repair before pressure shifts?"},
+  "visual": {"terrain": "river", "ground_label": "FORD LEVEL", "upper_label": "RAISED POSTS", "board_label": "ASH FORD / CROSSING DEFENSE"}
+}

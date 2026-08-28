@@ -4,6 +4,8 @@
   "question": "Can one strong entrance remain connected to a flexible interior?",
   "objective": "Hold Gate without abandoning the response yard.",
   "lesson": "Concentrate strength, but preserve one interior route.",
+  "keep_id": "greywatch_keep",
+  "recommended_packs": ["pike_line", "field_engineers"],
   "starting_doctrine": "gate_assault",
   "doctrines": ["gate_assault", "distributed_sabotage", "feint_and_flank"],
   "wave_plans": [["raider", "raider"], ["raider", "sapper"], ["raider", "climber", "sapper"]],
