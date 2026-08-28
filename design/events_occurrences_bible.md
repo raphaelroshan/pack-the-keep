@@ -1,13 +1,14 @@
 # Pack the Keep — Events, Occurrences, Meetings, and Developments Bible
 
-**Status:** Proposed content bible for future implementation
-**Baseline:** `v0.10.0-greywatch-vertical-slice`
+**Status:** Proposed content bible for post-P12 implementation
+**Current baseline:** `0.12.3-alpha-packaged-pause-close` on remote `main` (`63a3a2d`)
+**Implementation note:** The current runtime implements the typed Relief Road event chain; the broader cards in this document remain staged future content.
 **Primary location:** Greywatch Keep and its immediate valley
 **Purpose:** Provide a deep but controlled source of events for preparation, recovery, scenario progression, character development, and future regional play.
 
 > **Event promise:** The keep is not a static board between waves. It is a small, stressed community whose needs, arguments, visitors, weather, rumors, repairs, and discoveries change what the player can protect.
 
-This document is a creative and implementation-oriented library. It is not a mandate to implement every event immediately. Events should enter the game in small authored slices, with stable identifiers, explicit requirements, typed effects, deterministic selection, clear visual consequences, and tests. The event system must deepen the fortification decision rather than distract from it.
+This document is a creative and implementation-oriented library. It is not a mandate to implement every event immediately. The runtime already has an explicit event command boundary, event persistence, typed effects, and the authored Relief Road chain. Future agents must extend those existing contracts rather than introduce a separate event system. Events should enter the game in small authored slices, with stable identifiers, explicit requirements, typed effects, deterministic selection, clear visual consequences, and tests. The event system must deepen the fortification decision rather than distract from it.
 
 ---
 
@@ -65,6 +66,10 @@ Not every event should have the same weight. The implementation should distingui
 ---
 
 ## 3. Pacing and selection rules
+
+### Current runtime boundary
+
+The current implementation supports authored event triggers and typed choices through `data/events/`, `src/core/content_catalog.gd`, and `PackKeepState`. It does **not** yet implement the full seeded random occurrence scheduler described later in this document. Treat random meetings, rare occurrences, and regional developments as design candidates until a bounded scheduler is deliberately introduced and tested.
 
 The event system should add texture without turning every preparation into a reading queue. Event cadence must preserve the central rhythm: inspect the keep, make a plan, watch the doctrine, recover, and learn.
 

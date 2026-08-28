@@ -4,15 +4,55 @@
 
 The repository separates product intent, keep simulation, invasion simulation, presentation, and verification. `design/design_prompt.md` is the persistent product brief. `AGENTS.md` is the coding contract. `src/core/keep_state.gd` owns deterministic commanders, packs, grid placement, pieces, waves, abilities, recovery, and serialization. `src/ui/main.gd` displays the keep and emits prototype actions. `tests/test_keep_state.gd` protects the simulation without rendering.
 
-Give the coding agent the persistent prompt once, then feed it one risk slice at a time. Do not ask it to “build the whole tower-defense game.” Give it one player-facing behavior, a small set of files, acceptance criteria, and the exact verification command. For the post-v0.10.0 sequence, use [`agent_handoff_roadmap.md`](agent_handoff_roadmap.md) as the long-horizon roadmap, content-schema reference, UX plan, testing framework, and ordered backlog.
+Give the coding agent the persistent prompt once, then feed it one risk slice at a time. Do not ask it to “build the whole tower-defense game.” Give it one player-facing behavior, a small set of files, acceptance criteria, and the exact verification command. For the current post-v0.12.3 sequence, use [`agent_handoff_roadmap.md`](agent_handoff_roadmap.md) as the long-horizon roadmap, [`design/events_occurrences_bible.md`](../design/events_occurrences_bible.md) as the creative event library, and the current `data/` definitions plus `src/core/content_catalog.gd` as the runtime content baseline.
 
 ## Persistent context prompt
 
 ```text
-You are the lead implementation agent for Pack the Keep. Read design/design_prompt.md, README.md, AGENTS.md, and docs/decision_log.md before editing. This is a Godot 4.x premium single-player Windows game for Steam and Epic Games Store. The core promise is commander-and-pack-driven top-down fort defense: choose a doctrine, open meaningful equipment or soldier packs, arrange a compact keep, and adapt to invasions. The first milestone is one keep, two commanders, four packs, four defender/equipment types, four enemy types, three invasion doctrines, three wave stages, a breach state, repair, and an outcome report. Keep simulation separate from UI. Work in small reversible slices, run headless tests, launch the game when possible, and report intent, plan, changed files, exact verification, risks, and one next task.
+You are the lead implementation agent for Pack the Keep. Read `design/design_prompt.md`, `README.md`, `AGENTS.md`, `docs/decision_log.md`, `docs/agent_handoff_roadmap.md`, and the relevant design card before editing. The current baseline is remote `main` at `0.12.3-alpha-packaged-pause-close`: two commanders, nine packs, eight scenarios, seven enemy types, authored multi-wave combat, runtime JSON content under `data/`, typed Relief Road events, bounded Campaign Ledger modifiers, controller/scaling/accessibility settings, and packaged Windows smoke coverage. The core promise remains commander-and-pack-driven top-down fort defense: choose a doctrine, arrange a compact keep, and adapt to invasions. Keep simulation separate from UI. Work in small reversible slices, preserve deterministic seeded outcomes and save compatibility, add tests before polish, and report intent, plan, changed files, exact verification, risks, and one next task. The next work should start with one complete event/occurrence slice from `design/events_occurrences_bible.md`, not a large roster or campaign map.
 ```
 
-## First feed: inspect and stabilize
+## Current post-P12 feed order
+
+The original feeds below describe the historical build-up from the prototype and should not be issued as unimplemented tasks. For the current remote baseline, issue these feeds in order:
+
+### Current feed 1 — implement one event from the occurrence bible
+
+```text
+Implement one complete event, preferably workshop_can_wait or family_blue_blanket. Read design/events_occurrences_bible.md and the current data/events/ schema. Add one runtime JSON definition, explicit eligibility, two valid choices, typed effects, visible board/report consequences, save/load persistence, deterministic replay coverage, UI smoke coverage, and a 1280x720 visual checkpoint. Do not build a generic random scheduler, a campaign map, or a new combat exception in this slice.
+```
+
+### Current feed 2 — connect event history to existing Results and Ledger
+
+```text
+Expose resolved event history, relationship flags, and event consequences through the existing Campaign Ledger and final Results without adding a second progression system. Keep history bounded and newest-first. Add tests proving inspection and presentation toggles do not mutate PackKeepState, and capture the event result at normal play distance.
+```
+
+### Current feed 3 — implement one three-event chain
+
+```text
+Implement one authored chain such as The Wrong Wall or The Refuge Bell: forecast, meeting/recovery choice, and consequence report. Include a decline path, scarcity path, collapse-safe path, active-event save/load, and same-seed replay. Use only validated typed effects and stable IDs.
+```
+
+### Current feed 4 — add one character arc
+
+```text
+Choose Mara Venn or Jory Pike. Add three bounded relationship/arc flags, two commander-aware variants, and one changed future event. The arc must alter a spatial or operational question; it must not become a dialogue-only reputation subsystem.
+```
+
+### Current feed 5 — reduce UX and content-maintenance risk
+
+```text
+Extract one self-contained panel/controller from src/ui/main.gd, preferably event cards, the Campaign Ledger, or settings. Preserve all existing signals, mouse/keyboard/controller paths, pause semantics, and authoritative command boundaries. Add regression coverage before changing layout or copy.
+```
+
+### Current feed 6 — finish packaged alpha hardening
+
+```text
+Complete the remaining clean-install, upgrade, missing-profile, and stale-backup Windows smoke cases. Keep platform behavior behind adapters, preserve offline operation, and verify that no packaged setting changes authoritative combat outcomes.
+```
+
+## Historical feeds: prototype build sequence
 
 ```text
 Inspect the repository without adding gameplay. Confirm the project entry scene, keep state, UI actions, test runner, and exact launch/test commands. If Godot is unavailable, state that clearly. Produce a small plan for stabilizing the current grid and test runner. Do not add new commanders, packs, enemies, or systems.
