@@ -5,6 +5,10 @@ const KEEP_PATHS: Array[String] = [
 	"res://data/keeps/ash_ford_redoubt.json"
 ]
 
+const REGION_PATHS: Array[String] = [
+	"res://data/regions/low_mill.json"
+]
+
 const PACK_PATHS: Array[String] = [
 	"res://data/packs/pike_line.json",
 	"res://data/packs/field_engineers.json",
@@ -193,6 +197,8 @@ const REQUIRED_DOCTRINE_FIELDS: Array[String] = [
 
 const REQUIRED_KEEP_FIELDS: Array[String] = ["id", "content_version", "status", "name", "short_role", "question", "grid_size", "rooms", "connections", "spatial_rule", "recovery_profile", "visual"]
 const REQUIRED_ROOM_FIELDS: Array[String] = ["name", "floor", "origin", "size", "critical", "role"]
+const REQUIRED_REGION_FIELDS: Array[String] = ["id", "content_version", "status", "name", "need", "route", "consequences"]
+const REQUIRED_REGION_CONSEQUENCE_FIELDS: Array[String] = ["id", "settlement_status", "route_status", "minimum_anchor_condition", "requires_non_collapse", "next_run_materials", "summary"]
 const REQUIRED_SCENARIO_FIELDS: Array[String] = ["id", "content_version", "status", "name", "short_role", "question", "objective", "lesson", "keep_id", "recommended_packs", "starting_doctrine", "doctrines", "wave_plans", "variations"]
 const REQUIRED_EVENT_FIELDS: Array[String] = ["id", "content_version", "status", "title", "short_role", "type", "scenario", "trigger", "selection", "setup", "choices", "follow_up"]
 const REQUIRED_EVENT_CHOICE_FIELDS: Array[String] = ["id", "label", "requirements", "effects", "visible_result"]
@@ -220,6 +226,7 @@ const REQUIRED_MODIFIER_FIELDS: Array[String] = ["id", "content_version", "statu
 const SUPPORTED_MODIFIER_EFFECTS: Array[String] = ["reveal_wave_composition", "enemy_health_bonus"]
 
 var _keeps: Dictionary = {}
+var _regions: Dictionary = {}
 var _packs: Dictionary = {}
 var _commanders: Dictionary = {}
 var _pieces: Dictionary = {}
@@ -232,6 +239,7 @@ var errors: Array[String] = []
 
 func load_default(known_room_ids: Array = []) -> Dictionary:
 	_keeps.clear()
+	_regions.clear()
 	_packs.clear()
 	_commanders.clear()
 	_pieces.clear()
@@ -247,6 +255,8 @@ func load_default(known_room_ids: Array = []) -> Dictionary:
 	for room_id in known_room_ids:
 		if not runtime_room_ids.has(String(room_id)):
 			runtime_room_ids.append(String(room_id))
+	for path in REGION_PATHS:
+		_load_region(path, runtime_room_ids)
 	for path in DOCTRINE_PATHS:
 		_load_doctrine(path)
 	for path in PIECE_PATHS:
@@ -268,7 +278,7 @@ func load_default(known_room_ids: Array = []) -> Dictionary:
 	_validate_event_follow_ups()
 	_validate_scenario_event_references()
 	_validate_modifier_unlock_events()
-	return {"ok": errors.is_empty(), "keeps": _keeps.duplicate(true), "commanders": _commanders.duplicate(true), "pieces": _pieces.duplicate(true), "packs": _packs.duplicate(true), "enemies": _enemies.duplicate(true), "doctrines": _doctrines.duplicate(true), "scenarios": _scenarios.duplicate(true), "events": _events.duplicate(true), "modifiers": _modifiers.duplicate(true), "errors": errors.duplicate()}
+	return {"ok": errors.is_empty(), "keeps": _keeps.duplicate(true), "regions": _regions.duplicate(true), "commanders": _commanders.duplicate(true), "pieces": _pieces.duplicate(true), "packs": _packs.duplicate(true), "enemies": _enemies.duplicate(true), "doctrines": _doctrines.duplicate(true), "scenarios": _scenarios.duplicate(true), "events": _events.duplicate(true), "modifiers": _modifiers.duplicate(true), "errors": errors.duplicate()}
 
 func keep_ids() -> Array[String]:
 	var result: Array[String] = []
@@ -280,6 +290,17 @@ func keep_ids() -> Array[String]:
 
 func keep_definition(keep_id: String) -> Dictionary:
 	return _keeps.get(keep_id, {}).duplicate(true)
+
+func region_ids() -> Array[String]:
+	var result: Array[String] = []
+	for path in REGION_PATHS:
+		var expected_id: String = path.get_file().get_basename()
+		if _regions.has(expected_id):
+			result.append(expected_id)
+	return result
+
+func region_definition(region_id: String) -> Dictionary:
+	return _regions.get(region_id, {}).duplicate(true)
 
 func room_ids() -> Array[String]:
 	var result: Array[String] = []
@@ -683,6 +704,71 @@ func validate_keep_definition(keep: Dictionary, expected_id: String) -> Array[St
 		for field in ["ground_label", "upper_label", "board_label"]:
 			if not visual.get(field) is String or String(visual.get(field, "")).strip_edges().is_empty():
 				validation_errors.append("keep %s visual %s must be non-empty text" % [keep_id, field])
+	return validation_errors
+
+func validate_region_definition(region: Dictionary, expected_id: String, known_room_ids: Array) -> Array[String]:
+	var validation_errors: Array[String] = []
+	for field in REQUIRED_REGION_FIELDS:
+		if not region.has(field):
+			validation_errors.append("%s is missing required field: %s" % [expected_id, field])
+	var region_id: String = String(region.get("id", ""))
+	if region_id != expected_id:
+		validation_errors.append("region id %s does not match filename %s" % [region_id, expected_id])
+	if not _is_snake_case_id(region_id):
+		validation_errors.append("region id %s must be snake_case" % region_id)
+	if String(region.get("status", "")) != "active":
+		validation_errors.append("region %s must have active status" % region_id)
+	_validate_integer_minimum(region, "content_version", region_id, "region", 1, validation_errors)
+	for field in ["name", "need"]:
+		if not region.get(field) is String or String(region.get(field, "")).strip_edges().is_empty():
+			validation_errors.append("region %s must have non-empty text for %s" % [region_id, field])
+	var route: Variant = region.get("route")
+	if not route is Dictionary or not _is_snake_case_id(String(route.get("id", ""))) or not route.get("name") is String or String(route.get("name", "")).strip_edges().is_empty() or not route.get("anchor_rooms") is Array or route.get("anchor_rooms", []).size() != 2:
+		validation_errors.append("region %s has an invalid route" % region_id)
+	else:
+		var seen_anchors: Array[String] = []
+		for room_id_value in route.get("anchor_rooms", []):
+			var room_id: String = String(room_id_value)
+			if not room_id_value is String or not known_room_ids.has(room_id) or seen_anchors.has(room_id):
+				validation_errors.append("region %s route has an invalid anchor room" % region_id)
+			else:
+				seen_anchors.append(room_id)
+	var consequences: Variant = region.get("consequences")
+	var consequence_ids: Array[String] = []
+	var previous_threshold: int = 101
+	if not consequences is Array or consequences.is_empty() or consequences.size() > 3:
+		validation_errors.append("region %s consequences must contain one to three entries" % region_id)
+	else:
+		for consequence in consequences:
+			if not consequence is Dictionary:
+				validation_errors.append("region %s consequence must be an object" % region_id)
+				continue
+			for field in REQUIRED_REGION_CONSEQUENCE_FIELDS:
+				if not consequence.has(field):
+					validation_errors.append("region %s consequence is missing required field: %s" % [region_id, field])
+			var consequence_id: String = String(consequence.get("id", ""))
+			if not _is_snake_case_id(consequence_id) or consequence_ids.has(consequence_id):
+				validation_errors.append("region %s has an invalid or duplicate consequence id" % region_id)
+			else:
+				consequence_ids.append(consequence_id)
+			for field in ["settlement_status", "route_status", "summary"]:
+				if not consequence.get(field) is String or String(consequence.get(field, "")).strip_edges().is_empty():
+					validation_errors.append("region %s consequence %s needs non-empty %s" % [region_id, consequence_id, field])
+			var threshold: Variant = consequence.get("minimum_anchor_condition")
+			if not _is_integer_number(threshold) or int(threshold) < 0 or int(threshold) > 100:
+				validation_errors.append("region %s consequence %s has an invalid anchor threshold" % [region_id, consequence_id])
+			elif int(threshold) >= previous_threshold:
+				validation_errors.append("region %s consequences must use descending anchor thresholds" % region_id)
+			else:
+				previous_threshold = int(threshold)
+			if not consequence.get("requires_non_collapse") is bool:
+				validation_errors.append("region %s consequence %s requires_non_collapse must be boolean" % [region_id, consequence_id])
+			var next_materials: Variant = consequence.get("next_run_materials")
+			if not _is_integer_number(next_materials) or int(next_materials) < 0 or int(next_materials) > 5:
+				validation_errors.append("region %s consequence %s next_run_materials must be from 0 to 5" % [region_id, consequence_id])
+		var fallback: Variant = consequences[consequences.size() - 1]
+		if fallback is Dictionary and (int(fallback.get("minimum_anchor_condition", -1)) != 0 or bool(fallback.get("requires_non_collapse", true))):
+			validation_errors.append("region %s final consequence must be an unconditional zero-threshold fallback" % region_id)
 	return validation_errors
 
 func validate_scenario_definition(scenario: Dictionary, expected_id: String, known_room_ids: Array, known_keep_ids: Array = [], known_pack_ids: Array = []) -> Array[String]:
@@ -1106,6 +1192,28 @@ func _load_keep(path: String) -> void:
 		errors.append("%s: %s" % [path, validation_error])
 	if validation_errors.is_empty():
 		_keeps[keep_id] = _normalize_keep(authored)
+
+func _load_region(path: String, known_room_ids: Array) -> void:
+	if not FileAccess.file_exists(path):
+		errors.append("missing region file: %s" % path)
+		return
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		errors.append("could not open region file: %s" % path)
+		return
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		errors.append("region file must contain one JSON object: %s" % path)
+		return
+	var region: Dictionary = parsed
+	var region_id: String = String(region.get("id", ""))
+	var validation_errors: Array[String] = validate_region_definition(region, path.get_file().get_basename(), known_room_ids)
+	if _regions.has(region_id):
+		validation_errors.append("duplicate region id: %s" % region_id)
+	for validation_error in validation_errors:
+		errors.append("%s: %s" % [path, validation_error])
+	if validation_errors.is_empty():
+		_regions[region_id] = region.duplicate(true)
 
 func _load_piece(path: String, known_room_ids: Array, known_enemy_ids: Array) -> void:
 	if not FileAccess.file_exists(path):

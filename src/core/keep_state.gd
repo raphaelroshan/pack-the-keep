@@ -70,12 +70,14 @@ var event_flags: Dictionary = {}
 var event_history: Array[Dictionary] = []
 var unlocked_modifier_ids: Array[String] = []
 var equipped_modifier_id: String = ""
+var regional_state: Dictionary = {}
 var _last_attackers: Array[String] = []
 var _last_attack_damage: Dictionary = {}
 var _last_armor_blocked: int = 0
 var content_catalog: RefCounted
 var _keep_definitions: Dictionary = {}
 var _room_definitions: Dictionary = ROOMS.duplicate(true)
+var _region_definitions: Dictionary = {}
 var _commander_definitions: Dictionary = {}
 var _piece_definitions: Dictionary = {}
 var _pack_definitions: Dictionary = {}
@@ -90,6 +92,7 @@ func _init(keep_seed: int = 3307) -> void:
 	content_catalog = ContentCatalog.new()
 	var catalog_result: Dictionary = content_catalog.load_default(ROOMS.keys())
 	_keep_definitions = catalog_result.get("keeps", {}).duplicate(true)
+	_region_definitions = catalog_result.get("regions", {}).duplicate(true)
 	_commander_definitions = catalog_result.get("commanders", {}).duplicate(true)
 	_piece_definitions = catalog_result.get("pieces", {}).duplicate(true)
 	_pack_definitions = catalog_result.get("packs", {}).duplicate(true)
@@ -117,15 +120,35 @@ func _reset_rooms() -> void:
 	for room_id in _room_definitions.keys():
 		rooms[room_id] = {"condition": 100, "state": "stable"}
 
+func _default_regional_state() -> Dictionary:
+	return {
+		"settlement_id": "low_mill",
+		"settlement_name": String(_region_definitions.get("low_mill", {}).get("name", "Low Mill")),
+		"settlement_status": "unproven",
+		"route_id": String(_region_definitions.get("low_mill", {}).get("route", {}).get("id", "mill_road")),
+		"route_name": String(_region_definitions.get("low_mill", {}).get("route", {}).get("name", "Miller's Road")),
+		"route_status": "unknown",
+		"consequence_id": "",
+		"summary": "Low Mill is waiting to see whether the defended road can carry people and supplies.",
+		"next_run_materials": 0,
+		"pending_support": false,
+		"applied_to_scenario_id": "",
+		"source_scenario_id": "",
+		"source_keep_id": "",
+		"source_replay_key": ""
+	}
+
 func reset_run(new_seed: int = 3307) -> void:
 	var preserved_unlocks: Array[String] = unlocked_modifier_ids.duplicate()
 	var preserved_equipped: String = equipped_modifier_id
+	var preserved_regional_state: Dictionary = regional_state.duplicate(true) if not regional_state.is_empty() else _default_regional_state()
 	seed = new_seed
 	commander_id = ACTIVE_COMMANDER
 	materials = int(_commander_definitions[ACTIVE_COMMANDER].starting_materials)
 	command_points = 3
 	unlocked_modifier_ids = preserved_unlocks
 	equipped_modifier_id = preserved_equipped if preserved_unlocks.has(preserved_equipped) and _modifier_definitions.has(preserved_equipped) else ""
+	regional_state = preserved_regional_state
 	morale = _starting_morale()
 	scenario_id = "gatehouse_lock"
 	_activate_keep(String(_scenario_definitions.get(scenario_id, {}).get("keep_id", "greywatch_keep")))
@@ -225,8 +248,9 @@ func select_commander(id: String) -> Dictionary:
 	if not event_history.is_empty():
 		return {"ok": false, "reason": "commander cannot change after scenario events begin"}
 	commander_id = id
-	materials = int(_commander_definitions[id].starting_materials)
-	morale = _starting_morale()
+	var applied_regional_materials: int = int(regional_state.get("next_run_materials", 0)) if scenario_active and String(regional_state.get("applied_to_scenario_id", "")) == scenario_id else 0
+	materials = int(_commander_definitions[id].starting_materials) + (variation_materials if scenario_active else 0) + applied_regional_materials
+	morale = clampi(_starting_morale() + (variation_morale if scenario_active else 0), 0, 10)
 	command_points = 3
 	return {"ok": true, "message": "%s takes command. %s Limitation: %s" % [_commander_definitions[id].name, _commander_definitions[id].passive, _commander_definitions[id].limitation], "ability_name": _commander_definitions[id].ability_name, "ability_text": _commander_definitions[id].ability_text}
 
@@ -261,9 +285,16 @@ func select_scenario(id: String) -> Dictionary:
 	variation_target_room = String(variation.get("target_room", ""))
 	variation_materials = int(variation.get("materials", 0))
 	variation_morale = int(variation.get("morale", 0))
-	materials = int(_commander_definitions[commander_id].starting_materials) + variation_materials
+	var regional_materials: int = 0
+	if bool(regional_state.get("pending_support", false)):
+		regional_materials = int(regional_state.get("next_run_materials", 0))
+		regional_state.pending_support = false
+		regional_state.applied_to_scenario_id = id
+	materials = int(_commander_definitions[commander_id].starting_materials) + variation_materials + regional_materials
 	morale = clampi(_starting_morale() + variation_morale, 0, 10)
 	_log("Scenario selected: %s / variation %s. %s" % [_scenario_definitions[id].name, scenario_variation_id, _scenario_definitions[id].lesson])
+	if regional_materials > 0:
+		_log("%s support reached the keep by %s: +%d starting materials." % [String(regional_state.get("settlement_name", "Low Mill")), String(regional_state.get("route_name", "Miller's Road")), regional_materials])
 	_refresh_active_event()
 	return {"ok": true, "message": "%s selected: %s Variation: %s." % [_scenario_definitions[id].name, _scenario_definitions[id].objective, scenario_variation_id], "scenario": scenario_preview(id)}
 
@@ -614,6 +645,23 @@ func keep_definition(id: String = "") -> Dictionary:
 		return {}
 	return _keep_definitions[selected_id].duplicate(true)
 
+func region_ids() -> Array[String]:
+	return content_catalog.region_ids()
+
+func region_definition(id: String) -> Dictionary:
+	if not _region_definitions.has(id):
+		return {}
+	return _region_definitions[id].duplicate(true)
+
+func regional_consequence() -> Dictionary:
+	return regional_state.duplicate(true)
+
+func current_regional_consequence() -> Dictionary:
+	var terminal_run: bool = scenario_active and (last_outcome == "collapse" or (wave_index >= authored_wave_count() and not wave_active and not repair_interval_active))
+	if not terminal_run or String(regional_state.get("source_scenario_id", "")) != scenario_id or String(regional_state.get("source_keep_id", "")) != keep_id:
+		return {}
+	return regional_consequence()
+
 func room_definitions() -> Dictionary:
 	return _room_definitions.duplicate(true)
 
@@ -708,7 +756,7 @@ func pack_definition(pack_id: String) -> Dictionary:
 	return _pack_definitions[pack_id].duplicate(true)
 
 func content_catalog_status() -> Dictionary:
-	return {"ok": content_catalog_errors.is_empty(), "keep_count": _keep_definitions.size(), "commander_count": _commander_definitions.size(), "piece_count": _piece_definitions.size(), "pack_count": _pack_definitions.size(), "enemy_count": _enemy_definitions.size(), "doctrine_count": _doctrine_definitions.size(), "scenario_count": _scenario_definitions.size(), "event_count": _event_definitions.size(), "modifier_count": _modifier_definitions.size(), "errors": content_catalog_errors.duplicate()}
+	return {"ok": content_catalog_errors.is_empty(), "keep_count": _keep_definitions.size(), "region_count": _region_definitions.size(), "commander_count": _commander_definitions.size(), "piece_count": _piece_definitions.size(), "pack_count": _pack_definitions.size(), "enemy_count": _enemy_definitions.size(), "doctrine_count": _doctrine_definitions.size(), "scenario_count": _scenario_definitions.size(), "event_count": _event_definitions.size(), "modifier_count": _modifier_definitions.size(), "errors": content_catalog_errors.duplicate()}
 
 func pack_preview(pack_id: String) -> Dictionary:
 	if not _pack_definitions.has(pack_id):
@@ -1678,7 +1726,45 @@ func finish_repair_interval() -> Dictionary:
 		if bool(next_wave.get("ok", false)):
 			_log("Automatic scenario sequence advanced to wave %d/%d." % [wave_index, authored_wave_count()])
 			return {"ok": true, "message": "Recovery closed. Wave %d/%d begins automatically." % [wave_index, authored_wave_count()], "unused_actions": unused, "next_wave_started": true, "next_wave": next_wave}
-	return {"ok": true, "message": "Repair interval closed. Greywatch is ready for the next forecast.", "unused_actions": unused, "next_wave_started": false, "next_wave": {}}
+	_record_regional_consequence()
+	return {"ok": true, "message": "Repair interval closed. The keep is ready for the next forecast.", "unused_actions": unused, "next_wave_started": false, "next_wave": {}}
+
+func _record_regional_consequence() -> void:
+	if not scenario_active or not _region_definitions.has("low_mill"):
+		return
+	var region: Dictionary = _region_definitions.low_mill
+	var route: Dictionary = region.get("route", {})
+	var anchor_condition: int = 100
+	for room_id_value in route.get("anchor_rooms", []):
+		var room_id: String = String(room_id_value)
+		anchor_condition = mini(anchor_condition, room_condition(room_id)) if rooms.has(room_id) else 0
+	var selected: Dictionary = {}
+	for consequence in region.get("consequences", []):
+		if bool(consequence.get("requires_non_collapse", false)) and last_outcome == "collapse":
+			continue
+		if anchor_condition >= int(consequence.get("minimum_anchor_condition", 0)):
+			selected = consequence
+			break
+	if selected.is_empty():
+		return
+	var support_materials: int = int(selected.get("next_run_materials", 0))
+	regional_state = {
+		"settlement_id": String(region.get("id", "low_mill")),
+		"settlement_name": String(region.get("name", "Low Mill")),
+		"settlement_status": String(selected.get("settlement_status", "unproven")),
+		"route_id": String(route.get("id", "mill_road")),
+		"route_name": String(route.get("name", "Miller's Road")),
+		"route_status": String(selected.get("route_status", "unknown")),
+		"consequence_id": String(selected.get("id", "")),
+		"summary": String(selected.get("summary", "")),
+		"next_run_materials": support_materials,
+		"pending_support": support_materials > 0,
+		"applied_to_scenario_id": "",
+		"source_scenario_id": scenario_id,
+		"source_keep_id": keep_id,
+		"source_replay_key": "%s/%s/%d" % [scenario_id, commander_id, seed]
+	}
+	_log("Regional report — %s / %s: %s" % [String(region.get("name", "Low Mill")), String(route.get("name", "Miller's Road")), String(selected.get("summary", ""))])
 
 func _finish_wave() -> Dictionary:
 	wave_active = false
@@ -1691,6 +1777,7 @@ func _finish_wave() -> Dictionary:
 		_reload_ammunition()
 		_battle_log("Outcome: collapse. Three critical functions or morale failed; the report identifies the chain; surviving ranged defenders reload for the next attempt.")
 		_append_wave_history()
+		_record_regional_consequence()
 	elif breach_level > 0:
 		last_outcome = "partial_breach"
 		morale = maxi(0, morale - 1)
@@ -1955,7 +2042,8 @@ func scenario_report() -> Dictionary:
 		"what_failed": what_failed,
 		"suggested_experiment": suggested_experiment,
 		"replay_key": String(scorecard.get("replay_key", "")),
-		"event_history": event_history.duplicate(true)
+		"event_history": event_history.duplicate(true),
+		"regional_consequence": current_regional_consequence()
 	}
 
 func forecast() -> Dictionary:
@@ -2059,6 +2147,7 @@ func summary() -> Dictionary:
 		"event_history": event_history.duplicate(true),
 		"unlocked_modifier_ids": unlocked_modifier_ids.duplicate(),
 		"equipped_modifier_id": equipped_modifier_id,
+		"regional_consequence": regional_consequence(),
 		"recovery_advice": recovery_advice(),
 		"scenario_scorecard": scenario_scorecard()
 	}
@@ -2111,6 +2200,7 @@ func serialize() -> Dictionary:
 		"event_history": event_history.duplicate(true),
 		"unlocked_modifier_ids": unlocked_modifier_ids.duplicate(),
 		"equipped_modifier_id": equipped_modifier_id,
+		"regional_state": regional_state.duplicate(true),
 		"schema_version": SAVE_SCHEMA_VERSION,
 		"game_id": GAME_ID
 	}
@@ -2165,6 +2255,56 @@ func _validate_saved_string_array(data: Dictionary, field_name: String) -> Strin
 			return "save %s entry is malformed" % field_name.replace("_", " ")
 	return ""
 
+func _validate_saved_regional_state(value: Variant) -> String:
+	if not value is Dictionary:
+		return "save regional state is malformed"
+	var state: Dictionary = value
+	for field_name in ["settlement_id", "settlement_name", "settlement_status", "route_id", "route_name", "route_status", "consequence_id", "summary", "applied_to_scenario_id", "source_scenario_id", "source_keep_id", "source_replay_key"]:
+		if not state.get(field_name) is String:
+			return "save regional state %s is malformed" % String(field_name).replace("_", " ")
+	if not state.get("pending_support") is bool or not _is_saved_number(state.get("next_run_materials")):
+		return "save regional support state is malformed"
+	var next_run_materials: int = int(state.get("next_run_materials", -1))
+	if next_run_materials < 0 or next_run_materials > 5:
+		return "save regional support materials are out of range"
+	var region_id: String = String(state.get("settlement_id", ""))
+	if not _region_definitions.has(region_id):
+		return "save regional state references an unknown settlement"
+	var region: Dictionary = _region_definitions[region_id]
+	var route: Dictionary = region.get("route", {})
+	if String(state.get("route_id", "")) != String(route.get("id", "")):
+		return "save regional state references an unknown route"
+	var consequence_id: String = String(state.get("consequence_id", ""))
+	if consequence_id.is_empty():
+		if next_run_materials != 0 or bool(state.get("pending_support", false)) or not String(state.get("applied_to_scenario_id", "")).is_empty():
+			return "save empty regional consequence cannot carry support"
+	else:
+		var authored: Dictionary = {}
+		for consequence in region.get("consequences", []):
+			if String(consequence.get("id", "")) == consequence_id:
+				authored = consequence
+				break
+		if authored.is_empty():
+			return "save regional state references an unknown consequence"
+		if String(state.get("settlement_status", "")) != String(authored.get("settlement_status", "")) or String(state.get("route_status", "")) != String(authored.get("route_status", "")) or int(state.get("next_run_materials", -1)) != int(authored.get("next_run_materials", -2)):
+			return "save regional consequence does not match authored content"
+	var source_scenario_id: String = String(state.get("source_scenario_id", ""))
+	if not source_scenario_id.is_empty() and not _scenario_definitions.has(source_scenario_id):
+		return "save regional state references an unknown source scenario"
+	var source_keep_id: String = String(state.get("source_keep_id", ""))
+	if not source_keep_id.is_empty() and not _keep_definitions.has(source_keep_id):
+		return "save regional state references an unknown source keep"
+	var applied_scenario_id: String = String(state.get("applied_to_scenario_id", ""))
+	if not applied_scenario_id.is_empty() and not _scenario_definitions.has(applied_scenario_id):
+		return "save regional state references an unknown applied scenario"
+	if bool(state.get("pending_support", false)) and next_run_materials <= 0:
+		return "save regional support cannot be pending without materials"
+	if bool(state.get("pending_support", false)) and not applied_scenario_id.is_empty():
+		return "save regional support cannot be pending and already applied"
+	if next_run_materials > 0 and not bool(state.get("pending_support", false)) and applied_scenario_id.is_empty():
+		return "save regional support must be pending or applied"
+	return ""
+
 func _validate_serialized_payload(data: Dictionary) -> String:
 	for field_name in ["seed", "materials", "command_points", "morale", "variation_materials", "variation_morale", "wave_index", "wave_progress", "battle_step", "battle_clock", "breach_level", "pack_openings_this_preparation", "repair_actions_remaining"]:
 		if data.has(field_name) and not _is_saved_number(data.get(field_name)):
@@ -2207,6 +2347,10 @@ func _validate_serialized_payload(data: Dictionary) -> String:
 	]:
 		if not String(validation).is_empty():
 			return String(validation)
+	if data.has("regional_state"):
+		var regional_error: String = _validate_saved_regional_state(data.get("regional_state"))
+		if not regional_error.is_empty():
+			return regional_error
 	if data.has("pieces") and not data.get("pieces") is Dictionary:
 		return "save pieces collection is malformed"
 	var saved_pieces: Dictionary = data.get("pieces", {})
@@ -2456,6 +2600,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 			event_history.append(history_entry.duplicate(true))
 	unlocked_modifier_ids = saved_unlocked_modifiers
 	equipped_modifier_id = saved_equipped_modifier
+	regional_state = data.get("regional_state", _default_regional_state()).duplicate(true)
 	if combat_metrics.is_empty():
 		_reset_combat_metrics()
 	repair_interval_active = bool(data.get("repair_interval_active", repair_interval_active))

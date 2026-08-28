@@ -36,7 +36,7 @@ jobs:
       - name: Validate vertical layers
         run: python tools/validate_vertical_layers.py --layers content/vertical_layers.json
       - name: Validate runtime content catalog
-        run: python tools/validate_runtime_content.py --keeps data/keeps --pieces data/pieces --packs data/packs --commanders data/commanders --enemies data/enemies --doctrines data/doctrines --scenarios data/scenarios --events data/events --modifiers data/modifiers --manifest content/content_manifest.json --event-schema content/event_schema.json
+        run: python tools/validate_runtime_content.py --keeps data/keeps --regions data/regions --pieces data/pieces --packs data/packs --commanders data/commanders --enemies data/enemies --doctrines data/doctrines --scenarios data/scenarios --events data/events --modifiers data/modifiers --manifest content/content_manifest.json --event-schema content/event_schema.json
       - name: Validate offline gameplay boundary
         run: python tools/validate_offline_boundary.py
       - name: Validate P12 alpha checklist

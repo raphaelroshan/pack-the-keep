@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.15.0-second-defensive-identity` — P15 adds Ash Ford as a second isolated defense identity; P12 human approval remains pending
+**Current build identity:** `0.15.1-regional-consequence` — P15 connects completed defenses to one bounded Low Mill consequence; P12 human approval remains pending
 
 ## Purpose
 
@@ -105,6 +105,10 @@ The Windows release-candidate smoke now runs five isolated lifecycle phases: cle
 ## v0.15.0 Second defensive identity
 
 Ash Ford Redoubt adds a distinct room graph, river-board presentation, and an explicit clear-causeway rule: leaving the marked ground cells free reduces incoming room damage by one. Ash Ford Crossing teaches Runner Network plus Field Engineers, while its five-material repairs restore only twenty condition, creating a distributed shallow-repair problem distinct from Greywatch's eight-material deep repairs. Keep topology, room labels, recovery profile, and spatial rules are runtime content; save/load derives the active keep from the selected scenario.
+
+## v0.15.1 Low Mill regional consequence
+
+Terminal defenses now produce one authored Low Mill report from the Gate and Supply Room conditions. Miller's Road can remain open, become contested, or close; the council correspondingly commits grain, guards its stores, or turns inward. Open and contested outcomes persist a one-shot three- or one-material contribution to the next selected scenario. Ledger and Results show the same read-only state, while save validation rejects unknown or content-mismatched regional records. No map, shop, stockpile, reputation score, or procedural regional system is introduced.
 
 ## v0.8.2 testability additions
 

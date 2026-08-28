@@ -447,3 +447,11 @@
 **Reason:** P15 needs a genuinely different defensive identity without duplicating enemies, inventing scenario-only UI authority, or forcing every existing room reference through a migration. Scenario-owned keep selection keeps the defense loop isolated and deterministic while making layout and recovery meaningfully different.
 
 **Trade-off:** Both current keeps share the same nine semantic room IDs, so wholly different future functions will require scoped aliases or broader content-reference validation. The second keep remains an isolated scenario; regional travel, economy, and faction systems stay deferred to the next bounded slice.
+
+## ADR-057: Regional consequence is one authored state projection
+
+**Decision:** Represent Low Mill and Miller's Road as one validated runtime region definition. At terminal scenario closure, `KeepState` selects one authored consequence from the run outcome and the lower condition of Gate and Supply Room. The state persists, appears in Ledger and Results, and may contribute zero to three materials exactly once when the next scenario is selected.
+
+**Reason:** P15 needs proof that a keep defense can cause something legible beyond its walls before a map or campaign economy is justified. Named anchors make the cause inspectable, and one-shot support makes the consequence operational without creating a stockpile or hidden reputation score.
+
+**Trade-off:** Low Mill has no player-selected regional action and only one route. The contribution is intentionally small, non-negative, and consumed on scenario selection; travel, shops, settlement inventories, relationship trees, and procedural regional scheduling remain out of scope.

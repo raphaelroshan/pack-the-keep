@@ -32,6 +32,18 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         self.assertIn("room_damage_reduction", joined)
         self.assertIn("room_repair_condition", joined)
 
+    def test_region_rejects_unknown_route_anchors_and_unbounded_support(self) -> None:
+        region = copy.deepcopy(load("data/regions/low_mill.json"))
+        region["route"]["anchor_rooms"] = ["gate", "missing_room"]
+        region["consequences"][0]["next_run_materials"] = 99
+        region["consequences"][1]["minimum_anchor_condition"] = 80
+        errors: list[str] = []
+        validator.validate_region(Path("low_mill.json"), region, {"gate", "supply_room"}, set(), errors)
+        joined = "\n".join(errors)
+        self.assertIn("anchor_rooms", joined)
+        self.assertIn("next_run_materials", joined)
+        self.assertIn("descending anchor thresholds", joined)
+
     def test_event_schema_contract_rejects_validator_drift(self) -> None:
         schema = load("content/event_schema.json")
         schema["selection"]["repeat_policies"].append("forever")

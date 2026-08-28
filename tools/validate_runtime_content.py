@@ -19,6 +19,11 @@ KEEP_FIELDS = {
     "rooms", "connections", "spatial_rule", "recovery_profile", "visual",
 }
 ROOM_FIELDS = {"name", "floor", "origin", "size", "critical", "role"}
+REGION_FIELDS = {"id", "content_version", "status", "name", "need", "route", "consequences"}
+REGION_CONSEQUENCE_FIELDS = {
+    "id", "settlement_status", "route_status", "minimum_anchor_condition",
+    "requires_non_collapse", "next_run_materials", "summary",
+}
 COMMANDER_FIELDS = {
     "id", "content_version", "status", "name", "short_role", "question", "passive",
     "ability", "ability_name", "ability_text", "limitation", "starting_materials",
@@ -357,6 +362,81 @@ def validate_keep(
     elif any(not isinstance(visual.get(field), str) or not visual[field].strip() for field in ("ground_label", "upper_label", "board_label")):
         errors.append(f"{path}: visual labels must be non-empty text")
     return keep_id, room_ids
+
+
+def validate_region(
+    path: Path,
+    region: dict[str, Any],
+    room_ids: set[str],
+    seen: set[str],
+    errors: list[str],
+) -> str | None:
+    for field in sorted(REGION_FIELDS - region.keys()):
+        errors.append(f"{path}: missing required field: {field}")
+    region_id = region.get("id")
+    if not isinstance(region_id, str) or not SNAKE_CASE.fullmatch(region_id):
+        errors.append(f"{path}: id must be non-empty snake_case")
+        return None
+    if region_id != path.stem:
+        errors.append(f"{path}: id {region_id} does not match filename")
+    if region_id in seen:
+        errors.append(f"duplicate runtime region id: {region_id}")
+    seen.add(region_id)
+    if region.get("status") != "active":
+        errors.append(f"{path}: runtime region status must be active")
+    if not is_integer(region.get("content_version")) or region["content_version"] < 1:
+        errors.append(f"{path}: content_version must be a positive integer")
+    for field in ("name", "need"):
+        if not isinstance(region.get(field), str) or not region[field].strip():
+            errors.append(f"{path}: {field} must be non-empty text")
+    route = region.get("route")
+    if not isinstance(route, dict):
+        errors.append(f"{path}: route must be an object")
+    else:
+        if not isinstance(route.get("id"), str) or not SNAKE_CASE.fullmatch(route["id"]):
+            errors.append(f"{path}: route id must be snake_case")
+        if not isinstance(route.get("name"), str) or not route["name"].strip():
+            errors.append(f"{path}: route name must be non-empty text")
+        anchors = route.get("anchor_rooms")
+        if not isinstance(anchors, list) or len(anchors) != 2 or len(set(value for value in anchors if isinstance(value, str))) != 2 or any(not isinstance(value, str) or value not in room_ids for value in anchors):
+            errors.append(f"{path}: route anchor_rooms must contain two distinct known rooms")
+    consequences = region.get("consequences")
+    if not isinstance(consequences, list) or not 1 <= len(consequences) <= 3:
+        errors.append(f"{path}: consequences must contain one to three entries")
+        consequences = []
+    seen_consequences: set[str] = set()
+    previous_threshold = 101
+    for consequence in consequences:
+        if not isinstance(consequence, dict):
+            errors.append(f"{path}: consequence must be an object")
+            continue
+        for field in sorted(REGION_CONSEQUENCE_FIELDS - consequence.keys()):
+            errors.append(f"{path}: consequence missing required field: {field}")
+        consequence_id = consequence.get("id")
+        if not isinstance(consequence_id, str) or not SNAKE_CASE.fullmatch(consequence_id) or consequence_id in seen_consequences:
+            errors.append(f"{path}: consequence id must be unique snake_case")
+        else:
+            seen_consequences.add(consequence_id)
+        for field in ("settlement_status", "route_status", "summary"):
+            if not isinstance(consequence.get(field), str) or not consequence[field].strip():
+                errors.append(f"{path}: consequence {field} must be non-empty text")
+        threshold = consequence.get("minimum_anchor_condition")
+        if not is_integer(threshold) or not 0 <= threshold <= 100:
+            errors.append(f"{path}: consequence minimum_anchor_condition must be from 0 to 100")
+        elif threshold >= previous_threshold:
+            errors.append(f"{path}: consequences must use descending anchor thresholds")
+        else:
+            previous_threshold = threshold
+        if not isinstance(consequence.get("requires_non_collapse"), bool):
+            errors.append(f"{path}: consequence requires_non_collapse must be boolean")
+        materials = consequence.get("next_run_materials")
+        if not is_integer(materials) or not 0 <= materials <= 5:
+            errors.append(f"{path}: consequence next_run_materials must be from 0 to 5")
+    if consequences:
+        fallback = consequences[-1]
+        if isinstance(fallback, dict) and (fallback.get("minimum_anchor_condition") != 0 or fallback.get("requires_non_collapse") is not False):
+            errors.append(f"{path}: final consequence must be an unconditional zero-threshold fallback")
+    return region_id
 
 
 def validate_piece(
@@ -1098,6 +1178,7 @@ def validate_commander(
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--keeps", required=True)
+    parser.add_argument("--regions", required=True)
     parser.add_argument("--packs", required=True)
     parser.add_argument("--commanders", required=True)
     parser.add_argument("--pieces", required=True)
@@ -1167,6 +1248,20 @@ def main() -> int:
     validate_id_parity("keep", manifest_keep_ids, seen_keeps, errors)
     if room_ids != manifest_room_ids:
         errors.append(f"{manifest_path}: room IDs differ from runtime keep room IDs")
+
+    manifest_region_values = manifest.get("active_slice", {}).get("region_ids")
+    if not isinstance(manifest_region_values, list) or any(not isinstance(value, str) for value in manifest_region_values):
+        errors.append(f"{manifest_path}: active_slice.region_ids must be an array of region IDs")
+        manifest_region_values = []
+    manifest_region_ids = set(manifest_region_values)
+    seen_regions: set[str] = set()
+    for path in json_files(Path(args.regions), "region", errors):
+        region = load_json(path, errors)
+        if not isinstance(region, dict):
+            errors.append(f"{path}: root must be an object")
+            continue
+        validate_region(path, region, room_ids, seen_regions, errors)
+    validate_id_parity("region", manifest_region_ids, seen_regions, errors)
 
     seen_doctrines: set[str] = set()
     for path in json_files(Path(args.doctrines), "doctrine", errors):
@@ -1328,7 +1423,7 @@ def main() -> int:
         return 1
     print(
         "runtime content catalog: PASS "
-        f"({len(seen_keeps)} keeps, {len(seen_pieces)} pieces, {len(seen_packs)} packs, "
+        f"({len(seen_keeps)} keeps, {len(seen_regions)} regions, {len(seen_pieces)} pieces, {len(seen_packs)} packs, "
         f"{len(seen_commanders)} commanders, {len(seen_enemies)} enemies, "
         f"{len(seen_doctrines)} doctrines, {len(seen_scenarios)} scenarios, "
         f"{len(seen_events)} events, {len(seen_modifiers)} modifiers)"

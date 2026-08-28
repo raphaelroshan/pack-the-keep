@@ -19,6 +19,7 @@ REQUIRED_HUMAN_GATES = {
 }
 EXPECTED_CONTENT_COUNTS = {
     "keep_count": 2,
+    "region_count": 1,
     "commander_count": 2,
     "piece_count": 17,
     "pack_count": 9,

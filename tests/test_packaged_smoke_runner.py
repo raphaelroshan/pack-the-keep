@@ -27,7 +27,7 @@ def complete_report(profile_dir: Path, version: str, phase: str, executable: Pat
         "battle_step": 1, "save_schema_version": 4, "settings_schema_version": 4,
         "controller_navigation_ready": True, "controller_defaults_ready": True,
         "settings_state_unchanged": True,
-        "content_status": {"ok": True, "keep_count": 2, "commander_count": 2, "piece_count": 17, "pack_count": 9, "enemy_count": 7, "doctrine_count": 8, "scenario_count": 9, "event_count": 9, "modifier_count": 2},
+        "content_status": {"ok": True, "keep_count": 2, "region_count": 1, "commander_count": 2, "piece_count": 17, "pack_count": 9, "enemy_count": 7, "doctrine_count": 8, "scenario_count": 9, "event_count": 9, "modifier_count": 2},
         "user_data_dir": str(profile_dir), "save_path": str(profile_dir / "packaged_smoke_run.save"),
         "settings_path": str(profile_dir / "packaged_smoke_settings.json"),
         "executable_path": str(executable),

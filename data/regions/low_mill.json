@@ -1,0 +1,41 @@
+{
+  "id": "low_mill",
+  "content_version": 1,
+  "status": "active",
+  "name": "Low Mill",
+  "need": "Keep the grain road usable without turning the settlement into a military storehouse.",
+  "route": {
+    "id": "mill_road",
+    "name": "Miller's Road",
+    "anchor_rooms": ["gate", "supply_room"]
+  },
+  "consequences": [
+    {
+      "id": "council_commits_grain",
+      "settlement_status": "connected",
+      "route_status": "open",
+      "minimum_anchor_condition": 71,
+      "requires_non_collapse": true,
+      "next_run_materials": 3,
+      "summary": "Both ends of Miller's Road remain dependable. Low Mill's council commits grain and repair timber to the next defense."
+    },
+    {
+      "id": "council_guards_its_stores",
+      "settlement_status": "cautious",
+      "route_status": "contested",
+      "minimum_anchor_condition": 1,
+      "requires_non_collapse": true,
+      "next_run_materials": 1,
+      "summary": "Miller's Road survives under guard. Low Mill sends one careful cart while its council waits to see whether the route can hold."
+    },
+    {
+      "id": "council_turns_inward",
+      "settlement_status": "withdrawn",
+      "route_status": "closed",
+      "minimum_anchor_condition": 0,
+      "requires_non_collapse": false,
+      "next_run_materials": 0,
+      "summary": "The defended route cannot guarantee passage. Low Mill's council keeps its stores home and waits for a safer road."
+    }
+  ]
+}

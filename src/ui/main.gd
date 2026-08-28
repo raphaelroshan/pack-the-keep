@@ -1477,7 +1477,7 @@ func _refresh_campaign_ledger() -> void:
 		var status: String = "EQUIPPED" if equipped else "UNLOCKED" if unlocked else "LOCKED"
 		var effect_text: String = _modifier_effect_text(definition)
 		ledger_text = "CAMPAIGN LEDGER — %s\n%s\n%s\nQuestion: %s\nLimitation: %s" % [status, String(definition.get("name", modifier_id)), effect_text, String(definition.get("question", "")), String(definition.get("limitation", ""))]
-	campaign_ledger_label.text = "%s%s" % [ledger_text, _event_ledger_text()]
+	campaign_ledger_label.text = "%s%s%s" % [ledger_text, _event_ledger_text(), _regional_report_text()]
 	var target_id: String = "" if equipped else modifier_id
 	var preview: Dictionary = keep.modifier_equip_preview(target_id)
 	if modifier_id.is_empty():
@@ -1518,6 +1518,20 @@ func _event_ledger_name(entry: Dictionary) -> String:
 	var stable_name: String = String(entry.get("event_id", "event")).replace("_", " ").capitalize()
 	var authored_title: String = String(entry.get("title", stable_name))
 	return stable_name if authored_title == stable_name else "%s — %s" % [stable_name, authored_title]
+
+func _regional_report_text(current_run_only: bool = false) -> String:
+	var consequence: Dictionary = keep.current_regional_consequence() if current_run_only else keep.regional_consequence()
+	if current_run_only and consequence.is_empty():
+		return "\nREGIONAL REPORT — resolves when this defense reaches a terminal state."
+	if consequence.is_empty() or String(consequence.get("consequence_id", "")).is_empty():
+		return "\nREGIONAL REPORT — Low Mill is waiting for a proven route."
+	var support_materials: int = int(consequence.get("next_run_materials", 0))
+	var support_status: String = "No material support follows this route state."
+	if support_materials > 0 and bool(consequence.get("pending_support", false)):
+		support_status = "Next scenario: +%d starting materials pending." % support_materials
+	elif support_materials > 0:
+		support_status = "Support applied to %s: +%d starting materials." % [String(consequence.get("applied_to_scenario_id", "the next defense")).replace("_", " ").capitalize(), support_materials]
+	return "\nREGIONAL REPORT — %s [%s]\n%s: %s\n%s\n%s" % [String(consequence.get("settlement_name", "Low Mill")), String(consequence.get("settlement_status", "unknown")).to_upper(), String(consequence.get("route_name", "Miller's Road")), String(consequence.get("route_status", "unknown")).to_upper(), String(consequence.get("summary", "")), support_status]
 
 func _on_toggle_campaign_modifier() -> void:
 	var selected_modifier_id: String = _selected_id(campaign_modifier_option)
@@ -2104,7 +2118,7 @@ func _refresh_result_explanation() -> void:
 		event_rows.append("W%d %s → %s" % [int(event_entry.get("wave", 0)), _event_ledger_name(event_entry), String(event_entry.get("visible_result", ""))])
 	var event_heading: String = "EVENT CONSEQUENCES — newest %d of %d" % [event_rows.size(), int(event_snapshot.get("total", event_rows.size()))] if bool(event_snapshot.get("truncated", false)) else "EVENT CONSEQUENCES — newest first"
 	var event_report: String = "\n%s\n%s" % [event_heading, "\n".join(event_rows)] if not event_rows.is_empty() else ""
-	scorecard_label.text = "%s — %s | %s\n%s%s\nREPLAY KEY — %s" % [report_heading, String(report.get("scenario_name", keep.scenario_id)), String(report.get("commander_name", keep.commander_id)), "\n".join(score_rows) if not score_rows.is_empty() else "No resolved waves yet.", event_report, String(report.get("replay_key", ""))]
+	scorecard_label.text = "%s — %s | %s\n%s%s%s\nREPLAY KEY — %s" % [report_heading, String(report.get("scenario_name", keep.scenario_id)), String(report.get("commander_name", keep.commander_id)), "\n".join(score_rows) if not score_rows.is_empty() else "No resolved waves yet.", event_report, _regional_report_text(true), String(report.get("replay_key", ""))]
 
 func _refresh_ui() -> void:
 	_refresh_room_options()

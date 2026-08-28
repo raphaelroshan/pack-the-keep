@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.15.0-second-defensive-identity",
+  "framework_version": "0.15.1-regional-consequence",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -280,6 +280,24 @@
     "upgrade_contract": "schema_3_profile_restores_then_rewrites_at_schema_4",
     "backup_contract": "valid_primary_state_outranks_valid_but_stale_backup_state",
     "simulation_boundary": "presentation_settings_are_proven_not_to_mutate_authoritative_keep_state"
+  },
+  "p15_second_defensive_identity": {
+    "status": "implemented",
+    "keeps": ["greywatch_keep", "ash_ford_redoubt"],
+    "scenario_owned_keep_selection": true,
+    "ash_ford_spatial_rule": "clear_marked_causeway_reduces_room_damage_by_one",
+    "recovery_profiles": ["greywatch_deep_repair", "ash_ford_shallow_distributed_repair"],
+    "non_goals": ["new_unit_roster", "scenario_only_ui_authority", "regional_map"]
+  },
+  "p15_minimal_regional_consequence": {
+    "status": "implemented",
+    "settlement": "low_mill",
+    "route": "mill_road",
+    "derivation": "terminal_outcome_plus_minimum_gate_and_supply_room_condition",
+    "outcomes": ["connected_open", "cautious_contested", "withdrawn_closed"],
+    "next_run_effect": "one_shot_bounded_starting_material_support",
+    "surfaces": ["campaign_ledger", "scenario_results"],
+    "non_goals": ["map", "shop", "stockpile", "reputation_score", "procedural_region_scheduler"]
   },
   "v090_multi_wave": {
     "status": "implemented",
