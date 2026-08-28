@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.17.1-threat-focus",
+  "framework_version": "0.17.2-threat-tooltips",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -348,6 +348,14 @@
     "synchronization": ["map_outline", "timeline_source", "dropdown", "inspector", "response_preview"],
     "live_refresh": "status_metrics_feed_timeline_and_focus_refresh_after_each_resolved_tick",
     "non_goals": ["focus_fire_command", "defender_retargeting", "command_point_cost", "simulation_mutation"]
+  },
+  "p21_threat_tooltips": {
+    "status": "implemented",
+    "hover_surfaces": ["map_enemy_marker", "timeline_arrival_marker"],
+    "tooltip_fields": ["enemy_name", "doctrine", "route", "current_and_max_health", "contact_tick", "named_counter"],
+    "focus_feedback": "focused_timeline_marker_uses_a_double_outline_matching_map_focus_language",
+    "authority_boundary": "tooltip_content_reads_enemy_inspection_and_piece_definitions_without_mutating_simulation",
+    "non_goals": ["hover_to_focus", "combat_orders", "persistent_popup_panel", "new_save_fields"]
   },
   "v090_multi_wave": {
     "status": "implemented",

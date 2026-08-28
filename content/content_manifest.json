@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.17.1",
+  "content_version": "0.17.2",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -315,7 +315,16 @@
     "live_hud": "battle_labels_and_response_preview_refresh_after_each_automatic_tick",
     "determinism": "focus_selection_handoff_and_timeline_clicks_do_not_change_keep_state",
     "evidence": ["design/p20_threat_focus_handoff.md", "docs/p20_threat_focus_visual_verification.md", "tests/test_p2_ui.gd", "tests/test_p3_ui.gd"],
-    "next_slice": "p20_human_threat_comprehension_sessions"
+    "next_slice": "p21_threat_tooltips"
+  },
+  "p21_threat_tooltips": {
+    "status": "implemented",
+    "hover_surfaces": ["map_enemy_marker", "timeline_arrival_marker"],
+    "tooltip": "name_doctrine_route_health_contact_tick_and_named_counter_from_authoritative_inspection",
+    "focus_feedback": "selected_timeline_arrival_uses_a_double_outline_without_obscuring_the_enemy_initial",
+    "determinism": "tooltip_queries_and_focus_rendering_do_not_change_keep_state",
+    "evidence": ["design/p21_threat_tooltips.md", "docs/p21_threat_tooltips_visual_verification.md", "tests/test_p2_ui.gd"],
+    "next_slice": "p21_human_threat_comprehension_sessions"
   },
   "campaign": {
     "title": "The Bell at Dusk",

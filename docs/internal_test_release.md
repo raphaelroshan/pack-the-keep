@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.17.1-threat-focus` — the controlled playtest now opens with a useful threat response, preserves manual inspection, and hands focus forward as enemies fall; human sessions and owner approval remain pending
+**Current build identity:** `0.17.2-threat-tooltips` — the controlled playtest now explains fort and timeline threats on hover and keeps the selected arrival visually anchored; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of nine authored scenarios, preview and reserve a limited pack offer, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, and recover during authored lulls.
+
+## v0.17.2 Threat tooltip additions
+
+Hovering a living enemy on the fort or its arrival marker on the assault timeline now shows the same compact readout: name, doctrine, route, current health, authored contact tick, and the named counter piece. The selected timeline marker carries a double outline matching the map focus language. Hover remains inspection-only and never changes focus or combat priority.
 
 ## v0.17.1 Threat focus additions
 
@@ -243,6 +247,10 @@ Start Three Bells at Dusk and confirm the footer shows six labelled ticks with e
 ## v0.17.1 acceptance checks
 
 Begin a multi-enemy assault and confirm the earliest, most urgent living threat is focused without input and the response preview is populated. Select a different living enemy from the map, timeline, dropdown, and keyboard/controller cycle, confirming all focus surfaces agree. Let that selected enemy be defeated and confirm focus hands off to the next priority. Verify live status and metrics update after each automatic tick, and compare serialized state before and after focus-only interactions.
+
+## v0.17.2 acceptance checks
+
+Begin a multi-enemy assault and hover the same threat on the fort and on its timeline arrival marker. Confirm both tooltips match and name the enemy, doctrine, route, current/max health, contact tick, and a friendly counter name. Focus that threat and confirm its timeline initial remains readable inside a distinct double outline. Move away and verify focus does not change; compare serialized state before and after tooltip inspection.
 
 ## v0.16.6 acceptance checks
 
