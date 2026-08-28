@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.17.2-threat-tooltips` — the controlled playtest now explains fort and timeline threats on hover and keeps the selected arrival visually anchored; human sessions and owner approval remain pending
+**Current build identity:** `0.17.3-assault-lane` — the controlled playtest now separates gate-approach annotations from the assault timeline while retaining hover inspection and selected-arrival focus; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of nine authored scenarios, preview and reserve a limited pack offer, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, and recover during authored lulls.
+
+## v0.17.3 Assault-lane spacing additions
+
+The fort canvas now reserves a dedicated apron beneath the gate approach for enemy focus and status annotations. The assault timeline sits below that space with its marker rings and next-contact summary fully inside the canvas, preventing multi-enemy openings from visually colliding with the tick rail. The page remains scroll-safe at smaller windows.
 
 ## v0.17.2 Threat tooltip additions
 
@@ -251,6 +255,10 @@ Begin a multi-enemy assault and confirm the earliest, most urgent living threat 
 ## v0.17.2 acceptance checks
 
 Begin a multi-enemy assault and hover the same threat on the fort and on its timeline arrival marker. Confirm both tooltips match and name the enemy, doctrine, route, current/max health, contact tick, and a friendly counter name. Focus that threat and confirm its timeline initial remains readable inside a distinct double outline. Move away and verify focus does not change; compare serialized state before and after tooltip inspection.
+
+## v0.17.3 acceptance checks
+
+Begin Three Bells at Dusk at tick zero and focus either ground-route threat. Confirm its marker, armor/smoke label, and `FOCUSED` label remain above the timeline with a visible gap. Confirm all six ticks, the selected timeline ring, and the next-contact summary fit inside the board. Repeat at 1280×720 and verify the page can scroll to every required battle control and readout.
 
 ## v0.16.6 acceptance checks
 

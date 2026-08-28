@@ -559,3 +559,11 @@
 **Reason:** The timeline made attack cadence readable, but its initials still required a click or a trip to the command rail before a player could identify the threat. Matching hover details let the player compare timing, route, health, and counter without interrupting live observation or changing their deliberate focus.
 
 **Trade-off:** Native hover tooltips are compact and desktop-oriented; controller users still rely on focus cycling and the response card. A persistent or controller-specific tooltip surface remains deferred until human playtests show that the existing focused inspector is insufficient.
+
+## ADR-071: The battle board reserves a separate approach apron
+
+**Decision:** Increase the board's logical height and place the assault timeline below a reserved gate-approach apron. Keep fort geometry, enemy interpolation paths, hit testing, and deterministic arrival timing unchanged.
+
+**Reason:** At the default desktop scale, ground-route threat markers and their `ARMOR`, `SMOKE`, or `FOCUSED` annotations occupied the same vertical band as timeline ticks. A small scroll-safe height increase restores the distinction between battlefield state and pacing information.
+
+**Trade-off:** The battle page is slightly taller and may require a little more vertical scrolling at 1280×720. This is preferable to scaling down the tactical board or hiding threat annotations, and all required controls remain within the existing scroll container.

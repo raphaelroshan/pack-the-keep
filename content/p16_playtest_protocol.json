@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.17.2-threat-tooltips",
+  "build_version": "0.17.3-assault-lane",
   "status": "ready_for_human_sessions",
   "release_ready": false,
   "minimum_completed_sessions": 4,
