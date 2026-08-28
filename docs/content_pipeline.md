@@ -35,7 +35,7 @@ The content layer is deliberately separate from simulation code. Events describe
 
 Every authored object receives a stable `id` in `snake_case`. IDs are implementation references and should not be renamed casually after a feature is merged. Display names, descriptions, and dialogue can change without changing the ID.
 
-Every event belongs to a scenario phase and references stable IDs. Decision events contain at least two choices; a scenario-conclusion event may contain one explicit acknowledgement. Every choice has a label, requirements, typed effects, and visible result. Effects are validated by the catalog and executed only by the simulation command; the UI never interprets them directly.
+Every event belongs to a scenario phase and references stable IDs. Decision events contain at least two choices; a scenario-conclusion event may contain one explicit acknowledgement. Every choice has a label, requirements, typed effects, and visible result. Effects are validated by the catalog and executed only by the simulation command; the UI never interprets them directly. The current implemented event baseline is the authored Relief Road chain; the broader `design/events_occurrences_bible.md` remains staged content and does not imply that a general random-occurrence scheduler already exists.
 
 Progression nodes should unlock a new decision or response rather than only increase a number. Endings should be reachable through multiple reasonable play styles when the simulation supports them. A failure or partial-success outcome must explain what was lost and preserve a meaningful next action.
 
