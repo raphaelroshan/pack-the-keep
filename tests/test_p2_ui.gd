@@ -29,6 +29,18 @@ func _initialize() -> void:
 	ui._process(0.25)
 	if ui.keep.battle_step != 0 or ui.keep_canvas._enemy_origin(0) == moving_origin:
 		failures.append("fractional real-time presentation did not move the enemy before the next deterministic tick")
+	var original_step: int = ui.keep.battle_step
+	var original_clock: float = ui.keep.battle_clock
+	var arrival_step: int = int(ui.keep.enemies[0].get("arrival_step", 1))
+	ui.keep.battle_step = maxi(0, arrival_step - 1)
+	ui.keep.battle_clock = 0.25
+	if not ui.keep_canvas._enemy_contact_is_imminent(0):
+		failures.append("enemy in the final approach second did not expose a contact telegraph")
+	ui.keep.battle_step = original_step
+	ui.keep.battle_clock = original_clock
+	var preview_traces: Array[Dictionary] = ui._next_engagement_traces()
+	if preview_traces.is_empty() or String(preview_traces[0].get("style", "")) != "melee":
+		failures.append("engagement traces did not retain the defender's data-driven combat style")
 	var space_event: InputEventKey = InputEventKey.new()
 	space_event.physical_keycode = 32
 	space_event.pressed = true
@@ -44,6 +56,10 @@ func _initialize() -> void:
 		failures.append("named Enter action did not resolve one manual step")
 	if ui.keep_canvas.engagement_traces.is_empty() or ui.keep_canvas.engagement_ttl <= 0.0:
 		failures.append("resolved combat tick did not produce a bounded engagement trace")
+	var effect_progress_before: float = ui.keep_canvas._combat_effect_progress()
+	ui.keep_canvas._process(0.08)
+	if ui.keep_canvas._combat_effect_progress() <= effect_progress_before:
+		failures.append("combat exchange presentation did not advance independently after the authoritative tick")
 	ui._process(1.0)
 	if ui.keep.battle_step != paused_step + 1:
 		failures.append("paused automatic presentation advanced the simulation")
@@ -54,10 +70,20 @@ func _initialize() -> void:
 	if not ui.battle_paused:
 		failures.append("second named Space action did not pause the battle again")
 	ui.keep_canvas.set_reduced_motion(true)
-	var reduced_motion_traces: Array[Dictionary] = [{"attacker_id": "pike_squad_0", "enemy_index": 0, "damage": 1}]
+	var reduced_motion_traces: Array[Dictionary] = [{"attacker_id": "pike_squad_0", "enemy_index": 0, "damage": 1, "style": "melee"}]
 	ui.keep_canvas.show_engagements(reduced_motion_traces)
-	if not ui.keep_canvas.engagement_traces.is_empty():
-		failures.append("reduced motion did not suppress transient engagement traces")
+	if ui.keep_canvas.engagement_traces.is_empty() or ui.keep_canvas.engagement_ttl > 0.22 or ui.keep_canvas._enemy_reaction_offset(0) != Vector2.ZERO:
+		failures.append("reduced motion did not retain a static bounded impact while suppressing travel and hit reaction")
+	var target_snapshot: Dictionary = ui._combat_target_snapshot()
+	var original_gate_condition: int = ui.keep.room_condition("gate")
+	var original_target: String = String(ui.keep.enemies[0].get("target", ""))
+	ui.keep.enemies[0].target = "gate"
+	ui.keep.rooms.gate.condition = original_gate_condition - 7
+	var detected_impacts: Array[Dictionary] = ui._resolved_target_impacts(target_snapshot)
+	if detected_impacts.is_empty() or int(detected_impacts[0].get("damage", 0)) != 7 or String(detected_impacts[0].get("target_kind", "")) != "room":
+		failures.append("authoritative before/after room state did not produce an exact target impact")
+	ui.keep.rooms.gate.condition = original_gate_condition
+	ui.keep.enemies[0].target = original_target
 
 	ui._set_battle_speed(2)
 	if ui.battle_speed_index != 2 or ui.keep.battle_step != paused_step + 1:

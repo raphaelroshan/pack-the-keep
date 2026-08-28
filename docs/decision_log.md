@@ -527,3 +527,11 @@
 **Reason:** The step-first presentation made a real-time simulation read like a turn-based wave prototype. Continuous motion and automatic playback make pressure legible as an unfolding siege while retaining pause, speed, manual-step, replay, and save guarantees. A larger default window and explicit 1440p option let the fort occupy an appropriate desktop canvas.
 
 **Trade-off:** Combat still resolves on deterministic one-second ticks beneath the interpolation, and recovery still separates authored pressure phases. Fully continuous damage, projectile physics, and removal of all internal wave terminology would widen simulation and migration risk without improving the current vertical-slice test proportionally.
+
+## ADR-067: Combat impact is presentation derived from authoritative state deltas
+
+**Decision:** Animate defender exchanges according to each piece's data-driven melee or ranged style, telegraph the final approach second, and derive room or piece impact marks from authoritative before/after state around a resolved tick. Keep projectile travel, hit reaction, labels, and audio entirely presentation-only.
+
+**Reason:** Continuous movement alone made the battle flow better but each deterministic tick still read as a brief line overlay. Travelling ranged marks, compact melee lunges, enemy reactions, and explicit structural impacts let a tester follow the causal exchange without reading the event feed after every second.
+
+**Trade-off:** Effects visualize already-resolved outcomes and are not collision simulations. Net before/after target damage may visually combine simultaneous pressure and automatic repair into one value; the event feed remains the detailed authority.

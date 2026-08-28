@@ -217,14 +217,18 @@ func _process(delta: float) -> void:
 	var battle_step_before: int = keep.battle_step
 	var breach_before: int = keep.breach_level
 	var engagement_traces: Array[Dictionary] = _next_engagement_traces()
+	var target_snapshot: Dictionary = _combat_target_snapshot()
 	var advance_delta: float = delta * _battle_speed()
 	if auto_pause_on_threat and battle_step_before == 0 and last_auto_pause_wave_index != keep.wave_index:
 		advance_delta = minf(advance_delta, maxf(0.0, 1.0 - keep.battle_clock))
 	var result: Dictionary = keep.advance_wave(advance_delta)
 	if keep_canvas != null:
 		keep_canvas.queue_redraw()
-	if keep.battle_step > battle_step_before and keep_canvas != null:
-		keep_canvas.call("show_engagements", engagement_traces)
+	var target_impacts: Array[Dictionary] = []
+	if keep.battle_step > battle_step_before:
+		target_impacts = _resolved_target_impacts(target_snapshot)
+		if keep_canvas != null:
+			keep_canvas.call("show_combat_exchange", engagement_traces, target_impacts)
 	if bool(result.get("resolved", false)):
 		battle_paused = true
 		_set_feedback(Color("#bfe8cf"), _outcome_cue(String(result.get("outcome", "unknown"))))
@@ -232,7 +236,8 @@ func _process(delta: float) -> void:
 		_set_screen("results")
 	else:
 		if keep.battle_report.size() > last_log_size:
-			_set_feedback(Color("#d26155"), "contact")
+			var exchange_cue: String = "impact" if not target_impacts.is_empty() else "volley" if not engagement_traces.is_empty() else "contact"
+			_set_feedback(Color("#d26155") if not target_impacts.is_empty() else Color("#d7a35b"), exchange_cue)
 			last_log_size = keep.battle_report.size()
 		var first_threat_step: bool = keep.battle_step > battle_step_before and battle_step_before == 0 and last_auto_pause_wave_index != keep.wave_index
 		var new_breach: bool = keep.breach_level > breach_before
@@ -316,12 +321,49 @@ func _next_engagement_traces() -> Array[Dictionary]:
 			continue
 		var response: Dictionary = keep.defender_response_preview(enemy_index)
 		for attacker in response.get("attackers", []):
+			var piece_id: String = String(attacker.get("piece_id", ""))
+			var piece: Dictionary = keep.piece_definition(piece_id)
 			traces.append({
 				"attacker_id": String(attacker.get("id", "")),
+				"piece_id": piece_id,
+				"style": String(piece.get("combat_style", "melee")),
 				"enemy_index": enemy_index,
 				"damage": int(attacker.get("damage", 0))
 			})
 	return traces
+
+func _combat_target_snapshot() -> Dictionary:
+	var snapshot: Dictionary = {}
+	for room_id in keep.rooms.keys():
+		snapshot["room:%s" % String(room_id)] = keep.room_condition(String(room_id))
+	for instance_id in keep.pieces.keys():
+		snapshot["piece:%s" % String(instance_id)] = int(keep.pieces[instance_id].get("health", 0))
+	return snapshot
+
+func _resolved_target_impacts(before: Dictionary) -> Array[Dictionary]:
+	var impacts: Array[Dictionary] = []
+	for target_key_value in before.keys():
+		var target_key: String = String(target_key_value)
+		var parts: PackedStringArray = target_key.split(":", true, 1)
+		if parts.size() != 2:
+			continue
+		var target_kind: String = parts[0]
+		var target_id: String = parts[1]
+		var after_value: int = int(before[target_key])
+		if target_kind == "room" and keep.rooms.has(target_id):
+			after_value = keep.room_condition(target_id)
+		elif target_kind == "piece" and keep.pieces.has(target_id):
+			after_value = int(keep.pieces[target_id].get("health", 0))
+		var damage: int = int(before[target_key]) - after_value
+		if damage <= 0:
+			continue
+		var source_enemy_index: int = -1
+		for enemy_index in range(keep.enemies.size()):
+			if String(keep.enemies[enemy_index].get("target", "")) == target_id and not bool(keep.enemies[enemy_index].get("defeated", false)):
+				source_enemy_index = enemy_index
+				break
+		impacts.append({"target_kind": target_kind, "target_id": target_id, "enemy_index": source_enemy_index, "damage": damage})
+	return impacts
 
 func _set_feedback(color: Color, cue_id: String = "") -> void:
 	if keep_canvas != null:
@@ -332,6 +374,8 @@ func _cue_profile(cue_id: String) -> Dictionary:
 	var profiles: Dictionary = {
 		"warning": {"frequencies": [330.0, 440.0], "duration": 0.055, "gain": 0.9},
 		"contact": {"frequencies": [160.0], "duration": 0.085, "gain": 1.0},
+		"volley": {"frequencies": [610.0, 780.0], "duration": 0.04, "gain": 0.7},
+		"impact": {"frequencies": [135.0, 190.0], "duration": 0.065, "gain": 0.9},
 		"confirm": {"frequencies": [480.0], "duration": 0.07, "gain": 0.75},
 		"repair": {"frequencies": [390.0, 520.0], "duration": 0.06, "gain": 0.8},
 		"ability": {"frequencies": [520.0, 660.0], "duration": 0.065, "gain": 0.9},
@@ -2268,9 +2312,11 @@ func _on_finish_interval() -> void:
 
 func _on_advance_wave() -> void:
 	var engagement_traces: Array[Dictionary] = _next_engagement_traces()
+	var target_snapshot: Dictionary = _combat_target_snapshot()
 	var result: Dictionary = keep.advance_wave(1.0)
+	var target_impacts: Array[Dictionary] = _resolved_target_impacts(target_snapshot) if bool(result.get("ok", false)) else []
 	if bool(result.get("ok", false)) and keep_canvas != null:
-		keep_canvas.call("show_engagements", engagement_traces)
+		keep_canvas.call("show_combat_exchange", engagement_traces, target_impacts)
 	if not bool(result.get("ok", false)):
 		_set_event("Battle blocked: %s." % String(result.get("reason", "unknown")))
 		_play_cue("error")
@@ -2283,8 +2329,9 @@ func _on_advance_wave() -> void:
 			_set_event("Final assault phase resolved: %s. Read the report." % String(result.get("outcome", "unknown")).replace("_", " "))
 		_set_screen("results")
 	else:
-		_set_feedback(Color("#d7a35b"), "contact")
-		_set_event("Battle step %d resolved. Pause and inspect the named target before committing the commander ability." % int(result.get("step", 0)))
+		var exchange_cue: String = "impact" if not target_impacts.is_empty() else "volley" if not engagement_traces.is_empty() else "contact"
+		_set_feedback(Color("#d26155") if not target_impacts.is_empty() else Color("#d7a35b"), exchange_cue)
+		_set_event("Combat tick %d resolved. Inspect the exchange before committing the commander ability." % int(result.get("step", 0)))
 	_refresh_ui()
 
 func _on_use_ability() -> void:
@@ -2692,6 +2739,7 @@ class KeepCanvas extends Control:
 	const CELL_X := 18.0
 	const CELL_Y := 28.0
 	const BASE_CANVAS_SIZE := Vector2(810, 292)
+	const COMBAT_EFFECT_DURATION := 0.52
 	const MAP_ORIGIN := Vector2(12, 28)
 	const UPPER_ORIGIN := Vector2(436, 28)
 	const MAP_SIZE := Vector2(12 * CELL_X, 8 * CELL_Y)
@@ -2706,6 +2754,7 @@ class KeepCanvas extends Control:
 	var reduced_motion_mode: bool = false
 	var focused_enemy_index: int = -1
 	var engagement_traces: Array[Dictionary] = []
+	var target_impacts: Array[Dictionary] = []
 	var engagement_ttl: float = 0.0
 
 	func set_focus(index: int) -> void:
@@ -2733,15 +2782,17 @@ class KeepCanvas extends Control:
 		reduced_motion_mode = enabled
 		if enabled:
 			feedback_ttl = 0.0
-			engagement_ttl = 0.0
-			engagement_traces.clear()
+			engagement_ttl = minf(engagement_ttl, 0.22)
 		queue_redraw()
 
 	func show_engagements(traces: Array[Dictionary]) -> void:
-		if reduced_motion_mode:
-			return
+		var no_impacts: Array[Dictionary] = []
+		show_combat_exchange(traces, no_impacts)
+
+	func show_combat_exchange(traces: Array[Dictionary], impacts: Array[Dictionary]) -> void:
 		engagement_traces = traces.duplicate(true)
-		engagement_ttl = 0.34
+		target_impacts = impacts.duplicate(true)
+		engagement_ttl = 0.22 if reduced_motion_mode else COMBAT_EFFECT_DURATION
 		queue_redraw()
 
 	func _process(delta: float) -> void:
@@ -2752,6 +2803,7 @@ class KeepCanvas extends Control:
 			engagement_ttl = maxf(0.0, engagement_ttl - delta)
 			if engagement_ttl <= 0.0:
 				engagement_traces.clear()
+				target_impacts.clear()
 			queue_redraw()
 		if keep != null and keep.wave_active:
 			queue_redraw()
@@ -2811,6 +2863,47 @@ class KeepCanvas extends Control:
 		var progress: float = clampf(continuous_time / arrival_step, 0.0, 1.0)
 		progress = progress * progress * (3.0 - 2.0 * progress)
 		return start.lerp(_enemy_contact_point(index, fallback_target), progress)
+
+	func _combat_effect_progress() -> float:
+		if engagement_ttl <= 0.0:
+			return 1.0
+		var duration: float = 0.22 if reduced_motion_mode else COMBAT_EFFECT_DURATION
+		return clampf(1.0 - engagement_ttl / duration, 0.0, 1.0)
+
+	func _enemy_reaction_offset(index: int) -> Vector2:
+		if reduced_motion_mode or engagement_ttl <= 0.0:
+			return Vector2.ZERO
+		var was_hit: bool = false
+		for trace in engagement_traces:
+			if int(trace.get("enemy_index", -1)) == index:
+				was_hit = true
+				break
+		if not was_hit:
+			return Vector2.ZERO
+		var progress: float = _combat_effect_progress()
+		if progress < 0.45:
+			return Vector2.ZERO
+		var decay: float = 1.0 - progress
+		return Vector2(sin(progress * PI * 8.0) * 3.5 * decay, 0.0)
+
+	func _target_board_origin(target_kind: String, target_id: String) -> Vector2:
+		if target_kind == "piece" and keep.pieces.has(target_id):
+			return _piece_board_origin(target_id)
+		if target_kind == "room" and keep.room_definitions().has(target_id):
+			var room: Dictionary = keep.room_definition(target_id)
+			var floor_origin: Vector2 = UPPER_ORIGIN if String(room.get("floor", "ground")) == "upper" else MAP_ORIGIN
+			return _room_rect(target_id, floor_origin).get_center()
+		return Vector2.ZERO
+
+	func _enemy_contact_remaining(index: int) -> float:
+		if keep == null or index < 0 or index >= keep.enemies.size():
+			return INF
+		var enemy: Dictionary = keep.enemies[index]
+		return float(enemy.get("arrival_step", 1)) - (float(keep.battle_step) + keep.battle_clock)
+
+	func _enemy_contact_is_imminent(index: int) -> bool:
+		var remaining: float = _enemy_contact_remaining(index)
+		return remaining > 0.0 and remaining <= 1.0
 
 	func _enemy_hit(position: Vector2) -> int:
 		if keep == null or not keep.wave_active:
@@ -3122,7 +3215,7 @@ class KeepCanvas extends Control:
 				continue
 			var enemy_id: String = String(enemy.get("enemy_id", ""))
 			var enemy_def: Dictionary = keep.enemy_definition(enemy_id)
-			var enemy_origin: Vector2 = _enemy_origin(index)
+			var enemy_origin: Vector2 = _enemy_origin(index) + _enemy_reaction_offset(index)
 			var enemy_color: Color = Color("#d26155") if enemy_id == "raider" else Color("#d7a35b") if enemy_id == "sapper" else Color("#a77bd1") if enemy_id == "climber" else Color("#9e3f48") if enemy_id == "shield_guard" else Color("#77727b") if enemy_id == "ash_slinger" else Color("#78453c") if enemy_id == "shieldbreaker" else Color("#b36c45")
 			var marker_radius: float = 12.0 if enemy_id == "siege_beast" else 9.0 if enemy_id == "shield_guard" else 8.0
 			draw_circle(enemy_origin, marker_radius, enemy_color)
@@ -3158,21 +3251,64 @@ class KeepCanvas extends Control:
 			var doctrine_initial: String = "R" if enemy_id == "raider" else "S" if enemy_id == "sapper" else "C" if enemy_id == "climber" else "G" if enemy_id == "shield_guard" else "A" if enemy_id == "ash_slinger" else "X" if enemy_id == "shieldbreaker" else "B"
 			draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(-3, 4), doctrine_initial, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#271b22"))
 
-	func _draw_engagement_traces() -> void:
-		if engagement_ttl <= 0.0 or engagement_traces.is_empty():
+	func _draw_contact_telegraphs() -> void:
+		if keep == null or not keep.wave_active:
 			return
-		var intensity: float = clampf(engagement_ttl / 0.34, 0.0, 1.0)
+		for index in range(keep.enemies.size()):
+			if bool(keep.enemies[index].get("defeated", false)) or not _enemy_contact_is_imminent(index):
+				continue
+			var remaining: float = _enemy_contact_remaining(index)
+			var urgency: float = 1.0 - clampf(remaining, 0.0, 1.0)
+			var pulse: float = 0.0 if reduced_motion_mode else sin(urgency * PI * 4.0) * 2.0
+			var origin: Vector2 = _enemy_origin(index)
+			var color: Color = Color("#fff4df") if high_contrast_mode else Color("#ef8d62")
+			draw_circle(origin, 14.0 + urgency * 5.0 + pulse, Color(color, 0.28 + urgency * 0.42), false, 2.0)
+			draw_string(ThemeDB.fallback_font, origin + Vector2(-18, -17), "CONTACT", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, color)
+
+	func _draw_engagement_traces() -> void:
+		if engagement_ttl <= 0.0 or (engagement_traces.is_empty() and target_impacts.is_empty()):
+			return
+		var progress: float = _combat_effect_progress()
 		for trace in engagement_traces:
 			var attacker_id: String = String(trace.get("attacker_id", ""))
 			var enemy_index: int = int(trace.get("enemy_index", -1))
 			if not keep.pieces.has(attacker_id) or enemy_index < 0 or enemy_index >= keep.enemies.size():
 				continue
 			var start: Vector2 = _piece_board_origin(attacker_id)
-			var target: Vector2 = _enemy_origin(enemy_index)
-			var trace_color: Color = Color(1.0, 0.77, 0.35, 0.35 + intensity * 0.55)
-			draw_line(start, target, trace_color, 2.0 + intensity * 1.5)
-			draw_circle(target, 5.0 + intensity * 6.0, trace_color, false, 2.0)
-			draw_string(ThemeDB.fallback_font, target + Vector2(10, -8), "-%d" % int(trace.get("damage", 0)), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#fff4df"))
+			var target: Vector2 = _enemy_origin(enemy_index) + _enemy_reaction_offset(enemy_index)
+			var style: String = String(trace.get("style", "melee"))
+			var trace_color: Color = Color("#ffe08a") if style == "ranged" else Color("#9fe1c0")
+			if reduced_motion_mode:
+				draw_circle(target, 10.0, Color(trace_color, 0.8), false, 2.5)
+			elif style == "ranged":
+				var travel: float = clampf(progress / 0.72, 0.0, 1.0)
+				var projectile: Vector2 = start.lerp(target, travel)
+				var tail: Vector2 = start.lerp(target, maxf(0.0, travel - 0.16))
+				draw_line(start, target, Color(trace_color, 0.18), 1.0)
+				draw_line(tail, projectile, Color(trace_color, 0.92), 3.0)
+				draw_circle(projectile, 3.5, trace_color)
+			else:
+				var direction: Vector2 = start.direction_to(target)
+				var lunge: float = sin(clampf(progress / 0.72, 0.0, 1.0) * PI) * minf(28.0, start.distance_to(target) * 0.28)
+				draw_line(start, start + direction * lunge, Color(trace_color, 0.9), 4.0)
+				draw_arc(start + direction * lunge, 7.0, -PI * 0.35, PI * 0.35, 8, trace_color, 2.0)
+			if reduced_motion_mode or progress >= 0.58:
+				var impact_strength: float = 1.0 if reduced_motion_mode else 1.0 - progress
+				draw_circle(target, 7.0 + impact_strength * 7.0, Color(trace_color, 0.75), false, 2.5)
+				draw_string(ThemeDB.fallback_font, target + Vector2(10, -8), "-%d" % int(trace.get("damage", 0)), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#fff4df"))
+		for impact in target_impacts:
+			var target: Vector2 = _target_board_origin(String(impact.get("target_kind", "")), String(impact.get("target_id", "")))
+			if target == Vector2.ZERO:
+				continue
+			var source_index: int = int(impact.get("enemy_index", -1))
+			var source: Vector2 = _enemy_origin(source_index) if source_index >= 0 and source_index < keep.enemies.size() else target + Vector2(0, 28)
+			var pressure_color: Color = Color("#ff796f")
+			if not reduced_motion_mode:
+				var strike_progress: float = clampf(progress / 0.62, 0.0, 1.0)
+				draw_line(source, source.lerp(target, strike_progress), Color(pressure_color, 0.82), 3.0)
+			if reduced_motion_mode or progress >= 0.48:
+				draw_circle(target, 9.0 + (1.0 - progress) * 8.0, Color(pressure_color, 0.85), false, 3.0)
+				draw_string(ThemeDB.fallback_font, target + Vector2(10, 12), "-%d STRUCTURE" % int(impact.get("damage", 0)), HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#ffb0a6"))
 
 	func _draw() -> void:
 		if keep == null:
@@ -3190,8 +3326,9 @@ class KeepCanvas extends Control:
 			draw_rect(rect, preview_color, true)
 			draw_rect(rect, Color("#bff0cc") if preview_valid else Color("#ffb0a6"), false, 2.0)
 			draw_string(ThemeDB.fallback_font, rect.position + Vector2(3, 12), "VALID" if preview_valid else "INVALID", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#fff4df"))
-		_draw_engagement_traces()
+		_draw_contact_telegraphs()
 		_draw_enemies()
+		_draw_engagement_traces()
 		if keep.wave_active:
 			var progress_width: float = 2.0 * MAP_SIZE.x * keep.wave_progress
 			draw_rect(Rect2(MAP_ORIGIN + Vector2(0, MAP_SIZE.y + 12), Vector2(2.0 * MAP_SIZE.x, 8)), Color("#402630"), true)

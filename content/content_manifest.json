@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.16.8",
+  "content_version": "0.16.9",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -281,7 +281,18 @@
     "display": ["1600x900_default", "2560x1440_preset", "125_percent_1440p_readability_floor", "responsive_layout"],
     "determinism": "presentation_interpolation_traces_focus_pause_and_display_scaling_do_not_change_authoritative_outcomes",
     "evidence": ["design/p17_realtime_assault_presentation.md", "docs/p17_realtime_assault_visual_verification.md", "tests/test_p2_ui.gd", "tests/test_p10_display_audio_settings.gd", "tests/test_quick_playtest.gd", "src/platform/packaged_smoke.gd"],
-    "next_slice": "p17_human_combat_readability_sessions"
+    "next_slice": "p18_combat_impact_and_pacing"
+  },
+  "p18_combat_impact_and_pacing": {
+    "status": "implemented",
+    "combat_exchange": ["ranged_projectile_travel", "melee_lunge", "enemy_hit_reaction", "target_damage_impact"],
+    "contact_readability": "final_approach_second_uses_contact_ring_and_explicit_label",
+    "target_damage_source": "net_room_and_piece_damage_is_derived_from_authoritative_before_after_state",
+    "audio": ["volley", "impact"],
+    "reduced_motion": "static_short_lived_impact_marks_preserve_damage_and_contact_information",
+    "determinism": "combat_effect_progress_audio_and_target_impact_comparison_do_not_mutate_keep_state",
+    "evidence": ["design/p18_combat_impact_and_pacing.md", "docs/p18_combat_impact_visual_verification.md", "tests/test_p2_ui.gd", "tests/test_p10_game_feel_cues.gd", "tests/test_p11_crossbow_watch_ui.gd"],
+    "next_slice": "p18_human_combat_pacing_sessions"
   },
   "campaign": {
     "title": "The Bell at Dusk",
