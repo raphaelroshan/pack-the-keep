@@ -25,10 +25,21 @@ func _initialize() -> void:
 		failures.append("start wave did not activate the invasion")
 	if ui.battle_paused:
 		failures.append("new invasion should begin in real-time playback")
+	var serialized_before_timeline: String = JSON.stringify(ui.keep.serialize())
+	var timeline_before: Dictionary = ui.keep_canvas.assault_timeline_snapshot()
+	var arrival_marker_count: int = 0
+	for arrival_rows in timeline_before.get("arrivals", {}).values():
+		arrival_marker_count += arrival_rows.size()
+	if int(timeline_before.get("tick_count", 0)) != 6 or arrival_marker_count != ui.keep.enemies.size() or int(timeline_before.get("next_arrival_step", -1)) < 1:
+		failures.append("assault timeline did not expose six ticks, stable active-enemy arrivals, and the next contact")
+	if JSON.stringify(ui.keep.serialize()) != serialized_before_timeline:
+		failures.append("assault timeline inspection mutated authoritative state")
 	var moving_origin: Vector2 = ui.keep_canvas._enemy_origin(0)
 	ui._process(0.25)
 	if ui.keep.battle_step != 0 or ui.keep_canvas._enemy_origin(0) == moving_origin:
 		failures.append("fractional real-time presentation did not move the enemy before the next deterministic tick")
+	if float(ui.keep_canvas.assault_timeline_snapshot().get("progress", 0.0)) <= float(timeline_before.get("progress", 0.0)):
+		failures.append("assault timeline did not advance fractionally with live presentation time")
 	var original_step: int = ui.keep.battle_step
 	var original_clock: float = ui.keep.battle_clock
 	var arrival_step: int = int(ui.keep.enemies[0].get("arrival_step", 1))
@@ -47,6 +58,10 @@ func _initialize() -> void:
 	ui._unhandled_key_input(space_event)
 	if not ui.battle_paused:
 		failures.append("named Space action did not pause the live battle")
+	var paused_timeline: Dictionary = ui.keep_canvas.assault_timeline_snapshot()
+	ui._process(0.4)
+	if ui.keep_canvas.assault_timeline_snapshot() != paused_timeline:
+		failures.append("paused battle changed the assault timeline")
 	var paused_step: int = ui.keep.battle_step
 	var enter_event: InputEventKey = InputEventKey.new()
 	enter_event.physical_keycode = 4194309

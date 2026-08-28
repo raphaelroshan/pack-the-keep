@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.16.9-combat-impact",
+  "framework_version": "0.17.0-assault-timeline",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -330,6 +330,14 @@
     "audio": ["volley_cue", "impact_cue", "existing_mute_and_effects_volume"],
     "accessibility": "reduced_motion_uses_static_bounded_impact_marks_without_travel_or_hit_jitter",
     "non_goals": ["projectile_collision", "continuous_authoritative_damage", "camera_shake", "new_save_fields"]
+  },
+  "p19_assault_timeline": {
+    "status": "implemented",
+    "timeline": ["six_labelled_ticks", "fractional_current_tick_fill", "stable_enemy_arrival_markers", "next_contact_summary"],
+    "authority_boundary": "reads_battle_step_clock_and_authored_arrivals_without_scheduling_or_mutation",
+    "layout": "replaces_the_existing_board_footer_progress_bar_without_adding_a_panel",
+    "accessibility": "high_contrast_colors_preserve_tick_and_enemy_initial_labels",
+    "non_goals": ["timeline_scrubbing", "timeline_commands", "arrival_retiming", "sub_tick_damage"]
   },
   "v090_multi_wave": {
     "status": "implemented",

@@ -535,3 +535,11 @@
 **Reason:** Continuous movement alone made the battle flow better but each deterministic tick still read as a brief line overlay. Travelling ranged marks, compact melee lunges, enemy reactions, and explicit structural impacts let a tester follow the causal exchange without reading the event feed after every second.
 
 **Trade-off:** Effects visualize already-resolved outcomes and are not collision simulations. Net before/after target damage may visually combine simultaneous pressure and automatic repair into one value; the event feed remains the detailed authority.
+
+## ADR-068: The board footer exposes deterministic assault cadence
+
+**Decision:** Replace the single battle progress bar with a six-segment timeline that fills the current fractional tick, places stable enemy initials at authored arrival ticks, and names the next unresolved contact. Keep the timeline read-only and inside the existing board footer.
+
+**Reason:** Real-time movement and impact feedback clarified moment-to-moment action but did not show the overall cadence. A compact timeline lets players anticipate attention spikes and understand why speed controls matter without adding another panel or exposing internal scheduling data as a command surface.
+
+**Trade-off:** The footer explicitly reveals the six-tick vertical-slice structure and authored arrival timing. That clarity is preferred for the current tactical puzzle; a future variable-duration scenario format would need to provide its own declared tick count.
