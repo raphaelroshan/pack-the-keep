@@ -40,9 +40,11 @@ func _initialize() -> void:
 	var malformed_breaker: Dictionary = catalog.enemy_definition("shieldbreaker")
 	malformed_breaker.target_piece_categories = []
 	malformed_breaker.target_piece_preference = "random"
+	malformed_breaker.target_mode = "anything"
+	malformed_breaker.attack_interval = 0
 	malformed_breaker.ignores_protection = "yes"
 	var breaker_errors: Array[String] = catalog.validate_enemy_definition(malformed_breaker, "shieldbreaker", PackKeepState.ROOMS.keys(), catalog.doctrine_ids())
-	_check(breaker_errors.size() >= 3, "catalog validation should reject malformed Shieldbreaker targeting and protection flags")
+	_check(breaker_errors.size() >= 5, "catalog validation should reject malformed Shieldbreaker targeting, cadence, mode, and protection flags")
 
 	var guarded = PackKeepState.new(5507)
 	guarded.open_pack("field_engineers")
@@ -50,7 +52,7 @@ func _initialize() -> void:
 	guarded.place_piece("repair_station", Vector2i(1, 1), "upper")
 	guarded.place_piece("shield_wardens", Vector2i(3, 1), "upper")
 	guarded._apply_enemy_damage("sapper", "repair_station_0")
-	_check(int(guarded.pieces["repair_station_0"].health) == 5, "adjacent Shield Wardens should reduce ordinary piece damage by one")
+	_check(int(guarded.pieces["repair_station_0"].health) == 8, "adjacent Shield Wardens should reduce ordinary piece damage by one")
 
 	var pierced = PackKeepState.new(5507)
 	pierced.open_pack("field_engineers")
@@ -58,7 +60,7 @@ func _initialize() -> void:
 	pierced.place_piece("repair_station", Vector2i(1, 1), "upper")
 	pierced.place_piece("shield_wardens", Vector2i(3, 1), "upper")
 	pierced._apply_enemy_damage("shieldbreaker", "repair_station_0")
-	_check(int(pierced.pieces["repair_station_0"].health) == 2, "Shieldbreaker should ignore adjacent piece protection")
+	_check(int(pierced.pieces["repair_station_0"].health) == 7, "Shieldbreaker should ignore adjacent piece protection")
 	_check(pierced.battle_report.has("Shieldbreaker ignored 1 adjacent guard protecting Repair Station."), "causal report should explain ignored adjacent protection")
 
 	var shuttered = PackKeepState.new(5507)

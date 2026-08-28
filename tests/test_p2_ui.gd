@@ -21,12 +21,22 @@ func _initialize() -> void:
 	if ui.keep.pieces.is_empty():
 		failures.append("starter placement did not create a defensive piece")
 	var labels_before: String = JSON.stringify(ui.keep.serialize())
+	var board_presentation: Dictionary = ui.keep_canvas.board_presentation_snapshot()
+	if bool(board_presentation.get("grid_visible", true)) or Vector2(board_presentation.get("cell_size", Vector2.ZERO)).x < 24.0 or Vector2(board_presentation.get("cell_size", Vector2.ZERO)).y < 32.0:
+		failures.append("battle board did not expose the enlarged grid-free presentation")
+	if not is_equal_approx(ui.keep_canvas._health_ratio(5, 10), 0.5) or not is_equal_approx(ui.keep_canvas._health_ratio(0, 10), 0.0):
+		failures.append("health bar projection did not reflect authoritative current and maximum health")
+	var gate_room: Dictionary = ui.keep.room_definition("gate")
+	var gate_board: Vector2 = ui.keep_canvas.MAP_ORIGIN + Vector2(gate_room.origin.x * ui.keep_canvas.CELL_X, gate_room.origin.y * ui.keep_canvas.CELL_Y) + Vector2(gate_room.size.x * ui.keep_canvas.CELL_X, gate_room.size.y * ui.keep_canvas.CELL_Y) * 0.5
+	var gate_view: Vector2 = ui.keep_canvas._board_offset() + gate_board * ui.keep_canvas._board_scale()
+	var gate_tooltip: String = ui.keep_canvas._get_tooltip(gate_view)
+	if not gate_tooltip.contains("Gate") or not gate_tooltip.contains("condition") or not gate_tooltip.contains("Critical room"):
+		failures.append("room hover did not expose full room identity, condition, and role")
 	var compact_piece_label: String = ui.keep_canvas._compact_board_label("Crossbow Patrol", 24.0, 8)
 	if compact_piece_label.is_empty() or ThemeDB.fallback_font.get_string_size(compact_piece_label, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x > 24.0:
 		failures.append("compact board label did not fit its requested width")
 	var first_piece_id: String = String(ui.keep.pieces.keys()[0])
 	var original_piece: Dictionary = ui.keep.pieces[first_piece_id].duplicate(true)
-	var gate_room: Dictionary = ui.keep.room_definition("gate")
 	var overlapping_piece: Dictionary = original_piece.duplicate(true)
 	overlapping_piece.origin = gate_room.origin
 	overlapping_piece.floor = gate_room.floor
@@ -36,15 +46,25 @@ func _initialize() -> void:
 	ui.keep.pieces[first_piece_id] = original_piece
 	if JSON.stringify(ui.keep.serialize()) != labels_before:
 		failures.append("board label projection mutated authoritative state")
+	ui._set_screen("preparation")
+	if not bool(ui.keep_canvas.board_presentation_snapshot().get("placement_guides_visible", false)):
+		failures.append("preparation board did not retain placement guides")
 	ui._on_start_wave()
 	if not ui.keep.wave_active:
 		failures.append("start wave did not activate the invasion")
+	if bool(ui.keep_canvas.board_presentation_snapshot().get("placement_guides_visible", true)):
+		failures.append("battle board kept preparation placement guides visible during combat")
 	if ui.battle_paused:
 		failures.append("new invasion should begin in real-time playback")
 	if ui.focused_enemy_index != ui._priority_enemy_index() or ui.focused_enemy_index < 0 or not String(ui.response_preview_label.text).contains("FOCUSED"):
 		failures.append("live battle did not begin with the highest-priority threat and a populated response preview")
 	if ui.enemy_option.selected < 0 or int(ui.enemy_option.get_item_metadata(ui.enemy_option.selected)) != ui.focused_enemy_index:
 		failures.append("automatic threat focus did not synchronize the enemy dropdown")
+	var watch_state_before: String = JSON.stringify(ui.keep.serialize())
+	if ui.keep_canvas.defender_watch_snapshot().is_empty():
+		failures.append("ready defenders did not face a projected attacker while idle")
+	if JSON.stringify(ui.keep.serialize()) != watch_state_before:
+		failures.append("defender readiness projection mutated authoritative state")
 	var serialized_before_timeline: String = JSON.stringify(ui.keep.serialize())
 	var timeline_before: Dictionary = ui.keep_canvas.assault_timeline_snapshot()
 	var spacing_before: Dictionary = ui.keep_canvas.assault_lane_spacing_snapshot()

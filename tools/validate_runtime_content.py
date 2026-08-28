@@ -44,7 +44,7 @@ PIECE_TEXT_FIELDS = {
 }
 ENEMY_FIELDS = {
     "id", "content_version", "status", "name", "short_role", "question", "health",
-    "damage", "arrival_step", "route", "target_rooms", "doctrine", "counter", "telegraph",
+    "damage", "arrival_step", "attack_interval", "target_mode", "route", "target_rooms", "doctrine", "counter", "telegraph",
     "counter_families", "failure_mode", "report_phrase", "presentation",
 }
 ENEMY_TEXT_FIELDS = {
@@ -583,6 +583,8 @@ def validate_enemy(
         errors.append(f"{path}: damage must be a non-negative integer")
     if not is_integer(enemy.get("arrival_step")) or enemy["arrival_step"] < 1:
         errors.append(f"{path}: arrival_step must be a positive integer")
+    if not is_integer(enemy.get("attack_interval")) or enemy["attack_interval"] < 1:
+        errors.append(f"{path}: attack_interval must be a positive integer")
     if "armor" in enemy:
         armor = enemy.get("armor")
         if not is_integer(armor) or armor < 0:
@@ -606,10 +608,18 @@ def validate_enemy(
                 modifier = disruption.get(field)
                 if isinstance(modifier, str) and modifier and modifier not in support_modifiers:
                     errors.append(f"{path}: disruption_profile references unknown support modifier: {modifier}")
+    target_mode = enemy.get("target_mode")
+    if target_mode not in {"unit_hunter", "room_destroyer"}:
+        errors.append(f"{path}: target_mode must be unit_hunter or room_destroyer")
     if "target_piece_categories" in enemy:
         validate_string_array(path, enemy.get("target_piece_categories"), "target_piece_categories", errors)
-        if enemy.get("target_piece_preference") != "highest_max_health":
-            errors.append(f"{path}: target_piece_preference must be highest_max_health")
+    if "target_piece_floors" in enemy:
+        floors = validate_string_array(path, enemy.get("target_piece_floors"), "target_piece_floors", errors)
+        for floor in floors:
+            if floor not in SUPPORTED_FLOORS:
+                errors.append(f"{path}: target_piece_floors contains unsupported floor: {floor}")
+    if "target_piece_preference" in enemy and enemy.get("target_piece_preference") not in {"lowest_condition", "highest_max_health"}:
+        errors.append(f"{path}: target_piece_preference must be lowest_condition or highest_max_health")
     if "ignores_protection" in enemy and not isinstance(enemy.get("ignores_protection"), bool):
         errors.append(f"{path}: ignores_protection must be boolean")
     for field in sorted(ENEMY_TEXT_FIELDS):

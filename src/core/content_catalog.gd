@@ -168,6 +168,8 @@ const REQUIRED_ENEMY_FIELDS: Array[String] = [
 	"health",
 	"damage",
 	"arrival_step",
+	"attack_interval",
+	"target_mode",
 	"route",
 	"target_rooms",
 	"doctrine",
@@ -525,6 +527,9 @@ func validate_enemy_definition(enemy: Dictionary, expected_id: String, known_roo
 	_validate_integer_minimum(enemy, "health", enemy_id, "enemy", 1, validation_errors)
 	_validate_integer_minimum(enemy, "damage", enemy_id, "enemy", 0, validation_errors)
 	_validate_integer_minimum(enemy, "arrival_step", enemy_id, "enemy", 1, validation_errors)
+	_validate_integer_minimum(enemy, "attack_interval", enemy_id, "enemy", 1, validation_errors)
+	if not ["unit_hunter", "room_destroyer"].has(String(enemy.get("target_mode", ""))):
+		validation_errors.append("enemy %s target_mode must be unit_hunter or room_destroyer" % enemy_id)
 	if enemy.has("armor"):
 		_validate_integer_minimum(enemy, "armor", enemy_id, "enemy", 0, validation_errors)
 		if int(enemy.get("armor", 0)) > 0 and (not enemy.get("armor_counter_tag") is String or String(enemy.get("armor_counter_tag", "")).strip_edges().is_empty()):
@@ -549,8 +554,13 @@ func validate_enemy_definition(enemy: Dictionary, expected_id: String, known_roo
 					validation_errors.append("enemy %s references unknown support modifier: %s" % [enemy_id, modifier])
 	if enemy.has("target_piece_categories"):
 		_validate_non_empty_string_array(enemy, "target_piece_categories", enemy_id, validation_errors)
-		if String(enemy.get("target_piece_preference", "")) != "highest_max_health":
-			validation_errors.append("enemy %s target_piece_preference must be highest_max_health" % enemy_id)
+	if enemy.has("target_piece_floors"):
+		_validate_non_empty_string_array(enemy, "target_piece_floors", enemy_id, validation_errors)
+		for floor in enemy.get("target_piece_floors", []):
+			if not ["ground", "upper"].has(String(floor)):
+				validation_errors.append("enemy %s target_piece_floors contains unsupported floor: %s" % [enemy_id, String(floor)])
+	if enemy.has("target_piece_preference") and not ["lowest_condition", "highest_max_health"].has(String(enemy.get("target_piece_preference", ""))):
+		validation_errors.append("enemy %s target_piece_preference must be lowest_condition or highest_max_health" % enemy_id)
 	if enemy.has("ignores_protection") and not enemy.get("ignores_protection") is bool:
 		validation_errors.append("enemy %s ignores_protection must be boolean" % enemy_id)
 	for field in ["name", "short_role", "question", "route", "doctrine", "counter", "telegraph", "failure_mode", "report_phrase"]:

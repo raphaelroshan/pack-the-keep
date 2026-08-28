@@ -55,8 +55,10 @@ func _test_runner_blocked_lane_response() -> void:
 func _test_supply_cache_recovery() -> void:
 	var keep: PackKeepState = PackKeepState.new(3307)
 	keep.open_pack("runner_network")
+	keep.open_pack("firekeepers")
 	keep.place_piece("supply_cache", Vector2i(4, 3), "ground")
 	keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
+	keep.place_piece("fire_team", Vector2i(6, 3), "ground")
 	keep.start_wave("gate_assault")
 	keep.advance_wave(6.0)
 	_check(bool(keep.pieces["supply_cache_0"].get("supply_spent", false)), "Supply Cache should become spent at the first recovery interval")
@@ -69,10 +71,11 @@ func _test_supply_cache_sapper_target() -> void:
 	var keep: PackKeepState = PackKeepState.new(3307)
 	keep.open_pack("runner_network")
 	keep.place_piece("supply_cache", Vector2i(4, 3), "ground")
+	keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
 	keep.start_wave("distributed_sabotage")
 	keep.advance_wave(3.0)
 	_check(String(keep.enemies[1].get("target", "")) == "supply_cache_0", "Sapper should prefer an exposed Supply Cache over an equally healthy room")
-	_check(int(keep.pieces["supply_cache_0"].get("health", 0)) == 2, "Sapper contact should visibly damage the exposed Supply Cache")
+	_check(int(keep.pieces["supply_cache_0"].get("health", 0)) == 7, "Sapper contact should visibly subtract its damage from Supply Cache health")
 
 func _test_rear_guard_fallback_bonus() -> void:
 	var baseline: PackKeepState = PackKeepState.new(3307)

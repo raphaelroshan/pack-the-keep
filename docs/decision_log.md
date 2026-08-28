@@ -575,3 +575,11 @@
 **Reason:** Rendering both label layers in the same small grid cells made the tactical board look like a debug overlay, especially with multi-word defenders. The defender is the actionable foreground object, while the room's shape and condition bar still communicate the underlying structure.
 
 **Trade-off:** An occupied room no longer displays its full name directly on the board. Players can click it for full details, and unoccupied rooms retain fitted labels; a future authored art pass may provide stronger iconographic room identity.
+
+## ADR-073: Most attackers clear defenders before rooms
+
+**Decision:** Add a required data-driven `target_mode` to every enemy. Raiders, Climbers, Ash Slingers, Shield Guards, and Shieldbreakers deterministically hunt living defensive pieces, while Sappers and Siege Beasts retain explicit structure-destruction behavior. Unit hunters may use authored category, floor, and health preferences but never fall through to a room. Resolved damage subtracts directly from piece health. If all placed defensive pieces are disabled, the wave resolves as a recoverable partial breach.
+
+**Reason:** The previous model made most attackers repeatedly damage rooms, so defenders read as passive damage sources rather than combatants holding a keep. Unit-first pressure makes health, counter coverage, retargeting, melee attacks, and projectiles causally legible, while specialist demolition roles preserve the strategic need to protect rooms.
+
+**Trade-off:** Existing layouts take more piece damage and some automated scenario outcomes become harsher. The current implementation keeps authored routes and deterministic one-second resolution; movement AI, collision projectiles, continuous damage, and player-issued focus fire remain deferred.

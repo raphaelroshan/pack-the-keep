@@ -10,8 +10,10 @@ func _init() -> void:
 	_test_two_floor_placement_and_overlap()
 	_test_hold_against_gate_assault()
 	_test_sapper_targeting_and_repair()
+	_test_unit_hunters_clear_defenders_first()
 	_test_climber_targets_upper_floor()
 	_test_lockdown_changes_room_damage()
+	_test_disabled_defense_is_partial_breach()
 	_test_partial_breach_is_recoverable()
 	_test_repair_interval_and_assignments()
 	_test_assignment_rules_and_action_budget()
@@ -70,9 +72,10 @@ func _test_unit_availability_and_metrics() -> void:
 	_expect(int(keep.combat_metrics.get("battle_steps", 0)) > 0, "combat metrics should count battle steps")
 	_expect(int(keep.combat_metrics.get("unit_attacks", 0)) > 0, "combat metrics should count unit attacks")
 	_expect(int(keep.combat_metrics.get("damage_dealt", 0)) > 0, "combat metrics should count damage dealt")
-	_expect(int(keep.combat_metrics.get("defeated_enemies", 0)) == 2, "combat metrics should count both defeated Raiders")
+	_expect(int(keep.combat_metrics.get("defeated_enemies", 0)) >= 1, "combat metrics should count stopped Raiders")
+	_expect(int(keep.combat_metrics.get("piece_damage", 0)) > 0, "unit-hunting Raiders should contribute defender damage metrics")
 	_expect(int(keep.pieces["pike_squad_0"].get("max_health", 0)) == 14, "unit instances should store max health")
-	_expect(int(keep.pieces["pike_squad_0"].get("health", 0)) == 14, "healthy units should retain full health")
+	_expect(int(keep.pieces["pike_squad_0"].get("health", 0)) < 14, "contacted units should expose authoritative health loss")
 
 func _test_two_floor_placement_and_overlap() -> void:
 	var keep: PackKeepState = PackKeepState.new(3307)
@@ -110,10 +113,31 @@ func _test_sapper_targeting_and_repair() -> void:
 	_expect(bool(started.get("ok", false)), "distributed sabotage should start")
 	var result: Dictionary = keep.advance_wave(6.0)
 	_expect(bool(result.get("resolved", false)), "distributed sabotage should resolve in the slice")
-	_expect(keep.room_condition("workshop") < 100 or keep.room_condition("supply_room") < 100 or keep.room_condition("armory") < 100, "Sapper should damage a support target")
-	_expect(String(result.get("timeline", []).filter(func(line: String) -> bool: return line.contains("Sapper reached")).front()).contains("Sapper reached"), "battle report should explain Sapper targeting")
+	_expect(int(keep.pieces["repair_station_1"].get("health", 0)) < int(keep.pieces["repair_station_1"].get("max_health", 0)), "Sapper should damage an exposed support piece before a room")
+	_expect(not result.get("timeline", []).filter(func(line: String) -> bool: return line.contains("Sapper damaged Repair Station")).is_empty(), "battle report should explain Sapper support-piece targeting")
 	var repaired: Dictionary = keep.repair_room("workshop")
 	_expect(bool(repaired.get("ok", false)) or keep.room_condition("workshop") == 100, "a damaged support room should have a repair path")
+
+func _test_unit_hunters_clear_defenders_first() -> void:
+	var keep: PackKeepState = PackKeepState.new(3307)
+	keep.open_pack("field_engineers")
+	keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
+	keep.place_piece("repair_station", Vector2i(4, 6), "ground")
+	keep._set_piece_health("pike_squad_0", 7)
+	_expect(String(keep._choose_target("raider")) == "pike_squad_0", "Raider should hunt the most exposed living defender instead of a room")
+	keep._set_piece_health("pike_squad_0", 0)
+	_expect(String(keep._choose_target("raider")) == "repair_station_1", "unit hunter should retarget another living defender after disabling its first target")
+	keep._set_piece_health("repair_station_1", 0)
+	_expect(String(keep._choose_target("raider")).is_empty(), "unit hunter should not fall through to a room when no defender survives")
+	_expect(["workshop", "supply_room", "armory"].has(String(keep._choose_target("sapper"))), "Sapper should remain an explicit support-room destroyer")
+	var saved: PackKeepState = PackKeepState.new(1)
+	keep.pieces["repair_station_1"].disabled = false
+	keep.pieces["repair_station_1"].health = 4
+	keep.pieces["repair_station_1"].condition = 0.5
+	keep.start_wave("gate_assault")
+	keep.advance_wave(2.0)
+	var loaded: Dictionary = saved.load_serialized(keep.serialize())
+	_expect(bool(loaded.get("ok", false)) and JSON.stringify(saved.serialize()) == JSON.stringify(keep.serialize()), "unit-first target selection should survive save/load exactly")
 
 func _test_climber_targets_upper_floor() -> void:
 	var keep: PackKeepState = PackKeepState.new(3307)
@@ -123,7 +147,8 @@ func _test_climber_targets_upper_floor() -> void:
 	_expect(bool(started.get("ok", false)), "feint and flank should start")
 	var result: Dictionary = keep.advance_wave(6.0)
 	_expect(bool(result.get("resolved", false)), "climber wave should resolve")
-	_expect(keep.room_condition("north_tower") < 100 or keep.room_condition("old_chapel") < 100, "Climber should target an upper-floor room")
+	_expect(int(keep.pieces["scout_post_0"].get("health", 0)) < int(keep.pieces["scout_post_0"].get("max_health", 0)), "Climber should hunt an upper-floor defender")
+	_expect(keep.room_condition("north_tower") == 100 and keep.room_condition("old_chapel") == 100, "Climber should not damage upper rooms directly")
 
 func _test_lockdown_changes_room_damage() -> void:
 	var normal: PackKeepState = PackKeepState.new(3307)
@@ -137,17 +162,30 @@ func _test_lockdown_changes_room_damage() -> void:
 	locked.use_commander_ability()
 	normal.advance_wave(2.0)
 	locked.advance_wave(2.0)
-	_expect(locked.room_condition("gate") > normal.room_condition("gate"), "Lockdown should reduce the next contact damage")
+	_expect(int(locked.pieces["scout_post_0"].get("health", 0)) > int(normal.pieces["scout_post_0"].get("health", 0)), "Lockdown should reduce the next contact damage against a defender")
 	_expect(locked.command_points == 2, "Lockdown should consume one command point")
 	_expect(not bool(locked.use_commander_ability().get("ok", false)), "Lockdown should be limited to once per wave")
+
+func _test_disabled_defense_is_partial_breach() -> void:
+	var keep: PackKeepState = PackKeepState.new(3307)
+	keep.open_pack("scouts")
+	keep.place_piece("scout_post", Vector2i(0, 0), "upper")
+	keep.pieces["scout_post_0"].health = 1
+	keep.pieces["scout_post_0"].condition = 0.1
+	keep.start_wave("gate_assault")
+	var result: Dictionary = keep.advance_wave(6.0)
+	_expect(String(result.get("outcome", "")) == "partial_breach", "disabling every defensive piece should break the line instead of awarding a hold")
+	_expect(keep.room_condition("gate") == 100, "a unit-hunter line break should not invent room damage")
+	_expect(keep.repair_interval_active, "a broken defensive line should open the recoverable repair interval")
 
 func _test_partial_breach_is_recoverable() -> void:
 	var keep: PackKeepState = PackKeepState.new(3307)
 	keep.open_pack("scouts")
 	keep.place_piece("scout_post", Vector2i(0, 0), "upper")
 	keep.start_wave("gate_assault")
+	keep._apply_room_damage("sapper", "gate", 7, false, false)
 	var result: Dictionary = keep.advance_wave(6.0)
-	_expect(String(result.get("outcome", "")) == "partial_breach", "an unsupported Gate should create a partial breach rather than a silent win")
+	_expect(String(result.get("outcome", "")) == "partial_breach", "an explicit room-destroyer breach should produce a partial breach")
 	_expect(not keep.wave_active, "a resolved partial breach should leave the wave inactive")
 	_expect(keep.room_state("gate") == "breached", "the report should identify the breached Gate")
 	var repair: Dictionary = keep.repair_room("gate")
@@ -159,8 +197,9 @@ func _test_repair_interval_and_assignments() -> void:
 	keep.open_pack("scouts")
 	keep.place_piece("scout_post", Vector2i(8, 1), "upper")
 	keep.start_wave("gate_assault")
+	keep._apply_room_damage("sapper", "gate", 7, false, false)
 	var result: Dictionary = keep.advance_wave(6.0)
-	_expect(String(result.get("outcome", "")) == "partial_breach", "unsupported Gate should open a recoverable interval")
+	_expect(String(result.get("outcome", "")) == "partial_breach", "room-destroyer damage should open a recoverable interval")
 	_expect(keep.repair_interval_active, "held or partial-breach outcomes should open the repair interval")
 	_expect(keep.repair_actions_remaining == 2, "Greywatch interval should begin with two actions")
 	var repaired: Dictionary = keep.repair_room("gate")
@@ -227,6 +266,8 @@ func _test_recovery_action_previews() -> void:
 func _test_causal_scenario_reports() -> void:
 	var held: PackKeepState = PackKeepState.new(3307)
 	held.place_piece("pike_squad", Vector2i(0, 3), "ground")
+	held.open_pack("firekeepers")
+	held.place_piece("fire_team", Vector2i(4, 3), "ground")
 	held.start_wave("gate_assault")
 	held.advance_wave(6.0)
 	var held_before: String = JSON.stringify(held.serialize())
@@ -240,6 +281,7 @@ func _test_causal_scenario_reports() -> void:
 	partial.open_pack("scouts")
 	partial.place_piece("scout_post", Vector2i(0, 0), "upper")
 	partial.start_wave("gate_assault")
+	partial._apply_room_damage("sapper", "gate", 7, false, false)
 	partial.advance_wave(6.0)
 	var partial_report: Dictionary = partial.scenario_report()
 	_expect(partial.last_outcome == "partial_breach", "partial-report fixture should produce a partial breach")

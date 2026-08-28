@@ -917,7 +917,7 @@ func inspect_enemy(index: int) -> Dictionary:
 	if not _enemy_definitions.has(enemy_id):
 		return {"ok": false, "reason": "enemy definition is unavailable"}
 	var definition: Dictionary = _enemy_definitions[enemy_id]
-	return {"ok": true, "kind": "enemy", "id": enemy_id, "index": index, "name": String(definition.name), "doctrine": String(definition.doctrine), "route": String(definition.route), "counter": String(definition.counter), "health": int(enemy.get("hp", 0)), "max_health": int(enemy.get("max_health", definition.health)), "damage": int(definition.damage), "armor": int(definition.get("armor", 0)), "armor_counter_tag": String(definition.get("armor_counter_tag", "")), "arrival_step": int(enemy.get("arrival_step", definition.arrival_step)), "base_arrival_step": int(definition.arrival_step), "has_signal_disruption": definition.get("disruption_profile") is Dictionary, "signal_disrupted": bool(enemy.get("signal_disrupted", false)), "ignores_protection": bool(definition.get("ignores_protection", false)), "target_piece_categories": definition.get("target_piece_categories", []).duplicate(), "target": String(enemy.get("target", "")), "defeated": bool(enemy.get("defeated", false))}
+	return {"ok": true, "kind": "enemy", "id": enemy_id, "index": index, "name": String(definition.name), "doctrine": String(definition.doctrine), "route": String(definition.route), "counter": String(definition.counter), "target_mode": String(definition.get("target_mode", "room_destroyer")), "health": int(enemy.get("hp", 0)), "max_health": int(enemy.get("max_health", definition.health)), "damage": int(definition.damage), "armor": int(definition.get("armor", 0)), "armor_counter_tag": String(definition.get("armor_counter_tag", "")), "arrival_step": int(enemy.get("arrival_step", definition.arrival_step)), "base_arrival_step": int(definition.arrival_step), "has_signal_disruption": definition.get("disruption_profile") is Dictionary, "signal_disrupted": bool(enemy.get("signal_disrupted", false)), "ignores_protection": bool(definition.get("ignores_protection", false)), "target_piece_categories": definition.get("target_piece_categories", []).duplicate(), "target": String(enemy.get("target", "")), "defeated": bool(enemy.get("defeated", false))}
 
 func remove_piece(instance_id: String) -> Dictionary:
 	if wave_active or repair_interval_active:
@@ -1515,26 +1515,60 @@ func defender_response_preview(enemy_index: int) -> Dictionary:
 		"priority_rule": "contact, arrival, effective counter damage, pressure, remaining health, wave slot"
 	}
 
+func _living_piece_targets(enemy: Dictionary, apply_preferences: bool) -> Array[String]:
+	var candidates: Array[String] = []
+	var target_categories: Array = enemy.get("target_piece_categories", [])
+	var target_floors: Array = enemy.get("target_piece_floors", [])
+	var instance_ids: Array = pieces.keys()
+	instance_ids.sort()
+	for instance_id_value in instance_ids:
+		var instance_id: String = String(instance_id_value)
+		var instance: Dictionary = pieces[instance_id]
+		if bool(instance.get("disabled", false)) or float(instance.get("condition", 0.0)) <= 0.0:
+			continue
+		if apply_preferences:
+			var piece: Dictionary = _piece_definitions[String(instance.get("piece_id", ""))]
+			if not target_categories.is_empty() and not target_categories.has(String(piece.get("category", ""))):
+				continue
+			if not target_floors.is_empty() and not target_floors.has(String(instance.get("floor", "ground"))):
+				continue
+		candidates.append(instance_id)
+	return candidates
+
+func _choose_piece_target(enemy: Dictionary) -> String:
+	var candidates: Array[String] = _living_piece_targets(enemy, true)
+	if candidates.is_empty():
+		candidates = _living_piece_targets(enemy, false)
+	if candidates.is_empty():
+		return ""
+	var preference: String = String(enemy.get("target_piece_preference", "lowest_condition"))
+	var selected: String = candidates[0]
+	for candidate in candidates:
+		if preference == "highest_max_health":
+			var candidate_max: int = int(pieces[candidate].get("max_health", 0))
+			var selected_max: int = int(pieces[selected].get("max_health", 0))
+			if candidate_max > selected_max or (candidate_max == selected_max and candidate < selected):
+				selected = candidate
+		else:
+			var candidate_condition: float = _target_condition(candidate)
+			var selected_condition: float = _target_condition(selected)
+			if candidate_condition < selected_condition or (is_equal_approx(candidate_condition, selected_condition) and candidate < selected):
+				selected = candidate
+	return selected
+
+func _target_is_active(target_id: String) -> bool:
+	if rooms.has(target_id):
+		return room_condition(target_id) > 0
+	if pieces.has(target_id):
+		return not bool(pieces[target_id].get("disabled", false)) and float(pieces[target_id].get("condition", 0.0)) > 0.0
+	return false
+
 func _choose_target(enemy_id: String) -> String:
 	var enemy: Dictionary = _enemy_definitions[enemy_id]
-	var target_categories: Variant = enemy.get("target_piece_categories")
-	if target_categories is Array and not target_categories.is_empty():
-		var selected_piece: String = ""
-		var selected_max_health: int = -1
-		for instance_id in pieces.keys():
-			var instance: Dictionary = pieces[instance_id]
-			if bool(instance.get("disabled", false)) or float(instance.get("condition", 0.0)) <= 0.0:
-				continue
-			var piece: Dictionary = _piece_definitions[String(instance.get("piece_id", ""))]
-			if not target_categories.has(String(piece.get("category", ""))):
-				continue
-			var max_health: int = int(instance.get("max_health", piece.get("max_health", 0)))
-			if max_health > selected_max_health or (max_health == selected_max_health and (selected_piece.is_empty() or String(instance_id) < selected_piece)):
-				selected_piece = String(instance_id)
-				selected_max_health = max_health
-		if not selected_piece.is_empty():
-			return selected_piece
+	if String(enemy.get("target_mode", "room_destroyer")) == "unit_hunter":
+		return _choose_piece_target(enemy)
 	var candidates: Array[String] = []
+	var preferred_piece_candidates: Array[String] = []
 	var target_rooms: Array = enemy.target_rooms.duplicate()
 	if enemy_id == "siege_beast" and not variation_target_room.is_empty() and target_rooms.has(variation_target_room):
 		target_rooms.erase(variation_target_room)
@@ -1546,9 +1580,9 @@ func _choose_target(enemy_id: String) -> String:
 		var instance: Dictionary = pieces[instance_id]
 		var piece_id: String = String(instance.get("piece_id", ""))
 		if enemy_id == "sapper" and ["repair_station", "supply_cache"].has(piece_id) and float(instance.get("condition", 0.0)) > 0.0:
-			candidates.append(String(instance_id))
-		elif enemy_id == "climber" and String(instance.get("floor", "ground")) == "upper" and float(instance.get("condition", 0.0)) > 0.0:
-			candidates.append(String(instance_id))
+			preferred_piece_candidates.append(String(instance_id))
+	if not preferred_piece_candidates.is_empty():
+		candidates = preferred_piece_candidates
 	if candidates.is_empty():
 		return ""
 	var selected: String = candidates[0]
@@ -1564,10 +1598,7 @@ func _target_condition(target_id: String) -> float:
 	if rooms.has(target_id):
 		return float(room_condition(target_id)) / 100.0
 	if pieces.has(target_id):
-		var condition: float = float(pieces[target_id].get("condition", 0.0))
-		if String(pieces[target_id].get("piece_id", "")) == "supply_cache":
-			return condition - 0.05
-		return condition
+		return float(pieces[target_id].get("condition", 0.0))
 	return 1.0
 
 func _apply_enemy_damage(enemy_id: String, target_id: String) -> void:
@@ -1610,7 +1641,7 @@ func _apply_enemy_damage(enemy_id: String, target_id: String) -> void:
 		var instance: Dictionary = pieces[target_id]
 		var piece_id: String = String(instance.get("piece_id", ""))
 		var max_health: int = int(instance.get("max_health", _piece_definitions[piece_id].get("max_health", 10)))
-		var health_loss: int = maxi(1, int(ceil(float(max_health) * float(damage) * 0.25)))
+		var health_loss: int = damage
 		_set_piece_health(target_id, int(instance.get("health", max_health)) - health_loss)
 		_battle_log("%s damaged %s by %d; health is %d/%d." % [_enemy_definitions[enemy_id].name, _piece_definitions[piece_id].name, damage, int(instance.get("health", 0)), max_health])
 
@@ -1744,7 +1775,7 @@ func _battle_step() -> Dictionary:
 			continue
 		var enemy_id: String = String(enemy.get("enemy_id", ""))
 		if battle_step >= int(enemy.get("arrival_step", _enemy_definitions[enemy_id].arrival_step)):
-			if String(enemy.get("target", "")).is_empty():
+			if not _target_is_active(String(enemy.get("target", ""))):
 				enemy.target = _choose_target(enemy_id)
 				var target_name: String = "none"
 				if _room_definitions.has(enemy.target):
@@ -1756,9 +1787,12 @@ func _battle_step() -> Dictionary:
 				lockdown_contact = true
 			if rally_pending:
 				rally_contact = true
-			if not String(enemy.get("target", "")).is_empty():
-				enemy.attacks_received = int(enemy.get("attacks_received", 0)) + 1
-			_apply_enemy_damage(enemy_id, String(enemy.get("target", "")))
+			var arrival_step: int = int(enemy.get("arrival_step", _enemy_definitions[enemy_id].arrival_step))
+			var attack_interval: int = maxi(1, int(_enemy_definitions[enemy_id].get("attack_interval", 1)))
+			if (battle_step - arrival_step) % attack_interval == 0:
+				if not String(enemy.get("target", "")).is_empty():
+					enemy.attacks_received = int(enemy.get("attacks_received", 0)) + 1
+				_apply_enemy_damage(enemy_id, String(enemy.get("target", "")))
 	_repair_after_defenders()
 	if lockdown_contact:
 		for instance_id in pieces.keys():
@@ -1893,6 +1927,7 @@ func _record_regional_consequence() -> void:
 func _finish_wave() -> Dictionary:
 	wave_active = false
 	var critical_breaches: int = _critical_breach_count()
+	var defense_line_broken: bool = not pieces.is_empty() and _surviving_piece_count() == 0
 	if critical_breaches >= 3 or morale <= 0:
 		last_outcome = "collapse"
 		repair_interval_active = false
@@ -1902,11 +1937,14 @@ func _finish_wave() -> Dictionary:
 		_battle_log("Outcome: collapse. Three critical functions or morale failed; the report identifies the chain; surviving ranged defenders reload for the next attempt.")
 		_append_wave_history()
 		_record_regional_consequence()
-	elif breach_level > 0:
+	elif breach_level > 0 or defense_line_broken:
 		last_outcome = "partial_breach"
 		morale = maxi(0, morale - 1)
 		materials += 5
-		_battle_log("Outcome: partial breach. The keep remains playable and receives 5 recovery materials.")
+		if defense_line_broken and breach_level == 0:
+			_battle_log("Outcome: partial breach. Every defensive piece was disabled, but the keep remains recoverable and receives 5 materials.")
+		else:
+			_battle_log("Outcome: partial breach. The keep remains playable and receives 5 recovery materials.")
 		_open_repair_interval(last_outcome)
 	else:
 		last_outcome = "held"
@@ -2129,7 +2167,7 @@ func scenario_report() -> Dictionary:
 	if last_outcome == "collapse":
 		what_failed.append("The final state collapsed because critical functions or morale reached the failure threshold.")
 	elif breached_waves > 0:
-		what_failed.append("%d wave%s breached at least one keep function." % [breached_waves, "" if breached_waves == 1 else "s"])
+		what_failed.append("%d wave%s broke the defensive line or breached a keep function." % [breached_waves, "" if breached_waves == 1 else "s"])
 	if not damaged_rooms.is_empty():
 		var weakest: Dictionary = damaged_rooms[0]
 		what_failed.append("%s finished at %d%% condition." % [String(_room_definitions[String(weakest.id)].name), int(weakest.condition)])

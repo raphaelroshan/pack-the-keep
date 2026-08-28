@@ -84,11 +84,8 @@ func _test_forecast_event_and_atomic_rejection() -> void:
 func _test_marked_sapper_contact() -> void:
 	var marked: PackKeepState = _start_relief("mark_support_lane")
 	var unmarked: PackKeepState = _start_relief("keep_command_ready")
-	for keep in [marked, unmarked]:
-		_resolve_wave(keep)
-		keep.choose_event_option("release_field_stores")
-		keep.finish_repair_interval()
-		keep.advance_wave(3.0)
+	marked._apply_enemy_damage("sapper", marked._choose_target("sapper"))
+	unmarked._apply_enemy_damage("sapper", unmarked._choose_target("sapper"))
 	_check(int(unmarked.combat_metrics.get("piece_damage", 0)) - int(marked.combat_metrics.get("piece_damage", 0)) == 1, "marked support lane should reduce exactly one Sapper contact damage")
 	_check(not bool(marked.event_flags.get("support_lane_marked", true)), "marked support lane should be consumed by the first Sapper contact")
 	_check(marked.battle_report.has("The marked support lane reduced the first Sapper contact by 1 damage and is now spent."), "Sapper mitigation should be named in the causal battle report")

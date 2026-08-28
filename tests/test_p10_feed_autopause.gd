@@ -55,6 +55,12 @@ func _initialize() -> void:
 	ui.last_log_size = 0
 	ui._on_place_piece()
 	ui.keep._set_piece_health("pike_squad_0", 0)
+	ui.keep.rooms["workshop"].condition = 40
+	ui.keep._update_room_state("workshop")
+	for index in range(ui.doctrine_option.item_count):
+		if String(ui.doctrine_option.get_item_metadata(index)) == "distributed_sabotage":
+			ui.doctrine_option.select(index)
+			break
 	ui._on_start_wave()
 	ui._set_battle_speed(2)
 	var baseline: Control = load("res://scenes/Main.tscn").instantiate()
@@ -62,6 +68,12 @@ func _initialize() -> void:
 	await process_frame
 	baseline._on_place_piece()
 	baseline.keep._set_piece_health("pike_squad_0", 0)
+	baseline.keep.rooms["workshop"].condition = 40
+	baseline.keep._update_room_state("workshop")
+	for index in range(baseline.doctrine_option.item_count):
+		if String(baseline.doctrine_option.get_item_metadata(index)) == "distributed_sabotage":
+			baseline.doctrine_option.select(index)
+			break
 	baseline._on_start_wave()
 	var baseline_result: Dictionary = baseline.keep.advance_wave(1.0)
 	_check(bool(baseline_result.get("ok", false)), "baseline deterministic step should resolve")
