@@ -3124,6 +3124,31 @@ class KeepCanvas extends Control:
 				return true
 		return false
 
+	func _compact_board_label(label_text: String, max_width: float, font_size: int, prefer_last_word: bool = false) -> String:
+		if label_text.is_empty() or max_width <= 0.0:
+			return ""
+		var font: Font = ThemeDB.fallback_font
+		if font.get_string_size(label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x <= max_width:
+			return label_text
+		var words: PackedStringArray = label_text.split(" ", false)
+		if words.size() > 1:
+			var preferred: String = words[words.size() - 1] if prefer_last_word else words[0]
+			if font.get_string_size(preferred, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x <= max_width:
+				return preferred
+			var acronym: String = ""
+			for word in words:
+				if not word.is_empty():
+					acronym += word.left(1).to_upper()
+			if font.get_string_size(acronym, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x <= max_width:
+				return acronym
+		var shortened: String = label_text
+		while shortened.length() > 1 and font.get_string_size(shortened + "…", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > max_width:
+			shortened = shortened.left(shortened.length() - 1)
+		return shortened + "…" if shortened.length() < label_text.length() else shortened
+
+	func _room_label_visible(room_id: String, floor_name: String, origin: Vector2) -> bool:
+		return not _placement_box_occupied(_room_rect(room_id, origin), floor_name, origin)
+
 	func _draw_placement_boxes(floor_name: String, origin: Vector2, outline_only: bool = false) -> void:
 		for room_id in keep.room_definitions().keys():
 			var room: Dictionary = keep.room_definition(String(room_id))
@@ -3238,13 +3263,16 @@ class KeepCanvas extends Control:
 			if String(room.get("floor", "ground")) != floor_name:
 				continue
 			var rect: Rect2 = _room_rect(String(room_id), origin)
+			var show_room_text: bool = _room_label_visible(String(room_id), floor_name, origin)
 			draw_rect(rect, _room_color(String(room_id)), true)
 			draw_rect(rect, Color("#c8b6a0"), false, 1.0)
-			draw_string(ThemeDB.fallback_font, rect.position + Vector2(2, 12), String(room.name), HORIZONTAL_ALIGNMENT_LEFT, rect.size.x - 4, 9, Color("#eadfce"))
+			if show_room_text:
+				draw_string(ThemeDB.fallback_font, rect.position + Vector2(2, 12), _compact_board_label(String(room.name), rect.size.x - 4.0, 9, true), HORIZONTAL_ALIGNMENT_LEFT, rect.size.x - 4, 9, Color("#eadfce"))
 			var condition: int = keep.room_condition(String(room_id))
 			var state_text: String = keep.room_state(String(room_id)).to_upper()
 			draw_rect(Rect2(rect.position + Vector2(2, rect.size.y - 12), Vector2(maxf(4.0, (rect.size.x - 4.0) * float(condition) / 100.0), 4)), Color("#bfe8cf") if condition >= 70 else Color("#d7a35b") if condition >= 35 else Color("#d26155"), true)
-			draw_string(ThemeDB.fallback_font, rect.position + Vector2(2, rect.size.y - 3), "%s %d%%" % [state_text, condition], HORIZONTAL_ALIGNMENT_LEFT, rect.size.x - 4, 8, Color("#fff4df"))
+			if show_room_text:
+				draw_string(ThemeDB.fallback_font, rect.position + Vector2(2, rect.size.y - 3), _compact_board_label("%s %d%%" % [state_text, condition], rect.size.x - 4.0, 8), HORIZONTAL_ALIGNMENT_LEFT, rect.size.x - 4, 8, Color("#fff4df"))
 		_draw_spatial_overlay(floor_name, origin)
 		_draw_placement_boxes(floor_name, origin)
 		for instance in keep.pieces.values():
@@ -3268,7 +3296,7 @@ class KeepCanvas extends Control:
 			draw_rect(piece_rect.grow(-2), color, true)
 			draw_rect(piece_rect.grow(-2), Color("#f1dfb8"), false, 1.5)
 			_draw_piece_glyph(piece_rect, piece_id, color)
-			draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(2, 11), String(piece.name), HORIZONTAL_ALIGNMENT_LEFT, piece_rect.size.x - 12, 8, Color("#201a25"))
+			draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(2, 11), _compact_board_label(String(piece.name), piece_rect.size.x - 14.0, 8), HORIZONTAL_ALIGNMENT_LEFT, piece_rect.size.x - 14, 8, Color("#201a25"))
 			var piece_status: String = "%d/%d hp" % [int(instance.get("health", 0)), int(instance.get("max_health", piece.get("max_health", 0)))]
 			var max_ammo: int = int(instance.get("max_ammo", piece.get("max_ammo", 0)))
 			if max_ammo > 0:

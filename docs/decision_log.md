@@ -567,3 +567,11 @@
 **Reason:** At the default desktop scale, ground-route threat markers and their `ARMOR`, `SMOKE`, or `FOCUSED` annotations occupied the same vertical band as timeline ticks. A small scroll-safe height increase restores the distinction between battlefield state and pacing information.
 
 **Trade-off:** The battle page is slightly taller and may require a little more vertical scrolling at 1280×720. This is preferable to scaling down the tactical board or hiding threat annotations, and all required controls remain within the existing scroll container.
+
+## ADR-072: Occupied rooms yield text priority to defenders
+
+**Decision:** Fit board labels by measured width and suppress a room's name and numeric state text when a placed defender overlaps it. Preserve the room boundary and condition bar, and keep complete room and defender information in the inspector.
+
+**Reason:** Rendering both label layers in the same small grid cells made the tactical board look like a debug overlay, especially with multi-word defenders. The defender is the actionable foreground object, while the room's shape and condition bar still communicate the underlying structure.
+
+**Trade-off:** An occupied room no longer displays its full name directly on the board. Players can click it for full details, and unoccupied rooms retain fitted labels; a future authored art pass may provide stronger iconographic room identity.
