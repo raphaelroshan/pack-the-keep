@@ -51,6 +51,8 @@ if command -v godot >/dev/null 2>&1; then
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p12_packaged_profile.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p12_settings_recovery.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p12_alpha_scenario_matrix.gd
+  godot --headless --audio-driver Dummy --path . --script res://tests/test_p13_workshop_event.gd
+  godot --headless --audio-driver Dummy --path . --script res://tests/test_p13_workshop_event_ui.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_initial_combat.gd
 elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --import
@@ -91,6 +93,8 @@ elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p12_packaged_profile.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p12_settings_recovery.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p12_alpha_scenario_matrix.gd
+  godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p13_workshop_event.gd
+  godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p13_workshop_event_ui.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_initial_combat.gd
 else
   echo "Godot 4.x is not installed or not on PATH."

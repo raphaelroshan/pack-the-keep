@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.12.9-alpha-save-integrity` — machine-audited P12 candidate evidence pending human approval
+**Current build identity:** `0.13.0-workshop-recovery` — first bounded P13 content-integration slice; P12 human approval remains pending
 
 ## Purpose
 
@@ -69,6 +69,10 @@ The second execution of every alpha scenario case now crosses a save/load bounda
 ## v0.12.9 Save integrity validation
 
 Run-save loading now preflights scalar types, nested piece/room/enemy/history shapes, catalog IDs, metrics, and assignment references before assigning any candidate state. Nested primary corruption is rejected cleanly and can fall back to a valid backup without script errors or partial mutation; JSON-decoded position data and legacy schema defaults remain supported.
+
+## v0.13.0 Workshop recovery event
+
+Gatehouse Lock now opens **The Workshop Can Wait** after wave two when sabotage leaves the Workshop at 70 condition or lower and Feint and Flank is next. The player may spend eight materials and one recovery action to repair the Workshop, or commit a valid placed Repair Station for one action. Both choices reuse the existing authoritative recovery commands, block ordinary recovery until resolved, persist through save/load, and appear in the existing Results event history.
 
 ## v0.8.2 testability additions
 

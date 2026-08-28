@@ -127,6 +127,27 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         for expected in ("does not match filename", "unsupported trigger phase", "trigger wave", "unsupported effect", "duplicate choice", "follow itself"):
             self.assertIn(expected, joined)
 
+    def test_recovery_event_rejects_unknown_spatial_references(self) -> None:
+        event = copy.deepcopy(load("data/events/workshop_can_wait.json"))
+        event["eligibility"]["room_condition"]["room"] = "missing_room"
+        event["choices"][0]["effects"] = [{"op": "repair_room", "room": "missing_room"}]
+        event["choices"][1]["requirements"]["piece_available"] = "missing_piece"
+        errors: list[str] = []
+        validator.validate_event(
+            Path("workshop_can_wait.json"),
+            event,
+            {"gatehouse_lock"},
+            set(),
+            set(),
+            errors,
+            {"workshop"},
+            {"repair_station"},
+        )
+        joined = "\n".join(errors)
+        self.assertIn("room_condition eligibility", joined)
+        self.assertIn("repair_room references unknown room", joined)
+        self.assertIn("piece_available must reference a known piece", joined)
+
     def test_modifier_rejects_unknown_unlock_effect_and_cost(self) -> None:
         modifier = copy.deepcopy(load("data/modifiers/roadside_intelligence.json"))
         modifier["unlock_event"] = "missing_event"

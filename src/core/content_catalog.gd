@@ -72,7 +72,8 @@ const SCENARIO_PATHS: Array[String] = [
 const EVENT_PATHS: Array[String] = [
 	"res://data/events/relief_road_warning.json",
 	"res://data/events/relief_road_recovery.json",
-	"res://data/events/relief_road_report.json"
+	"res://data/events/relief_road_report.json",
+	"res://data/events/workshop_can_wait.json"
 ]
 
 const MODIFIER_PATHS: Array[String] = [
@@ -183,8 +184,8 @@ const REQUIRED_SCENARIO_FIELDS: Array[String] = ["id", "content_version", "statu
 const REQUIRED_EVENT_FIELDS: Array[String] = ["id", "content_version", "status", "title", "short_role", "type", "scenario", "trigger", "setup", "choices", "follow_up"]
 const SUPPORTED_EVENT_TYPES: Array[String] = ["forecast", "recovery", "scenario_conclusion"]
 const SUPPORTED_EVENT_PHASES: Array[String] = ["preparation", "recovery", "results"]
-const SUPPORTED_EVENT_REQUIREMENTS: Array[String] = ["command_points", "recovery_actions", "morale"]
-const SUPPORTED_EVENT_EFFECTS: Array[String] = ["spend_command_points", "spend_recovery_action", "add_materials", "add_morale", "set_flag", "record_outcome", "unlock_modifier"]
+const SUPPORTED_EVENT_REQUIREMENTS: Array[String] = ["command_points", "recovery_actions", "morale", "materials", "piece_available"]
+const SUPPORTED_EVENT_EFFECTS: Array[String] = ["spend_command_points", "spend_recovery_action", "add_materials", "add_morale", "set_flag", "record_outcome", "unlock_modifier", "repair_room", "assign_piece"]
 const REQUIRED_MODIFIER_FIELDS: Array[String] = ["id", "content_version", "status", "name", "short_role", "question", "unlock_event", "effect", "starting_morale_cost", "limitation"]
 const SUPPORTED_MODIFIER_EFFECTS: Array[String] = ["reveal_wave_composition", "enemy_health_bonus"]
 
@@ -223,7 +224,7 @@ func load_default(known_room_ids: Array = []) -> Dictionary:
 	for path in MODIFIER_PATHS:
 		_load_modifier(path)
 	for path in EVENT_PATHS:
-		_load_event(path)
+		_load_event(path, known_room_ids)
 	_validate_piece_availability()
 	_validate_doctrine_enemy_references()
 	_validate_event_follow_ups()
@@ -575,7 +576,7 @@ func validate_scenario_definition(scenario: Dictionary, expected_id: String, kno
 		validation_errors.append("scenario %s must include standard_bell variation" % scenario_id)
 	return validation_errors
 
-func validate_event_definition(event: Dictionary, expected_id: String) -> Array[String]:
+func validate_event_definition(event: Dictionary, expected_id: String, known_room_ids: Array = []) -> Array[String]:
 	var validation_errors: Array[String] = []
 	for field in REQUIRED_EVENT_FIELDS:
 		if not event.has(field):
@@ -603,6 +604,25 @@ func validate_event_definition(event: Dictionary, expected_id: String) -> Array[
 			validation_errors.append("event %s trigger phase is unsupported" % event_id)
 		if not _is_integer_number(trigger.get("wave")) or int(trigger.get("wave", -1)) < 0 or int(trigger.get("wave", -1)) > 3:
 			validation_errors.append("event %s trigger wave must be an integer from 0 to 3" % event_id)
+	var eligibility: Variant = event.get("eligibility", {})
+	if not eligibility is Dictionary:
+		validation_errors.append("event %s eligibility must be an object" % event_id)
+	else:
+		for eligibility_id in eligibility.keys():
+			if String(eligibility_id) == "room_condition":
+				var condition: Variant = eligibility[eligibility_id]
+				if not condition is Dictionary or not condition.get("room") is String or (not known_room_ids.is_empty() and not known_room_ids.has(String(condition.get("room", "")))) or not _is_integer_number(condition.get("lte")) or int(condition.get("lte", -1)) < 0 or int(condition.get("lte", -1)) > 100:
+					validation_errors.append("event %s room_condition eligibility needs a known room and lte from 0 to 100" % event_id)
+			elif String(eligibility_id) == "next_doctrine":
+				var doctrines: Variant = eligibility[eligibility_id]
+				if not doctrines is Array or doctrines.is_empty():
+					validation_errors.append("event %s next_doctrine eligibility must be a non-empty array" % event_id)
+				else:
+					for doctrine_id in doctrines:
+						if not doctrine_id is String or not doctrine_ids().has(String(doctrine_id)):
+							validation_errors.append("event %s next_doctrine eligibility references an unknown doctrine" % event_id)
+			else:
+				validation_errors.append("event %s has unsupported eligibility: %s" % [event_id, String(eligibility_id)])
 	var choices: Variant = event.get("choices", [])
 	var choice_ids: Array[String] = []
 	if not choices is Array or choices.is_empty():
@@ -623,7 +643,7 @@ func validate_event_definition(event: Dictionary, expected_id: String) -> Array[
 				if not choice.get(field) is String or String(choice.get(field, "")).strip_edges().is_empty():
 					validation_errors.append("event %s choice %s must have non-empty %s" % [event_id, choice_id, field])
 			_validate_event_requirements(event_id, choice_id, choice.get("requirements", {}), validation_errors)
-			_validate_event_effects(event_id, choice_id, choice.get("effects", []), validation_errors)
+			_validate_event_effects(event_id, choice_id, choice.get("effects", []), known_room_ids, validation_errors)
 	var follow_up: Variant = event.get("follow_up", "")
 	if not follow_up is String or (not String(follow_up).is_empty() and not _is_snake_case_id(String(follow_up))):
 		validation_errors.append("event %s follow_up must be empty or snake_case" % event_id)
@@ -639,6 +659,10 @@ func _validate_event_requirements(event_id: String, choice_id: String, requireme
 		if not SUPPORTED_EVENT_REQUIREMENTS.has(String(requirement_id)):
 			validation_errors.append("event %s choice %s has unsupported requirement: %s" % [event_id, choice_id, String(requirement_id)])
 			continue
+		if String(requirement_id) == "piece_available":
+			if not requirements[requirement_id] is String or not piece_ids().has(String(requirements[requirement_id])):
+				validation_errors.append("event %s choice %s piece_available must reference a known piece" % [event_id, choice_id])
+			continue
 		var constraint: Variant = requirements[requirement_id]
 		if not constraint is Dictionary or constraint.size() != 1:
 			validation_errors.append("event %s choice %s requirement %s must contain one constraint" % [event_id, choice_id, String(requirement_id)])
@@ -647,7 +671,7 @@ func _validate_event_requirements(event_id: String, choice_id: String, requireme
 		if not ["gte", "lt"].has(operator_id) or not _is_integer_number(constraint[operator_id]):
 			validation_errors.append("event %s choice %s requirement %s has invalid constraint" % [event_id, choice_id, String(requirement_id)])
 
-func _validate_event_effects(event_id: String, choice_id: String, effects: Variant, validation_errors: Array[String]) -> void:
+func _validate_event_effects(event_id: String, choice_id: String, effects: Variant, known_room_ids: Array, validation_errors: Array[String]) -> void:
 	if not effects is Array or effects.is_empty():
 		validation_errors.append("event %s choice %s must define typed effects" % [event_id, choice_id])
 		return
@@ -669,6 +693,19 @@ func _validate_event_effects(event_id: String, choice_id: String, effects: Varia
 			validation_errors.append("event %s choice %s record_outcome needs a snake_case tag" % [event_id, choice_id])
 		elif operation == "unlock_modifier" and not _known_modifier_ids().has(String(effect.get("modifier", ""))):
 			validation_errors.append("event %s choice %s references unknown modifier" % [event_id, choice_id])
+		elif operation == "repair_room":
+			if not effect.get("room") is String or not known_room_ids.has(String(effect.get("room", ""))):
+				validation_errors.append("event %s choice %s repair_room references unknown room" % [event_id, choice_id])
+		elif operation == "assign_piece":
+			if not effect.get("piece") is String or not piece_ids().has(String(effect.get("piece", ""))):
+				validation_errors.append("event %s choice %s assign_piece references unknown piece" % [event_id, choice_id])
+			if not effect.get("room") is String or not known_room_ids.has(String(effect.get("room", ""))):
+				validation_errors.append("event %s choice %s assign_piece references unknown room" % [event_id, choice_id])
+	if effects is Array and effects.size() > 1:
+		for effect in effects:
+			if effect is Dictionary and ["repair_room", "assign_piece"].has(String(effect.get("op", ""))):
+				validation_errors.append("event %s choice %s authoritative recovery effects must be the only effect" % [event_id, choice_id])
+				break
 
 func validate_modifier_definition(modifier: Dictionary, expected_id: String) -> Array[String]:
 	var validation_errors: Array[String] = []
@@ -862,7 +899,7 @@ func _load_scenario(path: String, known_room_ids: Array) -> void:
 	if validation_errors.is_empty():
 		_scenarios[scenario_id] = scenario.duplicate(true)
 
-func _load_event(path: String) -> void:
+func _load_event(path: String, known_room_ids: Array) -> void:
 	if not FileAccess.file_exists(path):
 		errors.append("missing event file: %s" % path)
 		return
@@ -876,7 +913,7 @@ func _load_event(path: String) -> void:
 		return
 	var event: Dictionary = parsed
 	var event_id: String = String(event.get("id", ""))
-	var validation_errors: Array[String] = validate_event_definition(event, path.get_file().get_basename())
+	var validation_errors: Array[String] = validate_event_definition(event, path.get_file().get_basename(), known_room_ids)
 	if _events.has(event_id):
 		validation_errors.append("duplicate event id: %s" % event_id)
 	for validation_error in validation_errors:

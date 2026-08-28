@@ -69,10 +69,10 @@ SUPPORTED_DOCTRINES = {"gate_assault", "distributed_sabotage", "feint_and_flank"
 SUPPORTED_NON_ENEMY_TARGETS = {"all"} | SUPPORTED_DOCTRINES
 SUPPORTED_EVENT_TYPES = {"forecast", "recovery", "scenario_conclusion"}
 SUPPORTED_EVENT_PHASES = {"preparation", "recovery", "results"}
-SUPPORTED_EVENT_REQUIREMENTS = {"command_points", "recovery_actions", "morale"}
+SUPPORTED_EVENT_REQUIREMENTS = {"command_points", "recovery_actions", "morale", "materials", "piece_available"}
 SUPPORTED_EVENT_EFFECTS = {
     "spend_command_points", "spend_recovery_action", "add_materials", "add_morale",
-    "set_flag", "record_outcome", "unlock_modifier",
+    "set_flag", "record_outcome", "unlock_modifier", "repair_room", "assign_piece",
 }
 SUPPORTED_MODIFIER_EFFECTS = {"reveal_wave_composition", "enemy_health_bonus"}
 SNAKE_CASE = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
@@ -447,7 +447,11 @@ def validate_event(
     modifier_ids: set[str],
     seen: set[str],
     errors: list[str],
+    room_ids: set[str] | None = None,
+    piece_ids: set[str] | None = None,
 ) -> tuple[str | None, str, str]:
+    room_ids = room_ids or set()
+    piece_ids = piece_ids or set()
     for field in sorted(EVENT_FIELDS - event.keys()):
         errors.append(f"{path}: missing required field: {field}")
     event_id = event.get("id")
@@ -481,6 +485,26 @@ def validate_event(
         wave = trigger.get("wave")
         if not is_integer(wave) or not 0 <= wave <= 3:
             errors.append(f"{path}: trigger wave must be an integer from 0 to 3")
+    eligibility = event.get("eligibility", {})
+    if not isinstance(eligibility, dict):
+        errors.append(f"{path}: eligibility must be an object")
+    else:
+        for eligibility_id, constraint in eligibility.items():
+            if eligibility_id == "room_condition":
+                if (
+                    not isinstance(constraint, dict)
+                    or constraint.get("room") not in room_ids
+                    or not is_integer(constraint.get("lte"))
+                    or not 0 <= constraint["lte"] <= 100
+                ):
+                    errors.append(f"{path}: room_condition eligibility needs a known room and lte from 0 to 100")
+            elif eligibility_id == "next_doctrine":
+                if not isinstance(constraint, list) or not constraint:
+                    errors.append(f"{path}: next_doctrine eligibility must be a non-empty array")
+                elif any(not isinstance(value, str) or value not in SUPPORTED_DOCTRINES for value in constraint):
+                    errors.append(f"{path}: next_doctrine eligibility references an unknown doctrine")
+            else:
+                errors.append(f"{path}: unsupported eligibility: {eligibility_id}")
     choices = event.get("choices")
     choice_ids: set[str] = set()
     if not isinstance(choices, list) or not choices:
@@ -507,6 +531,10 @@ def validate_event(
         for requirement_id, constraint in requirements.items():
             if requirement_id not in SUPPORTED_EVENT_REQUIREMENTS:
                 errors.append(f"{path}: choice {choice_id} has unsupported requirement: {requirement_id}")
+                continue
+            if requirement_id == "piece_available":
+                if not isinstance(constraint, str) or constraint not in piece_ids:
+                    errors.append(f"{path}: choice {choice_id} piece_available must reference a known piece")
                 continue
             if not isinstance(constraint, dict) or len(constraint) != 1:
                 errors.append(f"{path}: choice {choice_id} requirement {requirement_id} must contain one constraint")
@@ -540,6 +568,16 @@ def validate_event(
             elif operation == "unlock_modifier":
                 if not isinstance(effect.get("modifier"), str) or effect["modifier"] not in modifier_ids:
                     errors.append(f"{path}: choice {choice_id} references unknown modifier")
+            elif operation == "repair_room":
+                if not isinstance(effect.get("room"), str) or effect["room"] not in room_ids:
+                    errors.append(f"{path}: choice {choice_id} repair_room references unknown room")
+            elif operation == "assign_piece":
+                if not isinstance(effect.get("piece"), str) or effect["piece"] not in piece_ids:
+                    errors.append(f"{path}: choice {choice_id} assign_piece references unknown piece")
+                if not isinstance(effect.get("room"), str) or effect["room"] not in room_ids:
+                    errors.append(f"{path}: choice {choice_id} assign_piece references unknown room")
+        if len(effects) > 1 and any(isinstance(effect, dict) and effect.get("op") in {"repair_room", "assign_piece"} for effect in effects):
+            errors.append(f"{path}: choice {choice_id} authoritative recovery effects must be the only effect")
     follow_up = event.get("follow_up")
     if not isinstance(follow_up, str) or (follow_up and not SNAKE_CASE.fullmatch(follow_up)):
         errors.append(f"{path}: follow_up must be empty or snake_case")
@@ -846,6 +884,10 @@ def main() -> int:
         value for value in manifest.get("p8_authored_events", {}).get("event_chain", [])
         if isinstance(value, str)
     }
+    manifest_event_ids.update(
+        value for value in manifest.get("p13_workshop_event", {}).get("event_ids", [])
+        if isinstance(value, str)
+    )
     manifest_modifier_ids = {
         value for value in manifest.get("p9_run_progression", {}).get("modifiers", [])
         if isinstance(value, str)
@@ -872,7 +914,7 @@ def main() -> int:
         if not isinstance(event, dict):
             errors.append(f"{path}: root must be an object")
             continue
-        event_id, event_scenario, follow_up = validate_event(path, event, seen_scenarios, seen_modifiers, seen_events, errors)
+        event_id, event_scenario, follow_up = validate_event(path, event, seen_scenarios, seen_modifiers, seen_events, errors, room_ids, seen_pieces)
         if event_id is not None:
             runtime_events[event_id] = (event_scenario, follow_up)
     for event_id in sorted(manifest_event_ids - seen_events):

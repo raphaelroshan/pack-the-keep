@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.12.9-alpha-save-integrity",
+  "framework_version": "0.13.0-workshop-recovery",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -213,6 +213,16 @@
     "catalog_rule": "saved_piece_enemy_pack_doctrine_scenario_commander_room_and_modifier_ids_must_exist",
     "fallback_rule": "nested_primary_corruption_is_a_clean_rejection_and_can_recover_the_valid_backup",
     "compatibility": "missing_legacy_fields_keep_their_existing_defaults_and_schema_migrations"
+  },
+  "p13_workshop_recovery_event": {
+    "status": "implemented",
+    "event": "workshop_can_wait",
+    "trigger": "gatehouse_lock_wave_two_recovery_with_strained_workshop_and_feint_and_flank_next",
+    "choices": ["repair_workshop", "assign_repair_station"],
+    "command_boundary": "typed_event_effects_reuse_authoritative_room_repair_and_piece_assignment_mutations",
+    "persistence": "active_and_resolved_event_state_round_trips_through_schema_4_saves",
+    "determinism_rule": "stable_piece_instance_order_and_preflighted_choices_produce_identical_replays",
+    "non_goals": ["random_scheduler", "campaign_map", "scenario_specific_ui", "new_combat_exception"]
   },
   "v090_multi_wave": {
     "status": "implemented",

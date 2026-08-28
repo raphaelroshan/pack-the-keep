@@ -375,3 +375,11 @@
 **Reason:** Candidate isolation protects the live UI state, but malformed nested data could still trigger script errors or produce a candidate that looked successful while containing unknown gameplay objects. A single preflight boundary makes rejection explicit and keeps backup fallback reliable.
 
 **Trade-off:** Save validation is stricter and adds maintenance when the runtime schema grows. Missing fields remain compatible for older schemas, while present fields must be structurally valid.
+
+## ADR-048: Authored events may invoke bounded recovery commands
+
+**Decision:** Allow validated event effects to invoke one authoritative room-repair or piece-assignment command as the complete effect of a choice. Event eligibility remains data-driven, while `KeepState` performs the same preview and mutation used by ordinary recovery controls.
+
+**Reason:** Greywatch events should change a visible operational decision without duplicating repair costs, adjacency rules, assignment limits, or stable instance selection in UI or scenario-specific code.
+
+**Trade-off:** Recovery-command effects cannot be mixed with other event effects in one choice. Richer multi-effect transactions remain deferred until they can preserve atomic validation without creating a second recovery rules engine.

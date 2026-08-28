@@ -327,7 +327,12 @@ func _event_requirement_failure(requirements: Variant) -> String:
 	var requirement_ids: Array = requirements.keys()
 	requirement_ids.sort()
 	for requirement_id in requirement_ids:
-		var current: int = command_points if String(requirement_id) == "command_points" else repair_actions_remaining if String(requirement_id) == "recovery_actions" else morale if String(requirement_id) == "morale" else -1
+		if String(requirement_id) == "piece_available":
+			var piece_id: String = String(requirements[requirement_id])
+			if _event_piece_instance(piece_id).is_empty():
+				return "event_requirement_piece_available"
+			continue
+		var current: int = command_points if String(requirement_id) == "command_points" else repair_actions_remaining if String(requirement_id) == "recovery_actions" else morale if String(requirement_id) == "morale" else materials if String(requirement_id) == "materials" else -1
 		if current < 0:
 			return "unsupported_event_requirement"
 		var constraint: Dictionary = requirements[requirement_id]
@@ -355,6 +360,14 @@ func _event_effect_failure(effects: Variant) -> String:
 			remaining_actions -= amount
 			if remaining_actions < 0:
 				return "event_requirement_recovery_actions"
+		elif operation == "repair_room":
+			var repair_preview: Dictionary = recovery_action_preview("repair_room", "", String(effect.get("room", "")), true)
+			if not bool(repair_preview.get("ok", false)):
+				return String(repair_preview.get("reason", "event_effect_repair_room"))
+		elif operation == "assign_piece":
+			var instance_id: String = _event_piece_instance(String(effect.get("piece", "")), String(effect.get("room", "")))
+			if instance_id.is_empty():
+				return "event_effect_assign_piece"
 		elif not ["add_materials", "add_morale", "set_flag", "record_outcome", "unlock_modifier"].has(operation):
 			return "unsupported_event_effect"
 		elif operation == "unlock_modifier" and not _modifier_definitions.has(String(effect.get("modifier", ""))):
@@ -386,7 +399,27 @@ func _apply_event_effect(effect: Dictionary) -> Dictionary:
 	if operation == "unlock_modifier":
 		var result: Dictionary = unlock_modifier(String(effect.get("modifier", "")), active_event_id)
 		return result.get("state_changes", [])[0] if not result.get("state_changes", []).is_empty() else {"op": operation, "modifier": String(effect.get("modifier", "")), "already_unlocked": true}
+	if operation == "repair_room":
+		var repair_result: Dictionary = _commit_room_repair(String(effect.get("room", "")))
+		return repair_result.get("state_changes", [])[0] if not repair_result.get("state_changes", []).is_empty() else {"op": operation, "room": String(effect.get("room", ""))}
+	if operation == "assign_piece":
+		var instance_id: String = _event_piece_instance(String(effect.get("piece", "")), String(effect.get("room", "")))
+		var assignment_result: Dictionary = _commit_piece_assignment(instance_id, String(effect.get("room", "")))
+		return assignment_result.get("state_changes", [])[0] if not assignment_result.get("state_changes", []).is_empty() else {"op": operation, "piece": instance_id, "room": String(effect.get("room", ""))}
 	return {"op": operation}
+
+func _event_piece_instance(piece_id: String, room_id: String = "") -> String:
+	var instance_ids: Array[String] = []
+	for instance_id_value in pieces.keys():
+		instance_ids.append(String(instance_id_value))
+	instance_ids.sort()
+	for instance_id in instance_ids:
+		var instance: Dictionary = pieces[instance_id]
+		if String(instance.get("piece_id", "")) != piece_id or bool(instance.get("disabled", false)):
+			continue
+		if room_id.is_empty() or bool(recovery_action_preview("assign_piece", instance_id, room_id, true).get("ok", false)):
+			return instance_id
+	return ""
 
 func _current_event_phase() -> String:
 	if repair_interval_active and not has_next_wave() and not last_outcome.is_empty():
@@ -399,7 +432,28 @@ func _current_event_phase() -> String:
 
 func _event_trigger_matches(definition: Dictionary) -> bool:
 	var trigger: Dictionary = definition.get("trigger", {})
-	return String(definition.get("scenario", "")) == scenario_id and String(trigger.get("phase", "")) == _current_event_phase() and int(trigger.get("wave", -1)) == wave_index
+	return String(definition.get("scenario", "")) == scenario_id and String(trigger.get("phase", "")) == _current_event_phase() and int(trigger.get("wave", -1)) == wave_index and _event_eligibility_matches(definition.get("eligibility", {}))
+
+func _event_eligibility_matches(eligibility: Variant) -> bool:
+	if not eligibility is Dictionary:
+		return false
+	for eligibility_id in eligibility.keys():
+		if String(eligibility_id) == "room_condition":
+			var condition: Dictionary = eligibility[eligibility_id]
+			if room_condition(String(condition.get("room", ""))) > int(condition.get("lte", 100)):
+				return false
+		elif String(eligibility_id) == "next_doctrine":
+			var doctrines: Array = eligibility[eligibility_id]
+			var next_doctrine: String = ""
+			if has_next_wave() and _scenario_definitions.has(scenario_id):
+				var authored_doctrines: Array = _scenario_definitions[scenario_id].get("doctrines", [])
+				if wave_index < authored_doctrines.size():
+					next_doctrine = String(authored_doctrines[wave_index])
+			if not doctrines.has(next_doctrine):
+				return false
+		else:
+			return false
+	return true
 
 func _refresh_active_event() -> void:
 	if not active_event_id.is_empty() or not scenario_active or not _scenario_definitions.has(scenario_id):
@@ -707,7 +761,7 @@ func remove_piece(instance_id: String) -> Dictionary:
 	pieces.erase(instance_id)
 	return {"ok": true, "message": "Removed defensive piece; materials are not refunded during an active run."}
 
-func recovery_action_preview(action_id: String, instance_id: String = "", room_id: String = "") -> Dictionary:
+func recovery_action_preview(action_id: String, instance_id: String = "", room_id: String = "", allow_active_event: bool = false) -> Dictionary:
 	var preview: Dictionary = {
 		"action_id": action_id,
 		"ok": false,
@@ -751,7 +805,7 @@ func recovery_action_preview(action_id: String, instance_id: String = "", room_i
 	if not repair_interval_active:
 		preview.reason = "no recovery interval is open"
 		return preview
-	if not active_event_id.is_empty():
+	if not active_event_id.is_empty() and not allow_active_event:
 		preview.reason = "resolve the active event first"
 		return preview
 	if repair_actions_remaining <= 0:
@@ -821,6 +875,9 @@ func assign_piece_to_room(instance_id: String, room_id: String) -> Dictionary:
 	var preview: Dictionary = recovery_action_preview("assign_piece", instance_id, room_id)
 	if not bool(preview.get("ok", false)):
 		return {"ok": false, "reason": String(preview.get("reason", "assignment is unavailable")), "state_changes": []}
+	return _commit_piece_assignment(instance_id, room_id)
+
+func _commit_piece_assignment(instance_id: String, room_id: String) -> Dictionary:
 	var piece_id: String = String(pieces[instance_id].get("piece_id", ""))
 	var rule: Dictionary = _piece_assignment_rule(piece_id)
 	assigned_rooms[room_id] = instance_id
@@ -1595,6 +1652,9 @@ func repair_room(room_id: String) -> Dictionary:
 	var preview: Dictionary = recovery_action_preview("repair_room", "", room_id)
 	if not bool(preview.get("ok", false)):
 		return {"ok": false, "reason": String(preview.get("reason", "room repair is unavailable")), "state_changes": []}
+	return _commit_room_repair(room_id)
+
+func _commit_room_repair(room_id: String) -> Dictionary:
 	materials -= 8
 	rooms[room_id].condition = mini(100, room_condition(room_id) + 30)
 	_update_room_state(room_id)
