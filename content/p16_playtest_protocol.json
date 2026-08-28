@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.18.0-unit-first-combat",
+  "build_version": "0.18.1-combat-cadence",
   "status": "ready_for_human_sessions",
   "release_ready": false,
   "minimum_completed_sessions": 4,

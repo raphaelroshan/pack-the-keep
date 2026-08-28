@@ -2191,13 +2191,21 @@ func _refresh_response_preview() -> void:
 	var counter_id: String = String(inspection.get("counter", ""))
 	var counter_name: String = String(keep.piece_definition(counter_id).get("name", counter_id.replace("_", " ").capitalize())) if not counter_id.is_empty() else "Read the forecast"
 	var response: Dictionary = keep.defender_response_preview(focused_enemy_index)
+	var strike_timing: Dictionary = keep.enemy_attack_timing(focused_enemy_index)
+	var strike_text: String = "STRIKE: cadence unavailable"
+	if bool(strike_timing.get("ok", false)):
+		var interval: int = int(strike_timing.get("attack_interval", 1))
+		if bool(strike_timing.get("within_wave", true)):
+			strike_text = "STRIKE: every %d tick%s · next T%d" % [interval, "" if interval == 1 else "s", int(strike_timing.get("next_attack_step", 0))]
+		else:
+			strike_text = "STRIKE: cadence complete for this assault phase"
 	var attacker_names: Array[String] = []
 	for attacker in response.get("attackers", []):
 		attacker_names.append("%s (%d)" % [String(attacker.get("name", "Defender")), int(attacker.get("damage", 0))])
 	var engagement_text: String = "NEXT STEP: no ready defender commits to this target"
 	if not attacker_names.is_empty():
 		engagement_text = "NEXT STEP: %s → %d damage · projected %d hp" % [", ".join(attacker_names), int(response.get("expected_damage", 0)), int(response.get("projected_health", 0))]
-	response_preview_label.text = "RESPONSE — FOCUSED %d: %s\n%s\nTHREAT: %s | TARGET: %s | %s\n%s\nCOUNTERS: %s\n%s: %s (%d command)" % [focused_enemy_index + 1, String(inspection.get("name", "enemy")), timing_text, String(inspection.get("doctrine", "approaching")).replace("_", " ").to_upper(), target_text, String(response.get("contact_state", "APPROACH")), engagement_text, counter_name, ability_name, ability_state, keep.command_points]
+	response_preview_label.text = "RESPONSE — FOCUSED %d: %s\n%s\nTHREAT: %s | TARGET: %s | %s\n%s\n%s\nCOUNTERS: %s\n%s: %s (%d command)" % [focused_enemy_index + 1, String(inspection.get("name", "enemy")), timing_text, String(inspection.get("doctrine", "approaching")).replace("_", " ").to_upper(), target_text, String(response.get("contact_state", "APPROACH")), strike_text, engagement_text, counter_name, ability_name, ability_state, keep.command_points]
 
 func _refresh_layout_lens() -> void:
 	if layout_lens_label == null:
@@ -3068,7 +3076,10 @@ class KeepCanvas extends Control:
 		var counter_id: String = String(inspection.get("counter", ""))
 		var counter_name: String = String(keep.piece_definition(counter_id).get("name", counter_id.replace("_", " ").capitalize())) if not counter_id.is_empty() else "Read the forecast"
 		var target_role: String = "Hunts defenders" if String(inspection.get("target_mode", "room_destroyer")) == "unit_hunter" else "Breaks structures"
-		return "%s — %s\n%s | Route: %s\nHP %d/%d | Contact T%d | Counter: %s" % [String(inspection.get("name", "Threat")), String(inspection.get("doctrine", "unknown")).replace("_", " ").capitalize(), target_role, String(inspection.get("route", "unknown")).replace("_", " ").capitalize(), int(inspection.get("health", 0)), int(inspection.get("max_health", 0)), int(inspection.get("arrival_step", 0)), counter_name]
+		var timing: Dictionary = keep.enemy_attack_timing(index)
+		var interval: int = int(timing.get("attack_interval", inspection.get("attack_interval", 1)))
+		var strike_text: String = "No further strike this phase" if not bool(timing.get("within_wave", true)) else "Next strike T%d" % int(timing.get("next_attack_step", inspection.get("arrival_step", 0)))
+		return "%s — %s\n%s | Route: %s\nHP %d/%d | Contact T%d | Strike every %dt · %s\nCounter: %s" % [String(inspection.get("name", "Threat")), String(inspection.get("doctrine", "unknown")).replace("_", " ").capitalize(), target_role, String(inspection.get("route", "unknown")).replace("_", " ").capitalize(), int(inspection.get("health", 0)), int(inspection.get("max_health", 0)), int(inspection.get("arrival_step", 0)), interval, strike_text, counter_name]
 
 	func _room_tooltip(room_id: String) -> String:
 		if keep == null or room_id.is_empty():
@@ -3459,7 +3470,16 @@ class KeepCanvas extends Control:
 			var enemy_health: int = int(enemy.get("hp", 0))
 			var enemy_max_health: int = int(enemy.get("max_health", enemy_def.get("health", 1)))
 			var enemy_bar_width: float = 34.0 if enemy_id == "siege_beast" else 28.0
-			_draw_health_bar(Rect2(enemy_origin + Vector2(-enemy_bar_width * 0.5, -marker_radius - 10.0), Vector2(enemy_bar_width, 5.0)), enemy_health, enemy_max_health)
+			var health_bar_rect: Rect2 = Rect2(enemy_origin + Vector2(-enemy_bar_width * 0.5, -marker_radius - 10.0), Vector2(enemy_bar_width, 5.0))
+			_draw_health_bar(health_bar_rect, enemy_health, enemy_max_health)
+			var cadence: Dictionary = keep.enemy_attack_timing(index)
+			if bool(cadence.get("active", false)) and bool(cadence.get("in_contact", false)) and bool(cadence.get("within_wave", false)):
+				var cadence_progress: float = float(cadence.get("cadence_progress", 0.0))
+				var cadence_rect: Rect2 = Rect2(health_bar_rect.position - Vector2(0, 4), Vector2(health_bar_rect.size.x, 2.0))
+				var cadence_color: Color = Color("#ffd166") if high_contrast_mode else Color("#ef8d62")
+				draw_rect(cadence_rect, Color(cadence_color, 0.18), true)
+				if cadence_progress > 0.0:
+					draw_rect(Rect2(cadence_rect.position, Vector2(cadence_rect.size.x * cadence_progress, cadence_rect.size.y)), cadence_color, true)
 			if index == focused_enemy_index:
 				draw_circle(enemy_origin, marker_radius + 5.0, Color("#fff4df"), false, 2.5)
 				draw_circle(enemy_origin, marker_radius + 9.0, Color("#e2bd84"), false, 1.5)
