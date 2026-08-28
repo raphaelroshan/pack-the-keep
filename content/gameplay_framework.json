@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.13.2-wrong-wall-chain",
+  "framework_version": "0.13.3-mara-second-door",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -239,6 +239,14 @@
     "trigger_rule": "terminal_result_events_may_list_bounded_authored_wave_indices",
     "persistence": "active_recovery_event_round_trips_before_choice",
     "non_goals": ["random_scheduler", "campaign_map", "new_combat_rule", "unbounded_branching"]
+  },
+  "p13_mara_arc": {
+    "status": "implemented",
+    "flags": ["mara_workshop_repaired", "mara_station_trusted", "mara_second_door_open"],
+    "future_event": "mara_second_door",
+    "commander_variants": ["castellan_compact_structure", "warden_open_response_lane"],
+    "choice_flag_rule": "flags_apply_only_after_all_typed_effects_validate_and_succeed",
+    "non_goals": ["relationship_score", "dialogue_tree", "combat_bonus"]
   },
   "v090_multi_wave": {
     "status": "implemented",

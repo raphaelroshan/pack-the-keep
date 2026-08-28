@@ -263,18 +263,19 @@ func current_event() -> Dictionary:
 	if active_event_id.is_empty() or not _event_definitions.has(active_event_id):
 		return {"ok": false, "reason": "no_active_event", "message": "No authored event is active."}
 	var definition: Dictionary = _event_definitions[active_event_id]
+	var commander_variant: Dictionary = definition.get("commander_variants", {}).get(commander_id, {})
 	var choice_previews: Array[Dictionary] = []
 	for choice in definition.get("choices", []):
 		var choice_id: String = String(choice.get("id", ""))
 		var preview: Dictionary = event_choice_preview(choice_id)
 		choice_previews.append({
 			"id": choice_id,
-			"label": String(choice.get("label", choice_id)),
+			"label": String(commander_variant.get("choice_labels", {}).get(choice_id, choice.get("label", choice_id))),
 			"visible_result": String(choice.get("visible_result", "")),
 			"available": bool(preview.get("ok", false)),
 			"reason": String(preview.get("reason", ""))
 		})
-	return {"ok": true, "id": active_event_id, "title": String(definition.get("title", active_event_id)), "type": String(definition.get("type", "")), "setup": String(definition.get("setup", "")), "phase": _current_event_phase(), "choices": choice_previews}
+	return {"ok": true, "id": active_event_id, "title": String(definition.get("title", active_event_id)), "type": String(definition.get("type", "")), "setup": String(commander_variant.get("setup", definition.get("setup", ""))), "phase": _current_event_phase(), "choices": choice_previews}
 
 func event_choice_preview(choice_id: String) -> Dictionary:
 	if active_event_id.is_empty() or not _event_definitions.has(active_event_id):
@@ -300,6 +301,12 @@ func choose_event_option(choice_id: String) -> Dictionary:
 	var state_changes: Array[Dictionary] = []
 	for effect in choice.get("effects", []):
 		state_changes.append(_apply_event_effect(effect))
+	var choice_flag_ids: Array = choice.get("flags", {}).keys()
+	choice_flag_ids.sort()
+	for flag_id_value in choice_flag_ids:
+		var flag_id: String = String(flag_id_value)
+		event_flags[flag_id] = bool(choice.flags[flag_id_value])
+		state_changes.append({"op": "set_flag", "flag": flag_id, "value": event_flags[flag_id]})
 	var history_entry: Dictionary = {
 		"event_id": event_id,
 		"choice_id": choice_id,
@@ -460,6 +467,15 @@ func _event_eligibility_matches(eligibility: Variant) -> bool:
 				if wave_index < authored_doctrines.size():
 					next_doctrine = String(authored_doctrines[wave_index])
 			if not doctrines.has(next_doctrine):
+				return false
+		elif String(eligibility_id) == "any_flag":
+			var flag_ids: Array = eligibility[eligibility_id]
+			var matched: bool = false
+			for flag_id in flag_ids:
+				if bool(event_flags.get(String(flag_id), false)):
+					matched = true
+					break
+			if not matched:
 				return false
 		else:
 			return false

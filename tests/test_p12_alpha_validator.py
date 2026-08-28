@@ -36,7 +36,7 @@ class P12AlphaValidatorTests(unittest.TestCase):
             content_status = {
                 "ok": True, "commander_count": 2, "piece_count": 17, "pack_count": 9,
                 "enemy_count": 7, "doctrine_count": 8, "scenario_count": 8,
-                "event_count": 7, "modifier_count": 2,
+                "event_count": 8, "modifier_count": 2,
             }
             shared = {
                 "ok": True, "build_version": "v", "editor_feature": False,

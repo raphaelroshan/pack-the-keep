@@ -166,6 +166,21 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         self.assertIn("trigger waves must be integers from 0 to 3", joined)
         self.assertIn("trigger wave array contains a duplicate", joined)
 
+    def test_event_rejects_invalid_choice_flags_and_commander_variants(self) -> None:
+        event = copy.deepcopy(load("data/events/mara_second_door.json"))
+        event["eligibility"]["any_flag"] = ["Not Stable"]
+        event["choices"][0]["flags"] = {"bad.flag": "yes"}
+        event["commander_variants"]["missing_commander"] = event["commander_variants"].pop("castellan")
+        errors: list[str] = []
+        validator.validate_event(
+            Path("mara_second_door.json"), event, {"gatehouse_lock"}, set(), set(), errors,
+            {"workshop"}, {"repair_station"},
+        )
+        joined = "\n".join(errors)
+        self.assertIn("any_flag eligibility contains an invalid flag", joined)
+        self.assertIn("must be a stable boolean", joined)
+        self.assertIn("commander variant missing_commander is malformed", joined)
+
     def test_modifier_rejects_unknown_unlock_effect_and_cost(self) -> None:
         modifier = copy.deepcopy(load("data/modifiers/roadside_intelligence.json"))
         modifier["unlock_event"] = "missing_event"

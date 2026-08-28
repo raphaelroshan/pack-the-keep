@@ -794,7 +794,7 @@ func _build_ui() -> void:
 	left.add_child(title)
 
 	var subtitle: Label = Label.new()
-	subtitle.text = "The Castellan’s first defense: connect the floors, read the doctrine, hold what matters."
+	subtitle.text = "Greywatch’s defense: connect the floors, read the doctrine, hold what matters."
 	subtitle.add_theme_color_override("font_color", Color("#c0b2c8"))
 	left.add_child(subtitle)
 

@@ -510,6 +510,11 @@ def validate_event(
                     errors.append(f"{path}: next_doctrine eligibility must be a non-empty array")
                 elif any(not isinstance(value, str) or value not in SUPPORTED_DOCTRINES for value in constraint):
                     errors.append(f"{path}: next_doctrine eligibility references an unknown doctrine")
+            elif eligibility_id == "any_flag":
+                if not isinstance(constraint, list) or not constraint:
+                    errors.append(f"{path}: any_flag eligibility must be a non-empty array")
+                elif any(not isinstance(value, str) or not SNAKE_CASE.fullmatch(value) for value in constraint):
+                    errors.append(f"{path}: any_flag eligibility contains an invalid flag")
             else:
                 errors.append(f"{path}: unsupported eligibility: {eligibility_id}")
     choices = event.get("choices")
@@ -585,6 +590,30 @@ def validate_event(
                     errors.append(f"{path}: choice {choice_id} assign_piece references unknown room")
         if len(effects) > 1 and any(isinstance(effect, dict) and effect.get("op") in {"repair_room", "assign_piece"} for effect in effects):
             errors.append(f"{path}: choice {choice_id} authoritative recovery effects must be the only effect")
+        flags = choice.get("flags", {})
+        if not isinstance(flags, dict):
+            errors.append(f"{path}: choice {choice_id} flags must be an object")
+        else:
+            for flag_id, value in flags.items():
+                if not isinstance(flag_id, str) or not SNAKE_CASE.fullmatch(flag_id) or not isinstance(value, bool):
+                    errors.append(f"{path}: choice {choice_id} flag {flag_id} must be a stable boolean")
+    commander_variants = event.get("commander_variants", {})
+    if not isinstance(commander_variants, dict):
+        errors.append(f"{path}: commander_variants must be an object")
+    else:
+        for commander_id, variant in commander_variants.items():
+            if (
+                commander_id not in {"castellan", "warden"}
+                or not isinstance(variant, dict)
+                or not isinstance(variant.get("setup"), str)
+                or not variant["setup"].strip()
+                or not isinstance(variant.get("choice_labels", {}), dict)
+            ):
+                errors.append(f"{path}: commander variant {commander_id} is malformed")
+                continue
+            for variant_choice_id, label in variant.get("choice_labels", {}).items():
+                if variant_choice_id not in choice_ids or not isinstance(label, str) or not label.strip():
+                    errors.append(f"{path}: commander variant {commander_id} references an invalid choice label")
     follow_up = event.get("follow_up")
     if not isinstance(follow_up, str) or (follow_up and not SNAKE_CASE.fullmatch(follow_up)):
         errors.append(f"{path}: follow_up must be empty or snake_case")

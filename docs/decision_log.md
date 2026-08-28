@@ -399,3 +399,11 @@
 **Reason:** Collapse ends the authored sequence immediately and skips recovery. A terminal report should explain that outcome without requiring duplicate event definitions or pretending the player reached wave three.
 
 **Trade-off:** Multi-wave triggers remain explicit authored lists, not wildcard scheduling. Validation rejects empty, duplicate, or out-of-range arrays.
+
+## ADR-051: Character arcs use explicit choice flags and authored variants
+
+**Decision:** Event choices may set validated boolean flags only after their typed effects succeed. A future event may require any named flag and may provide commander-specific setup and labels while preserving identical underlying choices and effects.
+
+**Reason:** Mara's arc needs earlier operational decisions to change a later conversation without introducing hidden reputation arithmetic or duplicating events for each commander.
+
+**Trade-off:** Variants alter framing, not combat math. More complex relationship thresholds and branching dialogue remain deferred.

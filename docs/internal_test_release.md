@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.13.2-wrong-wall-chain` — bounded three-beat P13 scenario chain; P12 human approval remains pending
+**Current build identity:** `0.13.3-mara-second-door` — bounded Mara Venn arc with commander-specific framing; P12 human approval remains pending
 
 ## Purpose
 
@@ -81,6 +81,10 @@ The existing Campaign Ledger now includes the five most recent authored-event co
 ## v0.13.2 The Wrong Wall chain
 
 The Wrong Wall now carries a preparation warning, a wave-one Workshop recovery decision, and a terminal consequence report. Players may explicitly decline the warning, preserve scarce resources when Workshop repair is unavailable, or spend the normal eight materials and one recovery action to repair it. The conclusion event can open after normal completion or early collapse, and an active recovery choice round-trips through save/load.
+
+## v0.13.3 Mara's Second Door
+
+Repairing the Workshop or trusting its Repair Station now records one of two visible Mara Venn arc flags. At Gatehouse Lock's conclusion, Mara proposes a second service door only after one of those choices; Castellan and Warden receive distinct compact-structure and response-lane framing. Opening or refusing the route records the third explicit flag, with no hidden relationship score or combat bonus.
 
 ## v0.8.2 testability additions
 

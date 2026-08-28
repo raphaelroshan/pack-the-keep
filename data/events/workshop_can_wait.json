@@ -18,6 +18,7 @@
       "label": "Repair Workshop (8 materials, 1 action)",
       "requirements": {"materials": {"gte": 8}, "recovery_actions": {"gte": 1}},
       "effects": [{"op": "repair_room", "room": "workshop"}],
+      "flags": {"mara_workshop_repaired": true},
       "visible_result": "The Workshop can support the next defense again, at the cost of materials and one recovery action."
     },
     {
@@ -25,8 +26,9 @@
       "label": "Assign Repair Station to Workshop (1 action)",
       "requirements": {"piece_available": "repair_station", "recovery_actions": {"gte": 1}},
       "effects": [{"op": "assign_piece", "piece": "repair_station", "room": "workshop"}],
+      "flags": {"mara_station_trusted": true},
       "visible_result": "The Repair Station crew commits to the Workshop, preserving materials but giving up another recovery action."
     }
   ],
-  "follow_up": ""
+  "follow_up": "mara_second_door"
 }

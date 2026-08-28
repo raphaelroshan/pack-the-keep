@@ -74,6 +74,7 @@ const EVENT_PATHS: Array[String] = [
 	"res://data/events/relief_road_recovery.json",
 	"res://data/events/relief_road_report.json",
 	"res://data/events/workshop_can_wait.json",
+	"res://data/events/mara_second_door.json",
 	"res://data/events/the_bell_has_a_pattern.json",
 	"res://data/events/the_gate_is_not_the_keep.json",
 	"res://data/events/wrong_wall_report.json"
@@ -636,6 +637,14 @@ func validate_event_definition(event: Dictionary, expected_id: String, known_roo
 					for doctrine_id in doctrines:
 						if not doctrine_id is String or not doctrine_ids().has(String(doctrine_id)):
 							validation_errors.append("event %s next_doctrine eligibility references an unknown doctrine" % event_id)
+			elif String(eligibility_id) == "any_flag":
+				var flag_ids: Variant = eligibility[eligibility_id]
+				if not flag_ids is Array or flag_ids.is_empty():
+					validation_errors.append("event %s any_flag eligibility must be a non-empty array" % event_id)
+				else:
+					for flag_id in flag_ids:
+						if not flag_id is String or not _is_snake_case_id(String(flag_id)):
+							validation_errors.append("event %s any_flag eligibility contains an invalid flag" % event_id)
 			else:
 				validation_errors.append("event %s has unsupported eligibility: %s" % [event_id, String(eligibility_id)])
 	var choices: Variant = event.get("choices", [])
@@ -659,6 +668,20 @@ func validate_event_definition(event: Dictionary, expected_id: String, known_roo
 					validation_errors.append("event %s choice %s must have non-empty %s" % [event_id, choice_id, field])
 			_validate_event_requirements(event_id, choice_id, choice.get("requirements", {}), validation_errors)
 			_validate_event_effects(event_id, choice_id, choice.get("effects", []), known_room_ids, validation_errors)
+			_validate_event_choice_flags(event_id, choice_id, choice.get("flags", {}), validation_errors)
+	var commander_variants: Variant = event.get("commander_variants", {})
+	if not commander_variants is Dictionary:
+		validation_errors.append("event %s commander_variants must be an object" % event_id)
+	else:
+		for commander_id_value in commander_variants.keys():
+			var commander_id: String = String(commander_id_value)
+			var variant: Variant = commander_variants[commander_id_value]
+			if not commander_ids().has(commander_id) or not variant is Dictionary or not variant.get("setup") is String or String(variant.get("setup", "")).strip_edges().is_empty() or not variant.get("choice_labels", {}) is Dictionary:
+				validation_errors.append("event %s commander variant %s is malformed" % [event_id, commander_id])
+				continue
+			for variant_choice_id in variant.get("choice_labels", {}).keys():
+				if not choice_ids.has(String(variant_choice_id)) or not variant.choice_labels[variant_choice_id] is String or String(variant.choice_labels[variant_choice_id]).strip_edges().is_empty():
+					validation_errors.append("event %s commander variant %s references an invalid choice label" % [event_id, commander_id])
 	var follow_up: Variant = event.get("follow_up", "")
 	if not follow_up is String or (not String(follow_up).is_empty() and not _is_snake_case_id(String(follow_up))):
 		validation_errors.append("event %s follow_up must be empty or snake_case" % event_id)
@@ -685,6 +708,14 @@ func _validate_event_requirements(event_id: String, choice_id: String, requireme
 		var operator_id: String = String(constraint.keys()[0])
 		if not ["gte", "lt"].has(operator_id) or not _is_integer_number(constraint[operator_id]):
 			validation_errors.append("event %s choice %s requirement %s has invalid constraint" % [event_id, choice_id, String(requirement_id)])
+
+func _validate_event_choice_flags(event_id: String, choice_id: String, flags: Variant, validation_errors: Array[String]) -> void:
+	if not flags is Dictionary:
+		validation_errors.append("event %s choice %s flags must be an object" % [event_id, choice_id])
+		return
+	for flag_id in flags.keys():
+		if not _is_snake_case_id(String(flag_id)) or not flags[flag_id] is bool:
+			validation_errors.append("event %s choice %s flag %s must be a stable boolean" % [event_id, choice_id, String(flag_id)])
 
 func _validate_event_effects(event_id: String, choice_id: String, effects: Variant, known_room_ids: Array, validation_errors: Array[String]) -> void:
 	if not effects is Array or effects.is_empty():
