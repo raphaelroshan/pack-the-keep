@@ -21,6 +21,7 @@ def base_record(protocol: dict, session_id: str) -> dict:
         "schema_version": 1,
         "build_version": protocol["build_version"],
         "source_revision": "a" * 40,
+        "ci_run_id": 12345,
         "artifact": {"name": "pack-the-keep.exe", "sha256": "b" * 64, "size_bytes": 1024},
         "session_id": session_id,
         "tester_alias": f"tester_{session_id}",

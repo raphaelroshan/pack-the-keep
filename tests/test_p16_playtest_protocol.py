@@ -16,10 +16,18 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
 import validate_p16_playtests as validator  # noqa: E402
+import write_playtest_build_manifest as build_manifest_tool  # noqa: E402
 
 
 def load(relative_path: str) -> dict:
     return json.loads((ROOT / relative_path).read_text(encoding="utf-8"))
+
+
+def write_build_manifest(directory: Path, artifact: Path) -> Path:
+    path = directory / "playtest-build.json"
+    manifest = build_manifest_tool.build_manifest(artifact, load("tools/ci_manifest.json"), "a" * 40, 12345)
+    path.write_text(json.dumps(manifest), encoding="utf-8")
+    return path
 
 
 class P16PlaytestProtocolTests(unittest.TestCase):
@@ -48,11 +56,12 @@ class P16PlaytestProtocolTests(unittest.TestCase):
             output = Path(directory) / "session_001.json"
             artifact = Path(directory) / "pack-the-keep.exe"
             artifact.write_bytes(b"pack-the-keep-test-artifact")
+            build_manifest = write_build_manifest(Path(directory), artifact)
             subprocess.run(
                 [
                     sys.executable, str(ROOT / "tools/new_playtest_session.py"),
                     "--protocol", str(ROOT / "content/p16_playtest_protocol.json"),
-                    "--source-revision", "a" * 40, "--artifact", str(artifact),
+                    "--build-manifest", str(build_manifest), "--artifact", str(artifact),
                     "--session-id", "session_001", "--tester-alias", "tester_a",
                     "--commander", "castellan", "--run-type", "baseline",
                     "--scenario", "gatehouse_lock", "--output", str(output),
@@ -64,6 +73,7 @@ class P16PlaytestProtocolTests(unittest.TestCase):
             record = json.loads(output.read_text(encoding="utf-8"))
             self.assertFalse(record["completed"])
             self.assertEqual(record["source_revision"], "a" * 40)
+            self.assertEqual(record["ci_run_id"], 12345)
             self.assertEqual(record["artifact"]["name"], artifact.name)
             self.assertEqual(record["artifact"]["sha256"], hashlib.sha256(artifact.read_bytes()).hexdigest())
             self.assertEqual(record["artifact"]["size_bytes"], artifact.stat().st_size)
@@ -79,11 +89,12 @@ class P16PlaytestProtocolTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             artifact = Path(directory) / "pack-the-keep.exe"
             artifact.write_bytes(b"artifact")
+            build_manifest = write_build_manifest(Path(directory), artifact)
             result = subprocess.run(
                 [
                     sys.executable, str(ROOT / "tools/new_playtest_session.py"),
                     "--protocol", str(ROOT / "content/p16_playtest_protocol.json"),
-                    "--source-revision", "a" * 40, "--artifact", str(artifact),
+                    "--build-manifest", str(build_manifest), "--artifact", str(artifact),
                     "--session-id", "session_004", "--tester-alias", "name@example.com",
                     "--commander", "castellan", "--run-type", "baseline",
                     "--scenario", "gatehouse_lock", "--output", str(Path(directory) / "session.json"),
@@ -95,15 +106,17 @@ class P16PlaytestProtocolTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("snake_case", result.stderr)
 
-    def test_generator_rejects_empty_artifact(self) -> None:
+    def test_generator_rejects_artifact_that_differs_from_manifest(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
-            artifact = Path(directory) / "empty.exe"
-            artifact.touch()
+            artifact = Path(directory) / "pack-the-keep.exe"
+            artifact.write_bytes(b"original")
+            build_manifest = write_build_manifest(Path(directory), artifact)
+            artifact.write_bytes(b"changed")
             result = subprocess.run(
                 [
                     sys.executable, str(ROOT / "tools/new_playtest_session.py"),
                     "--protocol", str(ROOT / "content/p16_playtest_protocol.json"),
-                    "--source-revision", "a" * 40, "--artifact", str(artifact),
+                    "--build-manifest", str(build_manifest), "--artifact", str(artifact),
                     "--session-id", "session_empty", "--tester-alias", "tester_empty",
                     "--commander", "castellan", "--run-type", "baseline",
                     "--scenario", "gatehouse_lock", "--output", str(Path(directory) / "session.json"),
@@ -113,7 +126,7 @@ class P16PlaytestProtocolTests(unittest.TestCase):
                 text=True,
             )
             self.assertNotEqual(result.returncode, 0)
-            self.assertIn("artifact is empty", result.stderr)
+            self.assertIn("does not match its build manifest", result.stderr)
 
     def test_completed_session_requires_every_observation(self) -> None:
         protocol = load("content/p16_playtest_protocol.json")
@@ -121,6 +134,7 @@ class P16PlaytestProtocolTests(unittest.TestCase):
             "schema_version": 1,
             "build_version": protocol["build_version"],
             "source_revision": "a" * 40,
+            "ci_run_id": 12345,
             "artifact": {"name": "pack-the-keep.exe", "sha256": "b" * 64, "size_bytes": 1024},
             "session_id": "session_002",
             "tester_alias": "tester_b",
@@ -155,6 +169,7 @@ class P16PlaytestProtocolTests(unittest.TestCase):
             "schema_version": 1,
             "build_version": protocol["build_version"],
             "source_revision": "a" * 40,
+            "ci_run_id": 12345,
             "artifact": {"name": "pack-the-keep.exe", "sha256": "b" * 64, "size_bytes": 1024},
             "session_id": "session_003",
             "tester_alias": "tester_c",
@@ -197,6 +212,7 @@ class P16PlaytestProtocolTests(unittest.TestCase):
                         "schema_version": 1,
                         "build_version": protocol["build_version"],
                         "source_revision": "a" * 40,
+                        "ci_run_id": 12345,
                         "artifact": {"name": "pack-the-keep.exe", "sha256": "b" * 64, "size_bytes": 1024},
                         "session_id": f"matrix_{index}",
                         "tester_alias": f"tester_{index}",
@@ -246,6 +262,7 @@ class P16PlaytestProtocolTests(unittest.TestCase):
                     "schema_version": 1,
                     "build_version": protocol["build_version"],
                     "source_revision": ("a" if index <= 2 else "c") * 40,
+                    "ci_run_id": 12345 if index <= 2 else 67890,
                     "artifact": {
                         "name": "pack-the-keep.exe",
                         "sha256": ("b" if index <= 2 else "d") * 64,

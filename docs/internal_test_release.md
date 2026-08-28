@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.16.2-playtest-provenance` — P16 evidence, triage, and artifact provenance are ready; human sessions and owner approval remain pending
+**Current build identity:** `0.16.3-playtest-kit` — P16 evidence, triage, and self-identifying Windows artifacts are ready; human sessions and owner approval remain pending
 
 ## Purpose
 
@@ -121,6 +121,10 @@ Session findings now carry stable issue keys. A deterministic summary reports ma
 ## v0.16.2 Playtest artifact provenance
 
 Every generated session now records the exact source commit and hashes the packaged executable under test. Matrix completion is calculated separately for each revision-and-artifact cohort, preventing four sessions from different binaries from being combined into false release-candidate coverage.
+
+## v0.16.3 Self-identifying playtest kit
+
+CI now writes `playtest-build.json` beside the packaged Windows executable. The manifest records the build version, exact source revision, workflow run ID, filename, byte size, and SHA-256 digest. Session generation consumes and revalidates that bundled manifest, eliminating manual provenance entry while retaining an unfilled human-only evidence record.
 
 ## v0.8.2 testability additions
 

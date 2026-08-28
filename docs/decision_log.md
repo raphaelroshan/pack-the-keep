@@ -479,3 +479,11 @@
 **Reason:** A version label alone does not prove which binary a person tested, and combining sessions from different fixes can make an untested candidate appear covered. Content-addressed provenance keeps feedback reproducible and the final matrix honest.
 
 **Trade-off:** Rebuilding after a fix starts a new artifact cohort, so the four-case matrix may need to be repeated. The stronger evidence is worth that cost before any owner-approved alpha release.
+
+## ADR-061: CI artifacts carry their own playtest manifest
+
+**Decision:** Generate `playtest-build.json` in the Windows packaging job and upload it beside the executable. Session generation must consume that manifest and independently verify the selected executable's filename, size, SHA-256 digest, build version, source revision, CI run ID, and non-release status.
+
+**Reason:** Manually copying provenance into a session record is error-prone. A self-identifying bundle makes the safe path the easy path and lets testers prove exactly which candidate they observed.
+
+**Trade-off:** A rebuilt or renamed executable invalidates the bundled manifest and requires regenerating it. This is intentional: modified binaries must not inherit evidence from the original CI artifact.

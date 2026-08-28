@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.16.2-playtest-provenance",
+  "framework_version": "0.16.3-playtest-kit",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -306,6 +306,7 @@
     "observation_contract": ["onboarding", "first_successful_hold", "partial_breach_recovery", "event_comprehension", "replay_motivation", "controller_scaling", "pause_trust", "save_recovery", "packaged_close"],
     "triage_contract": "human_authored_issue_keys_repeated_in_two_or_more_records_become_deterministic_task_candidates",
     "provenance_contract": "completed_matrix_coverage_is_counted_per_exact_source_revision_and_artifact_sha256_cohort",
+    "artifact_contract": "ci_packages_playtest_build_json_with_the_windows_executable_and_session_generation_revalidates_the_hash",
     "presentation": "title_screen_names_the_exact_pre_alpha_build_identity",
     "automation_boundary": "validators_may_report_matrix_coverage_but_human_playtest_and_release_gates_remain_pending_until_owner_approval",
     "non_goals": ["fabricated_sessions", "automatic_release_approval", "external_distribution", "storefront_submission"]
