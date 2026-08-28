@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.12.8-alpha-resume-matrix",
+  "framework_version": "0.12.9-alpha-save-integrity",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -206,6 +206,13 @@
     "viability_rule": "every_baseline_resolves_three_waves_without_collapse_and_closes_final_recovery_and_events",
     "determinism_rule": "checkpoint_round_trips_and_uninterrupted_resumed_terminal_states_produce_byte_identical_serialized_json",
     "human_boundary": "automated_viability_does_not_replace_human_playtest_or_presentation_approval"
+  },
+  "p12_nested_save_validation": {
+    "status": "implemented",
+    "preflight_rule": "validate_identity_scalar_and_nested_collection_shapes_before_mutating_keep_state",
+    "catalog_rule": "saved_piece_enemy_pack_doctrine_scenario_commander_room_and_modifier_ids_must_exist",
+    "fallback_rule": "nested_primary_corruption_is_a_clean_rejection_and_can_recover_the_valid_backup",
+    "compatibility": "missing_legacy_fields_keep_their_existing_defaults_and_schema_migrations"
   },
   "v090_multi_wave": {
     "status": "implemented",

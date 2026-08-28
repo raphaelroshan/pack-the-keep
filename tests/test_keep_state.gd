@@ -347,6 +347,32 @@ func _test_p0_save_rejection_and_reset() -> void:
 	malformed["pieces"] = ["not", "a", "dictionary"]
 	var malformed_result: Dictionary = restored.load_serialized(malformed)
 	_expect(not bool(malformed_result.get("ok", false)), "malformed piece collections should be rejected")
+	var state_before_nested_rejections: String = JSON.stringify(restored.serialize())
+	var malformed_piece_entry: Dictionary = serialized.duplicate(true)
+	malformed_piece_entry.pieces = {"broken": "not an object"}
+	_expect(not bool(restored.load_serialized(malformed_piece_entry).get("ok", false)), "non-object piece entries should be rejected")
+	_expect(JSON.stringify(restored.serialize()) == state_before_nested_rejections, "rejecting a nested piece entry should not partially mutate state")
+	var unknown_piece: Dictionary = serialized.duplicate(true)
+	unknown_piece.pieces["pike_squad_0"].piece_id = "unknown_piece"
+	_expect(not bool(restored.load_serialized(unknown_piece).get("ok", false)), "unknown saved piece IDs should be rejected")
+	_expect(JSON.stringify(restored.serialize()) == state_before_nested_rejections, "rejecting an unknown piece should not partially mutate state")
+	var malformed_enemy_entry: Dictionary = serialized.duplicate(true)
+	malformed_enemy_entry.enemies = ["not an object"]
+	_expect(not bool(restored.load_serialized(malformed_enemy_entry).get("ok", false)), "non-object enemy entries should be rejected")
+	_expect(JSON.stringify(restored.serialize()) == state_before_nested_rejections, "rejecting a nested enemy entry should not partially mutate state")
+	var incomplete_rooms: Dictionary = serialized.duplicate(true)
+	incomplete_rooms.rooms.erase("gate")
+	_expect(not bool(restored.load_serialized(incomplete_rooms).get("ok", false)), "incomplete saved room maps should be rejected")
+	_expect(JSON.stringify(restored.serialize()) == state_before_nested_rejections, "rejecting incomplete rooms should not partially mutate state")
+	var broken_assignment: Dictionary = serialized.duplicate(true)
+	broken_assignment.assigned_rooms = {"gate": "missing_piece"}
+	_expect(not bool(restored.load_serialized(broken_assignment).get("ok", false)), "assignments to missing pieces should be rejected")
+	_expect(JSON.stringify(restored.serialize()) == state_before_nested_rejections, "rejecting a broken assignment should not partially mutate state")
+	var unknown_commander: Dictionary = serialized.duplicate(true)
+	unknown_commander.seed = 1234
+	unknown_commander.commander_id = "unknown_commander"
+	_expect(not bool(restored.load_serialized(unknown_commander).get("ok", false)), "unknown saved commanders should be rejected")
+	_expect(JSON.stringify(restored.serialize()) == state_before_nested_rejections, "identity validation should happen before any saved field mutates state")
 	keep.reset_run(77)
 	_expect(keep.seed == 77 and keep.pieces.is_empty(), "reset should clear placed pieces")
 	_expect(keep.reserved_pack_id.is_empty() and keep.available_pieces == ["pike_squad", "narrow_gate"], "reset should clear reserve and restore starter availability")
@@ -433,3 +459,11 @@ func _test_save_round_trip() -> void:
 	_expect(restored.rooms == keep.rooms, "save should preserve room condition")
 	_expect(restored.enemies == keep.enemies, "save should preserve active enemies")
 	_expect(restored.wave_active == keep.wave_active, "save should preserve wave state")
+	var disk_source: PackKeepState = PackKeepState.new(24)
+	disk_source.open_pack("field_engineers")
+	disk_source.place_piece("repair_station", Vector2i(4, 3), "ground")
+	var disk_payload: Variant = JSON.parse_string(JSON.stringify(disk_source.serialize()))
+	var disk_restored: PackKeepState = PackKeepState.new(0)
+	var disk_result: Dictionary = disk_restored.load_serialized(disk_payload)
+	_expect(bool(disk_result.get("ok", false)), "JSON-decoded saves should pass nested validation")
+	_expect(disk_restored.pieces["repair_station_0"].origin == Vector2i(4, 3), "JSON-decoded piece origins should survive validation and decoding")

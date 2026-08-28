@@ -48,6 +48,23 @@ func _initialize() -> void:
 	_check(String(ui.event_label.text).contains("from backup"), "backup recovery should be explicit")
 
 	_remove_test_files()
+	var malformed_nested: Dictionary = _saved_state(4405)
+	malformed_nested.pieces["pike_squad_0"] = "not an object"
+	_write(TEST_SAVE, JSON.stringify(malformed_nested))
+	_write(TEST_BACKUP, JSON.stringify(_saved_state(4406)))
+	ui._on_load()
+	_check(ui.keep.seed == 4406 and ui.keep.pieces.has("pike_squad_0"), "malformed nested primary state should recover the valid backup")
+	_check(String(ui.event_label.text).contains("from backup"), "nested backup recovery should be explicit")
+
+	_remove_test_files()
+	var unknown_catalog_id: Dictionary = _saved_state(4407)
+	unknown_catalog_id.pieces["pike_squad_0"].piece_id = "unknown_piece"
+	_write(TEST_SAVE, JSON.stringify(unknown_catalog_id))
+	_write(TEST_BACKUP, JSON.stringify(_saved_state(4408)))
+	ui._on_load()
+	_check(ui.keep.seed == 4408 and ui.keep.pieces.has("pike_squad_0"), "unknown nested catalog IDs should recover the valid backup")
+
+	_remove_test_files()
 	_write(TEST_BACKUP, JSON.stringify(_saved_state(4402)))
 	ui.keep.reset_run(99)
 	ui._on_load()

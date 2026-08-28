@@ -367,3 +367,11 @@
 **Reason:** Isolated mechanic tests can remain green while an older scenario becomes unwinnable, a final event remains unresolved, a commander-specific path drifts, or persistence changes the continuation. A compact cross-product gate catches those release-wide regressions locally without depending on hosted CI.
 
 **Trade-off:** The matrix proves only that a known answer remains viable and deterministic. It does not establish that all layouts are balanced, that partial breaches feel fair, or that the human alpha playtest is complete.
+
+## ADR-047: Save payloads are preflighted before candidate mutation
+
+**Decision:** Validate top-level scalar types and the nested shape and catalog identity of pieces, rooms, enemies, assignments, metrics, logs, and wave history before copying any saved field into `KeepState`.
+
+**Reason:** Candidate isolation protects the live UI state, but malformed nested data could still trigger script errors or produce a candidate that looked successful while containing unknown gameplay objects. A single preflight boundary makes rejection explicit and keeps backup fallback reliable.
+
+**Trade-off:** Save validation is stricter and adds maintenance when the runtime schema grows. Missing fields remain compatible for older schemas, while present fields must be structurally valid.

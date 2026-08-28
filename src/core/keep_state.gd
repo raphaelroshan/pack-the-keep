@@ -1899,6 +1899,190 @@ func _decode_origin(value: Variant) -> Vector2i:
 			return Vector2i(int(parts[0].strip_edges()), int(parts[1].strip_edges()))
 	return Vector2i.ZERO
 
+func _is_saved_number(value: Variant) -> bool:
+	return value is int or value is float
+
+func _is_valid_saved_origin(value: Variant) -> bool:
+	if value is Vector2i:
+		return true
+	if value is Array:
+		return value.size() >= 2 and _is_saved_number(value[0]) and _is_saved_number(value[1])
+	if value is String:
+		var cleaned: String = String(value).replace("Vector2i(", "").replace("(", "").replace(")", "")
+		var parts: PackedStringArray = cleaned.split(",")
+		return parts.size() == 2 and parts[0].strip_edges().is_valid_int() and parts[1].strip_edges().is_valid_int()
+	return false
+
+func _validate_saved_id_array(data: Dictionary, field_name: String, definitions: Dictionary) -> String:
+	if not data.has(field_name):
+		return ""
+	if not data.get(field_name) is Array:
+		return "save %s collection is malformed" % field_name.replace("_", " ")
+	var seen: Array[String] = []
+	for value in data.get(field_name, []):
+		if not value is String or not definitions.has(String(value)):
+			return "save %s contains an unknown ID" % field_name.replace("_", " ")
+		if seen.has(String(value)):
+			return "save %s contains duplicates" % field_name.replace("_", " ")
+		seen.append(String(value))
+	return ""
+
+func _validate_saved_string_array(data: Dictionary, field_name: String) -> String:
+	if not data.has(field_name):
+		return ""
+	if not data.get(field_name) is Array:
+		return "save %s collection is malformed" % field_name.replace("_", " ")
+	for value in data.get(field_name, []):
+		if not value is String:
+			return "save %s entry is malformed" % field_name.replace("_", " ")
+	return ""
+
+func _validate_serialized_payload(data: Dictionary) -> String:
+	for field_name in ["seed", "materials", "command_points", "morale", "variation_materials", "variation_morale", "wave_index", "wave_progress", "battle_step", "battle_clock", "breach_level", "pack_openings_this_preparation", "repair_actions_remaining"]:
+		if data.has(field_name) and not _is_saved_number(data.get(field_name)):
+			return "save %s value is malformed" % String(field_name).replace("_", " ")
+	for field_name in ["scenario_active", "wave_active", "lockdown_pending", "lockdown_used", "rally_pending", "rally_used", "repair_interval_active"]:
+		if data.has(field_name) and not data.get(field_name) is bool:
+			return "save %s value is malformed" % String(field_name).replace("_", " ")
+	for field_name in ["commander_id", "scenario_id", "scenario_variation_id", "variation_target_room", "enemy_doctrine", "last_outcome", "repair_interval_reason", "reserved_pack_id"]:
+		if data.has(field_name) and not data.get(field_name) is String:
+			return "save %s value is malformed" % String(field_name).replace("_", " ")
+	var saved_commander_id: String = String(data.get("commander_id", ACTIVE_COMMANDER))
+	if not _commander_definitions.has(saved_commander_id):
+		return "save contains an unknown commander"
+	var saved_scenario_id: String = String(data.get("scenario_id", scenario_id))
+	if not _scenario_definitions.has(saved_scenario_id):
+		return "save contains an unknown scenario"
+	var saved_doctrine_id: String = String(data.get("enemy_doctrine", enemy_doctrine))
+	if not _doctrine_definitions.has(saved_doctrine_id):
+		return "save contains an unknown invasion doctrine"
+	var saved_outcome: String = String(data.get("last_outcome", ""))
+	if not saved_outcome.is_empty() and not ["held", "partial_breach", "collapse"].has(saved_outcome):
+		return "save contains an unknown outcome"
+	var saved_variation_target: String = String(data.get("variation_target_room", ""))
+	if not saved_variation_target.is_empty() and not ROOMS.has(saved_variation_target):
+		return "save variation target room is unknown"
+	var saved_reserved_pack: String = String(data.get("reserved_pack_id", ""))
+	if not saved_reserved_pack.is_empty() and not _pack_definitions.has(saved_reserved_pack):
+		return "save reserved pack is unknown"
+	for validation in [
+		_validate_saved_id_array(data, "owned_packs", _pack_definitions),
+		_validate_saved_id_array(data, "offered_packs", _pack_definitions),
+		_validate_saved_id_array(data, "available_pieces", _piece_definitions),
+		_validate_saved_string_array(data, "log"),
+		_validate_saved_string_array(data, "battle_report"),
+	]:
+		if not String(validation).is_empty():
+			return String(validation)
+	if data.has("pieces") and not data.get("pieces") is Dictionary:
+		return "save pieces collection is malformed"
+	var saved_pieces: Dictionary = data.get("pieces", {})
+	for instance_id_value in saved_pieces.keys():
+		if not instance_id_value is String or String(instance_id_value).is_empty():
+			return "save piece instance ID is malformed"
+		var instance_value: Variant = saved_pieces[instance_id_value]
+		if not instance_value is Dictionary:
+			return "save piece entry is malformed"
+		var instance: Dictionary = instance_value
+		var piece_id_value: Variant = instance.get("piece_id", "")
+		if not piece_id_value is String or not _piece_definitions.has(String(piece_id_value)):
+			return "save contains an unknown piece"
+		if instance.has("origin") and not _is_valid_saved_origin(instance.get("origin")):
+			return "save piece origin is malformed"
+		if instance.has("floor") and (not instance.get("floor") is String or not FLOORS.has(String(instance.get("floor")))):
+			return "save piece floor is malformed"
+		if instance.has("assignment"):
+			if not instance.get("assignment") is String:
+				return "save piece assignment is malformed"
+			var assignment: String = String(instance.get("assignment"))
+			if not assignment.is_empty() and not ROOMS.has(assignment):
+				return "save piece assignment room is unknown"
+		for field_name in ["max_health", "health", "condition", "attack_cooldown", "attacks", "damage_dealt", "targets_stopped", "max_ammo", "ammo"]:
+			if instance.has(field_name) and not _is_saved_number(instance.get(field_name)):
+				return "save piece %s is malformed" % String(field_name).replace("_", " ")
+		for field_name in ["disabled", "supply_spent"]:
+			if instance.has(field_name) and not instance.get(field_name) is bool:
+				return "save piece %s is malformed" % String(field_name).replace("_", " ")
+		for field_name in ["last_target", "placement_zone"]:
+			if instance.has(field_name) and not instance.get(field_name) is String:
+				return "save piece %s is malformed" % String(field_name).replace("_", " ")
+	if data.has("rooms"):
+		if not data.get("rooms") is Dictionary:
+			return "save rooms collection is malformed"
+		var saved_rooms: Dictionary = data.get("rooms", {})
+		for room_id in ROOMS.keys():
+			if not saved_rooms.has(room_id):
+				return "save rooms collection is incomplete"
+		for room_id_value in saved_rooms.keys():
+			if not room_id_value is String or not ROOMS.has(String(room_id_value)):
+				return "save contains an unknown room"
+			var room_value: Variant = saved_rooms[room_id_value]
+			if not room_value is Dictionary:
+				return "save room entry is malformed"
+			if room_value.has("condition") and not _is_saved_number(room_value.get("condition")):
+				return "save room condition is malformed"
+			if room_value.has("state") and not room_value.get("state") is String:
+				return "save room state is malformed"
+	if data.has("enemies"):
+		if not data.get("enemies") is Array:
+			return "save enemies collection is malformed"
+		for enemy_value in data.get("enemies", []):
+			if not enemy_value is Dictionary:
+				return "save enemy entry is malformed"
+			var enemy: Dictionary = enemy_value
+			var enemy_id_value: Variant = enemy.get("enemy_id", "")
+			if not enemy_id_value is String or not _enemy_definitions.has(String(enemy_id_value)):
+				return "save contains an unknown enemy"
+			for field_name in ["max_health", "hp", "damage", "arrival_step", "slot", "attacks_received", "damage_taken"]:
+				if enemy.has(field_name) and not _is_saved_number(enemy.get(field_name)):
+					return "save enemy %s is malformed" % String(field_name).replace("_", " ")
+			for field_name in ["signal_disrupted", "defeated"]:
+				if enemy.has(field_name) and not enemy.get(field_name) is bool:
+					return "save enemy %s is malformed" % String(field_name).replace("_", " ")
+			if enemy.has("target"):
+				if not enemy.get("target") is String:
+					return "save enemy target is malformed"
+				var target: String = String(enemy.get("target"))
+				if not target.is_empty() and not ROOMS.has(target) and not saved_pieces.has(target):
+					return "save enemy target is unknown"
+	if data.has("assigned_rooms"):
+		if not data.get("assigned_rooms") is Dictionary:
+			return "save assigned rooms collection is malformed"
+		var saved_assignments: Dictionary = data.get("assigned_rooms", {})
+		var assigned_instances: Array[String] = []
+		for room_id_value in saved_assignments.keys():
+			if not room_id_value is String or not ROOMS.has(String(room_id_value)):
+				return "save assignment room is unknown"
+			var instance_id_value: Variant = saved_assignments[room_id_value]
+			if not instance_id_value is String or not saved_pieces.has(String(instance_id_value)):
+				return "save assignment piece is unknown"
+			if assigned_instances.has(String(instance_id_value)):
+				return "save assignment piece is duplicated"
+			assigned_instances.append(String(instance_id_value))
+			if String(saved_pieces[String(instance_id_value)].get("assignment", "")) != String(room_id_value):
+				return "save assignment mapping is inconsistent"
+	if data.has("combat_metrics"):
+		if not data.get("combat_metrics") is Dictionary:
+			return "save combat metrics collection is malformed"
+		for metric_value in data.get("combat_metrics", {}).values():
+			if not _is_saved_number(metric_value):
+				return "save combat metric is malformed"
+	if data.has("wave_history"):
+		if not data.get("wave_history") is Array:
+			return "save wave history collection is malformed"
+		for history_value in data.get("wave_history", []):
+			if not history_value is Dictionary:
+				return "save wave history entry is malformed"
+			var history: Dictionary = history_value
+			if history.has("doctrine") and (not history.get("doctrine") is String or not _doctrine_definitions.has(String(history.get("doctrine")))):
+				return "save wave history doctrine is unknown"
+			if history.has("outcome") and (not history.get("outcome") is String or not ["held", "partial_breach", "collapse"].has(String(history.get("outcome")))):
+				return "save wave history outcome is malformed"
+			for field_name in ["wave", "breach_level", "morale_after", "defeated_enemies", "room_damage", "piece_damage", "ammo_spent", "enemy_attacks", "recovery_actions_used"]:
+				if history.has(field_name) and not _is_saved_number(history.get(field_name)):
+					return "save wave history %s is malformed" % String(field_name).replace("_", " ")
+	return ""
+
 func load_serialized(data: Dictionary) -> Dictionary:
 	if data.is_empty():
 		return {"ok": false, "reason": "save payload is empty"}
@@ -1908,6 +2092,9 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	var game_id: String = String(data.get("game_id", GAME_ID))
 	if game_id != GAME_ID:
 		return {"ok": false, "reason": "save belongs to another game"}
+	var validation_error: String = _validate_serialized_payload(data)
+	if not validation_error.is_empty():
+		return {"ok": false, "reason": validation_error}
 	if data.has("pieces") and not (data.get("pieces") is Dictionary):
 		return {"ok": false, "reason": "save pieces collection is malformed"}
 	if data.has("rooms") and not (data.get("rooms") is Dictionary):

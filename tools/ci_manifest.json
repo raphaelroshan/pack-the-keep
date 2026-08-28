@@ -1,7 +1,7 @@
 {
   "slug": "pack-the-keep",
   "display_name": "Pack the Keep",
-  "build_version": "0.12.8-alpha-resume-matrix",
+  "build_version": "0.12.9-alpha-save-integrity",
   "godot_test": "res://tests/test_keep_state.gd",
   "primary_repo": "raphaelroshan/pack-the-keep",
   "release_platforms": ["steam", "epic-games-store"],

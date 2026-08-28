@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.12.8",
+  "content_version": "0.12.9",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -186,7 +186,14 @@
     "simulation_executions": 96,
     "resume_boundaries": ["wave_one_pre_step", "first_recovery_before_event_resolution", "wave_two_pre_step"],
     "contract": "byte_identical_uninterrupted_and_resumed_three_wave_non_collapse_baselines_with_closed_terminal_recovery_and_event_state",
-    "evidence": ["design/p12_alpha_scenario_matrix.md", "tests/test_p12_alpha_scenario_matrix.gd"]
+    "evidence": ["design/p12_alpha_scenario_matrix.md", "tests/test_p12_alpha_scenario_matrix.gd"],
+    "next_slice": "p12_nested_save_validation"
+  },
+  "p12_nested_save_validation": {
+    "status": "implemented",
+    "coverage": ["scalar_types", "piece_shapes", "enemy_shapes", "complete_rooms", "catalog_ids", "assignments", "metrics", "wave_history"],
+    "mutation_rule": "all_validation_completes_before_saved_fields_are_assigned",
+    "recovery_rule": "invalid_nested_primary_state_falls_back_to_a_valid_backup"
   },
   "campaign": {
     "title": "The Bell at Dusk",
