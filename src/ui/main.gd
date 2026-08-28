@@ -2079,7 +2079,8 @@ func _format_inspection(data: Dictionary) -> String:
 		var signal_text: String = " | signal DISRUPTED" if bool(data.get("signal_disrupted", false)) else " | signal RELAYED" if bool(data.get("has_signal_disruption", false)) else ""
 		var protection_text: String = " | protection PIERCING" if bool(data.get("ignores_protection", false)) else ""
 		var target_role: String = "hunts defenders" if String(data.get("target_mode", "room_destroyer")) == "unit_hunter" else "breaks structures"
-		return "INSPECTOR — ENEMY %s\n%s via %s | %s | %d/%d hp | damage %d%s%s%s | contact step %d\nCounter: %s | Target: %s" % [String(data.name), String(data.doctrine).replace("_", " "), String(data.route).replace("_", " "), target_role, int(data.health), int(data.max_health), int(data.damage), armor_text, signal_text, protection_text, int(data.get("arrival_step", 0)), String(data.counter), String(data.target if not String(data.target).is_empty() else "approaching")]
+		var target_readout: Dictionary = keep.enemy_target_readout(int(data.get("index", -1)))
+		return "INSPECTOR — ENEMY %s\n%s via %s | %s | %d/%d hp | damage %d%s%s%s | contact step %d\nCounter: %s | Target: %s" % [String(data.name), String(data.doctrine).replace("_", " "), String(data.route).replace("_", " "), target_role, int(data.health), int(data.max_health), int(data.damage), armor_text, signal_text, protection_text, int(data.get("arrival_step", 0)), String(data.counter), String(target_readout.get("summary", "Approaching"))]
 	var special_state: String = ""
 	if String(data.get("piece_id", "")) == "supply_cache":
 		special_state = "\nReserve: %s" % ("SPENT" if bool(data.get("supply_spent", false)) else "READY")
@@ -2185,9 +2186,7 @@ func _refresh_response_preview() -> void:
 	var ability_name: String = String(keep.commander_definition(keep.commander_id).get("ability_name", "Ability"))
 	var ability_state: String = "available" if keep.command_points > 0 and not bool(keep.lockdown_used if keep.commander_id == "castellan" else keep.rally_used) else "spent or unavailable"
 	var timing_text: String = "PAUSED PREVIEW — commit when ready" if battle_paused else "RUNNING — pause to inspect before committing"
-	var target_text: String = String(inspection.get("target", ""))
-	if target_text.is_empty():
-		target_text = "APPROACHING"
+	var target_text: String = String(keep.enemy_target_readout(focused_enemy_index).get("summary", "Approaching"))
 	var counter_id: String = String(inspection.get("counter", ""))
 	var counter_name: String = String(keep.piece_definition(counter_id).get("name", counter_id.replace("_", " ").capitalize())) if not counter_id.is_empty() else "Read the forecast"
 	var response: Dictionary = keep.defender_response_preview(focused_enemy_index)
@@ -3079,7 +3078,8 @@ class KeepCanvas extends Control:
 		var timing: Dictionary = keep.enemy_attack_timing(index)
 		var interval: int = int(timing.get("attack_interval", inspection.get("attack_interval", 1)))
 		var strike_text: String = "No further strike this phase" if not bool(timing.get("within_wave", true)) else "Next strike T%d" % int(timing.get("next_attack_step", inspection.get("arrival_step", 0)))
-		return "%s — %s\n%s | Route: %s\nHP %d/%d | Contact T%d | Strike every %dt · %s\nCounter: %s" % [String(inspection.get("name", "Threat")), String(inspection.get("doctrine", "unknown")).replace("_", " ").capitalize(), target_role, String(inspection.get("route", "unknown")).replace("_", " ").capitalize(), int(inspection.get("health", 0)), int(inspection.get("max_health", 0)), int(inspection.get("arrival_step", 0)), interval, strike_text, counter_name]
+		var target_readout: Dictionary = keep.enemy_target_readout(index)
+		return "%s — %s\n%s | Route: %s\nHP %d/%d | Contact T%d | Strike every %dt · %s\nTarget: %s\nCounter: %s" % [String(inspection.get("name", "Threat")), String(inspection.get("doctrine", "unknown")).replace("_", " ").capitalize(), target_role, String(inspection.get("route", "unknown")).replace("_", " ").capitalize(), int(inspection.get("health", 0)), int(inspection.get("max_health", 0)), int(inspection.get("arrival_step", 0)), interval, strike_text, String(target_readout.get("summary", "Approaching")), counter_name]
 
 	func _room_tooltip(room_id: String) -> String:
 		if keep == null or room_id.is_empty():

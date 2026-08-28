@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.18.1",
+  "content_version": "0.18.2",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -360,7 +360,15 @@
     "presentation": ["matching_map_and_timeline_cadence_tooltips", "focused_strike_line", "enemy_cadence_meter"],
     "determinism": "cadence_queries_and_drawing_do_not_mutate_serialized_state_or_combat_order",
     "evidence": ["design/p25_combat_cadence_readability.md", "docs/p25_combat_cadence_visual_verification.md", "tests/test_keep_state.gd", "tests/test_p2_ui.gd"],
-    "next_slice": "p25_human_combat_timing_sessions"
+    "next_slice": "p26_friendly_target_readouts"
+  },
+  "p26_friendly_target_readouts": {
+    "status": "implemented",
+    "read_model": ["target_kind", "friendly_name", "health_or_condition", "active_state", "stable_id_for_diagnostics"],
+    "presentation": ["friendly_enemy_inspector_target", "friendly_focused_response_target", "friendly_map_and_timeline_tooltip_target"],
+    "determinism": "target_readout_queries_do_not_select_or_change_targets_and_do_not_mutate_serialized_state",
+    "evidence": ["design/p26_friendly_target_readouts.md", "docs/p26_friendly_target_visual_verification.md", "tests/test_keep_state.gd", "tests/test_p2_ui.gd"],
+    "next_slice": "p26_human_target_comprehension_sessions"
   },
   "campaign": {
     "title": "The Bell at Dusk",

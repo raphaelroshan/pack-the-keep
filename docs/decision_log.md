@@ -591,3 +591,11 @@
 **Reason:** Slower demolition and heavy attacks improved balance but were invisible between impacts. A shared projection lets the player see when pressure will land without adding a second timer, new save state, or a player-issued interrupt system.
 
 **Trade-off:** The cadence meter anticipates deterministic tick resolution rather than physical wind-up animation. It does not represent stun, haste, or interruption; those mechanics remain deferred until the compact battle is validated by human playtests.
+
+## ADR-075: Stable combat target IDs stay internal
+
+**Decision:** Keep enemy targets serialized as stable room or piece instance IDs, but resolve those IDs through one read-only target projection before presenting them. The projection supplies a friendly name plus HP for pieces, condition/state for rooms, and explicit approach or no-target language.
+
+**Reason:** Raw values such as `repair_station_1` are useful for deterministic state and tests but break the illustrated siege presentation. A shared projection keeps the inspector, response card, and tooltips consistent without duplicating target rules in the UI.
+
+**Trade-off:** Multiple copies of the same defender currently share the same display name. Persistent nicknames or player-managed numbering remain out of scope; the stable ID remains available in the read model for diagnostics.
