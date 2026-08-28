@@ -20,6 +20,22 @@ func _initialize() -> void:
 	ui._on_place_piece()
 	if ui.keep.pieces.is_empty():
 		failures.append("starter placement did not create a defensive piece")
+	var labels_before: String = JSON.stringify(ui.keep.serialize())
+	var compact_piece_label: String = ui.keep_canvas._compact_board_label("Crossbow Patrol", 24.0, 8)
+	if compact_piece_label.is_empty() or ThemeDB.fallback_font.get_string_size(compact_piece_label, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x > 24.0:
+		failures.append("compact board label did not fit its requested width")
+	var first_piece_id: String = String(ui.keep.pieces.keys()[0])
+	var original_piece: Dictionary = ui.keep.pieces[first_piece_id].duplicate(true)
+	var gate_room: Dictionary = ui.keep.room_definition("gate")
+	var overlapping_piece: Dictionary = original_piece.duplicate(true)
+	overlapping_piece.origin = gate_room.origin
+	overlapping_piece.floor = gate_room.floor
+	ui.keep.pieces[first_piece_id] = overlapping_piece
+	if ui.keep_canvas._room_label_visible("gate", "ground", ui.keep_canvas.MAP_ORIGIN):
+		failures.append("placed defender did not suppress the competing room label")
+	ui.keep.pieces[first_piece_id] = original_piece
+	if JSON.stringify(ui.keep.serialize()) != labels_before:
+		failures.append("board label projection mutated authoritative state")
 	ui._on_start_wave()
 	if not ui.keep.wave_active:
 		failures.append("start wave did not activate the invasion")

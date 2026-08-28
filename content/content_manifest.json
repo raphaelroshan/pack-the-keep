@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.17.3",
+  "content_version": "0.17.4",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -333,7 +333,16 @@
     "bounds": "timeline_bar_selection_rings_and_next_contact_summary_fit_inside_the_canvas",
     "determinism": "spacing_snapshot_drawing_and_hit_testing_do_not_change_keep_state",
     "evidence": ["design/p22_assault_lane_spacing.md", "docs/p22_assault_lane_visual_verification.md", "tests/test_p2_ui.gd"],
-    "next_slice": "p22_human_battle_readability_sessions"
+    "next_slice": "p23_board_label_clarity"
+  },
+  "p23_board_label_clarity": {
+    "status": "implemented",
+    "labels": "room_and_piece_names_fit_their_draw_width_using_stable_compact_fallbacks",
+    "occupied_room_rule": "hide_room_name_and_numeric_state_beneath_a_piece_but_keep_boundary_and_condition_bar",
+    "inspection": "full_room_and_piece_details_remain_in_the_existing_inspector",
+    "determinism": "label_fitting_and_overlap_queries_do_not_change_keep_state",
+    "evidence": ["design/p23_board_label_clarity.md", "docs/p23_board_label_visual_verification.md", "tests/test_p2_ui.gd"],
+    "next_slice": "p23_human_board_comprehension_sessions"
   },
   "campaign": {
     "title": "The Bell at Dusk",

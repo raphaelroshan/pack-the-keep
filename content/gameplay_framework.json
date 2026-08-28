@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.17.3-assault-lane",
+  "framework_version": "0.17.4-board-labels",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -364,6 +364,14 @@
     "timeline": "placed_below_the_approach_apron_with_its_summary_inside_design_bounds",
     "authority_boundary": "layout_and_spacing_only_without_path_timing_hit_test_or_simulation_changes",
     "non_goals": ["camera_controls", "enemy_path_changes", "command_rail_rework", "new_save_fields"]
+  },
+  "p23_board_label_clarity": {
+    "status": "implemented",
+    "label_fitting": "full_name_then_preferred_word_then_acronym_then_ellipsis_with_measured_width",
+    "occupied_rooms": "retain_boundaries_and_condition_bars_while_suppressing_competing_room_text",
+    "full_detail": "room_and_piece_inspectors_keep_complete_names_status_assignments_and_purpose",
+    "authority_boundary": "label_projection_reads_layout_state_without_changing_placement_or_simulation",
+    "non_goals": ["room_geometry_changes", "piece_footprint_changes", "final_art", "save_fields"]
   },
   "v090_multi_wave": {
     "status": "implemented",

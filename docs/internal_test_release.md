@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.17.3-assault-lane` — the controlled playtest now separates gate-approach annotations from the assault timeline while retaining hover inspection and selected-arrival focus; human sessions and owner approval remain pending
+**Current build identity:** `0.17.4-board-labels` — the controlled playtest now separates tactical layers and keeps room/unit labels within their board footprints; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of nine authored scenarios, preview and reserve a limited pack offer, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, and recover during authored lulls.
+
+## v0.17.4 Board-label additions
+
+Room and defender labels now fit their available board width using stable compact forms. When a defender occupies a room, the room keeps its boundary and condition bar but suppresses the name and numeric state text beneath the unit. The existing inspector remains the complete source for names, health, assignment, and purpose.
 
 ## v0.17.3 Assault-lane spacing additions
 
@@ -259,6 +263,10 @@ Begin a multi-enemy assault and hover the same threat on the fort and on its tim
 ## v0.17.3 acceptance checks
 
 Begin Three Bells at Dusk at tick zero and focus either ground-route threat. Confirm its marker, armor/smoke label, and `FOCUSED` label remain above the timeline with a visible gap. Confirm all six ticks, the selected timeline ring, and the next-contact summary fit inside the board. Repeat at 1280×720 and verify the page can scroll to every required battle control and readout.
+
+## v0.17.4 acceptance checks
+
+Place defenders over several named rooms and confirm the unit names stay inside their footprints. Verify occupied rooms no longer draw competing name or numeric state text beneath the unit, while their boundaries and condition bars remain visible. Click the occupied room and defender in turn and confirm the inspector still presents each full name and complete state.
 
 ## v0.16.6 acceptance checks
 
