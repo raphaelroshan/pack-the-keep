@@ -56,7 +56,7 @@ func _initialize() -> void:
 	ui._refresh_ui()
 	await process_frame
 	_check(not ui.keep.wave_active and ui.keep.wave_history.size() == 1, "Ash at the Bell teaching wave should resolve through the UI")
-	_check(String(ui.scorecard_label.text).contains("Ash at the Bell") and String(ui.scorecard_label.text).contains("W1"), "Results should identify the Bell Guard scenario and resolved wave")
+	_check(String(ui.scorecard_label.text).contains("Ash at the Bell") and String(ui.scorecard_label.text).contains("PHASE 1"), "Results should identify the Bell Guard scenario and resolved assault phase")
 
 	ui.queue_free()
 	await process_frame

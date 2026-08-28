@@ -51,14 +51,14 @@ func _initialize() -> void:
 	_check(ui.screen == "preparation", "confirming custom setup should enter Preparation")
 	_check(ui.keep_canvas.visible and ui.preparation_controls[0].visible, "Preparation should show the fort and build tools")
 	_check(not ui.setup_controls[0].visible and not ui.battle_controls[0].visible and not ui.settings_controls[0].visible, "Preparation should hide unrelated control groups")
-	_check(String(ui.playtest_button.text) == "START INVASION — PAUSED", "Preparation should expose one clear primary action")
+	_check(String(ui.playtest_button.text) == "BEGIN ASSAULT — REAL TIME", "Preparation should expose one clear real-time primary action")
 
 	ui._on_recommended_layout()
 	ui.playtest_button.pressed.emit()
 	await process_frame
-	_check(ui.screen == "battle" and ui.keep.wave_active and ui.keep.battle_step == 0, "primary action should enter Battle paused before step one")
+	_check(ui.screen == "battle" and ui.keep.wave_active and ui.keep.battle_step == 0 and not ui.battle_paused, "primary action should enter a live Battle before tick one")
 	_check(ui.battle_controls[0].visible and not ui.preparation_controls[0].visible, "Battle should replace build tools with battle controls")
-	_check(String(ui.playtest_button.text) == "ADVANCE ONE STEP — INSPECT", "Battle should expose one clear step action")
+	_check(String(ui.playtest_button.text) == "PAUSE — INSPECT", "Battle should expose pause as the primary live-combat action")
 
 	ui.queue_free()
 	await process_frame

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.16.7-combat-focus",
+  "framework_version": "0.16.8-realtime-assault",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -22,9 +22,9 @@
   },
   "p2_presentation_and_input": {
     "status": "implemented",
-    "battle_timing": ["paused_inspection_start", "presentation_clock", "0.5x", "1.0x", "2.0x", "manual_single_step"],
+    "battle_timing": ["live_assault_start", "continuous_enemy_interpolation", "presentation_clock", "0.5x", "1.0x", "2.0x", "pause_inspection", "manual_single_step"],
     "named_input_actions": ["battle_pause", "battle_advance", "battle_speed_half", "battle_speed_normal", "battle_speed_double", "battle_manual_step", "placement_arm", "placement_cancel", "report_focus", "feedback_mute", "contrast_toggle"],
-    "feedback_cues": ["room_condition_bars", "piece_health_bars", "explicit_state_labels", "declared_target_lines", "siege_beast_area_radius", "transient_impact_recovery_frame"],
+    "feedback_cues": ["room_condition_bars", "piece_health_bars", "explicit_state_labels", "declared_target_lines", "siege_beast_area_radius", "transient_defender_engagement_traces", "transient_impact_recovery_frame"],
     "accessibility": ["high_contrast_cues", "keyboard_mouse_path", "focusable_controls", "scrollable_command_panel", "mute_feedback_tones"],
     "audio": "optional_code_generated_feedback_tones_only",
     "determinism_rule": "pause_speed_input_and_presentation_feedback_do_not mutate authoritative keep outcomes",
@@ -313,12 +313,21 @@
     "automation_boundary": "validators_may_report_matrix_coverage_but_human_playtest_and_release_gates_remain_pending_until_owner_approval",
     "non_goals": ["fabricated_sessions", "automatic_release_approval", "external_distribution", "storefront_submission"]
   },
+  "p17_realtime_assault_presentation": {
+    "status": "implemented",
+    "simulation_boundary": "authoritative_combat_remains_deterministic_one_second_ticks",
+    "playback": ["battle_starts_live", "fractional_enemy_interpolation", "pause_resume", "manual_tick_while_paused", "0.5x", "1.0x", "2.0x"],
+    "combat_feedback": ["transient_defender_engagement_lines", "impact_rings", "damage_labels", "reduced_motion_suppression"],
+    "player_language": ["assault_phases", "recovery_lulls"],
+    "display": ["1600x900_default", "2560x1440_preset", "125_percent_1440p_readability_floor", "responsive_side_by_side_or_stacked_layout"],
+    "non_goals": ["continuous_damage_simulation", "projectile_physics", "save_schema_change", "final_art"]
+  },
   "v090_multi_wave": {
     "status": "implemented",
     "authored_sequence": "scenario_wave_plans_and_doctrines_define_three_escalating_waves",
     "recovery_gate": "explicit_repair_interval_closure_starts_the_next_authored_wave_once",
     "terminal_behavior": "final_wave_enters_results_and_rejects_a_fourth_wave",
-    "presentation": "each_wave_begins_paused_and_reports_forecast_route_and_next_doctrine",
+    "presentation": "each_authored_phase_begins_in_live_playback_and_reports_forecast_route_and_next_doctrine_with_pause_available_for_inspection",
     "persistence": "wave_index_active_wave_recovery_and_battle_state_remain_serializable"
   },
   "v086_playtest_refinement": {
@@ -1582,8 +1591,8 @@
     },
     {
       "id": "battle",
-      "purpose": "inspect forecast, enemy actors, and step-by-step contact",
-      "primary_action": "advance battle step"
+      "purpose": "watch the assault unfold and pause to inspect forecast, enemy actors, and contact",
+      "primary_action": "pause or resume assault"
     },
     {
       "id": "results",

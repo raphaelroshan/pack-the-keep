@@ -56,7 +56,7 @@ func _initialize() -> void:
 	ui._set_screen("results")
 	ui._on_map_clicked("ground", Vector2i(6, 3))
 	_check(String(ui.inspector_label.text).contains("Reserve: SPENT"), "recovery did not expose the Supply Cache SPENT state")
-	_check(String(ui.scorecard_label.text).contains("The Relief Road") and String(ui.scorecard_label.text).contains("W1"), "first-wave Results did not identify Relief Road and its scorecard row")
+	_check(String(ui.scorecard_label.text).contains("The Relief Road") and String(ui.scorecard_label.text).contains("PHASE 1"), "first assault Results did not identify Relief Road and its scorecard row")
 
 	while ui.keep.has_next_wave():
 		if ui.keep.active_event_id == "relief_road_recovery":
@@ -72,7 +72,7 @@ func _initialize() -> void:
 		ui.keep.finish_repair_interval()
 	ui._set_screen("results")
 	await process_frame
-	_check(String(ui.scorecard_label.text).contains("Rolling Breach") and String(ui.scorecard_label.text).contains("W3"), "terminal Results did not capture the Rolling Breach finale")
+	_check(String(ui.scorecard_label.text).contains("Rolling Breach") and String(ui.scorecard_label.text).contains("PHASE 3"), "terminal Results did not capture the Rolling Breach finale")
 	_check(String(ui.scorecard_label.text).contains("SCENARIO REPORT"), "terminal Relief Road Results did not expose the completed report")
 
 	ui.queue_free()

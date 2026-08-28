@@ -85,7 +85,7 @@ func run(ui: Control) -> void:
 		_record_error(errors, int(catalog_status.get(count_key, 0)) == int(expected_counts[count_key]), "exported runtime content has the wrong %s" % count_key)
 	var ui_scale_ready: bool = false
 	var controller_remap_ready: bool = false
-	var initial_pause_ready: bool = false
+	var initial_realtime_ready: bool = false
 	var paused_state_frozen: bool = false
 	var remapped_pause_ready: bool = false
 	var manual_step_ready: bool = false
@@ -107,10 +107,10 @@ func run(ui: Control) -> void:
 		settings_state_unchanged = JSON.stringify(ui.keep.serialize()) == authoritative_before_settings
 		ui._on_load()
 		restored_run_ready = ui.keep.wave_active and ui.keep.battle_step == 1
-		restored_scale_ready = ui.ui_scale_index == 2 and is_equal_approx(get_tree().root.content_scale_factor, 1.25) and ui.gameplay_columns.vertical
+		restored_scale_ready = ui.ui_scale_index == 2 and is_equal_approx(get_tree().root.content_scale_factor, 1.25) and ui.window_size_index == 3
 		restored_remap_ready = _has_joypad_binding("battle_pause", 10) and not _has_joypad_binding("placement_arm", 10)
 		_record_error(errors, restored_run_ready, "reinstalled build did not restore the saved battle")
-		_record_error(errors, restored_scale_ready, "reinstalled build did not restore 125 percent stacked scale")
+		_record_error(errors, restored_scale_ready, "reinstalled build did not restore 125 percent scale and the 2560x1440 preset")
 		_record_error(errors, restored_remap_ready, "reinstalled build did not restore the controller remap")
 	elif phase == "stale_backup":
 		_record_error(errors, profile_files_complete and profile_backups_complete, "stale-backup phase needs complete primary and backup files")
@@ -148,8 +148,9 @@ func run(ui: Control) -> void:
 	elif phase == "clean_install":
 		_record_error(errors, not profile_files_present, "initial packaged profile was not clean")
 		ui._set_ui_scale(2)
-		ui_scale_ready = ui.ui_scale_index == 2 and is_equal_approx(get_tree().root.content_scale_factor, 1.25) and ui.gameplay_columns.vertical
-		_record_error(errors, ui_scale_ready, "125 percent packaged UI scale did not apply the stacked layout")
+		ui._set_window_size(3)
+		ui_scale_ready = ui.ui_scale_index == 2 and is_equal_approx(get_tree().root.content_scale_factor, 1.25) and ui.window_size_index == 3 and ui.WINDOW_SIZE_PRESETS[3] == Vector2i(2560, 1440)
+		_record_error(errors, ui_scale_ready, "packaged display did not retain 125 percent scale with the 2560x1440 preset")
 		ui._begin_rebind("battle_pause")
 		ui._unhandled_input(replacement)
 		controller_remap_ready = _has_joypad_binding("battle_pause", 10) and not _has_joypad_binding("placement_arm", 10)
@@ -159,20 +160,21 @@ func run(ui: Control) -> void:
 		var placed: Dictionary = ui.keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
 		_record_error(errors, bool(placed.get("ok", false)), "starter placement failed")
 		ui._on_start_wave()
-		initial_pause_ready = ui.keep.wave_active and ui.battle_paused and ui.screen == "battle"
-		_record_error(errors, initial_pause_ready, "packaged battle did not begin paused on the Battle screen")
+		initial_realtime_ready = ui.keep.wave_active and not ui.battle_paused and ui.screen == "battle"
+		_record_error(errors, initial_realtime_ready, "packaged assault did not begin in real-time playback on the Battle screen")
+		ui._unhandled_input(replacement)
 		var paused_step_before: int = ui.keep.battle_step
 		ui._process(2.0)
 		paused_state_frozen = ui.keep.battle_step == paused_step_before
 		_record_error(errors, paused_state_frozen, "paused packaged presentation advanced authoritative battle state")
+		ui._on_advance_wave()
+		manual_step_ready = ui.battle_paused and ui.keep.battle_step == paused_step_before + 1
+		_record_error(errors, manual_step_ready, "manual packaged step did not advance exactly once while paused")
 		ui._unhandled_input(replacement)
 		var remapped_resume_ready: bool = not ui.battle_paused
 		ui._unhandled_input(replacement)
 		remapped_pause_ready = remapped_resume_ready and ui.battle_paused
 		_record_error(errors, remapped_pause_ready, "remapped controller pause did not toggle packaged battle state")
-		ui._on_advance_wave()
-		manual_step_ready = ui.battle_paused and ui.keep.battle_step == paused_step_before + 1
-		_record_error(errors, manual_step_ready, "manual packaged step did not advance exactly once while paused")
 		ui._on_save()
 		_record_error(errors, FileAccess.file_exists(SAVE_PATH), "run save was not written to user data")
 		_record_error(errors, ui._save_preferences(), "settings were not written to user data")
@@ -184,7 +186,7 @@ func run(ui: Control) -> void:
 		_record_error(errors, String(save_payload.get("game_id", "")) == "pack-the-keep", "run save has the wrong game ID")
 		_record_error(errors, int(save_payload.get("schema_version", 0)) == 4, "run save has the wrong schema version")
 		_record_error(errors, int(settings_payload.get("schema_version", 0)) == 4, "settings have the wrong schema version")
-	var settings_scale_ready: bool = int(settings_payload.get("ui_scale_index", -1)) == 2
+	var settings_scale_ready: bool = int(settings_payload.get("ui_scale_index", -1)) == 2 and int(settings_payload.get("window_size_index", -1)) == 3
 	var settings_remap_ready: bool = _settings_has_joypad_binding(settings_payload, "battle_pause", 10)
 	if phase == "clean_install":
 		_record_error(errors, settings_scale_ready, "packaged settings did not persist 125 percent scale")
@@ -216,7 +218,7 @@ func run(ui: Control) -> void:
 		"ui_scale_ready": ui_scale_ready,
 		"settings_scale_ready": settings_scale_ready,
 		"settings_remap_ready": settings_remap_ready,
-		"initial_pause_ready": initial_pause_ready,
+		"initial_realtime_ready": initial_realtime_ready,
 		"paused_state_frozen": paused_state_frozen,
 		"remapped_pause_ready": remapped_pause_ready,
 		"manual_step_ready": manual_step_ready,

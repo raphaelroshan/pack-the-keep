@@ -34,7 +34,7 @@ def packaged_report(phase: str, profile: str, executable: str) -> dict[str, obje
             "profile_files_present": False, "profile_files_complete": False,
             "controller_remap_ready": True, "ui_scale_ready": True,
             "settings_scale_ready": True, "settings_remap_ready": True,
-            "initial_pause_ready": True, "paused_state_frozen": True,
+            "initial_realtime_ready": True, "paused_state_frozen": True,
             "remapped_pause_ready": True, "manual_step_ready": True,
         })
     elif phase == "reinstall":

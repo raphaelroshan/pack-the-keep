@@ -45,7 +45,7 @@ func _initialize() -> void:
 		failures.append("confirmed guided setup did not place exactly two starter pieces")
 	if not ui.keep.pieces.has("pike_squad_0") or not ui.keep.pieces.has("narrow_gate_1"):
 		failures.append("quick-playtest preset is missing Pike Squad or Narrow Gate")
-	var quick_action: Button = _find_button(ui, "START INVASION — PAUSED")
+	var quick_action: Button = _find_button(ui, "BEGIN ASSAULT — REAL TIME")
 	if quick_action == null:
 		failures.append("preparation start action is missing")
 	else:
@@ -55,19 +55,21 @@ func _initialize() -> void:
 		failures.append("preparation action did not open battle")
 	if not ui.keep.wave_active:
 		failures.append("preparation action did not start an invasion")
-	if ui.keep.battle_step != 0 or not ui.battle_paused:
-		failures.append("battle did not open paused before the first step")
+	if ui.keep.battle_step != 0 or ui.battle_paused:
+		failures.append("battle did not open in real-time playback before the first tick")
 	var battle_step_before: int = ui.keep.battle_step
-	var advance_button: Button = _find_button(ui, "ADVANCE ONE STEP — INSPECT")
-	if advance_button == null:
-		failures.append("battle primary action did not change to advance-step state")
+	var pause_button: Button = _find_button(ui, "PAUSE — INSPECT")
+	if pause_button == null:
+		failures.append("battle primary action did not change to pause state")
 	else:
-		advance_button.pressed.emit()
+		pause_button.pressed.emit()
 		await process_frame
-	if ui.keep.battle_step != battle_step_before + 1:
-		failures.append("battle primary action did not advance exactly one additional step")
 	if not ui.battle_paused:
-		failures.append("primary battle action unexpectedly started real-time motion")
+		failures.append("primary battle action did not pause real-time motion")
+	ui._on_advance_wave()
+	await process_frame
+	if ui.keep.battle_step != battle_step_before + 1:
+		failures.append("secondary manual step did not advance exactly one deterministic tick")
 	var safety: int = 0
 	while ui.keep.wave_active and safety < 20:
 		ui._on_advance_wave()
@@ -75,27 +77,27 @@ func _initialize() -> void:
 		safety += 1
 	if ui.screen != "results":
 		failures.append("quick-playtest did not reach inter-wave Results after wave one")
-	var continue_two: Button = _find_button(ui, "CONTINUE — START WAVE 2/3")
+	var continue_two: Button = _find_button(ui, "END LULL — RELEASE PHASE 2/3")
 	if continue_two == null:
 		failures.append("inter-wave Results did not offer Continue for wave two")
 	else:
 		continue_two.pressed.emit()
 		await process_frame
-	if ui.screen != "battle" or not ui.keep.wave_active or ui.keep.wave_index != 2 or ui.battle_paused != true:
-		failures.append("Continue did not stage paused wave two")
+	if ui.screen != "battle" or not ui.keep.wave_active or ui.keep.wave_index != 2 or ui.battle_paused:
+		failures.append("Continue did not resume live assault phase two")
 	safety = 0
 	while ui.keep.wave_active and safety < 20:
 		ui._on_advance_wave()
 		await process_frame
 		safety += 1
-	var continue_three: Button = _find_button(ui, "CONTINUE — START WAVE 3/3")
+	var continue_three: Button = _find_button(ui, "END LULL — RELEASE PHASE 3/3")
 	if continue_three == null:
 		failures.append("inter-wave Results did not offer Continue for wave three")
 	else:
 		continue_three.pressed.emit()
 		await process_frame
-	if ui.screen != "battle" or not ui.keep.wave_active or ui.keep.wave_index != 3 or ui.battle_paused != true:
-		failures.append("Continue did not stage paused wave three")
+	if ui.screen != "battle" or not ui.keep.wave_active or ui.keep.wave_index != 3 or ui.battle_paused:
+		failures.append("Continue did not resume live assault phase three")
 	safety = 0
 	while ui.keep.wave_active and safety < 20:
 		ui._on_advance_wave()

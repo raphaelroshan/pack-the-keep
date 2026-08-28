@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.16.7",
+  "content_version": "0.16.8",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -59,14 +59,14 @@
   },
   "p10_controller_and_scaling": {
     "status": "implemented",
-    "ui_scale_presets": [80, 100, 125, 150],
+    "ui_scale_presets": [80, 100, 125, 150, 200],
     "input": "controller_navigation_and_keyboard_controller_binding_capture",
     "layout": "large_scales_stack_board_and_command_rail_inside_a_page_scroll",
     "next_slice": "p10_display_and_audio_settings"
   },
   "p10_display_and_audio_settings": {
     "status": "implemented",
-    "display": ["windowed", "fullscreen", "1280x720", "1600x900", "1920x1080"],
+    "display": ["windowed", "fullscreen", "1280x720", "1600x900", "1920x1080", "2560x1440"],
     "audio": "effects_volume_presets_plus_independent_mute",
     "next_slice": "p10_event_feed_and_game_feel"
   },
@@ -261,7 +261,7 @@
     "build_identity_surface": "title_screen_pre_alpha_build_label",
     "artifact_provenance": ["source_revision", "artifact_filename", "artifact_sha256", "artifact_size_bytes"],
     "playtest_kit": "ci_bundles_playtest_build_json_observer_brief_and_four_unfilled_matrix_templates_beside_the_exact_windows_executable",
-    "launch_flow": "main_menu_to_briefing_to_preparation_to_paused_battle_to_recovery_or_report",
+    "launch_flow": "main_menu_to_briefing_to_preparation_to_live_battle_to_recovery_or_report",
     "screen_distribution": "briefing_build_battle_recovery_and_settings_controls_are_contextual_not_one_long_command_list",
     "matrix_rule": "all_four_required_combinations_must_share_one_source_revision_and_artifact_sha256",
     "human_gate": "pending",
@@ -269,7 +269,19 @@
     "scope_boundary": "automation_validates_evidence_shape_but_never_authors_observations_approves_distribution_or_marks_release_ready",
     "triage": "stable_issue_keys_group_repeated_findings_into_deterministic_reversible_task_candidates",
     "evidence": ["docs/p16_human_playtest_protocol.md", "docs/p16_menu_flow_visual_verification.md", "tools/write_playtest_build_manifest.py", "tools/new_playtest_session.py", "tools/validate_p16_playtests.py", "tools/summarize_p16_playtests.py", "tests/test_p16_playtest_build_manifest.py", "tests/test_p16_playtest_protocol.py", "tests/test_p16_playtest_summary.py", "tests/test_p16_playtest_readiness_ui.gd", "tests/test_menu_flow_ui.gd"],
-    "next_slice": "p16_human_sessions_then_release_preparation"
+    "next_slice": "p17_realtime_assault_presentation"
+  },
+  "p17_realtime_assault_presentation": {
+    "status": "implemented",
+    "battle_entry": "assault_begins_live_at_tick_zero",
+    "motion": "enemy_markers_interpolate_from_fractional_presentation_clock_between_authoritative_ticks",
+    "attack_readability": ["transient_defender_engagement_lines", "impact_rings", "damage_labels"],
+    "inspection_controls": ["pause_resume_primary_action", "manual_tick_while_paused", "focused_response_preview"],
+    "terminology": ["assault_phase", "recovery_lull"],
+    "display": ["1600x900_default", "2560x1440_preset", "125_percent_1440p_readability_floor", "responsive_layout"],
+    "determinism": "presentation_interpolation_traces_focus_pause_and_display_scaling_do_not_change_authoritative_outcomes",
+    "evidence": ["design/p17_realtime_assault_presentation.md", "docs/p17_realtime_assault_visual_verification.md", "tests/test_p2_ui.gd", "tests/test_p10_display_audio_settings.gd", "tests/test_quick_playtest.gd", "src/platform/packaged_smoke.gd"],
+    "next_slice": "p17_human_combat_readability_sessions"
   },
   "campaign": {
     "title": "The Bell at Dusk",

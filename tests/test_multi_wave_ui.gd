@@ -19,7 +19,7 @@ func _resolve_current_wave(ui: Control) -> void:
 		safety += 1
 
 func _continue_wave(ui: Control, wave_number: int) -> void:
-	var button: Button = _find_button(ui, "CONTINUE — START WAVE %d/3" % wave_number)
+	var button: Button = _find_button(ui, "END LULL — RELEASE PHASE %d/3" % wave_number)
 	if button == null:
 		failures.append("continue button for wave %d was missing" % wave_number)
 	else:
@@ -54,7 +54,7 @@ func _initialize() -> void:
 	await _resolve_current_wave(ui)
 	if ui.screen != "results" or not ui.keep.repair_interval_active:
 		failures.append("wave one did not end in inter-wave recovery Results")
-	if not String(ui.scorecard_label.text).contains("W1"):
+	if not String(ui.scorecard_label.text).contains("PHASE 1"):
 		failures.append("inter-wave Results did not expose the wave-one scorecard row")
 	if not ui.keep.has_next_wave():
 		failures.append("wave one Results did not expose a next wave")
@@ -70,7 +70,7 @@ func _initialize() -> void:
 		failures.append("final wave did not produce terminal Results recovery")
 	if _find_button(ui, "REVIEW SETUP — PLAY AGAIN") == null:
 		failures.append("terminal Results did not expose the replay setup action")
-	if not String(ui.scorecard_label.text).contains("W1") or not String(ui.scorecard_label.text).contains("W2") or not String(ui.scorecard_label.text).contains("W3") or not String(ui.scorecard_label.text).contains("recovery actions"):
+	if not String(ui.scorecard_label.text).contains("PHASE 1") or not String(ui.scorecard_label.text).contains("PHASE 2") or not String(ui.scorecard_label.text).contains("PHASE 3") or not String(ui.scorecard_label.text).contains("recovery actions"):
 		failures.append("terminal Results did not expose the complete three-wave scorecard")
 	if not String(ui.scorecard_label.text).contains("SCENARIO REPORT") or not String(ui.scorecard_label.text).contains("Pressure:"):
 		failures.append("terminal Results did not expose the causal scenario report")
