@@ -1,10 +1,16 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.17.4-board-labels` — the controlled playtest now separates tactical layers and keeps room/unit labels within their board footprints; human sessions and owner approval remain pending
+**Current build identity:** `0.18.0-unit-first-combat` — the controlled playtest now makes defender-clearing attackers and explicit room destroyers visually distinct on a larger gridless board; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of nine authored scenarios, preview and reserve a limited pack offer, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, and recover during authored lulls.
+
+## v0.18.0 Unit-first combat additions
+
+Raiders, Climbers, Ash Slingers, Shield Guards, and Shieldbreakers now select living defensive pieces instead of rooms. Their data-driven category, floor, and health preferences shape which defender they pursue, and they retarget when that defender is disabled. Sappers and Siege Beasts remain explicit demolition roles; Sappers prefer exposed Repair Stations or Supply Caches before support rooms, while Siege Beasts retain area pressure. Resolved piece damage now subtracts directly from health so logs and bars share one readable scale. Heavy and demolition enemies use a slower two-tick attack cadence. If every placed defensive piece is disabled, the result is a recoverable Partial Breach rather than an incorrect Hold.
+
+The keep board uses larger cells without an always-visible grid. Placement guides appear only during Preparation. Rooms, defenders, and enemies have authoritative health bars; attackers draw target lines to pieces as well as rooms; ready defenders face their projected threats; and room hover text exposes full identity, floor, purpose, condition, and critical/support status. Existing melee lunges and ranged projectiles remain presentation derived from deterministic combat state.
 
 ## v0.17.4 Board-label additions
 
@@ -267,6 +273,12 @@ Begin Three Bells at Dusk at tick zero and focus either ground-route threat. Con
 ## v0.17.4 acceptance checks
 
 Place defenders over several named rooms and confirm the unit names stay inside their footprints. Verify occupied rooms no longer draw competing name or numeric state text beneath the unit, while their boundaries and condition bars remain visible. Click the occupied room and defender in turn and confirm the inspector still presents each full name and complete state.
+
+## v0.18.0 acceptance checks
+
+Run Gate Assault with multiple defenders and confirm Raiders target a living defensive piece, its health bar decreases with each hit, and the Raider retargets after disabling it without damaging a room. Run Distributed Sabotage and confirm the Sapper prefers an exposed Repair Station or Supply Cache, then falls back to a named support room. Run Area Pressure and confirm Siege Beast still damages rooms rather than defenders.
+
+During Battle, verify the keep has no cell grid or placement boxes, both floors occupy the larger board, and room, defender, and enemy health bars remain legible. Pause before contact and confirm ready defenders face their projected attackers. Observe a Pike Squad melee lunge and a Fire Team or Crossbow Patrol projectile. Hover an occupied and unoccupied room and confirm full room details appear without changing the selected target or serialized state. Repeat at 1280×720 and 2560×1440.
 
 ## v0.16.6 acceptance checks
 

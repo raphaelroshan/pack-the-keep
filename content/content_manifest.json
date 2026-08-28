@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.17.4",
+  "content_version": "0.18.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -342,7 +342,17 @@
     "inspection": "full_room_and_piece_details_remain_in_the_existing_inspector",
     "determinism": "label_fitting_and_overlap_queries_do_not_change_keep_state",
     "evidence": ["design/p23_board_label_clarity.md", "docs/p23_board_label_visual_verification.md", "tests/test_p2_ui.gd"],
-    "next_slice": "p23_human_board_comprehension_sessions"
+    "next_slice": "p24_unit_first_combat_board"
+  },
+  "p24_unit_first_combat_board": {
+    "status": "implemented",
+    "target_roles": ["unit_hunter", "room_destroyer"],
+    "unit_hunters": ["raider", "climber", "ash_slinger", "shield_guard", "shieldbreaker"],
+    "room_destroyers": ["sapper", "siege_beast"],
+    "presentation": ["larger_gridless_keep", "preparation_only_placement_guides", "health_bars", "unit_target_lines", "room_hover_details", "idle_defender_facing", "melee_and_ranged_feedback"],
+    "determinism": "role_selection_retargeting_damage_health_and_save_load_remain_authoritative_and_seed_replayable",
+    "evidence": ["design/p24_unit_first_combat_board.md", "docs/p24_unit_first_combat_visual_verification.md", "tests/test_keep_state.gd", "tests/test_p2_ui.gd"],
+    "next_slice": "p24_human_combat_readability_sessions"
   },
   "campaign": {
     "title": "The Bell at Dusk",

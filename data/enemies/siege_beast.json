@@ -8,6 +8,8 @@
   "health": 16,
   "damage": 3,
   "arrival_step": 3,
+  "attack_interval": 2,
+  "target_mode": "room_destroyer",
   "route": "outer_approach",
   "target_rooms": ["inner_yard", "outer_wall", "old_chapel", "workshop"],
   "doctrine": "area_pressure",

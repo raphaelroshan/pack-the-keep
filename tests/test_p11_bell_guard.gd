@@ -66,7 +66,8 @@ func _initialize() -> void:
 	_check(int(unlinked.inspect_enemy(0).get("arrival_step", 0)) == 2, "uncountered Ash Slinger should arrive one step early")
 	unlinked.advance_wave(1.0)
 	unlinked.advance_wave(1.0)
-	_check(unlinked.room_condition("barracks") < 100.0, "uncountered smoke should create early Barracks contact")
+	_check(int(unlinked.pieces["pike_squad_0"].get("health", 0)) < int(unlinked.pieces["pike_squad_0"].get("max_health", 0)), "uncountered smoke should create early defender contact")
+	_check(unlinked.room_condition("barracks") == 100.0, "unit-hunting Ash Slinger should not damage Barracks directly")
 	_check(unlinked.battle_report.has("Ash Slinger smoke broke the warning chain; contact advances from step 3 to step 2."), "causal report should explain early smoke contact")
 
 	var lone_bell = _new_smoke_state(["bellkeepers"])

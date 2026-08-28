@@ -116,11 +116,13 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         enemy = copy.deepcopy(load("data/enemies/shieldbreaker.json"))
         enemy["target_piece_categories"] = []
         enemy["target_piece_preference"] = "random"
+        enemy["target_mode"] = "anything"
+        enemy["attack_interval"] = 0
         enemy["ignores_protection"] = "yes"
         errors = []
         validator.validate_enemy(Path("shieldbreaker.json"), enemy, {"gate", "barracks", "inner_yard"}, {"shield_wardens"}, {"break_the_line"}, set(), {}, set(), errors)
         joined = "\n".join(errors)
-        for expected in ("target_piece_categories", "target_piece_preference", "ignores_protection"):
+        for expected in ("target_piece_categories", "target_piece_preference", "target_mode", "attack_interval", "ignores_protection"):
             self.assertIn(expected, joined)
 
     def test_doctrine_allows_repeated_actors_but_rejects_unknown_ones(self) -> None:

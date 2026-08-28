@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.17.4-board-labels",
+  "framework_version": "0.18.0-unit-first-combat",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -372,6 +372,20 @@
     "full_detail": "room_and_piece_inspectors_keep_complete_names_status_assignments_and_purpose",
     "authority_boundary": "label_projection_reads_layout_state_without_changing_placement_or_simulation",
     "non_goals": ["room_geometry_changes", "piece_footprint_changes", "final_art", "save_fields"]
+  },
+  "p24_unit_first_combat_board": {
+    "status": "implemented",
+    "target_roles": {
+      "unit_hunter": ["raider", "climber", "ash_slinger", "shield_guard", "shieldbreaker"],
+      "room_destroyer": ["sapper", "siege_beast"]
+    },
+    "targeting": "unit_hunters_finish_exposed_defensive_pieces_with_data_driven_category_floor_and_health_preferences_while_room_destroyers_retain_explicit_structure_behavior",
+    "piece_damage_scale": "resolved_damage_subtracts_directly_from_piece_health",
+    "attack_cadence": "data_driven_positive_tick_interval_with_heavy_and_demolition_roles_attacking_every_two_contact_ticks",
+    "outcome": "disabling_every_placed_defensive_piece_produces_a_recoverable_partial_breach_instead_of_a_hold",
+    "presentation": ["larger_two_floor_board", "hidden_cell_grid", "preparation_only_placement_guides", "authoritative_room_piece_and_enemy_health_bars", "piece_target_lines", "room_hover_details", "idle_defender_facing_cues", "melee_lunges", "ranged_projectiles"],
+    "authority_boundary": "targeting_damage_health_and_outcomes_remain_deterministic_core_state_while_hover_facing_projectiles_and_lunges_are_read_only_presentation",
+    "non_goals": ["pathfinding", "collision_projectiles", "continuous_damage", "focus_fire_orders", "new_save_fields"]
   },
   "v090_multi_wave": {
     "status": "implemented",
