@@ -31,12 +31,24 @@ func _setup_baseline(state: RefCounted, scenario_id: String) -> bool:
 	if not _check_command(state.place_piece("pike_squad", Vector2i(0, 3), "ground"), "%s starter placement" % scenario_id):
 		return false
 	match scenario_id:
-		"gatehouse_lock", "wrong_wall", "open_yard_net":
+		"gatehouse_lock", "wrong_wall":
 			if not _check_command(state.open_pack("field_engineers"), "%s Field Engineers" % scenario_id):
 				return false
 			if not _check_command(state.place_piece("repair_station", Vector2i(4, 3), "ground"), "%s Repair Station" % scenario_id):
 				return false
 			return _check_command(state.place_piece("brace", Vector2i(6, 2), "ground"), "%s Brace" % scenario_id)
+		"open_yard_net":
+			if not _check_command(state.open_pack("scouts"), "Open Yard Net Scouts"):
+				return false
+			if not _check_command(state.open_pack("firekeepers"), "Open Yard Net Firekeepers"):
+				return false
+			if not _check_command(state.place_piece("fire_team", Vector2i(4, 3), "ground"), "Open Yard Net Fire Team"):
+				return false
+			if not _check_command(state.place_piece("fire_brazier", Vector2i(1, 1), "upper"), "Open Yard Net Fire Brazier"):
+				return false
+			if not _check_command(state.place_piece("scout_post", Vector2i(8, 1), "upper"), "Open Yard Net Scout Post"):
+				return false
+			return _check_command(state.place_piece("signal_beacon", Vector2i(4, 1), "upper"), "Open Yard Net Signal Beacon")
 		"relief_road":
 			if not _check_command(state.choose_event_option("keep_command_ready"), "Relief Road warning"):
 				return false

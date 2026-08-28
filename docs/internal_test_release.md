@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.16.6-menu-flow` — the controlled playtest now has a polished launch journey and self-contained Windows evidence materials; human sessions and owner approval remain pending
+**Current build identity:** `0.16.7-combat-focus` — the controlled playtest now has deterministic one-target defender commitments and focused next-step response previews; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of nine authored scenarios, preview and reserve a limited pack offer, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, pause or run the wave at three presentation speeds, advance manually, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, and recover after pressure.
+
+## v0.16.7 Combat focus additions
+
+Each ready defender now commits to at most one living threat per deterministic combat step. Commitments resolve in stable piece-instance order before surviving enemies make contact, using contact state, arrival timing, effective damage, enemy pressure, remaining health, and wave slot as deterministic priorities. The focused-enemy response card previews the exact next-step attackers, expected damage, contact state, and projected health without changing authoritative state. Multi-enemy waves therefore test coverage and action economy instead of multiplying a defender's attacks or ammunition use.
 
 ## v0.11.0 Crossbow Watch additions
 

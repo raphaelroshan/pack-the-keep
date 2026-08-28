@@ -47,6 +47,10 @@ func _initialize() -> void:
 		failures.append("preparation did not expose selected-piece removal")
 	ui._on_quick_test_action()
 	await process_frame
+	ui._select_enemy_focus(0, "UI smoke")
+	await process_frame
+	if not String(ui.response_preview_label.text).contains("NEXT STEP:") or not String(ui.response_preview_label.text).contains("projected"):
+		failures.append("focused response preview did not expose next-step defender commitment and projected health")
 	await _resolve_current_wave(ui)
 	if ui.screen != "results" or not ui.keep.repair_interval_active:
 		failures.append("wave one did not end in inter-wave recovery Results")

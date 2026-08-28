@@ -511,3 +511,11 @@
 **Reason:** The previous single command rail exposed setup, placement, combat, recovery, persistence, and accessibility controls together. It proved functionality but made the first action hard to read and allowed presentation-only screen jumps that did not correspond to the run state.
 
 **Trade-off:** Some controls now require entering their dedicated screen, and the command rail remains scrollable for narrow windows. The clearer hierarchy is preferred over keeping every prototype action simultaneously visible.
+
+## ADR-065: Defenders commit to one deterministic target per combat step
+
+**Decision:** Resolve defender fire before enemy contact in stable piece-instance order. Each ready defender may engage at most one living enemy per combat step, selected by contact urgency, arrival timing, effective counter damage, enemy pressure, remaining health, and stable wave slot. A read-only response preview exposes the next planned engagement for inspection without reserving or mutating a target.
+
+**Reason:** The previous enemy-first loop allowed every defender to attack every compatible enemy during the same one-second step. Larger waves therefore multiplied defender actions and ranged ammunition use, obscuring the meaning of focus, timing, and coherent counter coverage. One commitment per defender makes mixed waves a real allocation problem while preserving deterministic pause-and-inspect play.
+
+**Trade-off:** Multi-enemy waves become more demanding and some historical balance fixtures may need explicit layout adjustments. Target choice remains automatic in this slice; direct focus-fire commands, movement, projectile travel, and a general threat-scoring resource are deferred until playtest evidence justifies them.

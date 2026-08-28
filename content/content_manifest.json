@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.16.6",
+  "content_version": "0.16.7",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -1293,7 +1293,7 @@
       "status": "implemented",
       "focus_inputs": ["map_enemy_click", "focus_cycle_forward", "focus_cycle_backward", "focus_enemy"],
       "selection": "active marker radius plus fixed padding; nearest center then stable index",
-      "response_preview": ["focused threat", "declared target or approaching", "counter family", "commander ability state", "paused timing"],
+      "response_preview": ["focused threat", "declared target or approaching", "next-step committed defenders", "expected damage", "projected health", "counter family", "commander ability state", "paused timing"],
       "recovery_priority": "criticality then condition then stable room ID; advisory only",
       "deferred": ["direct_enemy_retargeting", "controller_remapping"]
     },
@@ -1301,7 +1301,7 @@
       "status": "implemented",
       "model": "real_time_presentation_over_deterministic_one_second_auto_battle_steps",
       "enemy_behavior": ["named_routes", "behavior_targets", "approach_then_contact", "causal_reports"],
-      "defender_behavior": ["automatic_counter_fire", "melee_and_ranged_styles", "floor_and_assignment_modifiers"],
+      "defender_behavior": ["one_target_commitment_per_step", "stable_piece_order", "contact_and_arrival_priority", "automatic_counter_fire", "melee_and_ranged_styles", "floor_and_assignment_modifiers"],
       "ammunition": "finite ranged rounds; reload at recovery; melee uses none",
       "skills": ["piece_role_skills", "commander_skills"],
       "determinism": "presentation timing and ammunition transitions are authoritative and replayable"
