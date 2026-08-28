@@ -77,6 +77,7 @@ class P16PlaytestProtocolTests(unittest.TestCase):
             self.assertEqual(record["artifact"]["name"], artifact.name)
             self.assertEqual(record["artifact"]["sha256"], hashlib.sha256(artifact.read_bytes()).hexdigest())
             self.assertEqual(record["artifact"]["size_bytes"], artifact.stat().st_size)
+            self.assertNotIn(b"\r\n", output.read_bytes())
             self.assertEqual({item["id"] for item in record["observations"]}, validator.REQUIRED_OBSERVATIONS)
             self.assertEqual({item["status"] for item in record["observations"]}, {"not_tested"})
             errors: list[str] = []

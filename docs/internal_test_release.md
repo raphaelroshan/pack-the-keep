@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.16.4-observer-brief` — P16 evidence, triage, and self-contained Windows playtest guidance are ready; human sessions and owner approval remain pending
+**Current build identity:** `0.16.5-matrix-templates` — P16 evidence, triage, and self-contained Windows playtest materials are ready; human sessions and owner approval remain pending
 
 ## Purpose
 
@@ -129,6 +129,10 @@ CI now writes `playtest-build.json` beside the packaged Windows executable. The 
 ## v0.16.4 Packaged observer brief
 
 Every Windows candidate now includes `PLAYTEST_README.md` beside its provenance and smoke evidence. CI creates the brief only after revalidating the exact executable against `playtest-build.json`; it carries the build identity, all nine human observation prompts, privacy limits, record-generation path, and explicit pre-alpha/owner-approval boundary without filling in any result.
+
+## v0.16.5 Unfilled matrix templates
+
+The packaged candidate now includes one provenance-bound JSON template for each commander/Hardened Vanguard matrix combination. Each template contains the exact executable identity and all observations as `not_tested`, while leaving session identity, timestamp, input, display, scenario, findings, summary, and approval-sensitive completion for the human observer. Templates are intentionally invalid evidence until those blanks are filled.
 
 ## v0.8.2 testability additions
 

@@ -17,6 +17,7 @@ python3 tools/summarize_p16_playtests.py --protocol content/p16_playtest_protoco
 python3 tests/test_p16_playtest_summary.py
 python3 tests/test_p16_playtest_build_manifest.py
 python3 tests/test_p16_playtest_brief.py
+python3 tests/test_p16_playtest_matrix_templates.py
 
 if command -v godot >/dev/null 2>&1; then
   godot --headless --audio-driver Dummy --path . --import

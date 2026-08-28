@@ -26,6 +26,45 @@ def non_empty(value: str) -> str:
     return value
 
 
+def build_unfilled_record(
+    protocol: dict,
+    build_manifest: dict,
+    *,
+    session_id: str,
+    tester_alias: str,
+    recorded_at: str,
+    platform: str,
+    input_method: str,
+    display: str,
+    commander: str,
+    run_type: str,
+    scenario: str,
+) -> dict:
+    return {
+        "schema_version": 1,
+        "build_version": protocol["build_version"],
+        "source_revision": build_manifest["source_revision"],
+        "ci_run_id": build_manifest["ci_run_id"],
+        "artifact": dict(build_manifest["artifact"]),
+        "session_id": session_id,
+        "tester_alias": tester_alias,
+        "recorded_at": recorded_at,
+        "platform": platform,
+        "input_method": input_method,
+        "display": display,
+        "commander": commander,
+        "run_type": run_type,
+        "scenario": scenario,
+        "completed": False,
+        "observations": [
+            {"id": observation["id"], "status": "not_tested", "notes": ""}
+            for observation in protocol["required_observations"]
+        ],
+        "findings": [],
+        "observer_summary": "",
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--protocol", default="content/p16_playtest_protocol.json")
@@ -66,31 +105,22 @@ def main() -> int:
     output_path = Path(args.output)
     if output_path.exists() and not args.force:
         raise SystemExit(f"refusing to overwrite existing session: {output_path}")
-    record = {
-        "schema_version": 1,
-        "build_version": protocol["build_version"],
-        "source_revision": build_manifest["source_revision"],
-        "ci_run_id": build_manifest["ci_run_id"],
-        "artifact": dict(build_manifest["artifact"]),
-        "session_id": args.session_id,
-        "tester_alias": args.tester_alias,
-        "recorded_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
-        "platform": args.platform,
-        "input_method": args.input_method,
-        "display": args.display,
-        "commander": args.commander,
-        "run_type": args.run_type,
-        "scenario": args.scenario,
-        "completed": False,
-        "observations": [
-            {"id": observation["id"], "status": "not_tested", "notes": ""}
-            for observation in observations
-        ],
-        "findings": [],
-        "observer_summary": ""
-    }
+    record = build_unfilled_record(
+        protocol,
+        build_manifest,
+        session_id=args.session_id,
+        tester_alias=args.tester_alias,
+        recorded_at=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        platform=args.platform,
+        input_method=args.input_method,
+        display=args.display,
+        commander=args.commander,
+        run_type=args.run_type,
+        scenario=args.scenario,
+    )
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+    with output_path.open("w", encoding="utf-8", newline="\n") as stream:
+        stream.write(json.dumps(record, indent=2) + "\n")
     print(f"Created unfilled playtest session: {output_path}")
     return 0
 
