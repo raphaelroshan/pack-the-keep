@@ -12,6 +12,9 @@ func _find_button(node: Node, target_text: String) -> Button:
 	return null
 
 func _resolve_current_wave(ui: Control) -> void:
+	if not ui.assault_ready_reason.is_empty():
+		ui._on_playtest_primary_action()
+		await process_frame
 	var safety: int = 0
 	while ui.keep.wave_active and safety < 12:
 		ui._on_advance_wave()

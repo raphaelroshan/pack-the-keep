@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.22.1",
+  "content_version": "0.22.2",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -451,6 +451,16 @@
     "authority": "presentation_only_after_authoritative_state_changes",
     "evidence": ["design/p35_battle_audio_cues.md", "docs/p35_battle_audio_cues_verification.md", "tests/test_p35_battle_audio_cues.gd"],
     "next_slice": "p36_wave_transition_readiness"
+  },
+  "p36_wave_transition_readiness": {
+    "status": "implemented",
+    "first_phase": "tick_zero_sound_the_bell_readiness",
+    "later_phase_trigger": ["doctrine_change", "new_enemy_family"],
+    "unchanged_pressure": "continues_live_after_recovery",
+    "persistence": "readiness_is_rederived_on_tick_zero_load_without_schema_change",
+    "authority": "presentation_pause_only_over_an_existing_authoritative_wave",
+    "evidence": ["design/p36_wave_transition_readiness.md", "docs/p36_wave_transition_readiness_verification.md", "tests/test_p36_wave_transition_readiness.gd"],
+    "next_slice": "p37_recovery_hierarchy"
   },
   "campaign": {
     "title": "The Bell at Dusk",

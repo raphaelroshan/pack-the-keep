@@ -139,6 +139,7 @@ var title_learn_button: Button
 var title_continue_tutorial_button: Button
 var screen: String = "title"
 var battle_paused: bool = true
+var assault_ready_reason: String = ""
 var battle_speed_index: int = 1
 var audio_muted: bool = false
 var high_contrast: bool = false
@@ -266,6 +267,7 @@ func _process(delta: float) -> void:
 			keep_canvas.call("show_combat_exchange", engagement_traces, target_impacts)
 		_ensure_enemy_focus()
 	if bool(result.get("resolved", false)):
+		assault_ready_reason = ""
 		battle_paused = true
 		_set_feedback(Color("#bfe8cf"), _outcome_cue(String(result.get("outcome", "unknown"))))
 		_set_event("Assault phase resolved: %s. Use the recovery lull before the next pressure arrives." % String(result.get("outcome", "unknown")).replace("_", " "))
@@ -490,6 +492,14 @@ func _toggle_battle_pause() -> void:
 		return
 	var tutorial_action: String = "resume_battle" if battle_paused else "pause_battle"
 	if not _tutorial_allows(tutorial_action):
+		return
+	if not assault_ready_reason.is_empty():
+		var ready_reason: String = assault_ready_reason
+		assault_ready_reason = ""
+		battle_paused = false
+		_set_event("The bell sounds. %s The assault now runs continuously at %.1fx." % [ready_reason, _battle_speed()])
+		_play_cue("resume")
+		_refresh_ui()
 		return
 	battle_paused = not battle_paused
 	_set_event("Battle paused. Read the forecast and report." if battle_paused else "Battle resumed at %.1fx speed." % _battle_speed())
@@ -2576,6 +2586,60 @@ func _on_place_piece() -> void:
 	var floor: String = _selected_id(floor_option)
 	_run_result(keep.place_piece(piece_id, _next_slot(piece_id, floor), floor), "Placement")
 
+func _pressure_readiness_context(previous_doctrine: String, current_doctrine: String, previous_enemies: Array, current_enemies: Array, first_wave: bool = false) -> Dictionary:
+	var previous_set: Dictionary = {}
+	for enemy_id_value in previous_enemies:
+		previous_set[String(enemy_id_value)] = true
+	var new_enemy_ids: Array[String] = []
+	for enemy_id_value in current_enemies:
+		var enemy_id: String = String(enemy_id_value)
+		if not previous_set.has(enemy_id) and enemy_id not in new_enemy_ids:
+			new_enemy_ids.append(enemy_id)
+	var doctrine_changed: bool = not previous_doctrine.is_empty() and previous_doctrine != current_doctrine
+	var required: bool = first_wave or doctrine_changed or not new_enemy_ids.is_empty()
+	var doctrine_name: String = current_doctrine.replace("_", " ").capitalize()
+	var enemy_names: Array[String] = []
+	var named_enemies: Array = current_enemies if first_wave else new_enemy_ids
+	for enemy_id in named_enemies:
+		var enemy_definition: Dictionary = keep.enemy_definition(String(enemy_id)) if keep != null else {}
+		var enemy_name: String = String(enemy_definition.get("name", String(enemy_id).replace("_", " ").capitalize()))
+		if enemy_name not in enemy_names:
+			enemy_names.append(enemy_name)
+	var reason: String = ""
+	if first_wave:
+		reason = "READY — %s approaches with %s." % [doctrine_name, " + ".join(enemy_names)]
+	elif doctrine_changed and not new_enemy_ids.is_empty():
+		reason = "NEW PRESSURE — %s introduces %s." % [doctrine_name, " + ".join(enemy_names)]
+	elif doctrine_changed:
+		reason = "DOCTRINE SHIFT — %s changes the assault pattern." % doctrine_name
+	elif not new_enemy_ids.is_empty():
+		reason = "NEW THREAT — %s joins the familiar pressure." % " + ".join(enemy_names)
+	return {"required": required, "reason": reason, "doctrine_changed": doctrine_changed, "new_enemy_ids": new_enemy_ids}
+
+func _current_wave_readiness_context() -> Dictionary:
+	if keep == null or not keep.wave_active or keep.wave_index <= 0:
+		return {"required": false, "reason": "", "doctrine_changed": false, "new_enemy_ids": []}
+	var scenario: Dictionary = keep.scenario_definition(keep.scenario_id)
+	var wave_plans: Array = scenario.get("wave_plans", [])
+	var doctrines: Array = scenario.get("doctrines", [])
+	var current_index: int = clampi(keep.wave_index - 1, 0, maxi(0, wave_plans.size() - 1))
+	var current_enemies: Array = wave_plans[current_index] if current_index < wave_plans.size() else []
+	var current_doctrine: String = String(doctrines[current_index]) if current_index < doctrines.size() else keep.enemy_doctrine
+	if current_index == 0:
+		return _pressure_readiness_context("", current_doctrine, [], current_enemies, true)
+	var previous_enemies: Array = wave_plans[current_index - 1] if current_index - 1 < wave_plans.size() else []
+	var previous_doctrine: String = String(doctrines[current_index - 1]) if current_index - 1 < doctrines.size() else current_doctrine
+	return _pressure_readiness_context(previous_doctrine, current_doctrine, previous_enemies, current_enemies)
+
+func _arm_assault_readiness() -> void:
+	if tutorial.active:
+		battle_paused = true
+		assault_ready_reason = ""
+		return
+	var context: Dictionary = _current_wave_readiness_context()
+	assault_ready_reason = String(context.get("reason", "")) if bool(context.get("required", false)) else ""
+	battle_paused = not assault_ready_reason.is_empty()
+
 func _on_start_wave() -> void:
 	if not _tutorial_allows("start_wave"):
 		return
@@ -2584,12 +2648,12 @@ func _on_start_wave() -> void:
 	var result: Dictionary = keep.start_wave(_selected_id(doctrine_option))
 	_run_result(result, "Invasion")
 	if bool(result.get("ok", false)):
-		battle_paused = tutorial.active
+		_arm_assault_readiness()
 		last_log_size = keep.battle_report.size()
 		focused_enemy_index = -1
 		_ensure_enemy_focus()
 		_set_screen("battle")
-		_set_event("Assault opened paused for analysis." if tutorial.active else "Assault underway at %.1fx. Press Space to pause and inspect; N advances one tick while paused." % _battle_speed())
+		_set_event("Assault opened paused for analysis." if tutorial.active else "%s Sound the bell when the defense is read." % assault_ready_reason)
 		_tutorial_advance("start_wave")
 		_refresh_ui()
 
@@ -2640,12 +2704,12 @@ func _on_finish_interval() -> void:
 	_run_result(result, "Interval")
 	if bool(result.get("ok", false)):
 		if bool(result.get("next_wave_started", false)):
-			battle_paused = tutorial.active
+			_arm_assault_readiness()
 			focused_enemy_index = -1
 			last_log_size = 0
 			_ensure_enemy_focus()
 			_set_screen("battle")
-			_set_event("The next assault opens paused for analysis." if tutorial.active else "The recovery lull ends and assault phase %d begins in real time." % keep.wave_index)
+			_set_event("The next assault opens paused for analysis." if tutorial.active else "%s Sound the bell when the changed pressure is understood." % assault_ready_reason if not assault_ready_reason.is_empty() else "Recovery closes and the familiar pressure resumes in real time.")
 			_tutorial_advance("finish_interval")
 			_refresh_ui()
 		else:
@@ -2653,6 +2717,11 @@ func _on_finish_interval() -> void:
 
 func _on_advance_wave() -> void:
 	if not _tutorial_allows("observe_wave"):
+		return
+	if not assault_ready_reason.is_empty():
+		_set_event("Sound the bell before advancing the first combat tick.")
+		_play_cue("error")
+		_refresh_ui()
 		return
 	var engagement_traces: Array[Dictionary] = _next_engagement_traces()
 	var target_snapshot: Dictionary = _combat_target_snapshot()
@@ -2666,6 +2735,7 @@ func _on_advance_wave() -> void:
 		_set_event("Battle blocked: %s." % String(result.get("reason", "unknown")))
 		_play_cue("error")
 	elif bool(result.get("resolved", false)):
+		assault_ready_reason = ""
 		battle_paused = true
 		_set_feedback(Color("#bfe8cf"), _outcome_cue(String(result.get("outcome", "unknown"))))
 		if keep.has_next_wave() and keep.repair_interval_active:
@@ -3108,6 +3178,7 @@ func _reset_for_setup() -> void:
 	setup_confirmed = false
 	focused_enemy_index = -1
 	battle_paused = true
+	assault_ready_reason = ""
 	last_auto_pause_wave_index = -1
 	last_log_size = 0
 	_clear_placement_mode()
@@ -3145,7 +3216,11 @@ func _on_continue_saved_run() -> void:
 	_on_load()
 	setup_confirmed = keep.scenario_active
 	if keep.wave_active:
-		battle_paused = false
+		if keep.battle_step == 0 and is_zero_approx(keep.battle_clock) and not tutorial.active:
+			_arm_assault_readiness()
+		else:
+			battle_paused = false
+			assault_ready_reason = ""
 		_ensure_enemy_focus()
 		_set_screen("battle")
 	elif keep.repair_interval_active or not keep.wave_history.is_empty():
@@ -3184,6 +3259,7 @@ func _on_reset_run() -> void:
 	setup_confirmed = false
 	focused_enemy_index = -1
 	battle_paused = true
+	assault_ready_reason = ""
 	last_auto_pause_wave_index = -1
 	last_log_size = 0
 	_clear_placement_mode()
@@ -3206,6 +3282,8 @@ func _first_battle_guidance() -> String:
 			return "FORTRESS ORDERS — Use the recommended starter layout or open a pack, place a fighting line, and keep one response route open."
 		return "FORTRESS READY — Read the forecast, then begin. Space pauses and N advances one combat tick while paused."
 	if screen == "battle":
+		if not assault_ready_reason.is_empty():
+			return "ASSAULT READY — Read the doctrine, arriving threats, routes, and likely target. Sound the bell when the defense is understood."
 		return "ASSAULT ORDERS — The fort stays visible while threats advance. Watch routes and targets; pause when needed to read the next committed response."
 	if screen == "results":
 		if keep.repair_interval_active and keep.has_next_wave():
@@ -3464,18 +3542,18 @@ func _refresh_ui() -> void:
 	guidance_label.text = _first_battle_guidance()
 	if playtest_button:
 		if screen == "preparation":
-			playtest_button.text = "BEGIN ASSAULT — REAL TIME"
+			playtest_button.text = "READY DEFENSE — ENTER ASSAULT"
 			playtest_button.disabled = keep.pieces.is_empty() or keep.repair_interval_active or not keep.active_event_id.is_empty()
-			playtest_button.tooltip_text = "Begin the selected assault immediately at the chosen speed. Space pauses at any time."
+			playtest_button.tooltip_text = "Enter the selected assault at tick zero, review its opening pressure, then sound the bell."
 			if not keep.active_event_id.is_empty():
 				playtest_status_label.text = "EVENT WAITING — choose an authored response before the invasion can begin."
 			else:
-				playtest_status_label.text = "DEFENSE READY — %d piece(s) placed. The assault begins live; Space pauses for inspection." % keep.pieces.size() if not keep.pieces.is_empty() else "DEFENSE WAITING — use the recommended layout or place at least one defender first."
+				playtest_status_label.text = "DEFENSE READY — %d piece(s) placed. Enter the assault, review first contact, then sound the bell." % keep.pieces.size() if not keep.pieces.is_empty() else "DEFENSE WAITING — use the recommended layout or place at least one defender first."
 		elif screen == "battle":
-			playtest_button.text = "RESUME ASSAULT" if battle_paused else "PAUSE — INSPECT"
+			playtest_button.text = "SOUND THE BELL — BEGIN PHASE %d" % keep.wave_index if not assault_ready_reason.is_empty() else "RESUME ASSAULT" if battle_paused else "PAUSE — INSPECT"
 			playtest_button.disabled = not keep.wave_active
-			playtest_button.tooltip_text = "Resume continuous combat." if battle_paused else "Pause immediately without advancing authoritative combat."
-			playtest_status_label.text = "ASSAULT PHASE %d/%d · TICK %d · %s — Space toggles pause; N advances one tick while paused." % [keep.wave_index, maxi(1, keep.authored_wave_count()), keep.battle_step, "PAUSED" if battle_paused else "LIVE %.1fx" % _battle_speed()]
+			playtest_button.tooltip_text = "Begin continuous combat after reviewing the opening pressure." if not assault_ready_reason.is_empty() else "Resume continuous combat." if battle_paused else "Pause immediately without advancing authoritative combat."
+			playtest_status_label.text = "%s TICK 0 · PAUSED — Space or the primary action sounds the bell." % assault_ready_reason if not assault_ready_reason.is_empty() else "ASSAULT PHASE %d/%d · TICK %d · %s — Space toggles pause; N advances one tick while paused." % [keep.wave_index, maxi(1, keep.authored_wave_count()), keep.battle_step, "PAUSED" if battle_paused else "LIVE %.1fx" % _battle_speed()]
 		elif screen == "results":
 			if tutorial.active and tutorial.failure_active:
 				playtest_button.text = "RETRY PHASE"
@@ -3504,8 +3582,8 @@ func _refresh_ui() -> void:
 	recent.reverse()
 	log_label.text = "COMBAT EVENT FEED — newest %d, newest first\n" % _event_feed_retention() + ("\n".join(recent) if not recent.is_empty() else "No assault has started. This feed will name the forecast, response, target, damage, and recovery.")
 
-	pause_button.text = "Resume battle (Space)" if battle_paused else "Pause battle (Space)"
-	manual_step_button.disabled = not keep.wave_active or not battle_paused
+	pause_button.text = "Sound the bell (Space)" if not assault_ready_reason.is_empty() else "Resume battle (Space)" if battle_paused else "Pause battle (Space)"
+	manual_step_button.disabled = not keep.wave_active or not battle_paused or not assault_ready_reason.is_empty()
 	speed_button.text = "Speed: %.1fx (1/2/3)" % _battle_speed()
 	mute_button.text = "Feedback tones: OFF" if audio_muted else "Feedback tones: ON"
 	contrast_button.text = "High-contrast cues: ON" if high_contrast else "High-contrast cues: OFF"

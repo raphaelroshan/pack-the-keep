@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.22.1-battle-audio",
+  "framework_version": "0.22.2-assault-readiness",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -1748,6 +1748,14 @@
     "accessibility": ["mute", "effects_volume", "reduced_motion_minimal_sequence", "visible_last_cue"],
     "output": "offline_procedural_audio_stream_generator",
     "determinism_rule": "cue_requests_observe_completed_presentation_beats_and_never_advance_or_mutate_simulation"
+  },
+  "assault_readiness": {
+    "status": "implemented",
+    "first_phase": "authoritative_wave_created_at_tick_zero_then_presentation_pauses_for_sound_the_bell",
+    "later_phases": "pause_when_doctrine_changes_or_a_new_enemy_family_appears_otherwise_continue_live",
+    "input_paths": ["primary_action", "keyboard_pause_binding", "controller_pause_binding"],
+    "persistence": "tick_zero_save_load_rederives_readiness_from_authored_scenario_without_new_fields",
+    "determinism_rule": "readiness_submits_no_delta_and_cannot_manual_step_until_acknowledged"
   },
   "unit_availability": {
     "status": "vertical_slice",

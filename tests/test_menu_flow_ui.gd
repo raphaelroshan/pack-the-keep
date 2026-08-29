@@ -52,14 +52,17 @@ func _initialize() -> void:
 	_check(ui.screen == "preparation", "confirming custom setup should enter Preparation")
 	_check(ui.keep_canvas.visible and ui.preparation_controls[0].visible, "Preparation should show the fort and build tools")
 	_check(not ui.setup_controls[0].visible and not ui.battle_controls[0].visible and not ui.settings_controls[0].visible, "Preparation should hide unrelated control groups")
-	_check(String(ui.playtest_button.text) == "BEGIN ASSAULT — REAL TIME", "Preparation should expose one clear real-time primary action")
+	_check(String(ui.playtest_button.text) == "READY DEFENSE — ENTER ASSAULT", "Preparation should expose one clear assault-entry action")
 
 	ui._on_recommended_layout()
 	ui.playtest_button.pressed.emit()
 	await process_frame
-	_check(ui.screen == "battle" and ui.keep.wave_active and ui.keep.battle_step == 0 and not ui.battle_paused, "primary action should enter a live Battle before tick one")
+	_check(ui.screen == "battle" and ui.keep.wave_active and ui.keep.battle_step == 0 and ui.battle_paused and not ui.assault_ready_reason.is_empty(), "primary action should enter Battle at tick zero with a readable ready beat")
 	_check(ui.battle_controls[0].visible and not ui.preparation_controls[0].visible, "Battle should replace build tools with battle controls")
-	_check(String(ui.playtest_button.text) == "PAUSE — INSPECT", "Battle should expose pause as the primary live-combat action")
+	_check(String(ui.playtest_button.text).contains("SOUND THE BELL"), "Battle should expose the ready confirmation as its primary action")
+	ui.playtest_button.pressed.emit()
+	await process_frame
+	_check(not ui.battle_paused and String(ui.playtest_button.text) == "PAUSE — INSPECT", "sounding the bell should begin continuous combat and expose pause")
 
 	ui.queue_free()
 	await process_frame

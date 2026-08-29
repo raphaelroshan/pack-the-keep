@@ -35,6 +35,8 @@ func _configure_paths(ui: Control) -> void:
 	ui.display_application_enabled = false
 
 func _resolve_wave(ui: Control) -> void:
+	if not ui.assault_ready_reason.is_empty():
+		ui._on_playtest_primary_action()
 	var guard: int = 0
 	while ui.keep.wave_active and guard < 12:
 		ui._on_advance_wave()

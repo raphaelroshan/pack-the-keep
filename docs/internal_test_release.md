@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.22.1-battle-audio` — the complete battle loop now uses one semantic procedural cue service for warning, contact, response, impact, breach, recovery, and outcome while preserving mute, volume, reduced-motion, and offline boundaries; human sessions and owner approval remain pending
+**Current build identity:** `0.22.2-assault-readiness` — the first assault and materially changed later phases now open at a readable tick-zero Sound the Bell state before continuing as real-time combat; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of ten authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.22.2 acceptance checks
+
+Enter the first assault and confirm Battle opens at tick zero with **Sound the Bell — Begin Phase 1** focused, the doctrine and arriving enemy family named, and manual step unavailable. Wait and change speed; no combat time should pass. Sound the bell with the primary action, Space, and a controller pause binding in separate runs and confirm each releases the same continuous battle. Save at readiness and Continue; the same phase and warning must return. After recovery, confirm a changed doctrine or newly introduced family opens another readiness beat, while an unchanged pressure comparison does not require one.
 
 ## v0.22.1 acceptance checks
 

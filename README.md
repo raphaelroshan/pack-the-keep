@@ -87,6 +87,10 @@ The procedural fortress renderer now uses a central visual registry and an expli
 
 The generated feedback tones now live in a focused `BattleAudioCueService` with one semantic vocabulary for assault start, contact, defender response, hostile impact, breach, recovery, and terminal outcome. The service remains offline and presentation-only, honors mute and effects volume, uses a minimal sequence with reduced motion, and records semantic requests in headless tests without opening an audio device or touching simulation time.
 
+## v0.22.2 assault readiness
+
+The first assault now opens at tick zero with a focused **Sound the Bell** ready state, leaving the fortress, incoming roster, routes, targets, timeline, and response preview visible before time advances. Later phases pause only when the doctrine changes or a new enemy family appears; identical pressure can continue live. Readiness uses the existing pause input, blocks manual stepping until acknowledged, and is re-derived when a tick-zero save is loaded without changing the save schema.
+
 ## Implemented first battle slice
 
 The current battle slice is **Greywatch Keep**, a two-floor 12×8 keep defended by **The Castellan** or **The Warden**. It implements four basic defenders—Pike Squad, Repair Station, Fire Team, and Scout Post—and four enemy doctrines: Raider gate assault, Sapper distributed sabotage, Climber wall bypass, and Siege Beast area pressure.

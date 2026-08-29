@@ -7,6 +7,9 @@ func _check(condition: bool, message: String) -> void:
 		failures.append(message)
 
 func _resolve_wave(ui: Control) -> void:
+	if not ui.assault_ready_reason.is_empty():
+		ui._on_playtest_primary_action()
+		await process_frame
 	var safety: int = 0
 	while ui.keep.wave_active and safety < 12:
 		ui._on_advance_wave()

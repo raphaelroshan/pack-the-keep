@@ -32,6 +32,9 @@ func _initialize() -> void:
 	ui._on_start_wave()
 	if not ui.keep.wave_active:
 		failures.append("recommended layout could not start the first invasion")
+	if not ui.guidance_label.text.contains("ASSAULT READY") or ui.assault_ready_reason.is_empty():
+		failures.append("first invasion did not expose the tick-zero readiness guide")
+	ui._on_playtest_primary_action()
 	if not ui.guidance_label.text.contains("fort stays visible"):
 		failures.append("battle guide did not explain the persistent fort board")
 	if not ui.log_label.text.contains("COMBAT EVENT FEED") or not ui.log_label.text.contains("Forecast"):
