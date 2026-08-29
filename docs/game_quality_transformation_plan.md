@@ -1,11 +1,11 @@
 # Pack the Keep — Game-Quality Transformation Plan
 
 **Audience:** GPT coding agents, art/UX agents, test agents, and the human owner
-**Current baseline:** `0.20.0-first-watch` at `d81767a`
-**Current status:** Technically substantial private pre-alpha; visually and flow-wise still a prototype
+**Current baseline:** `0.21.1-preparation-brief`
+**Current status:** Technically substantial public-source pre-alpha; presentation transformation in progress
 **Primary objective:** Turn the existing deterministic fortress-defense systems into a coherent, attractive, immediately understandable game-quality private alpha without rewriting the simulation core.
 
-**Implementation ledger:** P32 completes the first bounded flow slice: terminal Results now has a dedicated debrief beside the persistent keep, with a three-phase timeline, causal chain, damage summary, consequences, replay experiment, and fixed actions. Human validation remains pending.
+**Implementation ledger:** P32 gives terminal Results a dedicated debrief beside the persistent keep. P33 gives ordinary Preparation a compact current-question, visible-answer, and open-weakness hierarchy above the primary action. Both remain presentation-only projections of authoritative state; human validation remains pending.
 
 > **Central diagnosis:** Pack the Keep has enough mechanics for a real game loop. Its largest gap is not feature count. Its largest gap is presentation: the player must feel that they are preparing a fortress, watching a defense, making urgent but comprehensible interventions, recovering from damage, and learning from the result—not operating a debug panel surrounded by a board.
 

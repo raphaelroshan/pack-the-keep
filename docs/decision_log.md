@@ -647,3 +647,11 @@
 **Reason:** Reusing inter-wave recovery presentation made a finished defense feel like another maintenance interval. A dedicated composition gives completion emotional and visual weight while retaining the damaged keep as evidence for the report.
 
 **Trade-off:** Detailed causal and fortress information scrolls inside the debrief so the replay action can remain fixed and visible. At 125% scale the keep and debrief stack vertically. No new result state is serialized, and unresolved terminal events continue to use their existing event flow until completion.
+
+## ADR-082: Preparation states the question, visible answer, and open weakness
+
+**Decision:** Add a compact `PreparationBriefPanel` above the primary assault action in ordinary Preparation. Derive its current question, visible answer, and first open weakness from existing forecast, scenario, layout-summary, and placed-piece read models. Hide the generic guidance text and suppress the panel during First Watch, which retains its authored objective card.
+
+**Reason:** Preparation exposed all relevant information, but the player had to synthesize doctrine, placement, and warnings from several dense command-rail sections. A stable three-part summary makes the decision legible at the moment of commitment while keeping the fortress as the main visual surface.
+
+**Trade-off:** The visible answer deliberately describes coverage rather than evaluating win probability, and the open weakness reports only the first deterministic warning. Full pack, comparison, and placement detail remains in the command rail. The panel adds no validation, scoring, simulation, or save authority.

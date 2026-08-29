@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.21.0-terminal-debrief` — the controlled playtest adds a dedicated final defense composition beside the persistent keep, with a three-phase timeline, causal chain, damage state, and replay experiment; human sessions and owner approval remain pending
+**Current build identity:** `0.21.1-preparation-brief` — Preparation now names the active tactical question, the layout's visible answer, and one unresolved weakness before the player commits to the assault; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of ten authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.21.1 acceptance checks
+
+Enter ordinary Preparation and confirm the compact brief appears above **Begin Assault** with three stable columns: **Current Question**, **Visible Answer**, and **Open Weakness**. An empty layout must say that no defenders are placed and expose a concrete floor/coverage problem. Apply the recommended layout and confirm the visible answer reports concrete placed coverage without claiming the keep will win. Confirm both fortress floors and the primary action remain in the first viewport, First Watch retains its authored objective instead of duplicating the generic brief, and refreshing the panel does not alter the saved keep state.
 
 ## v0.21.0 acceptance checks
 
