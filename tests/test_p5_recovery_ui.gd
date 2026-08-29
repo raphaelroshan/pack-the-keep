@@ -36,7 +36,7 @@ func _initialize() -> void:
 	_check(ui.selected_instance_id == "pike_squad_0" and ui._selected_id(ui.room_option) == "gate", "map-first recovery targeting did not preserve the selected piece and room")
 	var scroll_rect: Rect2 = Rect2(ui.command_scroll.global_position, ui.command_scroll.size)
 	_check(scroll_rect.has_point(ui.recovery_stage_label.global_position + Vector2.ONE), "Results did not scroll the command table to the recovery choices")
-	_check(String(ui.recovery_stage_label.text).contains("ACTION 1 OF 2"), "recovery header did not expose the first action slot")
+	_check(String(ui.recovery_stage_label.text).contains("CHOICE 1 OF 2"), "recovery header did not expose the first action slot")
 	_check(not ui.recovery_room_button.disabled, "damaged selected room was not a legal repair card")
 	_check(not ui.recovery_piece_button.disabled, "damaged selected piece was not a legal repair card")
 	_check(not ui.recovery_assign_button.disabled, "adjacent specialist assignment was not a legal action card")
@@ -48,7 +48,7 @@ func _initialize() -> void:
 	await process_frame
 	_check(ui.keep.materials == materials_before - 8, "room repair card did not spend the authoritative material cost")
 	_check(ui.keep.repair_actions_remaining == 1, "room repair card did not consume exactly one action")
-	_check(String(ui.recovery_stage_label.text).contains("ACTION 2 OF 2"), "recovery header did not advance to the second action slot")
+	_check(String(ui.recovery_stage_label.text).contains("CHOICE 2 OF 2"), "recovery header did not advance to the second action slot")
 
 	ui.recovery_assign_button.pressed.emit()
 	await process_frame

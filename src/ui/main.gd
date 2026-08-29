@@ -6,6 +6,7 @@ const TerminalDebriefPanelView = preload("res://src/ui/terminal_debrief_panel.gd
 const PreparationBriefPanelView = preload("res://src/ui/preparation_brief_panel.gd")
 const BoardVisuals = preload("res://src/ui/board_visual_registry.gd")
 const BattleAudioCues = preload("res://src/ui/battle_audio_cue_service.gd")
+const RecoveryBriefPanelView = preload("res://src/ui/recovery_brief_panel.gd")
 
 const PackKeepState = preload("res://src/core/keep_state.gd")
 const PackagedSmoke = preload("res://src/platform/packaged_smoke.gd")
@@ -98,6 +99,7 @@ var command_scroll: ScrollContainer
 var command_panel: PanelContainer
 var terminal_debrief_panel: TerminalDebriefPanel
 var preparation_brief_panel: PreparationBriefPanel
+var recovery_brief_panel: RecoveryBriefPanel
 var title_card: PanelContainer
 var build_identity_label: Label
 var screen_label: Label
@@ -1045,6 +1047,9 @@ func _build_ui() -> void:
 	preparation_brief_panel = PreparationBriefPanelView.new()
 	preparation_brief_panel.visible = false
 	left.add_child(preparation_brief_panel)
+	recovery_brief_panel = RecoveryBriefPanelView.new()
+	recovery_brief_panel.visible = false
+	left.add_child(recovery_brief_panel)
 	guidance_label = Label.new()
 	guidance_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	guidance_label.custom_minimum_size = Vector2(800, 64)
@@ -1357,7 +1362,7 @@ func _build_ui() -> void:
 	recovery_actions_panel.add_theme_constant_override("separation", 6)
 	controls.add_child(recovery_actions_panel)
 	var recovery_heading: Label = Label.new()
-	recovery_heading.text = "RECOVERY ACTIONS"
+	recovery_heading.text = "CHOOSE WHAT SURVIVES"
 	recovery_heading.add_theme_font_size_override("font_size", 16)
 	recovery_heading.add_theme_color_override("font_color", Color("#e2bd84"))
 	recovery_actions_panel.add_child(recovery_heading)
@@ -1789,6 +1794,8 @@ func _set_screen(next_screen: String) -> void:
 		status_label.visible = gameplay_screen
 	if preparation_brief_panel:
 		preparation_brief_panel.visible = screen == "preparation" and not tutorial.active
+	if recovery_brief_panel:
+		recovery_brief_panel.visible = screen == "results" and keep.repair_interval_active and not terminal_result and not tutorial.active
 	if guidance_label:
 		guidance_label.visible = gameplay_screen and screen != "preparation" and not terminal_result
 	if playtest_button:
@@ -1891,7 +1898,7 @@ func _focus_screen_control() -> void:
 		terminal_debrief_panel.focus_primary()
 		return
 	elif screen == "results" and recovery_actions_panel.visible:
-		target = recovery_room_button
+		target = _first_legal_recovery_control()
 	elif screen == "results":
 		target = playtest_button
 	elif screen == "settings":
@@ -1909,6 +1916,12 @@ func _focus_screen_control() -> void:
 		else:
 			page_scroll.scroll_horizontal = 0
 			page_scroll.scroll_vertical = 0
+
+func _first_legal_recovery_control() -> Control:
+	for candidate in [recovery_room_button, recovery_piece_button, recovery_assign_button, recovery_clear_button, finish_interval_button]:
+		if candidate != null and candidate.visible and not candidate.disabled:
+			return candidate
+	return finish_interval_button
 
 func _focus_recovery_controls() -> void:
 	if command_scroll and recovery_actions_panel and recovery_actions_panel.visible:
@@ -2486,12 +2499,7 @@ func _refresh_preparation_brief() -> void:
 	var weakness: String = String(warnings[0]) if not warnings.is_empty() else "No immediate coverage warning; compare the layout against the forecast."
 	preparation_brief_panel.render({"question": question, "answer": answer, "weakness": weakness})
 
-func _refresh_recovery_priorities() -> void:
-	if recovery_priority_label == null:
-		return
-	if not keep.repair_interval_active and keep.last_outcome.is_empty():
-		recovery_priority_label.text = "RECOVERY PRIORITIES — Appear after a Hold or Partial Breach. The ranking is advisory; repair commands remain authoritative."
-		return
+func _recovery_priority_rows() -> Array[Dictionary]:
 	var priorities: Array[Dictionary] = []
 	for room_id in keep.rooms.keys():
 		var id: String = String(room_id)
@@ -2515,6 +2523,15 @@ func _refresh_recovery_priorities() -> void:
 			if int(right.get("score", 0)) > int(left.get("score", 0)) or (int(right.get("score", 0)) == int(left.get("score", 0)) and String(right.get("id", "")) < String(left.get("id", ""))):
 				priorities[outer] = right
 				priorities[inner] = left
+	return priorities
+
+func _refresh_recovery_priorities() -> void:
+	if recovery_priority_label == null:
+		return
+	if not keep.repair_interval_active and keep.last_outcome.is_empty():
+		recovery_priority_label.text = "RECOVERY PRIORITIES — Appear after a Hold or Partial Breach. The ranking is advisory; repair commands remain authoritative."
+		return
+	var priorities: Array[Dictionary] = _recovery_priority_rows()
 	var rows: Array[String] = []
 	for index in range(mini(3, priorities.size())):
 		var row: Dictionary = priorities[index]
@@ -2524,6 +2541,51 @@ func _refresh_recovery_priorities() -> void:
 		recovery_priority_label.text = "RECOVERY PRIORITIES — %s\n%s\nNEXT: %s | %s\nTRADE-OFF: %s" % ["advisory order", " | ".join(rows), String(advice.get("next_doctrine", "next doctrine")).replace("_", " "), String(advice.get("target", "preserve the most important function")), String(advice.get("tradeoff", "choose deliberately"))]
 	else:
 		recovery_priority_label.text = "RECOVERY PRIORITIES — %s\n%s" % ["advisory order", " | ".join(rows)]
+
+func _recovery_brief_view_model() -> Dictionary:
+	var latest: Dictionary = keep.wave_history.back() if not keep.wave_history.is_empty() else {}
+	var outcome: String = String(latest.get("outcome", keep.last_outcome)).replace("_", " ").to_upper()
+	var changed: String = "Phase %d %s · %d enemies defeated · %d room / %d defender damage." % [int(latest.get("wave", keep.wave_index)), outcome, int(latest.get("defeated_enemies", 0)), int(latest.get("room_damage", 0)), int(latest.get("piece_damage", 0))]
+	var priorities: Array[Dictionary] = _recovery_priority_rows()
+	var first_priority: Dictionary = priorities[0] if not priorities.is_empty() else {}
+	var damaged_piece: Dictionary = {}
+	var largest_piece_loss: int = 0
+	for instance_id_value in keep.pieces.keys():
+		var instance_id: String = String(instance_id_value)
+		var instance: Dictionary = keep.pieces[instance_id]
+		var maximum: int = int(instance.get("max_health", 0))
+		var health: int = int(instance.get("health", maximum))
+		var loss: int = maximum - health
+		if loss > largest_piece_loss:
+			largest_piece_loss = loss
+			damaged_piece = {"name": String(keep.piece_definition(String(instance.get("piece_id", ""))).get("name", instance_id)), "health": health, "maximum": maximum, "disabled": bool(instance.get("disabled", false))}
+	var matters: String
+	var room_needs_attention: bool = not first_priority.is_empty() and int(first_priority.get("score", 0)) > 0
+	if not damaged_piece.is_empty() and not room_needs_attention:
+		matters = "%s is %s at %d/%d health." % [String(damaged_piece.get("name", "A defender")), "DISABLED" if bool(damaged_piece.get("disabled", false)) else "DAMAGED", int(damaged_piece.get("health", 0)), int(damaged_piece.get("maximum", 0))]
+	elif first_priority.is_empty():
+		matters = "No damaged room is currently ranked; preserve flexibility before the next pressure."
+	else:
+		matters = "%s is %s at %d%% condition." % [String(first_priority.get("name", "The keep")), String(first_priority.get("state", "STABLE")), int(first_priority.get("condition", 100))]
+	var advice: Dictionary = keep.recovery_advice()
+	var next_pressure: String = "%s · %s" % [String(advice.get("next_doctrine", "next doctrine")).replace("_", " ").capitalize(), String(advice.get("target", "Preserve the most important function."))] if bool(advice.get("ok", false)) else "No further authored pressure is forecast."
+	return {
+		"actions_remaining": keep.repair_actions_remaining,
+		"materials": keep.materials,
+		"changed": changed,
+		"matters": matters,
+		"next": next_pressure,
+		"priority": String(damaged_piece.get("name", "")) if not damaged_piece.is_empty() and not room_needs_attention else String(first_priority.get("name", advice.get("target", "Preserve the most important function."))),
+		"tradeoff": String(advice.get("tradeoff", "Every recovery action leaves another need unanswered."))
+	}
+
+func _refresh_recovery_brief() -> void:
+	if recovery_brief_panel == null:
+		return
+	var terminal_result: bool = _is_terminal_result()
+	recovery_brief_panel.visible = screen == "results" and keep.repair_interval_active and not terminal_result and not tutorial.active
+	if recovery_brief_panel.visible:
+		recovery_brief_panel.render(_recovery_brief_view_model())
 
 func _apply_recovery_action_card(title: Label, detail: Label, button: Button, action_name: String, preview: Dictionary) -> void:
 	var target_name: String = String(preview.get("target_name", "Select a target"))
@@ -2545,7 +2607,7 @@ func _refresh_recovery_action_cards() -> void:
 		return
 	var action_number: int = 3 - keep.repair_actions_remaining
 	if keep.repair_actions_remaining > 0:
-		recovery_stage_label.text = "ACTION %d OF 2 — choose one priority. %d material(s) available." % [action_number, keep.materials]
+		recovery_stage_label.text = "CHOICE %d OF 2 — exact costs and trade-offs are shown below." % action_number
 	else:
 		recovery_stage_label.text = "ACTIONS COMPLETE — continue explicitly when the keep is ready."
 	var instance_id: String = _selected_piece_instance()
@@ -3418,6 +3480,8 @@ func _refresh_terminal_debrief() -> void:
 		playtest_status_label.visible = screen in ["preparation", "battle", "results"] and not terminal_result
 	if recovery_actions_panel != null and terminal_result:
 		recovery_actions_panel.visible = false
+	if recovery_brief_panel != null and terminal_result:
+		recovery_brief_panel.visible = false
 	if not terminal_result:
 		return
 	terminal_debrief_panel.render(_terminal_debrief_view_model())
@@ -3599,6 +3663,7 @@ func _refresh_ui() -> void:
 	_refresh_response_preview()
 	_refresh_layout_lens()
 	_refresh_preparation_brief()
+	_refresh_recovery_brief()
 	_refresh_recovery_priorities()
 	_refresh_recovery_action_cards()
 	_refresh_result_explanation()
