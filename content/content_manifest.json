@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.22.3",
+  "content_version": "0.23.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -469,7 +469,16 @@
     "focus": "first_legal_recovery_action",
     "persistence": "rederived_after_inter_wave_save_load_without_schema_change",
     "evidence": ["design/p37_recovery_hierarchy.md", "docs/p37_recovery_hierarchy_verification.md", "tests/test_p37_recovery_hierarchy.gd"],
-    "next_slice": "p38_setup_choice_cards"
+    "next_slice": "p38_war_council_choice_cards"
+  },
+  "p38_war_council_choice_cards": {
+    "status": "implemented",
+    "composition": ["commander_identity", "strength", "intervention", "limitation", "first_question", "scenario_objective", "pressure_arc", "run_rule", "fixed_commitments"],
+    "navigation": "card_previous_next_with_advanced_dropdown_fallback",
+    "tutorial": "locked_to_castellan_and_gatehouse_lock",
+    "authority": "presentation_only_over_existing_commander_and_scenario_selection_commands",
+    "evidence": ["design/p38_war_council_choice_cards.md", "docs/p38_war_council_choice_cards_verification.md", "tests/test_p38_war_council_choice_cards.gd"],
+    "next_slice": "p39_pack_offer_choice_cards"
   },
   "campaign": {
     "title": "The Bell at Dusk",

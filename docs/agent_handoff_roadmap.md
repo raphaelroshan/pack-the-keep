@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
 **Document status:** Active planning contract for post-v0.14.2 development
-**Current release baseline:** `0.22.3-recovery-hierarchy` on the current vertical-slice branch; remote `main` remains owner-controlled
+**Current release baseline:** `0.23.0-war-council-cards` on the current vertical-slice branch; remote `main` remains owner-controlled
 **Release posture:** CI-verified public repository with owner-controlled merges; no public alpha release or storefront claim yet
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
@@ -110,6 +110,7 @@ Milestones must be completed in order. An agent may split a milestone into small
 | P35 | Implemented; human audio-recognition evidence pending | One presentation-only cue service covers assault start, contact, defender response, hostile impact, breach, recovery, and terminal outcomes while honoring mute, volume, reduced motion, and headless operation. | Reconcile the ready beat and later-wave start behavior without changing combat timing. |
 | P36 | Implemented; human pacing evidence pending | Phase one opens at tick-zero readiness; later doctrine or roster changes pause for a readable warning, while unchanged pressure can continue live. | Give inter-wave Recovery a compact what-changed/why/next hierarchy above its actions. |
 | P37 | Implemented; human recovery-comprehension evidence pending | Inter-wave Recovery now states what changed, why it matters, next pressure, action budget, first priority, and trade-off above the persistent keep; exact commands remain in the rail. | Replace raw War Council selectors with compact commander and scenario choice cards. |
+| P38 | Implemented; human choice-comprehension evidence pending | The War Council now presents commander identity and authored defense pressure through two navigable cards, with First Watch locks and advanced dropdown fallbacks preserved. | Give Preparation pack offers the same game-facing choice hierarchy without changing pack authority. |
 
 P13 onward are planning identifiers, not permission to release automatically. Every milestone still requires local validation, CI, visual review, and explicit human approval before external distribution. The existing P5–P12 sections below remain useful as acceptance contracts, but agents must not re-implement them unless a regression or refactor explicitly requires it.
 

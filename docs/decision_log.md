@@ -687,3 +687,11 @@
 **Reason:** The action cards were mechanically clear but required the player to infer the phase outcome and next-wave stakes from separate long reports. A compact hierarchy frames the two-action sacrifice before the player evaluates individual buttons.
 
 **Trade-off:** The priority is advisory and selects only one visible damaged room or defender. It does not reorder, auto-select, or execute actions. Terminal Results, authored-event gating, and all recovery costs remain unchanged.
+
+## ADR-087: The War Council presents choices before controls
+
+**Decision:** Replace the main-column selected-loadout paragraph with a dedicated presentation-only `WarCouncilChoicePanel`. Show commander identity, strength, intervention, limitation, and first question beside scenario identity, objective, teaching question, authored pressure arc, risk, and fixed commitments. Route card navigation through the existing option metadata and selection handlers, and retain the dropdowns as an advanced fallback.
+
+**Reason:** The briefing contained the right information but made the player assemble it from a compact paragraph and a long command rail. Two stable cards make the run-defining contrast readable before the fortress appears and give mouse, keyboard, and controller users an obvious browsing path.
+
+**Trade-off:** The main setup screen becomes taller and may scroll at small windows or large UI scales. Cards therefore stack at 125% scale, while the detailed scenario preview and fallback selectors remain available in the command rail. No card field is serialized or allowed to select content during render.
