@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
 **Document status:** Active planning contract for post-v0.14.2 development
-**Current release baseline:** `0.24.1-battle-command-hierarchy` on the current vertical-slice branch; remote `main` remains owner-controlled
+**Current release baseline:** `0.25.0-local-playtest-observer` on the current vertical-slice branch; remote `main` remains owner-controlled
 **Release posture:** CI-verified public repository with owner-controlled merges; no public alpha release or storefront claim yet
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
@@ -115,6 +115,7 @@ Milestones must be completed in order. An agent may split a milestone into small
 | P40 | Implemented; human preparation-flow evidence pending | Preparation now reads as pack choice, placement/inspection, and defense commitment, with diagnostics collapsed behind an explicit Advanced control. | Give room, defender, and threat inspection one consistent action-oriented hierarchy. |
 | P41 | Implemented; human inspection-comprehension evidence pending | Room, defender, and threat selections now share identity, condition, tactical purpose, next action, and detailed evidence without raw IDs. | Simplify Battle commands around live state, intervention, and inspection. |
 | P42 | Implemented; human battle-hierarchy evidence pending | Battle now leads with live state, pause/resume, commander intervention, and focused-threat inspection; step, speed, and fallback selection remain available under Tactical controls. | Add opt-in local playtest instrumentation and a stable screen-state capture harness without network telemetry. |
+| P43 | Implemented; human sessions remain pending | Settings can explicitly enable session-only local observation, export a non-human-evidence JSON snapshot, and run a stable nine-screen visual capture harness. | Extract a presentation snapshot boundary for one screen without changing simulation ownership. |
 
 P13 onward are planning identifiers, not permission to release automatically. Every milestone still requires local validation, CI, visual review, and explicit human approval before external distribution. The existing P5–P12 sections below remain useful as acceptance contracts, but agents must not re-implement them unless a regression or refactor explicitly requires it.
 

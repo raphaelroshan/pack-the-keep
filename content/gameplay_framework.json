@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.24.1-battle-command-hierarchy",
+  "framework_version": "0.25.0-local-playtest-observer",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -1801,6 +1801,14 @@
     "disclosed_controls": ["manual_single_step", "presentation_speed", "fallback_threat_selector"],
     "tutorial": "enemy_inspection_focus_targets_the_visible_focused_threat_action",
     "determinism_rule": "disclosure_and_battle_state_projection_do_not_change_combat_commands_timing_or_serialized_state"
+  },
+  "local_playtest_observation": {
+    "status": "implemented",
+    "default": "disabled_each_launch",
+    "metrics": ["screen_duration", "first_action", "pause_count", "focus_count", "primary_action_path", "recovery_choice", "result_type"],
+    "export": "explicit_local_json_only",
+    "capture": "stable_1600x900_nine_screen_graphical_harness",
+    "privacy_rule": "no_identifiers_network_upload_or_human_evidence_claims"
   },
   "unit_availability": {
     "status": "vertical_slice",
