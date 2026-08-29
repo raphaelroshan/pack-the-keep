@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.23.1-pack-offer-card` — Preparation now explains each pack's doctrine, pieces, cost, spatial demand, strength, weakness, and offer state before opening; human sessions and owner approval remain pending
+**Current build identity:** `0.23.2-preparation-hierarchy` — Preparation now groups pack choice, defender placement/inspection, and assault commitment into a numbered game-facing hierarchy; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of ten authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.23.2 acceptance checks
+
+Enter Preparation and confirm the rail reads **1 Choose a Doctrine Pack** then **2 Place & Inspect Defenders**, while the board action reads **3 Ready Defense — Enter Assault**. Confirm the Advanced panel begins collapsed, reveals the catalogue, doctrine selector, and layout analysis on demand, and can be closed without changing the run. Confirm First Watch still focuses Pike Line Open after Gate inspection and the hierarchy remains usable at 125% scale.
 
 ## v0.23.1 acceptance checks
 

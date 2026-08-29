@@ -703,3 +703,11 @@
 **Reason:** Packs are the game's signature strategic commitment, but the previous interface presented them like a debug catalogue. A single card makes the sacrifice and board demand visible before materials are spent and clearly distinguishes browsing from committing.
 
 **Trade-off:** The command rail card is taller than the former selector. Its information replaces rather than duplicates the old preview, and it remains scrollable at large scale. State labels are derived from `pack_preview()` and current tutorial context; only `PackKeepState` may grant, reserve, price, or reject a pack.
+
+## ADR-089: Preparation uses a three-stage command hierarchy
+
+**Decision:** Order Preparation around numbered pack choice, defender placement/inspection, and assault commitment. Move piece selection beside floor and placement actions, suppress the decorative mixed icon strip, and collapse the pack catalogue, invasion doctrine selector, and full layout lens behind an explicit Advanced control.
+
+**Reason:** All necessary commands existed, but the rail interleaved high-frequency decisions with diagnostic selectors and repeated visual references. The new hierarchy makes the next meaningful verb visible while leaving the fortress and answer-quality brief as the primary surface.
+
+**Trade-off:** Advanced information now requires one disclosure action. It remains keyboard/controller accessible and preserves exact state, costs, and command paths; tutorial-required actions never depend on opening the Advanced panel.

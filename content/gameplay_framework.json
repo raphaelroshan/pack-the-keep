@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.23.1-pack-offer-card",
+  "framework_version": "0.23.2-preparation-hierarchy",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -1780,6 +1780,13 @@
     "navigation": "card_previous_next_changes_only_existing_pack_selector",
     "fallback": "advanced_pack_dropdown_remains_available_outside_first_watch",
     "determinism_rule": "offer_rendering_and_browsing_do_not_grant_content_or_mutate_pack_keep_state"
+  },
+  "preparation_command_hierarchy": {
+    "status": "implemented",
+    "stages": ["choose_doctrine_pack", "place_and_inspect_defenders", "commit_defense"],
+    "advanced_controls": ["pack_catalogue", "invasion_doctrine", "full_layout_analysis"],
+    "default": "advanced_controls_collapsed",
+    "determinism_rule": "grouping_visibility_and_numbering_do_not_change_commands_or_pack_keep_state"
   },
   "unit_availability": {
     "status": "vertical_slice",
