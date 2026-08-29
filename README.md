@@ -91,6 +91,10 @@ The generated feedback tones now live in a focused `BattleAudioCueService` with 
 
 The first assault now opens at tick zero with a focused **Sound the Bell** ready state, leaving the fortress, incoming roster, routes, targets, timeline, and response preview visible before time advances. Later phases pause only when the doctrine changes or a new enemy family appears; identical pressure can continue live. Readiness uses the existing pause input, blocks manual stepping until acknowledged, and is re-derived when a tick-zero save is loaded without changing the save schema.
 
+## v0.23.2 Preparation hierarchy
+
+Preparation now reads as three numbered stages: choose a doctrine pack, place and inspect defenders, then commit the defense. Piece and floor controls live together, while the pack catalogue, authored doctrine selector, and full layout analysis are collapsed behind an Advanced control. The fortress, current question/answer/weakness brief, and primary assault action remain dominant.
+
 ## v0.23.1 pack offer card
 
 Preparation now presents the selected pack as a complete doctrine offer rather than a raw dropdown preview. The card shows contents and placement costs, opening cost, strength, limitation, spatial demand, strategic question, opening budget, and Available/Reserved/Opened/No Openings state. Card browsing is presentation-only; Open and Reserve retain the existing authoritative commands, and the advanced dropdown remains as a fallback.

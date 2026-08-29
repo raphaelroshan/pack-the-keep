@@ -45,7 +45,7 @@ func _initialize() -> void:
 		failures.append("confirmed guided setup did not place exactly two starter pieces")
 	if not ui.keep.pieces.has("pike_squad_0") or not ui.keep.pieces.has("narrow_gate_1"):
 		failures.append("quick-playtest preset is missing Pike Squad or Narrow Gate")
-	var quick_action: Button = _find_button(ui, "READY DEFENSE — ENTER ASSAULT")
+	var quick_action: Button = _find_button(ui, "3  READY DEFENSE — ENTER ASSAULT")
 	if quick_action == null:
 		failures.append("preparation start action is missing")
 	else:

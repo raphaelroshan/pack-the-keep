@@ -52,7 +52,7 @@ func _initialize() -> void:
 	_check(ui.screen == "preparation", "confirming custom setup should enter Preparation")
 	_check(ui.keep_canvas.visible and ui.preparation_controls[0].visible, "Preparation should show the fort and build tools")
 	_check(not ui.setup_controls[0].visible and not ui.battle_controls[0].visible and not ui.settings_controls[0].visible, "Preparation should hide unrelated control groups")
-	_check(String(ui.playtest_button.text) == "READY DEFENSE — ENTER ASSAULT", "Preparation should expose one clear assault-entry action")
+	_check(String(ui.playtest_button.text) == "3  READY DEFENSE — ENTER ASSAULT", "Preparation should expose one clear numbered assault-entry action")
 
 	ui._on_recommended_layout()
 	ui.playtest_button.pressed.emit()

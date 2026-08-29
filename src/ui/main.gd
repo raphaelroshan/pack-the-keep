@@ -63,6 +63,10 @@ var pack_preview_label: Label
 var preparation_pack_offer_panel: PackOfferPanel
 var pack_button: Button
 var reserve_button: Button
+var preparation_advanced_button: Button
+var preparation_advanced_panel: VBoxContainer
+var preparation_pack_stage_label: Label
+var preparation_placement_stage_label: Label
 var inspector_label: Label
 var placement_label: Label
 var event_label: Label
@@ -1206,7 +1210,12 @@ func _build_ui() -> void:
 	layout_lens_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	layout_lens_label.custom_minimum_size = Vector2(292, 142)
 	layout_lens_label.add_theme_color_override("font_color", Color("#d8c389"))
-	preparation_section.add_child(layout_lens_label)
+
+	preparation_pack_stage_label = Label.new()
+	preparation_pack_stage_label.text = "1  CHOOSE A DOCTRINE PACK"
+	preparation_pack_stage_label.add_theme_font_size_override("font_size", 14)
+	preparation_pack_stage_label.add_theme_color_override("font_color", Color("#e2bd84"))
+	preparation_section.add_child(preparation_pack_stage_label)
 
 	commander_option = OptionButton.new()
 	for commander_id in keep.commander_ids():
@@ -1295,21 +1304,35 @@ func _build_ui() -> void:
 	pack_button = preparation_pack_offer_panel.open_button
 	reserve_button = preparation_pack_offer_panel.reserve_button
 	pack_preview_label = preparation_pack_offer_panel.detail_label
+	preparation_advanced_button = Button.new()
+	preparation_advanced_button.text = "Show advanced preparation"
+	preparation_advanced_button.tooltip_text = "Show catalogue, authored doctrine, and full layout analysis without changing the defense."
+	preparation_advanced_button.pressed.connect(_toggle_preparation_advanced)
+	preparation_section.add_child(preparation_advanced_button)
+	preparation_advanced_panel = VBoxContainer.new()
+	preparation_advanced_panel.add_theme_constant_override("separation", 6)
+	preparation_advanced_panel.visible = false
+	preparation_section.add_child(preparation_advanced_panel)
 	var pack_advanced_heading: Label = Label.new()
 	pack_advanced_heading.text = "ADVANCED PACK LIST"
 	pack_advanced_heading.add_theme_font_size_override("font_size", 12)
 	pack_advanced_heading.add_theme_color_override("font_color", Color("#8fc6d1"))
-	preparation_section.add_child(pack_advanced_heading)
+	preparation_advanced_panel.add_child(pack_advanced_heading)
 	pack_option = OptionButton.new()
 	pack_option.item_selected.connect(func(_index: int) -> void: _refresh_pack_preview())
 	for pack_id in keep.pack_ids():
 		pack_option.add_item(String(keep.pack_definition(pack_id).get("name", pack_id)))
 		pack_option.set_item_metadata(pack_option.item_count - 1, pack_id)
 	var pack_group: VBoxContainer = _labeled_control("Pack catalogue", pack_option)
-	preparation_section.add_child(pack_group)
+	preparation_advanced_panel.add_child(pack_group)
 	availability_label = Label.new()
 	availability_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	availability_label.add_theme_color_override("font_color", Color("#aab1b2"))
+	preparation_placement_stage_label = Label.new()
+	preparation_placement_stage_label.text = "2  PLACE & INSPECT DEFENDERS"
+	preparation_placement_stage_label.add_theme_font_size_override("font_size", 14)
+	preparation_placement_stage_label.add_theme_color_override("font_color", Color("#e2bd84"))
+	preparation_section.add_child(preparation_placement_stage_label)
 	preparation_section.add_child(availability_label)
 	var asset_strip: VBoxContainer = VBoxContainer.new()
 	for asset_row in [[PIKE_ICON, REPAIR_ICON, FIRE_ICON, SCOUT_ICON, GATE_ICON], [RAIDER_ICON, SAPPER_ICON, CLIMBER_ICON]]:
@@ -1323,6 +1346,7 @@ func _build_ui() -> void:
 			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 			row.add_child(icon)
 		asset_strip.add_child(row)
+	asset_strip.visible = false
 	preparation_section.add_child(asset_strip)
 
 	piece_option = OptionButton.new()
@@ -1332,7 +1356,7 @@ func _build_ui() -> void:
 		piece_option.set_item_metadata(piece_option.item_count - 1, piece_id)
 		piece_option.set_item_disabled(piece_option.item_count - 1, not keep.available_pieces.has(String(piece_id)))
 	var piece_group: VBoxContainer = _labeled_control("Piece", piece_option)
-	inspection_section.add_child(piece_group)
+	preparation_section.add_child(piece_group)
 
 	floor_option = OptionButton.new()
 	floor_option.item_selected.connect(func(_index: int) -> void: _arm_selected_piece())
@@ -1371,8 +1395,8 @@ func _build_ui() -> void:
 		doctrine_option.add_item(String(keep.doctrine_definition(doctrine_id).get("name", doctrine_id)))
 		doctrine_option.set_item_metadata(doctrine_option.item_count - 1, doctrine_id)
 	var doctrine_group: VBoxContainer = _labeled_control("Invasion doctrine", doctrine_option)
-	preparation_section.add_child(doctrine_group)
-	preparation_section.move_child(layout_lens_label, preparation_section.get_child_count() - 1)
+	preparation_advanced_panel.add_child(doctrine_group)
+	preparation_advanced_panel.add_child(layout_lens_label)
 	recovery_actions_panel = VBoxContainer.new()
 	recovery_actions_panel.add_theme_constant_override("separation", 6)
 	controls.add_child(recovery_actions_panel)
@@ -2233,6 +2257,13 @@ func _cycle_pack(direction: int) -> void:
 		return
 	pack_option.select(wrapi(pack_option.selected + direction, 0, pack_option.item_count))
 	_refresh_pack_preview()
+
+func _toggle_preparation_advanced() -> void:
+	if preparation_advanced_panel == null:
+		return
+	preparation_advanced_panel.visible = not preparation_advanced_panel.visible
+	preparation_advanced_button.text = "Hide advanced preparation" if preparation_advanced_panel.visible else "Show advanced preparation"
+	_set_event("Advanced preparation details shown." if preparation_advanced_panel.visible else "Advanced preparation details collapsed.")
 
 func _on_open_pack() -> void:
 	var pack_id: String = _selected_id(pack_option)
@@ -3700,7 +3731,7 @@ func _refresh_ui() -> void:
 	guidance_label.text = _first_battle_guidance()
 	if playtest_button:
 		if screen == "preparation":
-			playtest_button.text = "READY DEFENSE — ENTER ASSAULT"
+			playtest_button.text = "3  READY DEFENSE — ENTER ASSAULT"
 			playtest_button.disabled = keep.pieces.is_empty() or keep.repair_interval_active or not keep.active_event_id.is_empty()
 			playtest_button.tooltip_text = "Enter the selected assault at tick zero, review its opening pressure, then sound the bell."
 			if not keep.active_event_id.is_empty():

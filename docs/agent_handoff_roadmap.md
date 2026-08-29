@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
 **Document status:** Active planning contract for post-v0.14.2 development
-**Current release baseline:** `0.23.1-pack-offer-card` on the current vertical-slice branch; remote `main` remains owner-controlled
+**Current release baseline:** `0.23.2-preparation-hierarchy` on the current vertical-slice branch; remote `main` remains owner-controlled
 **Release posture:** CI-verified public repository with owner-controlled merges; no public alpha release or storefront claim yet
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
@@ -112,6 +112,7 @@ Milestones must be completed in order. An agent may split a milestone into small
 | P37 | Implemented; human recovery-comprehension evidence pending | Inter-wave Recovery now states what changed, why it matters, next pressure, action budget, first priority, and trade-off above the persistent keep; exact commands remain in the rail. | Replace raw War Council selectors with compact commander and scenario choice cards. |
 | P38 | Implemented; human choice-comprehension evidence pending | The War Council now presents commander identity and authored defense pressure through two navigable cards, with First Watch locks and advanced dropdown fallbacks preserved. | Give Preparation pack offers the same game-facing choice hierarchy without changing pack authority. |
 | P39 | Implemented; human pack-comprehension evidence pending | Preparation now exposes doctrine, contents, costs, spatial demand, strength, limitation, question, opening budget, and offer state in one command card. | Simplify the remaining Preparation command hierarchy around placement and inspection. |
+| P40 | Implemented; human preparation-flow evidence pending | Preparation now reads as pack choice, placement/inspection, and defense commitment, with diagnostics collapsed behind an explicit Advanced control. | Give room, defender, and threat inspection one consistent action-oriented hierarchy. |
 
 P13 onward are planning identifiers, not permission to release automatically. Every milestone still requires local validation, CI, visual review, and explicit human approval before external distribution. The existing P5–P12 sections below remain useful as acceptance contracts, but agents must not re-implement them unless a regression or refactor explicitly requires it.
 
