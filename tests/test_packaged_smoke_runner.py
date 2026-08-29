@@ -24,7 +24,7 @@ def complete_report(profile_dir: Path, version: str, phase: str, executable: Pat
         "schema_version": 2, "phase": phase, "ok": True, "errors": [],
         "build_version": version, "editor_feature": False,
         "offline_proxy_guard": True, "smoke_guard": True, "main_scene_freed": True,
-        "battle_step": 1, "save_schema_version": 4, "settings_schema_version": 4,
+        "battle_step": 1, "save_schema_version": 4, "settings_schema_version": 5,
         "controller_navigation_ready": True, "controller_defaults_ready": True,
         "settings_state_unchanged": True,
         "content_status": {"ok": True, "keep_count": 2, "region_count": 1, "commander_count": 2, "piece_count": 17, "pack_count": 9, "enemy_count": 7, "doctrine_count": 8, "scenario_count": 10, "event_count": 9, "modifier_count": 2},
@@ -108,7 +108,7 @@ class PackagedSmokeReportTests(unittest.TestCase):
                     (report_dir / runner.REPORT_FILENAME).write_text(json.dumps(report), encoding="utf-8")
                     if phase == "clean_install":
                         (report_dir / runner.SAVE_FILENAME).write_text(json.dumps({"schema_version": 4, "seed": 3307, "battle_step": 1, "unlocked_modifier_ids": [], "equipped_modifier_id": ""}), encoding="utf-8")
-                        (report_dir / runner.SETTINGS_FILENAME).write_text(json.dumps({"schema_version": 4, "ui_scale_index": 2, "input_bindings": {}, "event_feed_retention_index": 0, "auto_pause_on_threat": False}), encoding="utf-8")
+                        (report_dir / runner.SETTINGS_FILENAME).write_text(json.dumps({"schema_version": 5, "ui_scale_index": 2, "input_bindings": {}, "event_feed_retention_index": 0, "auto_pause_on_threat": False, "tutorial_completed": False, "tutorial_dismissed": False}), encoding="utf-8")
                 return runner.subprocess.CompletedProcess(command, 0, "", "")
 
             arguments = [
@@ -181,7 +181,7 @@ class PackagedSmokeReportTests(unittest.TestCase):
             save_path = user_data / runner.SAVE_FILENAME
             settings_path = user_data / runner.SETTINGS_FILENAME
             save_path.write_text(json.dumps({"schema_version": 4, "seed": 3307, "battle_step": 1, "unlocked_modifier_ids": ["x"], "equipped_modifier_id": "x"}), encoding="utf-8")
-            settings_path.write_text(json.dumps({"schema_version": 4, "ui_scale_index": 2, "input_bindings": {"battle_pause": []}, "event_feed_retention_index": 3, "auto_pause_on_threat": True}), encoding="utf-8")
+            settings_path.write_text(json.dumps({"schema_version": 5, "ui_scale_index": 2, "input_bindings": {"battle_pause": []}, "event_feed_retention_index": 3, "auto_pause_on_threat": True, "tutorial_completed": False, "tutorial_dismissed": False}), encoding="utf-8")
             report = {"user_data_dir": str(user_data), "save_path": str(save_path), "settings_path": str(settings_path)}
 
             runner.write_stale_backups(report)

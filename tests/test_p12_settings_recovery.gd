@@ -33,7 +33,7 @@ func _has_joypad_binding(action: String, button_index: int) -> bool:
 
 func _settings(speed: int, muted: bool, scale: int) -> Dictionary:
 	return {
-		"schema_version": 4,
+		"schema_version": 5,
 		"battle_speed_index": speed,
 		"audio_muted": muted,
 		"high_contrast": muted,
@@ -47,7 +47,9 @@ func _settings(speed: int, muted: bool, scale: int) -> Dictionary:
 		"fullscreen_enabled": true,
 		"effects_volume_index": 1,
 		"event_feed_retention_index": 3,
-		"auto_pause_on_threat": muted
+		"auto_pause_on_threat": muted,
+		"tutorial_completed": false,
+		"tutorial_dismissed": false
 	}
 
 func _initialize() -> void:

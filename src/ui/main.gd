@@ -1,6 +1,7 @@
 extends Control
 
 const AuthoredEventPanelView = preload("res://src/ui/authored_event_panel.gd")
+const FirstWatchTutorial = preload("res://src/ui/tutorial_director.gd")
 
 const PackKeepState = preload("res://src/core/keep_state.gd")
 const PackagedSmoke = preload("res://src/platform/packaged_smoke.gd")
@@ -17,10 +18,13 @@ const CLIMBER_ICON = preload("res://assets/climber_icon.png")
 const SAVE_PATH := "user://pack_the_keep_prototype.save"
 const SAVE_TEMP_PATH := "user://pack_the_keep_prototype.save.tmp"
 const SAVE_BACKUP_PATH := "user://pack_the_keep_prototype.save.bak"
-const SETTINGS_SCHEMA_VERSION := 4
+const SETTINGS_SCHEMA_VERSION := 5
 const SETTINGS_PATH := "user://pack_the_keep_settings.json"
 const SETTINGS_TEMP_PATH := "user://pack_the_keep_settings.json.tmp"
 const SETTINGS_BACKUP_PATH := "user://pack_the_keep_settings.json.bak"
+const TUTORIAL_PATH := "user://pack_the_keep_tutorial.save"
+const TUTORIAL_TEMP_PATH := "user://pack_the_keep_tutorial.save.tmp"
+const TUTORIAL_BACKUP_PATH := "user://pack_the_keep_tutorial.save.bak"
 const UI_SCALE_PRESETS := [0.8, 1.0, 1.25, 1.5, 2.0]
 const WINDOW_SIZE_PRESETS := [Vector2i(1280, 720), Vector2i(1600, 900), Vector2i(1920, 1080), Vector2i(2560, 1440)]
 const EFFECTS_VOLUME_PRESETS := [0.25, 0.5, 0.75, 1.0]
@@ -125,6 +129,8 @@ var reset_bindings_button: Button
 var binding_summary_label: Label
 var input_help_label: Label
 var quick_test_button: Button
+var title_learn_button: Button
+var title_continue_tutorial_button: Button
 var screen: String = "title"
 var battle_paused: bool = true
 var battle_speed_index: int = 1
@@ -143,6 +149,9 @@ var save_backup_path: String = SAVE_BACKUP_PATH
 var settings_path: String = SETTINGS_PATH
 var settings_temp_path: String = SETTINGS_TEMP_PATH
 var settings_backup_path: String = SETTINGS_BACKUP_PATH
+var tutorial_path: String = TUTORIAL_PATH
+var tutorial_temp_path: String = TUTORIAL_TEMP_PATH
+var tutorial_backup_path: String = TUTORIAL_BACKUP_PATH
 var preferences_persistence_enabled: bool = true
 var display_application_enabled: bool = true
 var rebind_waiting_action: String = ""
@@ -186,9 +195,24 @@ var scorecard_label: Label
 var layout_lens_label: Label
 var playtest_button: Button
 var playtest_status_label: Label
+var tutorial: TutorialDirector
+var tutorial_panel: PanelContainer
+var tutorial_speaker_label: Label
+var tutorial_title_label: Label
+var tutorial_body_label: Label
+var tutorial_objective_label: Label
+var tutorial_continue_button: Button
+var tutorial_skip_button: Button
+var tutorial_help_button: Button
+var tutorial_checkpoint: Dictionary = {}
+var tutorial_completed: bool = false
+var tutorial_dismissed: bool = false
+var developer_ui_enabled: bool = false
 
 func _ready() -> void:
 	keep = PackKeepState.new(3307)
+	tutorial = FirstWatchTutorial.new()
+	developer_ui_enabled = OS.get_cmdline_user_args().has("--debug-ui")
 	_restore_default_input_bindings()
 	_ensure_controller_navigation_bindings()
 	preferences_persistence_enabled = DisplayServer.get_name() != "headless"
@@ -237,6 +261,8 @@ func _process(delta: float) -> void:
 		_set_feedback(Color("#bfe8cf"), _outcome_cue(String(result.get("outcome", "unknown"))))
 		_set_event("Assault phase resolved: %s. Use the recovery lull before the next pressure arrives." % String(result.get("outcome", "unknown")).replace("_", " "))
 		_set_screen("results")
+		if tutorial.active and tutorial.sync_wave_result(keep.wave_index, String(result.get("outcome", ""))):
+			_prepare_tutorial_step()
 	else:
 		if keep.battle_report.size() > last_log_size:
 			var exchange_cue: String = "impact" if not target_impacts.is_empty() else "volley" if not engagement_traces.is_empty() else "contact"
@@ -469,12 +495,19 @@ func _toggle_battle_pause() -> void:
 	if not keep.wave_active:
 		_set_event("Pause is available during an active invasion.")
 		return
+	var tutorial_action: String = "resume_battle" if battle_paused else "pause_battle"
+	if not _tutorial_allows(tutorial_action):
+		return
 	battle_paused = not battle_paused
 	_set_event("Battle paused. Read the forecast and report." if battle_paused else "Battle resumed at %.1fx speed." % _battle_speed())
 	_play_cue("pause" if battle_paused else "resume")
+	if not battle_paused:
+		_tutorial_advance("resume_battle")
 	_refresh_ui()
 
 func _set_battle_speed(index: int) -> void:
+	if not _tutorial_allows("speed"):
+		return
 	battle_speed_index = clampi(index, 0, 2)
 	_save_preferences()
 	_set_event("Battle speed set to %.1fx. Space pauses; N advances one manual step." % _battle_speed())
@@ -786,6 +819,8 @@ func _load_preferences() -> void:
 	effects_volume_index = 3
 	event_feed_retention_index = 0
 	auto_pause_on_threat = false
+	tutorial_completed = false
+	tutorial_dismissed = false
 	_restore_default_input_bindings()
 	var selected: Dictionary = _load_preferences_candidate(settings_path)
 	if not bool(selected.get("ok", false)):
@@ -825,6 +860,11 @@ func _load_preferences() -> void:
 			event_feed_retention_index = int(saved_feed_retention)
 		if payload.get("auto_pause_on_threat") is bool:
 			auto_pause_on_threat = bool(payload.auto_pause_on_threat)
+	if schema_version >= 5:
+		if payload.get("tutorial_completed") is bool:
+			tutorial_completed = bool(payload.tutorial_completed)
+		if payload.get("tutorial_dismissed") is bool:
+			tutorial_dismissed = bool(payload.tutorial_dismissed)
 	_apply_ui_scale()
 	_apply_display_settings()
 
@@ -849,7 +889,7 @@ func _save_preferences() -> bool:
 	var file: FileAccess = FileAccess.open(settings_temp_path, FileAccess.WRITE)
 	if file == null:
 		return false
-	file.store_string(JSON.stringify({"schema_version": SETTINGS_SCHEMA_VERSION, "battle_speed_index": battle_speed_index, "audio_muted": audio_muted, "high_contrast": high_contrast, "reduced_motion": reduced_motion, "ui_scale_index": ui_scale_index, "input_bindings": _serialize_input_bindings(), "window_size_index": window_size_index, "fullscreen_enabled": fullscreen_enabled, "effects_volume_index": effects_volume_index, "event_feed_retention_index": event_feed_retention_index, "auto_pause_on_threat": auto_pause_on_threat}))
+	file.store_string(JSON.stringify({"schema_version": SETTINGS_SCHEMA_VERSION, "battle_speed_index": battle_speed_index, "audio_muted": audio_muted, "high_contrast": high_contrast, "reduced_motion": reduced_motion, "ui_scale_index": ui_scale_index, "input_bindings": _serialize_input_bindings(), "window_size_index": window_size_index, "fullscreen_enabled": fullscreen_enabled, "effects_volume_index": effects_volume_index, "event_feed_retention_index": event_feed_retention_index, "auto_pause_on_threat": auto_pause_on_threat, "tutorial_completed": tutorial_completed, "tutorial_dismissed": tutorial_dismissed}))
 	file.flush()
 	file.close()
 	var directory: DirAccess = DirAccess.open("user://")
@@ -883,7 +923,7 @@ func _build_ui() -> void:
 
 	page_scroll = ScrollContainer.new()
 	page_scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	page_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	page_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	page_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	add_child(page_scroll)
 
@@ -910,8 +950,8 @@ func _build_ui() -> void:
 	screen_label.add_theme_color_override("font_color", Color("#e2bd84"))
 	menu_bar.add_child(screen_label)
 	var navigation_labels: Dictionary = {
-		"title": "Home", "setup": "Briefing", "preparation": "Prepare",
-		"battle": "Battle", "results": "Report", "settings": "Settings"
+		"title": "Main Menu", "setup": "War Council", "preparation": "Fortress",
+		"battle": "Assault", "results": "Aftermath", "settings": "Settings"
 	}
 	for menu_item in ["title", "setup", "preparation", "battle", "results", "settings"]:
 		var menu_button: Button = Button.new()
@@ -937,6 +977,9 @@ func _build_ui() -> void:
 
 	title_card = _build_title_card()
 	shell.add_child(title_card)
+	tutorial_panel = _build_tutorial_panel()
+	tutorial_panel.visible = false
+	shell.add_child(tutorial_panel)
 
 	var columns: BoxContainer = BoxContainer.new()
 	columns.vertical = ui_scale_index >= 2
@@ -1489,7 +1532,7 @@ func _build_title_card() -> PanelContainer:
 	heading.add_theme_color_override("font_color", Color("#e2bd84"))
 	content.add_child(heading)
 	var copy: Label = Label.new()
-	copy.text = "Choose a doctrine. Shape the keep. Read the invasion before it breaks you.\nA deliberate top-down defense built for pausing, inspecting, and adapting."
+	copy.text = "Choose a doctrine. Shape the keep. Read the invasion before it breaks you.\nA deliberate top-down defense about preparation, pressure, and recovery."
 	copy.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	copy.add_theme_font_size_override("font_size", 17)
 	copy.add_theme_color_override("font_color", Color("#c0b2c8"))
@@ -1506,24 +1549,24 @@ func _build_title_card() -> PanelContainer:
 	content.add_child(pillars)
 	build_identity_label = Label.new()
 	build_identity_label.name = "BuildIdentityLabel"
-	build_identity_label.text = "PRE-ALPHA • BUILD %s • HUMAN EVIDENCE PENDING" % String(ProjectSettings.get_setting("application/config/version", "unknown"))
+	build_identity_label.text = "PRE-ALPHA • %s • HUMAN PLAYTEST PENDING" % String(ProjectSettings.get_setting("application/config/version", "unknown"))
 	build_identity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	build_identity_label.add_theme_color_override("font_color", Color("#aab1b2"))
 	content.add_child(build_identity_label)
 	quick_test_button = Button.new()
-	quick_test_button.text = "Start Game — Quick Playtest"
-	quick_test_button.tooltip_text = "Review the guided Gatehouse Lock briefing before entering a recommended starter defense."
+	quick_test_button.text = "New Game"
+	quick_test_button.tooltip_text = "Begin First Watch on a new profile, or open the War Council after learning the keep."
 	quick_test_button.custom_minimum_size = Vector2(300, 44)
 	quick_test_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	quick_test_button.pressed.connect(_on_start_quick_playtest)
+	quick_test_button.pressed.connect(_on_new_game)
 	_style_button(quick_test_button, true)
 	content.add_child(quick_test_button)
 	var secondary_actions: HBoxContainer = HBoxContainer.new()
 	secondary_actions.alignment = BoxContainer.ALIGNMENT_CENTER
 	secondary_actions.add_theme_constant_override("separation", 8)
 	title_custom_button = Button.new()
-	title_custom_button.text = "Custom Defense"
-	title_custom_button.tooltip_text = "Choose any commander and scenario, then build from an empty preparation board."
+	title_custom_button.text = "Skirmish"
+	title_custom_button.tooltip_text = "Choose any commander and scenario, then build a defense from the War Council."
 	title_custom_button.custom_minimum_size = Vector2(180, 34)
 	title_custom_button.pressed.connect(_on_start_custom_setup)
 	_style_button(title_custom_button, false)
@@ -1542,7 +1585,68 @@ func _build_title_card() -> PanelContainer:
 	_style_button(title_settings_button, false)
 	secondary_actions.add_child(title_settings_button)
 	content.add_child(secondary_actions)
+	var learning_actions: HBoxContainer = HBoxContainer.new()
+	learning_actions.alignment = BoxContainer.ALIGNMENT_CENTER
+	learning_actions.add_theme_constant_override("separation", 8)
+	title_learn_button = Button.new()
+	title_learn_button.text = "Learn to Play"
+	title_learn_button.tooltip_text = "Start the full First Watch tutorial from the beginning."
+	title_learn_button.pressed.connect(_start_tutorial)
+	_style_button(title_learn_button, false)
+	learning_actions.add_child(title_learn_button)
+	title_continue_tutorial_button = Button.new()
+	title_continue_tutorial_button.text = "Continue Tutorial"
+	title_continue_tutorial_button.tooltip_text = "Resume the latest valid First Watch checkpoint."
+	title_continue_tutorial_button.pressed.connect(_continue_tutorial)
+	_style_button(title_continue_tutorial_button, false)
+	learning_actions.add_child(title_continue_tutorial_button)
+	content.add_child(learning_actions)
 	return card
+
+func _build_tutorial_panel() -> PanelContainer:
+	var panel: PanelContainer = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(0, 142)
+	panel.mouse_filter = Control.MOUSE_FILTER_PASS
+	_style_panel(panel, Color("#231d28"), Color("#d3a860"), 10)
+	var body: VBoxContainer = VBoxContainer.new()
+	body.add_theme_constant_override("separation", 5)
+	panel.add_child(body)
+	tutorial_speaker_label = Label.new()
+	tutorial_speaker_label.add_theme_font_size_override("font_size", 12)
+	tutorial_speaker_label.add_theme_color_override("font_color", Color("#8fc6d1"))
+	body.add_child(tutorial_speaker_label)
+	tutorial_title_label = Label.new()
+	tutorial_title_label.add_theme_font_size_override("font_size", 22)
+	tutorial_title_label.add_theme_color_override("font_color", Color("#f1d28e"))
+	body.add_child(tutorial_title_label)
+	tutorial_body_label = Label.new()
+	tutorial_body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tutorial_body_label.add_theme_font_size_override("font_size", 14)
+	tutorial_body_label.add_theme_color_override("font_color", Color("#ded4c4"))
+	body.add_child(tutorial_body_label)
+	tutorial_objective_label = Label.new()
+	tutorial_objective_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tutorial_objective_label.add_theme_color_override("font_color", Color("#9fe0bd"))
+	body.add_child(tutorial_objective_label)
+	var actions: HBoxContainer = HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	body.add_child(actions)
+	tutorial_continue_button = Button.new()
+	tutorial_continue_button.text = "Continue"
+	tutorial_continue_button.pressed.connect(_on_tutorial_continue)
+	_style_button(tutorial_continue_button, true)
+	actions.add_child(tutorial_continue_button)
+	tutorial_help_button = Button.new()
+	tutorial_help_button.text = "Show Objective"
+	tutorial_help_button.pressed.connect(_on_tutorial_help)
+	_style_button(tutorial_help_button, false)
+	actions.add_child(tutorial_help_button)
+	tutorial_skip_button = Button.new()
+	tutorial_skip_button.text = "Skip Tutorial"
+	tutorial_skip_button.pressed.connect(_skip_tutorial)
+	_style_button(tutorial_skip_button, false)
+	actions.add_child(tutorial_skip_button)
+	return panel
 
 func _build_overview_panel(title_text: String, body_text: String) -> PanelContainer:
 	var panel: PanelContainer = PanelContainer.new()
@@ -1637,6 +1741,8 @@ func _set_screen(next_screen: String) -> void:
 		gameplay_columns.visible = screen != "title"
 	if title_card:
 		title_card.visible = screen == "title"
+	if tutorial_panel:
+		tutorial_panel.visible = tutorial != null and tutorial.active
 	if art_banner:
 		art_banner.visible = screen in ["title", "setup"]
 		art_banner.custom_minimum_size.y = 100 if screen == "setup" else 150
@@ -1668,7 +1774,7 @@ func _set_screen(next_screen: String) -> void:
 	if enemy_label:
 		enemy_label.visible = screen == "battle"
 	if metrics_label:
-		metrics_label.visible = screen in ["battle", "results"]
+		metrics_label.visible = developer_ui_enabled and screen in ["battle", "results"]
 	if result_explain_label:
 		result_explain_label.visible = screen == "results"
 	if scorecard_label:
@@ -1680,7 +1786,7 @@ func _set_screen(next_screen: String) -> void:
 	if event_label:
 		event_label.visible = screen in ["preparation", "battle"]
 	if log_label:
-		log_label.visible = screen == "battle"
+		log_label.visible = developer_ui_enabled and screen == "battle"
 	_set_group_visibility(setup_controls, screen == "setup")
 	_set_group_visibility(preparation_controls, screen == "preparation")
 	_set_group_visibility(battle_controls, screen == "battle")
@@ -1689,21 +1795,21 @@ func _set_screen(next_screen: String) -> void:
 	_set_group_visibility(settings_controls, screen == "settings")
 	_set_group_visibility(event_controls, screen in ["preparation", "results"] and keep != null and not keep.active_event_id.is_empty())
 	if screen_label:
-		screen_label.text = "PACK THE KEEP / %s" % ("Briefing" if screen == "setup" else "Report" if screen == "results" else screen.capitalize())
+		screen_label.text = "PACK THE KEEP / %s" % ({"title": "Main Menu", "setup": "War Council", "preparation": "Fortress", "battle": "Assault", "results": "Aftermath", "settings": "Settings"}.get(screen, screen.capitalize()))
 	if main_title_label:
 		if screen == "setup":
-			main_title_label.text = "PLAYTEST BRIEFING"
-			main_subtitle_label.text = "Choose the lens and pressure first; the board comes next."
+			main_title_label.text = "WAR COUNCIL"
+			main_subtitle_label.text = "Choose who leads, what pressure approaches, and what the keep must preserve."
 		elif screen == "settings":
 			main_title_label.text = "SETTINGS & ACCESSIBILITY"
 			main_subtitle_label.text = "Tune readability and input without touching the simulation."
 		else:
-			main_title_label.text = "%s — %s" % [String(keep.keep_definition().get("name", "The Keep")).to_upper(), screen.to_upper()]
-			main_subtitle_label.text = "Build a visible answer, inspect pressure, and preserve a recovery option."
+			main_title_label.text = "%s — %s" % [String(keep.keep_definition().get("name", "The Keep")).to_upper(), {"preparation": "FORTRESS", "battle": "ASSAULT", "results": "AFTERMATH"}.get(screen, screen.to_upper())]
+			main_subtitle_label.text = "Build a visible answer, read the pressure, and preserve a way to recover."
 	if command_panel_title:
 		command_panel_title.text = {
-			"setup": "BRIEFING CONTROLS", "preparation": "PREPARATION TOOLS",
-			"battle": "BATTLE CONTROLS", "results": "RECOVERY & REPORT",
+			"setup": "WAR COUNCIL", "preparation": "BUILD & ASSIGN",
+			"battle": "COMMAND THE DEFENSE", "results": "RECOVERY & OUTCOME",
 			"settings": "SETTINGS"
 		}.get(screen, "COMMAND TABLE")
 	if input_help_label:
@@ -1716,27 +1822,32 @@ func _set_screen(next_screen: String) -> void:
 		}.get(screen, "Tab/D-pad moves focus. Enter/A confirms.")
 	if screen_hint:
 		if screen == "setup":
-			screen_hint.text = "1 Briefing  ›  2 Prepare  ›  3 Battle  ›  4 Report"
+			screen_hint.text = "WAR COUNCIL  ›  FORTRESS  ›  ASSAULT  ›  AFTERMATH"
 		elif screen == "preparation":
-			screen_hint.text = "Place and assign before opening the next doctrine."
+			screen_hint.text = "Spend materials, place defenders, and read the forecast."
 		elif screen == "battle":
-			screen_hint.text = "The assault is live; pause to inspect before spending the commander ability."
+			screen_hint.text = "The assault is live. Pause to inspect before spending command."
 		elif screen == "results":
 			if keep and keep.repair_interval_active and keep.has_next_wave():
 				screen_hint.text = "Repair or assign during the lull, then release the next assault phase."
 			else:
-				screen_hint.text = "Read the report, repair what matters, then return to preparation."
+				screen_hint.text = "Read why the keep held or failed, then choose the next defense."
 		elif screen == "settings":
 			screen_hint.text = "Presentation settings are saved separately from the run."
 		else:
 			screen_hint.text = "A compact two-floor defense about pressure and recovery."
 	_refresh_ui()
 	_refresh_navigation()
+	if command_scroll != null:
+		command_scroll.scroll_vertical = 0
 	call_deferred("_focus_screen_control")
 	if screen == "results" and keep and keep.repair_interval_active:
 		call_deferred("_focus_recovery_controls")
 
 func _focus_screen_control() -> void:
+	if tutorial.active:
+		_focus_tutorial_target(String(tutorial.current_step().get("focus", "")))
+		return
 	var target: Control
 	if screen == "title":
 		target = quick_test_button
@@ -1779,31 +1890,13 @@ func _refresh_navigation() -> void:
 	if menu_buttons.is_empty():
 		return
 	for target in menu_buttons.keys():
-		var available: bool = true
-		if target == "battle":
-			available = keep.wave_active
-		elif target == "results":
-			available = keep.repair_interval_active or not keep.wave_history.is_empty()
-		elif target == "preparation":
-			available = setup_confirmed and keep.scenario_active and not keep.wave_active and not keep.repair_interval_active
-		elif target == "setup":
-			available = not keep.wave_active and not keep.repair_interval_active
-		menu_buttons[target].disabled = not available or target == screen
+		menu_buttons[target].visible = screen != "title"
+		menu_buttons[target].disabled = target != "settings" or target == screen
+		menu_buttons[target].modulate = Color.WHITE if target == screen else Color("#77717c") if target != "settings" else Color.WHITE
 
 func _on_navigation_requested(target: String) -> void:
 	if target == "settings":
 		_on_open_settings()
-		return
-	if target == "setup" and screen == "title":
-		_on_start_custom_setup()
-		return
-	if target == "battle" and not keep.wave_active:
-		return
-	if target == "results" and keep.wave_history.is_empty() and not keep.repair_interval_active:
-		return
-	if target == "preparation" and (not setup_confirmed or not keep.scenario_active or keep.wave_active or keep.repair_interval_active):
-		return
-	_set_screen(target)
 
 func _labeled_control(label_text: String, control: Control) -> VBoxContainer:
 	var group: VBoxContainer = VBoxContainer.new()
@@ -1869,10 +1962,18 @@ func _next_slot(piece_id: String, floor: String) -> Vector2i:
 	return Vector2i(x, y)
 
 func _on_select_commander() -> void:
+	if tutorial.active:
+		_select_option_metadata(commander_option, "castellan")
+		_set_event("First Watch uses the Castellan so Lockdown can be taught in the final assault.")
+		return
 	_run_result(keep.select_commander(_selected_id(commander_option)), "Commander")
 	_refresh_scenario_preview()
 
 func _on_select_scenario() -> void:
+	if tutorial.active:
+		_select_option_metadata(scenario_option, "gatehouse_lock")
+		_set_event("First Watch follows the Gatehouse Lock defense.")
+		return
 	var result: Dictionary = keep.select_scenario(_selected_id(scenario_option))
 	_run_result(result, "Scenario")
 	_refresh_room_options()
@@ -2005,6 +2106,8 @@ func _regional_report_text(current_run_only: bool = false) -> String:
 	return "\nREGIONAL REPORT — %s [%s]\n%s: %s\n%s\n%s" % [String(consequence.get("settlement_name", "Low Mill")), String(consequence.get("settlement_status", "unknown")).to_upper(), String(consequence.get("route_name", "Miller's Road")), String(consequence.get("route_status", "unknown")).to_upper(), String(consequence.get("summary", "")), support_status]
 
 func _on_toggle_campaign_modifier() -> void:
+	if not _tutorial_allows("campaign_modifier"):
+		return
 	var selected_modifier_id: String = _selected_id(campaign_modifier_option)
 	var modifier_id: String = "" if keep.equipped_modifier_id == selected_modifier_id else selected_modifier_id
 	_run_result(keep.equip_modifier(modifier_id), "Campaign")
@@ -2022,10 +2125,18 @@ func _refresh_pack_preview() -> void:
 	pack_preview_label.text = "PACK PREVIEW — %s\nDoctrine: %s | Open cost: %d materials\nAdds: %s\nSolves: %s\nAsks: %s\n%s" % [String(preview.name), String(preview.doctrine).replace("_", " "), int(preview.cost), ", ".join(pieces), String(preview.solves), String(preview.asks), String(preview.preview)]
 
 func _on_open_pack() -> void:
-	_run_result(keep.open_pack(_selected_id(pack_option)), "Pack")
+	var pack_id: String = _selected_id(pack_option)
+	if not _tutorial_allows("open_pack", pack_id):
+		return
+	var result: Dictionary = keep.open_pack(pack_id)
+	_run_result(result, "Pack")
+	if bool(result.get("ok", false)):
+		_tutorial_advance("open_pack", pack_id)
 	_refresh_pack_preview()
 
 func _on_reserve_pack() -> void:
+	if not _tutorial_allows("reserve_pack"):
+		return
 	_run_result(keep.reserve_pack(_selected_id(pack_option)), "Reserve")
 	_refresh_pack_preview()
 
@@ -2067,6 +2178,8 @@ func _has_piece_id(piece_id: String) -> bool:
 	return false
 
 func _on_recommended_layout() -> void:
+	if not _tutorial_allows("recommended_layout"):
+		return
 	if keep.wave_active:
 		_set_event("Recommended layout is preparation-only. Resolve the invasion before rebuilding.")
 		return
@@ -2109,28 +2222,44 @@ func _on_map_hovered(floor: String, cell: Vector2i) -> void:
 func _on_map_clicked(floor: String, cell: Vector2i) -> void:
 	var piece_id: String = _selected_id(piece_option)
 	if placement_mode:
+		if not _tutorial_allows("place_piece", piece_id):
+			return
+		if tutorial.active:
+			var required_cell: Vector2i = Vector2i(0, 3) if piece_id == "pike_squad" else Vector2i(2, 5) if piece_id == "narrow_gate" else cell
+			if floor != "ground" or cell != required_cell:
+				_set_event("First Watch: place %s in the highlighted position at %s." % [String(keep.piece_definition(piece_id).get("name", piece_id)), str(required_cell)])
+				_play_cue("error")
+				return
 		var result: Dictionary = keep.place_piece(piece_id, cell, floor)
 		_run_result(result, "Placement")
 		if bool(result.get("ok", false)):
 			selected_instance_id = String(result.get("piece_instance", ""))
 			_clear_placement_mode()
+			_tutorial_advance("place_piece", piece_id)
 		return
 	var instance_id: String = keep.piece_at_cell(floor, cell)
 	if not instance_id.is_empty():
+		var inspected_piece_id: String = String(keep.pieces[instance_id].get("piece_id", ""))
+		if not _tutorial_allows("inspect_piece", inspected_piece_id):
+			return
 		selected_instance_id = instance_id
 		var piece_inspection: Dictionary = keep.inspect_piece(instance_id)
 		_select_option_metadata(piece_option, String(piece_inspection.get("piece_id", "")))
 		inspected_text = _format_inspection(piece_inspection)
 		_set_event("Inspector focused on %s." % String(piece_inspection.get("name", instance_id)))
+		_tutorial_advance("inspect_piece", inspected_piece_id)
 		_refresh_ui()
 		return
 	var room_id: String = keep.room_at_cell(floor, cell)
 	if not room_id.is_empty():
+		if not _tutorial_allows("inspect_room", room_id):
+			return
 		if not keep.repair_interval_active:
 			selected_instance_id = ""
 		_select_option_metadata(room_option, room_id)
 		inspected_text = _format_inspection(keep.inspect_room(room_id))
 		_set_event("Inspector focused on %s." % String(keep.inspect_room(room_id).get("name", room_id)))
+		_tutorial_advance("inspect_room", room_id)
 		_refresh_ui()
 
 func _format_inspection(data: Dictionary) -> String:
@@ -2207,6 +2336,11 @@ func _ensure_enemy_focus() -> bool:
 	return _apply_enemy_focus(_priority_enemy_index())
 
 func _select_enemy_focus(index: int, source: String) -> void:
+	if index < 0 or index >= keep.enemies.size():
+		return
+	var enemy_id: String = String(keep.enemies[index].get("enemy_id", ""))
+	if not _tutorial_allows("inspect_enemy", enemy_id):
+		return
 	if not _apply_enemy_focus(index):
 		return
 	for option_index in range(enemy_option.item_count):
@@ -2214,6 +2348,7 @@ func _select_enemy_focus(index: int, source: String) -> void:
 			enemy_option.select(option_index)
 			break
 	_set_event("Enemy %d focused via %s. Pause and choose the response." % [index + 1, source])
+	_tutorial_advance("inspect_enemy", enemy_id)
 	_refresh_ui()
 
 func _on_enemy_clicked(index: int) -> void:
@@ -2363,6 +2498,8 @@ func _refresh_recovery_action_cards() -> void:
 		finish_interval_button.text = "FINISH RECOVERY"
 
 func _on_remove_piece() -> void:
+	if not _tutorial_allows("remove_piece"):
+		return
 	if keep.wave_active or keep.repair_interval_active:
 		_set_event("Piece removal is preparation-only; finish the active assault phase or recovery lull first.")
 		return
@@ -2377,22 +2514,29 @@ func _on_remove_piece() -> void:
 	_run_result(removed, "Layout")
 
 func _on_place_piece() -> void:
+	if tutorial.active:
+		_set_event("First Watch teaches direct placement on the highlighted fort position.")
+		_play_cue("error")
+		return
 	var piece_id: String = _selected_id(piece_option)
 	var floor: String = _selected_id(floor_option)
 	_run_result(keep.place_piece(piece_id, _next_slot(piece_id, floor), floor), "Placement")
 
 func _on_start_wave() -> void:
+	if not _tutorial_allows("start_wave"):
+		return
 	_clear_placement_mode()
 	focused_enemy_index = -1
 	var result: Dictionary = keep.start_wave(_selected_id(doctrine_option))
 	_run_result(result, "Invasion")
 	if bool(result.get("ok", false)):
-		battle_paused = false
+		battle_paused = tutorial.active
 		last_log_size = keep.battle_report.size()
 		focused_enemy_index = -1
 		_ensure_enemy_focus()
 		_set_screen("battle")
-		_set_event("Assault underway at %.1fx. Press Space to pause and inspect; N advances one tick while paused." % _battle_speed())
+		_set_event("Assault opened paused for analysis." if tutorial.active else "Assault underway at %.1fx. Press Space to pause and inspect; N advances one tick while paused." % _battle_speed())
+		_tutorial_advance("start_wave")
 		_refresh_ui()
 
 func _selected_piece_instance() -> String:
@@ -2405,37 +2549,61 @@ func _selected_piece_instance() -> String:
 	return ""
 
 func _on_assign_piece() -> void:
-	_run_result(keep.assign_piece_to_room(_selected_piece_instance(), _selected_id(room_option)), "Assignment")
+	var room_id: String = _selected_id(room_option)
+	if not _tutorial_allows("assign_piece", room_id):
+		return
+	var result: Dictionary = keep.assign_piece_to_room(_selected_piece_instance(), room_id)
+	_run_result(result, "Assignment")
+	if bool(result.get("ok", false)):
+		_tutorial_advance("assign_piece", room_id)
 
 func _on_clear_assignment() -> void:
+	if not _tutorial_allows("clear_assignment"):
+		return
 	_run_result(keep.clear_piece_assignment(_selected_piece_instance()), "Assignment")
 
 func _on_repair_room() -> void:
-	_run_result(keep.repair_room(_selected_id(room_option)), "Repair")
+	var room_id: String = _selected_id(room_option)
+	if not _tutorial_allows("repair_room", room_id):
+		return
+	var result: Dictionary = keep.repair_room(room_id)
+	_run_result(result, "Repair")
+	if bool(result.get("ok", false)):
+		_tutorial_advance("repair_room", room_id)
 
 func _on_repair_piece() -> void:
-	_run_result(keep.repair_piece(_selected_piece_instance()), "Repair")
+	if not _tutorial_allows("repair_piece"):
+		return
+	var result: Dictionary = keep.repair_piece(_selected_piece_instance())
+	_run_result(result, "Repair")
+	if bool(result.get("ok", false)):
+		_tutorial_advance("repair_piece")
 
 func _on_finish_interval() -> void:
+	if not _tutorial_allows("finish_interval"):
+		return
 	var result: Dictionary = keep.finish_repair_interval()
 	_run_result(result, "Interval")
 	if bool(result.get("ok", false)):
 		if bool(result.get("next_wave_started", false)):
-			battle_paused = false
+			battle_paused = tutorial.active
 			focused_enemy_index = -1
 			last_log_size = 0
 			_ensure_enemy_focus()
 			_set_screen("battle")
-			_set_event("The recovery lull ends and assault phase %d begins in real time." % keep.wave_index)
+			_set_event("The next assault opens paused for analysis." if tutorial.active else "The recovery lull ends and assault phase %d begins in real time." % keep.wave_index)
+			_tutorial_advance("finish_interval")
 			_refresh_ui()
 		else:
 			_set_screen("preparation")
 
 func _on_advance_wave() -> void:
+	if not _tutorial_allows("observe_wave"):
+		return
 	var engagement_traces: Array[Dictionary] = _next_engagement_traces()
 	var target_snapshot: Dictionary = _combat_target_snapshot()
 	var result: Dictionary = keep.advance_wave(1.0)
-	var target_impacts: Array[Dictionary] = _resolved_target_impacts(target_snapshot) if bool(result.get("ok", false)) else []
+	var target_impacts: Array = _resolved_target_impacts(target_snapshot) if bool(result.get("ok", false)) else []
 	if bool(result.get("ok", false)) and keep_canvas != null:
 		keep_canvas.call("show_combat_exchange", engagement_traces, target_impacts)
 	if bool(result.get("ok", false)):
@@ -2451,6 +2619,8 @@ func _on_advance_wave() -> void:
 		else:
 			_set_event("Final assault phase resolved: %s. Read the report." % String(result.get("outcome", "unknown")).replace("_", " "))
 		_set_screen("results")
+		if tutorial.active and tutorial.sync_wave_result(keep.wave_index, String(result.get("outcome", ""))):
+			_prepare_tutorial_step()
 	else:
 		var exchange_cue: String = "impact" if not target_impacts.is_empty() else "volley" if not engagement_traces.is_empty() else "contact"
 		_set_feedback(Color("#d26155") if not target_impacts.is_empty() else Color("#d7a35b"), exchange_cue)
@@ -2458,7 +2628,12 @@ func _on_advance_wave() -> void:
 	_refresh_ui()
 
 func _on_use_ability() -> void:
-	_run_result(keep.use_commander_ability(), "Ability")
+	if not _tutorial_allows("use_ability"):
+		return
+	var result: Dictionary = keep.use_commander_ability()
+	_run_result(result, "Ability")
+	if bool(result.get("ok", false)):
+		_tutorial_advance("use_ability")
 
 func _run_result(result: Dictionary, label: String) -> void:
 	if bool(result.get("ok", false)):
@@ -2471,6 +2646,8 @@ func _run_result(result: Dictionary, label: String) -> void:
 	_refresh_ui()
 
 func _on_save() -> void:
+	if not _tutorial_allows("save_run"):
+		return
 	var file: FileAccess = FileAccess.open(save_temp_path, FileAccess.WRITE)
 	if file == null:
 		_set_event("Save failed: could not open the temporary save path.")
@@ -2501,6 +2678,8 @@ func _on_save() -> void:
 	_set_event("Keep state saved safely with schema %d." % PackKeepState.SAVE_SCHEMA_VERSION)
 
 func _on_load() -> void:
+	if not _tutorial_allows("load_run"):
+		return
 	var primary: Dictionary = _load_save_candidate(save_path)
 	var loaded_from_backup: bool = false
 	var selected: Dictionary = primary
@@ -2543,7 +2722,9 @@ func _load_save_candidate(path: String) -> Dictionary:
 
 func _on_playtest_primary_action() -> void:
 	if screen == "results":
-		if keep.repair_interval_active and keep.has_next_wave():
+		if tutorial.active and (tutorial.failure_active or tutorial.expected_action() == "finish_tutorial"):
+			_on_tutorial_continue()
+		elif keep.repair_interval_active and keep.has_next_wave():
 			_on_finish_interval()
 		else:
 			_on_start_quick_playtest()
@@ -2551,6 +2732,299 @@ func _on_playtest_primary_action() -> void:
 		_on_start_wave()
 	elif screen == "battle":
 		_toggle_battle_pause()
+
+func _on_new_game() -> void:
+	if not tutorial_completed and not tutorial_dismissed:
+		_start_tutorial()
+	else:
+		_on_start_custom_setup()
+
+func _start_tutorial() -> void:
+	_reset_for_setup()
+	guided_setup = false
+	tutorial.start()
+	tutorial_checkpoint.clear()
+	_select_option_metadata(commander_option, "castellan")
+	keep.select_commander("castellan")
+	_select_option_metadata(scenario_option, "gatehouse_lock")
+	keep.select_scenario("gatehouse_lock")
+	_select_option_metadata(doctrine_option, "gate_assault")
+	_set_screen("title")
+	_prepare_tutorial_step()
+
+func _continue_tutorial() -> void:
+	var loaded: Dictionary = _load_tutorial_candidate(tutorial_path)
+	if not bool(loaded.get("ok", false)):
+		loaded = _load_tutorial_candidate(tutorial_backup_path)
+	if not bool(loaded.get("ok", false)):
+		_start_tutorial()
+		return
+	keep = loaded.keep
+	tutorial.restore_progress(loaded.progress)
+	tutorial_checkpoint = loaded.get("checkpoint", {}).duplicate(true)
+	setup_confirmed = bool(loaded.get("setup_confirmed", true))
+	guided_setup = false
+	selected_instance_id = String(loaded.get("selected_instance_id", ""))
+	_set_screen(String(loaded.get("screen", tutorial.current_step().get("screen", "setup"))))
+	_prepare_tutorial_step(false)
+
+func _skip_tutorial() -> void:
+	tutorial_dismissed = true
+	tutorial.stop()
+	tutorial_checkpoint.clear()
+	_delete_tutorial_progress()
+	_save_preferences()
+	_on_start_custom_setup()
+	_set_event("First Watch skipped. Learn to Play remains available from the Main Menu.")
+
+func _on_tutorial_help() -> void:
+	if not tutorial.active:
+		return
+	var step: Dictionary = tutorial.current_step()
+	_set_event("%s — %s" % [String(step.get("title", "First Watch")), String(step.get("objective", "Follow the highlighted action."))])
+	_focus_tutorial_target(String(step.get("focus", "")))
+
+func _on_tutorial_continue() -> void:
+	if not tutorial.active:
+		return
+	if tutorial.failure_active:
+		_retry_tutorial_phase()
+		return
+	match tutorial.expected_action():
+		"continue":
+			_tutorial_advance("continue")
+		"finish_tutorial":
+			_complete_tutorial()
+
+func _tutorial_allows(action_id: String, subject_id: String = "") -> bool:
+	if not tutorial.active:
+		return true
+	var combined: String = action_id if subject_id.is_empty() else "%s:%s" % [action_id, subject_id]
+	if tutorial.allows(combined) or tutorial.allows(action_id):
+		return true
+	var step: Dictionary = tutorial.current_step()
+	_set_event("First Watch objective: %s" % String(step.get("objective", "Complete the highlighted action.")))
+	_play_cue("error")
+	_focus_tutorial_target(String(step.get("focus", "")))
+	return false
+
+func _tutorial_advance(action_id: String, subject_id: String = "") -> void:
+	if not tutorial.active:
+		return
+	if tutorial.advance_if_matching(action_id, subject_id) or (not subject_id.is_empty() and tutorial.advance_if_matching(action_id)):
+		_prepare_tutorial_step()
+
+func _prepare_tutorial_step(capture_checkpoint: bool = true) -> void:
+	if not tutorial.active:
+		_refresh_tutorial_panel()
+		return
+	var step: Dictionary = tutorial.current_step()
+	var target_screen: String = String(step.get("screen", screen))
+	if not tutorial.failure_active and target_screen != screen:
+		_set_screen(target_screen)
+	match tutorial.current_id():
+		"war_council":
+			_select_option_metadata(commander_option, "castellan")
+			_select_option_metadata(scenario_option, "gatehouse_lock")
+		"open_pike_line":
+			_select_option_metadata(pack_option, "pike_line")
+			_refresh_pack_preview()
+		"place_pike":
+			_select_option_metadata(piece_option, "pike_squad")
+			_select_option_metadata(floor_option, "ground")
+			_arm_selected_piece()
+			preview_origin = Vector2i(0, 3)
+			preview_valid = bool(keep.piece_preview("pike_squad", preview_origin, "ground").get("valid", false))
+		"place_gate":
+			_select_option_metadata(piece_option, "narrow_gate")
+			_select_option_metadata(floor_option, "ground")
+			_arm_selected_piece()
+			preview_origin = Vector2i(2, 5)
+			preview_valid = bool(keep.piece_preview("narrow_gate", preview_origin, "ground").get("valid", false))
+		"repair_defender":
+			_select_most_damaged_piece()
+		"assign_gate":
+			_select_piece_instance_by_type("pike_squad")
+			_select_option_metadata(room_option, "gate")
+		"repair_room":
+			_select_most_damaged_room()
+	if capture_checkpoint and bool(step.get("checkpoint", false)):
+		var checkpoint_step: String = String(tutorial_checkpoint.get("step_id", ""))
+		if checkpoint_step != tutorial.current_id():
+			tutorial_checkpoint = {"step_id": tutorial.current_id(), "progress": tutorial.serialize_progress(), "keep_state": keep.serialize(), "screen": screen, "setup_confirmed": setup_confirmed, "selected_instance_id": selected_instance_id}
+	_refresh_tutorial_panel()
+	_save_tutorial_progress()
+	_refresh_ui()
+	call_deferred("_focus_tutorial_target", String(step.get("focus", "")))
+
+func _select_piece_instance_by_type(piece_id: String) -> void:
+	for instance_id in keep.pieces.keys():
+		if String(keep.pieces[instance_id].get("piece_id", "")) == piece_id:
+			selected_instance_id = String(instance_id)
+			_select_option_metadata(piece_option, piece_id)
+			return
+
+func _select_most_damaged_piece() -> void:
+	var selected_id: String = ""
+	var selected_ratio: float = 2.0
+	for instance_id_value in keep.pieces.keys():
+		var instance_id: String = String(instance_id_value)
+		var piece: Dictionary = keep.pieces[instance_id]
+		var ratio: float = float(piece.get("health", 0)) / maxf(1.0, float(piece.get("max_health", 1)))
+		if ratio < selected_ratio and ratio < 1.0:
+			selected_ratio = ratio
+			selected_id = instance_id
+	if not selected_id.is_empty():
+		selected_instance_id = selected_id
+		_select_option_metadata(piece_option, String(keep.pieces[selected_id].get("piece_id", "")))
+
+func _select_most_damaged_room() -> void:
+	var selected_id: String = ""
+	var selected_condition: int = 101
+	for room_id_value in keep.rooms.keys():
+		var room_id: String = String(room_id_value)
+		var condition: int = keep.room_condition(room_id)
+		if condition < selected_condition:
+			selected_condition = condition
+			selected_id = room_id
+	if not selected_id.is_empty() and selected_condition < 100:
+		_select_option_metadata(room_option, selected_id)
+
+func _refresh_tutorial_panel() -> void:
+	if tutorial_panel == null:
+		return
+	tutorial_panel.visible = tutorial.active
+	if title_card != null:
+		title_card.visible = screen == "title" and not tutorial.active
+	var gameplay_screen: bool = screen in ["preparation", "battle", "results"]
+	if main_title_label != null:
+		main_title_label.visible = screen != "title" and not (tutorial.active and gameplay_screen)
+	if main_subtitle_label != null:
+		main_subtitle_label.visible = screen != "title" and not (tutorial.active and gameplay_screen)
+	if guidance_label != null:
+		guidance_label.visible = gameplay_screen and not tutorial.active
+	var tutorial_primary_action: bool = tutorial.active and tutorial.expected_action() in ["start_wave", "resume_battle", "observe_wave", "finish_interval", "finish_tutorial", "retry_phase"]
+	if playtest_button != null:
+		playtest_button.visible = gameplay_screen and (not tutorial.active or tutorial_primary_action)
+	if playtest_status_label != null:
+		playtest_status_label.visible = gameplay_screen and (not tutorial.active or tutorial_primary_action)
+	if not tutorial.active:
+		return
+	var step: Dictionary = tutorial.current_step()
+	tutorial_speaker_label.text = String(step.get("speaker", "FIRST WATCH"))
+	tutorial_title_label.text = String(step.get("title", "Learn to Play"))
+	tutorial_body_label.text = tutorial.failure_message if tutorial.failure_active else String(step.get("body", ""))
+	tutorial_objective_label.text = "CURRENT OBJECTIVE — %s" % ("Retry the current phase." if tutorial.failure_active else String(step.get("objective", "")))
+	var action: String = tutorial.expected_action()
+	tutorial_continue_button.visible = action in ["continue", "finish_tutorial", "retry_phase"]
+	tutorial_continue_button.text = "Retry Phase" if action == "retry_phase" else "Finish Tutorial" if action == "finish_tutorial" else "Continue"
+	tutorial_skip_button.visible = action != "finish_tutorial"
+	_update_tutorial_board_target(String(step.get("focus", "")))
+
+func _update_tutorial_board_target(focus_id: String) -> void:
+	if keep_canvas == null:
+		return
+	if focus_id == "board_gate":
+		var gate: Dictionary = keep.room_definition("gate")
+		keep_canvas.call("set_tutorial_target", String(gate.get("floor", "ground")), gate.get("origin", Vector2i.ZERO), gate.get("size", Vector2i.ONE), "INSPECT GATE")
+	elif focus_id == "board_pike":
+		keep_canvas.call("set_tutorial_target", "ground", Vector2i(0, 3), Vector2i(2, 1), "PIKE SQUAD")
+	elif focus_id == "board_narrow_gate":
+		keep_canvas.call("set_tutorial_target", "ground", Vector2i(2, 5), Vector2i(1, 2), "NARROW GATE")
+	else:
+		keep_canvas.call("clear_tutorial_target")
+
+func _focus_tutorial_target(target_id: String) -> void:
+	var target: Control
+	match target_id:
+		"tutorial_continue": target = tutorial_continue_button
+		"setup_confirm": target = setup_confirm_button
+		"pack_open": target = pack_option
+		"primary_action": target = playtest_button
+		"enemy_inspector": target = enemy_option
+		"commander_ability": target = commander_ability_button
+		"repair_piece": target = recovery_piece_button
+		"repair_room": target = recovery_room_button
+		"assign_piece": target = recovery_assign_button
+	if target != null and target.is_visible_in_tree() and not target.disabled:
+		target.grab_focus()
+
+func _save_tutorial_progress() -> bool:
+	if not preferences_persistence_enabled or not tutorial.active:
+		return true
+	var payload: Dictionary = {"schema_version": 1, "progress": tutorial.serialize_progress(), "keep_state": keep.serialize(), "screen": screen, "setup_confirmed": setup_confirmed, "selected_instance_id": selected_instance_id, "checkpoint": tutorial_checkpoint}
+	var file: FileAccess = FileAccess.open(tutorial_temp_path, FileAccess.WRITE)
+	if file == null:
+		return false
+	file.store_string(JSON.stringify(payload))
+	file.flush()
+	file.close()
+	var directory: DirAccess = DirAccess.open("user://")
+	if directory == null:
+		return false
+	if FileAccess.file_exists(tutorial_backup_path):
+		directory.remove(tutorial_backup_path.get_file())
+	if FileAccess.file_exists(tutorial_path):
+		if directory.rename(tutorial_path.get_file(), tutorial_backup_path.get_file()) != OK:
+			return false
+	if directory.rename(tutorial_temp_path.get_file(), tutorial_path.get_file()) != OK:
+		if FileAccess.file_exists(tutorial_backup_path):
+			directory.rename(tutorial_backup_path.get_file(), tutorial_path.get_file())
+		return false
+	return true
+
+func _load_tutorial_candidate(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {"ok": false, "reason": "missing"}
+	var parser: JSON = JSON.new()
+	if parser.parse(FileAccess.get_file_as_string(path)) != OK or not parser.data is Dictionary:
+		return {"ok": false, "reason": "invalid tutorial JSON"}
+	var payload: Dictionary = parser.data
+	if int(payload.get("schema_version", 0)) != 1 or not payload.get("progress") is Dictionary or not payload.get("keep_state") is Dictionary:
+		return {"ok": false, "reason": "invalid tutorial schema"}
+	var restored_keep: PackKeepState = PackKeepState.new(0)
+	if not bool(restored_keep.load_serialized(payload.keep_state).get("ok", false)):
+		return {"ok": false, "reason": "invalid tutorial keep state"}
+	var restored_tutorial: TutorialDirector = FirstWatchTutorial.new()
+	if not restored_tutorial.restore_progress(payload.progress):
+		return {"ok": false, "reason": "invalid tutorial progress"}
+	return {"ok": true, "keep": restored_keep, "progress": payload.progress, "screen": String(payload.get("screen", "setup")), "setup_confirmed": bool(payload.get("setup_confirmed", true)), "selected_instance_id": String(payload.get("selected_instance_id", "")), "checkpoint": payload.get("checkpoint", {})}
+
+func _delete_tutorial_progress() -> void:
+	var directory: DirAccess = DirAccess.open("user://")
+	if directory == null:
+		return
+	for path in [tutorial_path, tutorial_temp_path, tutorial_backup_path]:
+		if FileAccess.file_exists(path):
+			directory.remove(path.get_file())
+
+func _retry_tutorial_phase() -> void:
+	if tutorial_checkpoint.is_empty():
+		_start_tutorial()
+		return
+	var restored_keep: PackKeepState = PackKeepState.new(0)
+	if not bool(restored_keep.load_serialized(tutorial_checkpoint.get("keep_state", {})).get("ok", false)):
+		_start_tutorial()
+		return
+	keep = restored_keep
+	tutorial.restore_progress(tutorial_checkpoint.get("progress", {}))
+	setup_confirmed = bool(tutorial_checkpoint.get("setup_confirmed", true))
+	selected_instance_id = String(tutorial_checkpoint.get("selected_instance_id", ""))
+	_set_screen(String(tutorial_checkpoint.get("screen", tutorial.current_step().get("screen", "battle"))))
+	_prepare_tutorial_step(false)
+	_set_event("Phase checkpoint restored. Apply the lesson and release the assault when ready.")
+
+func _complete_tutorial() -> void:
+	tutorial_completed = true
+	tutorial_dismissed = false
+	tutorial.stop()
+	tutorial_checkpoint.clear()
+	_delete_tutorial_progress()
+	_save_preferences()
+	_reset_for_setup()
+	guided_setup = false
+	_set_screen("setup")
+	_set_event("First Watch complete. The War Council is open for your next defense.")
 
 func _on_start_quick_playtest() -> void:
 	_reset_for_setup()
@@ -2582,6 +3056,8 @@ func _reset_for_setup() -> void:
 	selected_instance_id = ""
 
 func _on_confirm_setup() -> void:
+	if not _tutorial_allows("confirm_setup"):
+		return
 	keep.select_commander(_selected_id(commander_option))
 	keep.select_scenario(_selected_id(scenario_option))
 	if guided_setup and keep.pieces.is_empty():
@@ -2593,6 +3069,7 @@ func _on_confirm_setup() -> void:
 		if guided_setup else
 		"Custom preparation ready: open a pack, place a readable defense, then start the invasion."
 	)
+	_tutorial_advance("confirm_setup")
 	_refresh_ui()
 
 func _on_open_settings() -> void:
@@ -2619,6 +3096,8 @@ func _on_continue_saved_run() -> void:
 		_set_screen("preparation")
 
 func _on_quick_test_action() -> void:
+	if not _tutorial_allows("quick_test"):
+		return
 	if screen == "title":
 		_on_start_quick_playtest()
 		return
@@ -2639,6 +3118,9 @@ func _on_quick_test_action() -> void:
 	_on_start_wave()
 
 func _on_reset_run() -> void:
+	if tutorial.active:
+		_retry_tutorial_phase()
+		return
 	keep.reset_run(3307)
 	guided_setup = false
 	setup_confirmed = false
@@ -2661,18 +3143,18 @@ func _first_battle_guidance() -> String:
 		return ""
 	if screen == "preparation":
 		if not keep.active_event_id.is_empty():
-			return "FIRST BATTLE GUIDE — Resolve the authored forecast choice in the command table, then place the defense and start the invasion."
+			return "FORTRESS ORDERS — Resolve the active decision, then complete the defense and sound the bell."
 		if keep.pieces.is_empty():
-			return "FIRST BATTLE GUIDE — 1 Use the recommended starter layout, or place Pike Squad in the courtyard and Narrow Gate by the gate. 2 Open one pack if you want a second doctrine. 3 Start the invasion when the board reads clearly."
-		return "FIRST BATTLE GUIDE — Layout ready. Read the FORECAST, then begin the assault. It runs immediately; use Space to pause or N to resolve one readable tick while paused."
+			return "FORTRESS ORDERS — Use the recommended starter layout or open a pack, place a fighting line, and keep one response route open."
+		return "FORTRESS READY — Read the forecast, then begin. Space pauses and N advances one combat tick while paused."
 	if screen == "battle":
-		return "FIRST BATTLE GUIDE — The fort stays visible while enemies move continuously toward contact. Pause when needed; the focused response preview shows the next committed defenders."
+		return "ASSAULT ORDERS — The fort stays visible while threats advance. Watch routes and targets; pause when needed to read the next committed response."
 	if screen == "results":
 		if keep.repair_interval_active and keep.has_next_wave():
 			return "RECOVERY LULL — Read the causal result, spend up to two repair or assignment actions, then release assault phase %d/%d." % [keep.wave_index + 1, keep.authored_wave_count()]
 		if keep.authored_wave_count() > 0 and keep.wave_index >= keep.authored_wave_count():
-			return "SCENARIO COMPLETE — Read the final causal result, then restart the quick playtest to test a different doctrine response."
-		return "FIRST BATTLE GUIDE — Read the causal result below, repair the highest-priority room, then finish the interval before the next doctrine. Change one placement at a time to learn the counter."
+			return "DEFENSE COMPLETE — Read the causal result, then return to the War Council for the next defense."
+		return "AFTERMATH — Read the causal result, repair the highest-priority loss, then end the lull when the keep is ready."
 	return ""
 
 func _scorecard_compact_text() -> String:
@@ -2707,9 +3189,11 @@ func _refresh_result_explanation() -> void:
 		event_rows.append("P%d %s → %s" % [int(event_entry.get("wave", 0)), _event_ledger_name(event_entry), String(event_entry.get("visible_result", ""))])
 	var event_heading: String = "EVENT CONSEQUENCES — newest %d of %d" % [event_rows.size(), int(event_snapshot.get("total", event_rows.size()))] if bool(event_snapshot.get("truncated", false)) else "EVENT CONSEQUENCES — newest first"
 	var event_report: String = "\n%s\n%s" % [event_heading, "\n".join(event_rows)] if not event_rows.is_empty() else ""
-	scorecard_label.text = "%s — %s | %s\n%s%s%s\nREPLAY KEY — %s" % [report_heading, String(report.get("scenario_name", keep.scenario_id)), String(report.get("commander_name", keep.commander_id)), "\n".join(score_rows) if not score_rows.is_empty() else "No resolved assault phases yet.", event_report, _regional_report_text(true), String(report.get("replay_key", ""))]
+	var diagnostic_replay: String = "\nREPLAY KEY — %s" % String(report.get("replay_key", "")) if developer_ui_enabled else ""
+	scorecard_label.text = "%s — %s | %s\n%s%s%s%s" % [report_heading, String(report.get("scenario_name", keep.scenario_id)), String(report.get("commander_name", keep.commander_id)), "\n".join(score_rows) if not score_rows.is_empty() else "No resolved assault phases yet.", event_report, _regional_report_text(true), diagnostic_replay]
 
 func _refresh_ui() -> void:
+	_refresh_tutorial_panel()
 	_refresh_room_options()
 	_refresh_pack_preview()
 	_refresh_scenario_preview()
@@ -2718,7 +3202,7 @@ func _refresh_ui() -> void:
 	if setup_overview_label:
 		var selected_commander: Dictionary = keep.commander_definition(_selected_id(commander_option))
 		var selected_scenario: Dictionary = keep.scenario_preview(_selected_id(scenario_option))
-		var setup_mode: String = "GUIDED PLAYTEST" if guided_setup else "CUSTOM DEFENSE"
+		var setup_mode: String = "FIRST WATCH" if tutorial.active else "GUIDED DEFENSE" if guided_setup else "SKIRMISH"
 		var modifier_name: String = "None"
 		if not keep.equipped_modifier_id.is_empty():
 			modifier_name = String(keep.modifier_definition(keep.equipped_modifier_id).get("name", keep.equipped_modifier_id))
@@ -2736,12 +3220,20 @@ func _refresh_ui() -> void:
 	if setup_confirm_button:
 		setup_confirm_button.text = "Enter Keep — Recommended Layout" if guided_setup else "Enter Keep — Build Defense"
 		setup_confirm_button.tooltip_text = "Enter Preparation with the guided two-piece baseline." if guided_setup else "Enter Preparation with an empty board and the selected starting pieces available."
+	if commander_option:
+		commander_option.disabled = tutorial.active
+	if scenario_option:
+		scenario_option.disabled = tutorial.active
+	if campaign_modifier_option:
+		campaign_modifier_option.disabled = tutorial.active
 	if title_continue_button:
 		title_continue_button.disabled = not FileAccess.file_exists(save_path) and not FileAccess.file_exists(save_backup_path)
+	if title_continue_tutorial_button:
+		title_continue_tutorial_button.visible = FileAccess.file_exists(tutorial_path) or FileAccess.file_exists(tutorial_backup_path)
 	var interval_text: String = "closed"
 	if keep.repair_interval_active:
 		interval_text = "%d action(s): %s" % [keep.repair_actions_remaining, keep.repair_interval_reason]
-	status_label.text = "%s | %s / %s | Materials %d | Command %d | Morale %d | Pieces %d | Assault %d | Tick %d | Breach %d | %s | Recovery %s" % [keep.summary().get("commander", "Commander"), String(keep.keep_definition().get("name", keep.keep_id)), String(keep.scenario_preview().get("name", "Free drill")), keep.materials, keep.command_points, keep.morale, keep.pieces.size(), keep.wave_index, keep.battle_step, keep.breach_level, "PAUSED" if battle_paused else "LIVE %.1fx" % _battle_speed(), interval_text]
+	status_label.text = "%s — %s\nMaterials %d  •  Morale %d  •  Command %d  •  Defenders %d  •  Phase %d/%d  •  Tick %d  •  %s" % [String(keep.keep_definition().get("name", keep.keep_id)), String(keep.scenario_preview().get("name", "Defense")), keep.materials, keep.morale, keep.command_points, keep.pieces.size(), keep.wave_index, maxi(1, keep.authored_wave_count()), keep.battle_step, "PAUSED" if battle_paused else "LIVE %.1fx" % _battle_speed()]
 	var commander: Dictionary = keep.commander_definition(keep.commander_id)
 	commander_profile_label.text = "%s\nPassive: %s\nAbility: %s — %s\nLimitation: %s" % [String(commander.get("name", keep.commander_id)), String(commander.get("passive", "")), String(commander.get("ability_name", "")), String(commander.get("ability_text", "")), String(commander.get("limitation", ""))]
 	commander_portrait.modulate = Color("#9fb9c3") if keep.commander_id == "warden" else Color.WHITE
@@ -2749,7 +3241,7 @@ func _refresh_ui() -> void:
 	commander_ability_button.text = "%s (%s)" % [String(commander.get("ability_name", "Ability")), String(commander.get("name", keep.commander_id)).replace("The ", "")]
 	commander_ability_button.tooltip_text = String(commander.get("ability_text", "Use once per assault phase."))
 	var forecast: Dictionary = keep.forecast()
-	forecast_label.text = "FORECAST — %s | Likely target: %s | Uncertainty: %s | Scout: %s" % [String(forecast.get("doctrine", "")).replace("_", " "), String(forecast.get("likely_target", "")), String(forecast.get("uncertainty", "")), "revealed" if bool(forecast.get("scout_bonus", false)) else "not revealed"]
+	forecast_label.text = "INVASION FORECAST — %s\nLikely target: %s  •  Uncertainty: %s  •  Scout detail: %s" % [String(forecast.get("doctrine", "")).replace("_", " ").capitalize(), String(forecast.get("likely_target", "")), String(forecast.get("uncertainty", "")), "revealed" if bool(forecast.get("scout_bonus", false)) else "limited"]
 	if bool(forecast.get("signal_disrupted", false)):
 		forecast_label.text += " | Signal: DISRUPTED"
 	elif bool(forecast.get("signal_network_active", false)):
@@ -2771,11 +3263,11 @@ func _refresh_ui() -> void:
 		var armor_text: String = " — armor %d" % int(enemy_definition.get("armor", 0)) if int(enemy_definition.get("armor", 0)) > 0 else ""
 		var signal_text: String = " — signal DISRUPTED" if bool(enemy.get("signal_disrupted", false)) else " — signal RELAYED" if enemy_definition.get("disruption_profile") is Dictionary else ""
 		var protection_text: String = " — protection PIERCING" if bool(enemy_definition.get("ignores_protection", false)) else ""
-		enemy_lines.append("%s [%s] — %s/%s%s%s%s — route %s — target %s" % [String(enemy_definition.get("name", enemy_id)), enemy_id, phase, enemy_state, armor_text, signal_text, protection_text, String(enemy_definition.get("route", "")), target])
-	enemy_label.text = "ENEMIES — " + (" | ".join(enemy_lines) if not enemy_lines.is_empty() else "No active enemies. Start an invasion to see doctrine-driven actors.")
+		enemy_lines.append("%s — %s / %s%s%s%s — route %s — target %s" % [String(enemy_definition.get("name", enemy_id)), phase, enemy_state, armor_text, signal_text, protection_text, String(enemy_definition.get("route", "")).replace("_", " "), target])
+	enemy_label.text = "ACTIVE THREATS\n" + ("\n".join(enemy_lines) if not enemy_lines.is_empty() else "No active enemies.")
 	var metrics: Dictionary = keep.combat_metrics
 	metrics_label.text = "METRICS — steps %d | unit attacks %d | damage dealt %d | ammo spent %d | enemy attacks %d | room damage %d | piece damage %d | repairs %d | disabled %d | defeated %d" % [int(metrics.get("battle_steps", 0)), int(metrics.get("unit_attacks", 0)), int(metrics.get("damage_dealt", 0)), int(metrics.get("ammo_spent", 0)), int(metrics.get("enemy_attacks", 0)), int(metrics.get("room_damage", 0)), int(metrics.get("piece_damage", 0)), int(metrics.get("repairs", 0)), int(metrics.get("disabled_units", 0)), int(metrics.get("defeated_enemies", 0))]
-	combat_explain_label.text = "REAL-TIME ASSAULT — enemies move continuously while deterministic combat ticks resolve underneath. Defenders commit once per tick before contact. Pause at any time to inspect the next response."
+	combat_explain_label.text = "ASSAULT RHYTHM — Defenders answer once per combat tick. Pause at any time to inspect the selected threat and its next strike."
 	var available_names: Array[String] = []
 	for available_id in keep.available_pieces:
 		available_names.append(String(keep.piece_definition(available_id).get("name", available_id)))
@@ -2800,7 +3292,7 @@ func _refresh_ui() -> void:
 		placement_label.text = "MAP READY — click a room or placed piece to inspect it; arm a piece to preview a direct placement."
 	keep_canvas.call("set_preview", placement_mode, preview_floor, preview_origin, _selected_id(piece_option), preview_valid)
 	if event_label.text.is_empty():
-		event_label.text = "Open Pike Line or Field Engineers, place a defense on either floor, start First Bell, and advance one step at a time."
+		event_label.text = "Greywatch awaits orders. Build a readable defense, then sound the bell."
 	guidance_label.text = _first_battle_guidance()
 	if playtest_button:
 		if screen == "preparation":
@@ -2817,7 +3309,17 @@ func _refresh_ui() -> void:
 			playtest_button.tooltip_text = "Resume continuous combat." if battle_paused else "Pause immediately without advancing authoritative combat."
 			playtest_status_label.text = "ASSAULT PHASE %d/%d · TICK %d · %s — Space toggles pause; N advances one tick while paused." % [keep.wave_index, maxi(1, keep.authored_wave_count()), keep.battle_step, "PAUSED" if battle_paused else "LIVE %.1fx" % _battle_speed()]
 		elif screen == "results":
-			if keep.repair_interval_active and keep.has_next_wave():
+			if tutorial.active and tutorial.failure_active:
+				playtest_button.text = "RETRY PHASE"
+				playtest_button.disabled = false
+				playtest_button.tooltip_text = "Restore the exact checkpoint at the start of this tutorial phase."
+				playtest_status_label.text = "THE KEEP FELL — Review the lesson and retry this phase."
+			elif tutorial.active and tutorial.expected_action() == "finish_tutorial":
+				playtest_button.text = "TUTORIAL COMPLETE — WAR COUNCIL"
+				playtest_button.disabled = false
+				playtest_button.tooltip_text = "Record First Watch as complete and choose the next defense."
+				playtest_status_label.text = "VICTORY — Greywatch survived all three First Watch assaults."
+			elif keep.repair_interval_active and keep.has_next_wave():
 				playtest_button.text = "END LULL — RELEASE PHASE %d/%d" % [keep.wave_index + 1, keep.authored_wave_count()]
 				playtest_button.disabled = false
 				playtest_button.tooltip_text = "Close recovery and return immediately to the live assault."
@@ -2825,8 +3327,8 @@ func _refresh_ui() -> void:
 			else:
 				playtest_button.text = "REVIEW SETUP — PLAY AGAIN"
 				playtest_button.disabled = false
-				playtest_button.tooltip_text = "Return to the guided briefing before replaying the deterministic candidate."
-				playtest_status_label.text = "FINAL RESULTS — %s | Replay %s" % [_scorecard_compact_text(), String(keep.scenario_scorecard().get("replay_key", ""))]
+				playtest_button.tooltip_text = "Return to the War Council before replaying the defense."
+				playtest_status_label.text = "FINAL OUTCOME — %s" % _scorecard_compact_text()
 	var recent: Array[String] = []
 	var start: int = maxi(0, keep.battle_report.size() - _event_feed_retention())
 	for index in range(start, keep.battle_report.size()):
@@ -2889,6 +3391,10 @@ class KeepCanvas extends Control:
 	var target_impacts: Array[Dictionary] = []
 	var engagement_ttl: float = 0.0
 	var placement_guides_visible: bool = false
+	var tutorial_target_floor: String = ""
+	var tutorial_target_cell: Vector2i = Vector2i(-1, -1)
+	var tutorial_target_size: Vector2i = Vector2i.ONE
+	var tutorial_target_label: String = ""
 
 	func set_focus(index: int) -> void:
 		focused_enemy_index = index
@@ -2920,6 +3426,19 @@ class KeepCanvas extends Control:
 
 	func set_placement_guides(visible: bool) -> void:
 		placement_guides_visible = visible
+		queue_redraw()
+
+	func set_tutorial_target(floor: String, cell: Vector2i, target_size: Vector2i, label: String) -> void:
+		tutorial_target_floor = floor
+		tutorial_target_cell = cell
+		tutorial_target_size = target_size
+		tutorial_target_label = label
+		queue_redraw()
+
+	func clear_tutorial_target() -> void:
+		tutorial_target_floor = ""
+		tutorial_target_cell = Vector2i(-1, -1)
+		tutorial_target_label = ""
 		queue_redraw()
 
 	func show_engagements(traces: Array[Dictionary]) -> void:
@@ -3848,6 +4367,12 @@ class KeepCanvas extends Control:
 		var visual: Dictionary = keep.keep_definition().get("visual", {})
 		_draw_floor(String(visual.get("ground_label", "GROUND FLOOR")), "ground", MAP_ORIGIN)
 		_draw_floor(String(visual.get("upper_label", "UPPER FLOOR")), "upper", UPPER_ORIGIN)
+		if not tutorial_target_floor.is_empty() and tutorial_target_cell.x >= 0:
+			var tutorial_origin: Vector2 = UPPER_ORIGIN if tutorial_target_floor == "upper" else MAP_ORIGIN
+			var tutorial_rect: Rect2 = Rect2(tutorial_origin + Vector2(tutorial_target_cell.x * CELL_X, tutorial_target_cell.y * CELL_Y), Vector2(tutorial_target_size.x * CELL_X, tutorial_target_size.y * CELL_Y)).grow(3)
+			draw_rect(tutorial_rect, Color(0.95, 0.73, 0.30, 0.14), true)
+			draw_rect(tutorial_rect, Color("#f1c56e"), false, 3.0)
+			draw_string(ThemeDB.fallback_font, tutorial_rect.position + Vector2(2, -5), tutorial_target_label, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#ffe8ac"))
 		if preview_active and not keep.piece_definition(preview_piece_id).is_empty():
 			var preview_size: Vector2i = keep.piece_definition(preview_piece_id).size
 			var preview_origin_pixel: Vector2 = MAP_ORIGIN if preview_floor == "ground" else UPPER_ORIGIN

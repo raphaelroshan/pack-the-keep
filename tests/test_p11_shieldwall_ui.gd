@@ -30,7 +30,7 @@ func _initialize() -> void:
 	ui._refresh_ui()
 	ui._select_enemy_focus(0, "P11 Shieldwall UI test")
 	await process_frame
-	_check(String(ui.forecast_label.text).contains("break the line"), "Battle forecast should name Break the Line")
+	_check(String(ui.forecast_label.text).contains("Break The Line"), "Battle forecast should name Break the Line")
 	_check(String(ui.enemy_label.text).contains("Shieldbreaker") and String(ui.enemy_label.text).contains("protection PIERCING"), "Battle roster should expose protection piercing")
 	_check(String(ui.inspector_label.text).contains("protection PIERCING") and String(ui.inspector_label.text).contains("Shield Wardens") and not String(ui.inspector_label.text).contains("shield_wardens_0"), "Inspector should expose the friendly Shieldbreaker target and bypass rule")
 	_check(String(ui.response_preview_label.text).contains("Shield Wardens"), "Response preview should name Shield Wardens")

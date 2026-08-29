@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.19.0-last-stand` — the controlled playtest adds a clearly advertised overwhelming scenario, an immediate terminal defender-wipe state, and a richer scenario browser; human sessions and owner approval remain pending
+**Current build identity:** `0.20.0-first-watch` — the controlled playtest adds a complete First Watch onboarding route, independent tutorial resume data, and checkpoint retries while preserving the overwhelming Last Bell end-state test; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of ten authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.20.0 acceptance checks
+
+Choose **New Game** on a fresh profile and confirm First Watch opens with the Castellan's introduction before the War Council. Follow the highlighted route through Gate inspection, Pike Line opening, direct Pike Squad and Narrow Gate placement, Raider/Sapper/Climber analysis, live pause and resume, defender repair, Gate assignment, room repair, and Lockdown. Confirm each assault phase begins paused for analysis, incorrect commands do not change the keep, progress can resume independently from a run save, collapse offers **Retry Phase**, and completion returns to the War Council. Confirm **Skip Tutorial** enters Skirmish without marking First Watch complete and **Learn to Play** remains available from the Main Menu.
 
 ## v0.19.0 acceptance checks
 

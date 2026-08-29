@@ -18,7 +18,7 @@ def packaged_report(phase: str, profile: str, executable: str) -> dict[str, obje
     report: dict[str, object] = {
         "schema_version": 2, "phase": phase, "ok": True, "build_version": "v", "editor_feature": False, "errors": [],
         "smoke_guard": True, "offline_proxy_guard": True, "main_scene_freed": True,
-        "battle_step": 1, "save_schema_version": 4, "settings_schema_version": 4,
+        "battle_step": 1, "save_schema_version": 4, "settings_schema_version": 5,
         "controller_navigation_ready": True, "controller_defaults_ready": True,
         "settings_state_unchanged": True,
         "content_status": {

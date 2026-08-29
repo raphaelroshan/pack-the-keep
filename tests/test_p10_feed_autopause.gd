@@ -49,7 +49,7 @@ func _initialize() -> void:
 	_check(String(ui.log_label.text).contains("event_19") and String(ui.log_label.text).contains("event_04"), "bounded feed should show the newest retained entries")
 	_check(not String(ui.log_label.text).contains("event_03"), "bounded feed should hide entries older than the retention preference")
 	var payload: Variant = JSON.parse_string(FileAccess.get_file_as_string(TEST_SETTINGS))
-	_check(payload is Dictionary and int(payload.get("schema_version", 0)) == 4, "feed preferences should write settings schema 4")
+	_check(payload is Dictionary and int(payload.get("schema_version", 0)) == 5, "feed preferences should write settings schema 5")
 
 	ui.keep.reset_run(3307)
 	ui.last_log_size = 0

@@ -39,7 +39,7 @@ func _initialize() -> void:
 	ui._refresh_ui()
 	await process_frame
 
-	_check(String(ui.forecast_label.text).contains("shielded advance"), "Battle forecast should name Shielded Advance")
+	_check(String(ui.forecast_label.text).contains("Shielded Advance"), "Battle forecast should name Shielded Advance")
 	_check(String(ui.enemy_label.text).contains("Shield Guard") and String(ui.enemy_label.text).contains("armor 2"), "Battle roster should show Shield Guard and its armor")
 	var ranged_traces: Array[Dictionary] = ui._next_engagement_traces()
 	_check(not ranged_traces.is_empty() and String(ranged_traces[0].get("style", "")) == "ranged" and String(ranged_traces[0].get("piece_id", "")) == "crossbow_patrol", "Crossbow Patrol response should expose ranged projectile presentation metadata")

@@ -93,7 +93,7 @@ def validate_report(report_path: Path, profile_root: Path, expected_version: str
     if expected_phase != "missing_profile":
         if report.get("battle_step") != 1:
             errors.append("packaged gameplay did not preserve deterministic battle step one")
-        if report.get("save_schema_version") != 4 or report.get("settings_schema_version") != 4:
+        if report.get("save_schema_version") != 4 or report.get("settings_schema_version") != 5:
             errors.append("packaged persistence schemas do not match the current runtime")
     if expected_phase == "clean_install":
         if report.get("profile_files_present") is not False or report.get("profile_files_complete") is not False:

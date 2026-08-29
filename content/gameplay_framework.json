@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.19.0-last-stand",
+  "framework_version": "0.20.0-first-watch",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -1709,6 +1709,15 @@
       "primary_action": "finish repair interval"
     }
   ],
+  "first_watch_tutorial": {
+    "status": "implemented",
+    "mode": "strict_guided_three_phase_gatehouse_lock",
+    "coaches": ["the_castellan", "mara_venn"],
+    "commands": ["confirm_setup", "inspect_room", "open_pack", "place_piece", "inspect_piece", "start_wave", "inspect_enemy", "resume_battle", "repair_piece", "assign_piece", "finish_interval", "repair_room", "use_ability"],
+    "persistence": "separate_versioned_progress_with_phase_checkpoint_retry",
+    "determinism_rule": "tutorial_state_may_gate_or_focus_existing_commands_but_never_resolves_combat_placement_recovery_or_damage",
+    "exit_paths": ["complete", "skip", "retry_phase"]
+  },
   "unit_availability": {
     "status": "vertical_slice",
     "starter_pieces": [
