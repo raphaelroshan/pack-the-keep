@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.25.1-battle-presentation-snapshot` — Battle state, command availability, threat focus, and response previews now render from one read-only snapshot; human sessions and owner approval remain pending
+**Current build identity:** `0.25.2-presentation-audit` — `--debug-ui` can outline major layout regions and report focus/clipping diagnostics while normal player launches remain unchanged; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of ten authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.25.2 acceptance checks
+
+Launch normally and confirm no audit overlay exists. Launch with `--debug-ui` and confirm visible major regions receive labeled outlines plus a footer naming the current screen, logical viewport, focus owner, visible-region count, and clipped-region count. Confirm the overlay ignores pointer and keyboard focus and does not change serialized keep state.
 
 ## v0.25.1 acceptance checks
 

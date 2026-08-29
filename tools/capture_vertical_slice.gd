@@ -83,6 +83,7 @@ func _write_manifest() -> void:
 		"build_version": String(ProjectSettings.get_setting("application/config/version", "unknown")),
 		"resolution": {"width": CAPTURE_SIZE.x, "height": CAPTURE_SIZE.y},
 		"files": captured_files,
+		"debug_ui": OS.get_cmdline_user_args().has("--debug-ui"),
 		"human_evidence": false,
 	}
 	var file: FileAccess = FileAccess.open(output_dir.path_join("capture-manifest.json"), FileAccess.WRITE)

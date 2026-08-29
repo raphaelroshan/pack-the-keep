@@ -1,11 +1,11 @@
 # Pack the Keep — Game-Quality Transformation Plan
 
 **Audience:** GPT coding agents, art/UX agents, test agents, and the human owner
-**Current baseline:** `0.25.1-battle-presentation-snapshot`
+**Current baseline:** `0.25.2-presentation-audit`
 **Current status:** Technically substantial public-source pre-alpha; presentation transformation in progress
 **Primary objective:** Turn the existing deterministic fortress-defense systems into a coherent, attractive, immediately understandable game-quality private alpha without rewriting the simulation core.
 
-**Implementation ledger:** P32 gives terminal Results a dedicated debrief. P33 adds Preparation question/answer/weakness hierarchy. P34 adds board visual grammar. P35 centralizes semantic battle audio. P36 adds tick-zero readiness. P37 gives inter-wave Recovery a compact what-changed/why/next/action-budget/priority hierarchy. P38 replaces raw-first War Council selection with commander and defense choice cards. P39 gives Preparation a complete pack doctrine offer card. P40 groups Preparation into three stages. P41 gives rooms, defenders, and threats one action-oriented inspection hierarchy without raw IDs. P42 centers Battle on live state, pause/resume, commander intervention, and focused-threat inspection while collapsing expert timing controls. P43 adds explicit local-only observation and a stable nine-screen capture harness. P44 introduces the first complete screen-level presentation snapshot boundary for Battle. Human validation remains pending.
+**Implementation ledger:** P32 gives terminal Results a dedicated debrief. P33 adds Preparation question/answer/weakness hierarchy. P34 adds board visual grammar. P35 centralizes semantic battle audio. P36 adds tick-zero readiness. P37 gives inter-wave Recovery a compact what-changed/why/next/action-budget/priority hierarchy. P38 replaces raw-first War Council selection with commander and defense choice cards. P39 gives Preparation a complete pack doctrine offer card. P40 groups Preparation into three stages. P41 gives rooms, defenders, and threats one action-oriented inspection hierarchy without raw IDs. P42 centers Battle on live state, pause/resume, commander intervention, and focused-threat inspection while collapsing expert timing controls. P43 adds explicit local-only observation and a stable nine-screen capture harness. P44 introduces the first complete screen-level presentation snapshot boundary for Battle. P45 adds a debug-only layout/focus/clipping audit overlay. Human validation remains pending.
 
 > **Central diagnosis:** Pack the Keep has enough mechanics for a real game loop. Its largest gap is not feature count. Its largest gap is presentation: the player must feel that they are preparing a fortress, watching a defense, making urgent but comprehensible interventions, recovering from damage, and learning from the result—not operating a debug panel surrounded by a board.
 
@@ -847,14 +847,14 @@ Start from the current Pack the Keep remote main. Read AGENTS.md, README.md,
 design/design_prompt.md, docs/agent_handoff_roadmap.md, and the latest visual
 verification notes.
 
-Implement the next game-quality slice: add a debug-only presentation audit
-mode that outlines major layout regions, reports current focus ownership, and
-identifies overflow/visibility problems during visual capture. Keep the audit
-absent from normal launches and packaged player flows.
+Implement the next game-quality slice: add a consistent Escape/back path and
+explicit unsaved-progress language for leaving Setup, Preparation, Battle,
+Recovery, Settings, and terminal Results. Use a small confirmation state where
+leaving would abandon unsaved progress.
 
-Preserve current hierarchy, capture harness, local observation, deterministic
-simulation, First Watch, and scaling. Do not turn audit visuals into gameplay
-state or expose them without the existing `--debug-ui` boundary.
+Preserve existing save/load behavior, tutorial locks, active-wave timing,
+controller navigation, and deterministic state. Do not silently discard a run
+or add platform-specific modal dependencies.
 ```
 
 ---
