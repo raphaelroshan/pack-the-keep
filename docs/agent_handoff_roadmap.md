@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
 **Document status:** Active planning contract for post-v0.14.2 development
-**Current release baseline:** `0.25.2-presentation-audit` on the current vertical-slice branch; remote `main` remains owner-controlled
+**Current release baseline:** `0.25.3-navigation-safety` on the current vertical-slice branch; remote `main` remains owner-controlled
 **Release posture:** CI-verified public repository with owner-controlled merges; no public alpha release or storefront claim yet
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
@@ -118,6 +118,7 @@ Milestones must be completed in order. An agent may split a milestone into small
 | P43 | Implemented; human sessions remain pending | Settings can explicitly enable session-only local observation, export a non-human-evidence JSON snapshot, and run a stable nine-screen visual capture harness. | Extract a presentation snapshot boundary for one screen without changing simulation ownership. |
 | P44 | Implemented; architecture migration remains incremental | Battle state, time controls, commander availability, focused threat, and response preview now render from one deterministic read-only snapshot. | Add a debug-only presentation audit overlay for layout bounds and focus targets. |
 | P45 | Implemented; human visual review remains pending | `--debug-ui` now outlines major visible regions and reports viewport, focus owner, and clipping counts without intercepting input or existing in normal launches. | Add a consistent Escape/back path and explicit unsaved-progress language. |
+| P46 | Implemented; human navigation evidence pending | Escape/controller-back now prioritizes cancel actions, returns from Settings and War Council predictably, and confirms before abandoning changes not stored in Continue Saved Run. | Run the required human playtest matrix and address only repeated observed friction. |
 
 P13 onward are planning identifiers, not permission to release automatically. Every milestone still requires local validation, CI, visual review, and explicit human approval before external distribution. The existing P5–P12 sections below remain useful as acceptance contracts, but agents must not re-implement them unless a regression or refactor explicitly requires it.
 

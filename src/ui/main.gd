@@ -145,6 +145,11 @@ var battle_tactical_button: Button
 var battle_tactical_panel: VBoxContainer
 var battle_presentation_snapshot: Dictionary = {}
 var presentation_audit_overlay: PresentationAuditOverlay
+var navigation_confirm_layer: Control
+var navigation_confirm_label: Label
+var navigation_confirm_leave_button: Button
+var pending_navigation_target: String = ""
+var last_saved_run_signature: String = ""
 var mute_button: Button
 var contrast_button: Button
 var reduced_motion_button: Button
@@ -376,7 +381,10 @@ func _handle_named_action(event: InputEvent) -> bool:
 	elif event.is_action_pressed("placement_arm"):
 		_arm_selected_piece()
 	elif event.is_action_pressed("placement_cancel"):
-		_on_cancel_placement()
+		if placement_mode:
+			_on_cancel_placement()
+		else:
+			_on_back_requested()
 	elif event.is_action_pressed("report_focus"):
 		_focus_report()
 	elif event.is_action_pressed("feedback_mute"):
@@ -1358,7 +1366,7 @@ func _build_ui() -> void:
 	setup_controls.append(setup_confirm_button)
 	setup_back_button = Button.new()
 	setup_back_button.text = "Back to Main Menu"
-	setup_back_button.pressed.connect(func() -> void: _set_screen("title"))
+	setup_back_button.pressed.connect(_on_back_requested)
 	left.add_child(setup_back_button)
 	setup_controls.append(setup_back_button)
 
@@ -1685,6 +1693,44 @@ func _build_ui() -> void:
 	_style_button(setup_confirm_button, true)
 	_style_button(pause_button, true)
 	_refresh_binding_controls()
+	_build_navigation_confirmation()
+
+func _build_navigation_confirmation() -> void:
+	navigation_confirm_layer = ColorRect.new()
+	navigation_confirm_layer.color = Color(0.03, 0.025, 0.04, 0.86)
+	navigation_confirm_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	navigation_confirm_layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	navigation_confirm_layer.z_index = 900
+	navigation_confirm_layer.visible = false
+	add_child(navigation_confirm_layer)
+	var panel: PanelContainer = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(520, 220)
+	panel.set_anchors_preset(Control.PRESET_CENTER)
+	panel.position = Vector2(-260, -110)
+	_style_panel(panel, Color("#211c29"), Color("#e2bd84"), 10)
+	navigation_confirm_layer.add_child(panel)
+	var body: VBoxContainer = VBoxContainer.new()
+	body.add_theme_constant_override("separation", 12)
+	panel.add_child(body)
+	var heading: Label = Label.new()
+	heading.text = "LEAVE THIS DEFENSE?"
+	heading.add_theme_font_size_override("font_size", 22)
+	heading.add_theme_color_override("font_color", Color("#e2bd84"))
+	body.add_child(heading)
+	navigation_confirm_label = Label.new()
+	navigation_confirm_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	navigation_confirm_label.add_theme_color_override("font_color", Color("#f2e5d1"))
+	body.add_child(navigation_confirm_label)
+	var stay_button: Button = Button.new()
+	stay_button.text = "Stay with defense"
+	stay_button.pressed.connect(_cancel_navigation_confirmation)
+	body.add_child(stay_button)
+	navigation_confirm_leave_button = Button.new()
+	navigation_confirm_leave_button.text = "Discard and return"
+	navigation_confirm_leave_button.pressed.connect(_confirm_navigation)
+	body.add_child(navigation_confirm_leave_button)
+	_style_button(stay_button, true)
+	_style_button(navigation_confirm_leave_button, false)
 
 func _build_title_card() -> PanelContainer:
 	var card: PanelContainer = PanelContainer.new()
@@ -2097,6 +2143,49 @@ func _refresh_navigation() -> void:
 func _on_navigation_requested(target: String) -> void:
 	if target == "settings":
 		_on_open_settings()
+
+func _has_unsaved_run_progress() -> bool:
+	if not keep.scenario_active:
+		return false
+	return JSON.stringify(keep.serialize()) != last_saved_run_signature
+
+func _on_back_requested() -> void:
+	if navigation_confirm_layer != null and navigation_confirm_layer.visible:
+		_cancel_navigation_confirmation()
+		return
+	if screen == "settings":
+		_on_close_settings()
+	elif screen == "setup":
+		_set_screen("title")
+	elif screen in ["preparation", "battle", "results"]:
+		_request_leave_run("setup" if screen != "results" or not _is_terminal_result() else "title")
+
+func _request_leave_run(target: String) -> void:
+	if not _has_unsaved_run_progress():
+		_leave_run(target)
+		return
+	pending_navigation_target = target
+	navigation_confirm_label.text = "This defense has changes that are not stored in Continue Saved Run. Leaving will discard the in-memory run; any existing save file remains untouched."
+	navigation_confirm_leave_button.text = "Discard and return to %s" % ("Main Menu" if target == "title" else "War Council")
+	navigation_confirm_layer.visible = true
+	navigation_confirm_layer.move_to_front()
+	navigation_confirm_leave_button.grab_focus()
+
+func _cancel_navigation_confirmation() -> void:
+	pending_navigation_target = ""
+	navigation_confirm_layer.visible = false
+	call_deferred("_focus_screen_control")
+
+func _confirm_navigation() -> void:
+	var target: String = pending_navigation_target
+	pending_navigation_target = ""
+	navigation_confirm_layer.visible = false
+	_leave_run(target)
+
+func _leave_run(target: String) -> void:
+	_reset_for_setup()
+	_set_screen(target if target in ["title", "setup"] else "title")
+	_set_event("Returned without changing the existing save file.")
 
 func _labeled_control(label_text: String, control: Control) -> VBoxContainer:
 	var group: VBoxContainer = VBoxContainer.new()
@@ -3099,6 +3188,7 @@ func _on_save() -> void:
 		return
 	if FileAccess.file_exists(save_backup_path):
 		directory.remove(save_backup_path.get_file())
+	last_saved_run_signature = JSON.stringify(keep.serialize())
 	_set_event("Keep state saved safely with schema %d." % PackKeepState.SAVE_SCHEMA_VERSION)
 
 func _on_load() -> void:
@@ -3118,6 +3208,7 @@ func _on_load() -> void:
 			_set_event("Load rejected: primary %s; backup %s. The current run is unchanged." % [primary_reason, backup_reason])
 			return
 	keep = selected.state
+	last_saved_run_signature = JSON.stringify(keep.serialize())
 	var result: Dictionary = selected.result
 	_clear_placement_mode()
 	selected_instance_id = ""
@@ -3160,8 +3251,7 @@ func _on_playtest_primary_action() -> void:
 		_toggle_battle_pause()
 
 func _on_terminal_return_to_menu() -> void:
-	_set_screen("title")
-	_set_event("Final defense retained in memory. Save Result before leaving if you want it available from Continue Saved Run.")
+	_request_leave_run("title")
 
 func _on_new_game() -> void:
 	local_playtest_observer.record_action("new_game")
@@ -3482,6 +3572,7 @@ func _on_start_custom_setup() -> void:
 
 func _reset_for_setup() -> void:
 	keep.reset_run(3307)
+	last_saved_run_signature = ""
 	setup_confirmed = false
 	focused_enemy_index = -1
 	battle_paused = true
@@ -3566,6 +3657,7 @@ func _on_reset_run() -> void:
 		_retry_tutorial_phase()
 		return
 	keep.reset_run(3307)
+	last_saved_run_signature = ""
 	guided_setup = false
 	setup_confirmed = false
 	focused_enemy_index = -1

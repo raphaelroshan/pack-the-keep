@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.25.2-presentation-audit` — `--debug-ui` can outline major layout regions and report focus/clipping diagnostics while normal player launches remain unchanged; human sessions and owner approval remain pending
+**Current build identity:** `0.25.3-navigation-safety` — Escape/controller-back is consistent and changed runs require an explicit in-game confirmation before leaving; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of ten authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.25.3 acceptance checks
+
+From War Council, press Escape and confirm a direct return to Main Menu. In Preparation, first arm placement and confirm Escape cancels placement without leaving. Press Escape again and confirm the unsaved-defense panel appears; **Stay with defense** must preserve exact state, while **Discard and return to War Council** resets only the in-memory run and does not delete an existing save. Save a run and confirm Back no longer claims that unchanged state is unsaved. Settings must return directly to its originating screen.
 
 ## v0.25.2 acceptance checks
 

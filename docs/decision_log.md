@@ -751,3 +751,11 @@
 **Reason:** Stable screenshots need a fast way to distinguish intended scrolling from accidental clipping and to verify controller focus without adding persistent debug labels to the player experience.
 
 **Trade-off:** The audit reports geometric clipping, not semantic severity, so deliberately scrollable content can appear in the count. It remains a development aid and is excluded entirely from ordinary launches.
+
+## ADR-095: Back navigation confirms unsaved run abandonment
+
+**Decision:** Route Escape/controller-back through one screen-aware handler. Cancel input rebinding or active placement first, close an open confirmation second, return directly from Settings and War Council, and require an in-game confirmation before resetting changed gameplay state. Derive dirty state by comparing serialized `PackKeepState` with the signature captured after a successful save or load.
+
+**Reason:** The prior Escape binding was only a placement cancel, and leaving a developed defense had no consistent language about unsaved progress. The new flow makes consequences explicit without platform-specific dialogs or a new save format.
+
+**Trade-off:** Serialized comparison is broader than a hand-maintained dirty flag and may treat any authoritative difference as unsaved. That conservative behavior is intentional; presentation changes never trigger it, and the existing save file is never deleted by discard navigation.

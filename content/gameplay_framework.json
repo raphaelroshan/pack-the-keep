@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.25.2-presentation-audit",
+  "framework_version": "0.25.3-navigation-safety",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -1823,6 +1823,13 @@
     "regions": ["title_card", "main_content", "fortress_board", "command_rail", "primary_action", "context_brief", "inspection_card", "terminal_debrief"],
     "diagnostics": ["viewport", "screen", "focus_owner", "visible_regions", "clipped_regions"],
     "determinism_rule": "overlay_is_mouse_ignoring_non_focusable_and_absent_from_normal_launches"
+  },
+  "navigation_safety": {
+    "status": "implemented",
+    "back_paths": ["settings_to_origin", "war_council_to_menu", "gameplay_to_confirmed_exit"],
+    "priority": ["cancel_input_rebind", "cancel_active_placement", "close_confirmation", "navigate_back"],
+    "dirty_detection": "serialized_run_compared_with_last_successful_save_or_load",
+    "persistence_rule": "discarding_in_memory_progress_never_deletes_the_existing_save_file"
   },
   "unit_availability": {
     "status": "vertical_slice",
