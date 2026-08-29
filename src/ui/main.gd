@@ -12,6 +12,7 @@ const PackOfferPanelView = preload("res://src/ui/pack_offer_panel.gd")
 const InspectionPanelView = preload("res://src/ui/inspection_panel.gd")
 const LocalPlaytestObserverView = preload("res://src/ui/local_playtest_observer.gd")
 const BattlePresentationSnapshotView = preload("res://src/ui/battle_presentation_snapshot.gd")
+const PresentationAuditOverlayView = preload("res://src/ui/presentation_audit_overlay.gd")
 
 const PackKeepState = preload("res://src/core/keep_state.gd")
 const PackagedSmoke = preload("res://src/platform/packaged_smoke.gd")
@@ -143,6 +144,7 @@ var inspect_enemy_button: Button
 var battle_tactical_button: Button
 var battle_tactical_panel: VBoxContainer
 var battle_presentation_snapshot: Dictionary = {}
+var presentation_audit_overlay: PresentationAuditOverlay
 var mute_button: Button
 var contrast_button: Button
 var reduced_motion_button: Button
@@ -264,6 +266,8 @@ func _ready() -> void:
 	if DisplayServer.get_name() != "headless":
 		_setup_audio()
 	_build_ui()
+	if developer_ui_enabled:
+		_build_presentation_audit_overlay()
 	_set_screen("title")
 	if OS.get_cmdline_user_args().has("--packaged-smoke") and OS.get_environment("PACK_THE_KEEP_PACKAGED_SMOKE") == "1":
 		call_deferred("_start_packaged_smoke")
@@ -276,6 +280,21 @@ func _start_packaged_smoke() -> void:
 	var smoke_harness: Node = PackagedSmoke.new()
 	get_tree().root.add_child(smoke_harness)
 	smoke_harness.call_deferred("run", self)
+
+func _build_presentation_audit_overlay() -> void:
+	presentation_audit_overlay = PresentationAuditOverlayView.new()
+	add_child(presentation_audit_overlay)
+	presentation_audit_overlay.configure({
+		"title_card": title_card,
+		"main_content": gameplay_main_column,
+		"fortress_board": keep_canvas,
+		"command_rail": command_panel,
+		"primary_action": playtest_button,
+		"preparation_brief": preparation_brief_panel,
+		"recovery_brief": recovery_brief_panel,
+		"inspection_card": inspection_panel,
+		"terminal_debrief": terminal_debrief_panel,
+	}, screen)
 
 func _process(delta: float) -> void:
 	if local_playtest_observer != null:
@@ -1893,6 +1912,8 @@ func _set_screen(next_screen: String) -> void:
 	screen = next_screen
 	if local_playtest_observer != null:
 		local_playtest_observer.record_screen(screen)
+	if presentation_audit_overlay != null:
+		presentation_audit_overlay.set_screen_name(screen)
 	var gameplay_screen: bool = screen in ["preparation", "battle", "results"]
 	var terminal_result: bool = _is_terminal_result()
 	if gameplay_columns:

@@ -743,3 +743,11 @@
 **Reason:** Battle presentation had become a cluster of direct reads spread across refresh helpers. One explicit snapshot makes the display deterministic, testable, and easier to extract into a dedicated panel without weakening simulation ownership.
 
 **Trade-off:** The snapshot still depends on several established `PackKeepState` read-model methods and produces player-facing strings rather than a fully theme-agnostic schema. This is an incremental boundary, not a broad UI rewrite.
+
+## ADR-094: Presentation diagnostics require an explicit debug launch
+
+**Decision:** Add a top-level `PresentationAuditOverlay` only when the existing `--debug-ui` argument is present. Track named major UI regions, current focus ownership, viewport size, and full-rectangle clipping while ignoring all pointer and keyboard input.
+
+**Reason:** Stable screenshots need a fast way to distinguish intended scrolling from accidental clipping and to verify controller focus without adding persistent debug labels to the player experience.
+
+**Trade-off:** The audit reports geometric clipping, not semantic severity, so deliberately scrollable content can appear in the count. It remains a development aid and is excluded entirely from ordinary launches.

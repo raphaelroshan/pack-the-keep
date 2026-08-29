@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.25.1-battle-presentation-snapshot",
+  "build_version": "0.25.2-presentation-audit",
   "status": "ready_for_human_sessions",
   "release_ready": false,
   "minimum_completed_sessions": 4,

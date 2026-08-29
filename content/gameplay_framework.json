@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.25.1-battle-presentation-snapshot",
+  "framework_version": "0.25.2-presentation-audit",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -1816,6 +1816,13 @@
     "consumer": "battle_command_rail",
     "compatibility": "existing_refresh_helpers_delegate_to_snapshot_renderer",
     "determinism_rule": "snapshot_build_is_repeatable_and_does_not_mutate_pack_keep_state"
+  },
+  "presentation_audit_mode": {
+    "status": "implemented",
+    "activation": "debug_ui_command_line_only",
+    "regions": ["title_card", "main_content", "fortress_board", "command_rail", "primary_action", "context_brief", "inspection_card", "terminal_debrief"],
+    "diagnostics": ["viewport", "screen", "focus_owner", "visible_regions", "clipped_regions"],
+    "determinism_rule": "overlay_is_mouse_ignoring_non_focusable_and_absent_from_normal_launches"
   },
   "unit_availability": {
     "status": "vertical_slice",
