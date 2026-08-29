@@ -759,3 +759,11 @@
 **Reason:** The prior Escape binding was only a placement cancel, and leaving a developed defense had no consistent language about unsaved progress. The new flow makes consequences explicit without platform-specific dialogs or a new save format.
 
 **Trade-off:** Serialized comparison is broader than a hand-maintained dirty flag and may treat any authoritative difference as unsaved. That conservative behavior is intentional; presentation changes never trigger it, and the existing save file is never deleted by discard navigation.
+
+## ADR-096: Tagged prereleases are self-contained playtest cohorts
+
+**Decision:** Regenerate the P16 executable provenance manifest, observer brief, and four unfilled matrix templates inside the tag-triggered Windows release workflow, then publish them beside the executable, packaged smoke report, release manifest, and exact source archive.
+
+**Reason:** The ordinary CI artifact already contained the complete observer kit, but the durable GitHub prerelease exposed only the executable and generic manifests. Separating the instructions and templates from the tagged binary made it too easy to test an unproven combination or lose the cohort when short-lived CI artifacts expired.
+
+**Trade-off:** Tagged releases contain several small JSON assets rather than one minimal download. They remain intentionally marked pre-alpha, every template remains invalid human evidence until completed by an observer, and automation still cannot set `release_ready` or approve distribution.
