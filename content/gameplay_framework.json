@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.22.3-recovery-hierarchy",
+  "framework_version": "0.23.0-war-council-cards",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -1764,6 +1764,14 @@
     "focus": "first_legal_recovery_command",
     "persistence": "brief_rederived_from_wave_history_damage_recovery_advice_and_action_budget",
     "determinism_rule": "brief_and_priority_projection_do_not_execute_or_reorder_recovery_commands"
+  },
+  "war_council_choice_cards": {
+    "status": "implemented",
+    "read_model": ["commander_identity", "strength", "intervention", "limitation", "first_question", "scenario_objective", "pressure_arc", "run_rule", "fixed_commitments"],
+    "navigation": "card_previous_next_routes_through_existing_option_metadata_and_selection_handlers",
+    "fallback": "advanced_commander_and_scenario_dropdowns_remain_in_the_command_rail",
+    "tutorial": "first_watch_visibly_locks_cards_and_fallback_selectors_to_castellan_and_gatehouse_lock",
+    "determinism_rule": "card_rendering_and_focus_do_not_select_content_or_mutate_pack_keep_state"
   },
   "unit_availability": {
     "status": "vertical_slice",

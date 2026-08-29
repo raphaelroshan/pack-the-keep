@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.22.3-recovery-hierarchy` — inter-wave Aftermath now leads with what changed, why it matters, the next pressure, remaining choices, and one advisory priority before the exact recovery actions; human sessions and owner approval remain pending
+**Current build identity:** `0.23.0-war-council-cards` — the War Council now explains commander identity and authored scenario pressure through compact choice cards with locked tutorial and advanced fallback paths; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of ten authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.23.0 acceptance checks
+
+Open Skirmish and confirm the War Council shows separate Commander and Defense cards before the board appears. Browse both commanders and confirm identity, passive strength, intervention, limitation, and first question update through the existing selection path. Browse scenarios and confirm keep, objective, teaching question, pressure arc, difficulty, peak pressure, terminal rule, and fixed commitments remain synchronized with the advanced dropdown. At 125% scale confirm the cards stack. Start First Watch and confirm both card navigation and fallback dropdowns are visibly locked to The Castellan and Gatehouse Lock.
 
 ## v0.22.3 acceptance checks
 

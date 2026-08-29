@@ -7,6 +7,7 @@ const PreparationBriefPanelView = preload("res://src/ui/preparation_brief_panel.
 const BoardVisuals = preload("res://src/ui/board_visual_registry.gd")
 const BattleAudioCues = preload("res://src/ui/battle_audio_cue_service.gd")
 const RecoveryBriefPanelView = preload("res://src/ui/recovery_brief_panel.gd")
+const WarCouncilChoicePanelView = preload("res://src/ui/war_council_choice_panel.gd")
 
 const PackKeepState = preload("res://src/core/keep_state.gd")
 const PackagedSmoke = preload("res://src/platform/packaged_smoke.gd")
@@ -110,6 +111,7 @@ var main_subtitle_label: Label
 var setup_overview_panel: PanelContainer
 var setup_summary_panel: PanelContainer
 var setup_overview_label: Label
+var war_council_choice_panel: WarCouncilChoicePanel
 var settings_overview_panel: PanelContainer
 var command_panel_title: Label
 var setup_confirm_button: Button
@@ -629,6 +631,8 @@ func _apply_responsive_layout() -> void:
 	if gameplay_main_column != null:
 		gameplay_main_column.custom_minimum_size.x = 810.0
 		gameplay_main_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if war_council_choice_panel != null:
+		war_council_choice_panel.set_compact_layout(stacked)
 	if command_panel != null:
 		command_panel.custom_minimum_size.x = 810.0 if stacked else 360.0 if logical_width >= 1500.0 else 292.0
 		command_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL if stacked else Control.SIZE_SHRINK_BEGIN
@@ -1018,18 +1022,18 @@ func _build_ui() -> void:
 
 	setup_overview_panel = _build_overview_panel(
 		"THE DEFENSE BRIEF",
-		"Choose a commander lens and an authored scenario before touching the board. The guided route enters Gatehouse Lock with a readable two-piece baseline; custom setup leaves placement in your hands."
+		"Choose a leader and an authored defense. Together they set the keep, pressure arc, and intervention before the board opens."
 	)
+	setup_overview_panel.custom_minimum_size.y = 88
 	left.add_child(setup_overview_panel)
-	setup_summary_panel = PanelContainer.new()
-	_style_panel(setup_summary_panel, Color("#1e2830"), Color("#45606b"))
+	war_council_choice_panel = WarCouncilChoicePanelView.new()
+	war_council_choice_panel.commander_previous_requested.connect(func() -> void: _cycle_commander(-1))
+	war_council_choice_panel.commander_next_requested.connect(func() -> void: _cycle_commander(1))
+	war_council_choice_panel.scenario_previous_requested.connect(func() -> void: _cycle_scenario(-1))
+	war_council_choice_panel.scenario_next_requested.connect(func() -> void: _cycle_scenario(1))
+	setup_summary_panel = war_council_choice_panel
 	left.add_child(setup_summary_panel)
-	setup_overview_label = Label.new()
-	setup_overview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	setup_overview_label.custom_minimum_size = Vector2(748, 118)
-	setup_overview_label.add_theme_font_size_override("font_size", 16)
-	setup_overview_label.add_theme_color_override("font_color", Color("#f0dca8"))
-	setup_summary_panel.add_child(setup_overview_label)
+	setup_overview_label = war_council_choice_panel.summary_label
 
 	settings_overview_panel = _build_overview_panel(
 		"READABILITY BEFORE PRESSURE",
@@ -1186,11 +1190,13 @@ func _build_ui() -> void:
 	commander_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	commander_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	commander_portrait.tooltip_text = "Commander portrait; Warden portrait art is pending the next asset-generation window."
+	commander_portrait.visible = false
 	setup_section.add_child(commander_portrait)
 	commander_profile_label = Label.new()
 	commander_profile_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	commander_profile_label.custom_minimum_size = Vector2(292, 78)
 	commander_profile_label.add_theme_color_override("font_color", Color("#c9bfd0"))
+	commander_profile_label.visible = false
 	setup_section.add_child(commander_profile_label)
 	layout_lens_label = Label.new()
 	layout_lens_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1203,7 +1209,12 @@ func _build_ui() -> void:
 		commander_option.add_item(String(keep.commander_definition(commander_id).get("name", commander_id)))
 		commander_option.set_item_metadata(commander_option.item_count - 1, commander_id)
 	commander_option.item_selected.connect(func(_index: int) -> void: _on_select_commander())
-	var commander_group: VBoxContainer = _labeled_control("Commander lens", commander_option)
+	var advanced_heading: Label = Label.new()
+	advanced_heading.text = "ADVANCED SELECTION"
+	advanced_heading.add_theme_font_size_override("font_size", 13)
+	advanced_heading.add_theme_color_override("font_color", Color("#8fc6d1"))
+	setup_section.add_child(advanced_heading)
+	var commander_group: VBoxContainer = _labeled_control("Commander list", commander_option)
 	setup_section.add_child(commander_group)
 
 	scenario_option = OptionButton.new()
@@ -1211,7 +1222,7 @@ func _build_ui() -> void:
 	for scenario_id in keep.scenario_ids():
 		scenario_option.add_item(String(keep.scenario_definition(scenario_id).get("name", scenario_id)))
 		scenario_option.set_item_metadata(scenario_option.item_count - 1, scenario_id)
-	var scenario_group: VBoxContainer = _labeled_control("Defensive scenario", scenario_option)
+	var scenario_group: VBoxContainer = _labeled_control("Scenario list", scenario_option)
 	setup_section.add_child(scenario_group)
 	var scenario_navigation: HBoxContainer = HBoxContainer.new()
 	scenario_navigation.add_theme_constant_override("separation", 8)
@@ -1534,6 +1545,7 @@ func _build_ui() -> void:
 	settings_controls.append(settings_back_button)
 	_style_buttons_recursive(menu_bar)
 	_style_buttons_recursive(command_panel)
+	_style_buttons_recursive(war_council_choice_panel)
 	_style_button(quick_test_button, true)
 	_style_button(playtest_button, true)
 	_style_button(setup_confirm_button, true)
@@ -1889,7 +1901,7 @@ func _focus_screen_control() -> void:
 	if screen == "title":
 		target = quick_test_button
 	elif screen == "setup":
-		target = commander_option
+		target = war_council_choice_panel.commander_next_button if war_council_choice_panel != null and not tutorial.active else commander_option
 	elif screen == "preparation":
 		target = playtest_button if not playtest_button.disabled else pack_option
 	elif screen == "battle":
@@ -2014,6 +2026,13 @@ func _on_select_commander() -> void:
 		return
 	_run_result(keep.select_commander(_selected_id(commander_option)), "Commander")
 	_refresh_scenario_preview()
+
+func _cycle_commander(direction: int) -> void:
+	if commander_option == null or commander_option.item_count == 0 or tutorial.active:
+		return
+	var next_index: int = wrapi(commander_option.selected + direction, 0, commander_option.item_count)
+	commander_option.select(next_index)
+	_on_select_commander()
 
 func _on_select_scenario() -> void:
 	if tutorial.active:
@@ -3502,6 +3521,53 @@ func _focus_terminal_debrief() -> void:
 	if terminal_debrief_panel != null:
 		terminal_debrief_panel.focus_primary()
 
+func _refresh_war_council_cards() -> void:
+	if war_council_choice_panel == null or commander_option == null or scenario_option == null:
+		return
+	var commander_id: String = _selected_id(commander_option)
+	var commander_definition: Dictionary = keep.commander_definition(commander_id)
+	var commander_ids: Array[String] = keep.commander_ids()
+	var scenario_id: String = _selected_id(scenario_option)
+	var scenario_definition: Dictionary = keep.scenario_definition(scenario_id)
+	var scenario_preview: Dictionary = keep.scenario_preview(scenario_id)
+	var modifier_name: String = "None"
+	if not keep.equipped_modifier_id.is_empty():
+		modifier_name = String(keep.modifier_definition(keep.equipped_modifier_id).get("name", keep.equipped_modifier_id))
+	var collapse_rule: bool = bool(scenario_preview.get("collapse_on_defender_wipe", false))
+	var end_state_summary: String = "defender wipe ends the run" if collapse_rule else "defender wipe is recoverable"
+	var setup_mode: String = "FIRST WATCH" if tutorial.active else "GUIDED DEFENSE" if guided_setup else "SKIRMISH"
+	war_council_choice_panel.render({
+		"mode": setup_mode,
+		"modifier": modifier_name,
+		"risk_summary": "RISK — %s · %s" % [String(scenario_preview.get("difficulty", "standard")).to_upper(), end_state_summary],
+		"commitment": "Entering fixes commander, keep, seeded variation, and the authored pressure order for this run.",
+		"locked": tutorial.active,
+		"commander": {
+			"index": commander_ids.find(commander_id) + 1,
+			"count": commander_ids.size(),
+			"name": String(commander_definition.get("name", commander_id)),
+			"identity": String(commander_definition.get("short_role", "Choose a strategic lens.")),
+			"strength": String(commander_definition.get("passive", "")),
+			"ability_name": String(commander_definition.get("ability_name", "Ability")),
+			"ability": String(commander_definition.get("ability_text", "")),
+			"limitation": String(commander_definition.get("limitation", "")),
+			"question": String(commander_definition.get("question", "")),
+		},
+		"scenario": {
+			"index": int(scenario_preview.get("catalog_index", 0)),
+			"count": int(scenario_preview.get("catalog_count", 0)),
+			"difficulty": String(scenario_preview.get("difficulty", "standard")),
+			"name": String(scenario_preview.get("name", scenario_id)),
+			"keep": String(scenario_preview.get("keep_name", "Keep")),
+			"identity": String(scenario_definition.get("short_role", "Authored pressure")),
+			"question": String(scenario_definition.get("question", "What must this defense preserve?")),
+			"objective": String(scenario_preview.get("objective", "")),
+			"arc": " → ".join(scenario_preview.get("doctrine_names", [])),
+			"risk": "%s; peak pressure %d; %s." % [String(scenario_preview.get("difficulty", "standard")).capitalize(), int(scenario_preview.get("peak_wave_size", 0)), end_state_summary],
+			"fixed": "%s, %d authored phases, variation %s." % [String(scenario_preview.get("keep_name", "Keep")), int(scenario_preview.get("wave_count", 0)), String(scenario_preview.get("variation_id", "standard_bell")).replace("_", " ")],
+		},
+	})
+
 func _refresh_ui() -> void:
 	_refresh_tutorial_panel()
 	_refresh_room_options()
@@ -3509,24 +3575,7 @@ func _refresh_ui() -> void:
 	_refresh_scenario_preview()
 	_refresh_authored_event()
 	_refresh_campaign_ledger()
-	if setup_overview_label:
-		var selected_commander: Dictionary = keep.commander_definition(_selected_id(commander_option))
-		var selected_scenario: Dictionary = keep.scenario_preview(_selected_id(scenario_option))
-		var setup_mode: String = "FIRST WATCH" if tutorial.active else "GUIDED DEFENSE" if guided_setup else "SKIRMISH"
-		var modifier_name: String = "None"
-		if not keep.equipped_modifier_id.is_empty():
-			modifier_name = String(keep.modifier_definition(keep.equipped_modifier_id).get("name", keep.equipped_modifier_id))
-		var end_state_summary: String = "defender wipe ends the run" if bool(selected_scenario.get("collapse_on_defender_wipe", false)) else "defender wipe is recoverable"
-		setup_overview_label.text = "%s\nCOMMANDER — %s · %s\nSCENARIO — %s · %s\nRISK — %s · %s\nMODIFIER — %s" % [
-			setup_mode,
-			String(selected_commander.get("name", "Commander")),
-			String(selected_commander.get("passive", "Choose a doctrine lens.")),
-			String(selected_scenario.get("name", "Scenario")),
-			String(selected_scenario.get("objective", "Choose the pressure to test.")),
-			String(selected_scenario.get("difficulty", "standard")).to_upper(),
-			end_state_summary,
-			modifier_name,
-		]
+	_refresh_war_council_cards()
 	if setup_confirm_button:
 		setup_confirm_button.text = "Enter Keep — Recommended Layout" if guided_setup else "Enter Keep — Build Defense"
 		setup_confirm_button.tooltip_text = "Enter Preparation with the guided two-piece baseline." if guided_setup else "Enter Preparation with an empty board and the selected starting pieces available."

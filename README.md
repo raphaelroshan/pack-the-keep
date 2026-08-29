@@ -91,6 +91,10 @@ The generated feedback tones now live in a focused `BattleAudioCueService` with 
 
 The first assault now opens at tick zero with a focused **Sound the Bell** ready state, leaving the fortress, incoming roster, routes, targets, timeline, and response preview visible before time advances. Later phases pause only when the doctrine changes or a new enemy family appears; identical pressure can continue live. Readiness uses the existing pause input, blocks manual stepping until acknowledged, and is re-derived when a tick-zero save is loaded without changing the save schema.
 
+## v0.23.0 War Council choice cards
+
+The War Council now presents commander and defense as two compact game-facing cards. Commander identity, passive strength, intervention, limitation, and first strategic question sit beside the selected keep, objective, teaching question, authored pressure arc, difficulty, peak pressure, terminal rule, and fixed run commitments. Previous/Next card actions use the existing authoritative selection handlers, while the original dropdowns remain under **Advanced Selection** as a secondary fallback. First Watch visibly locks both paths, and the cards stack at 125% scale.
+
 ## v0.22.3 recovery hierarchy
 
 Inter-wave Aftermath now places a compact Recovery Lull brief above the damaged fortress. It states what changed, why the damage matters, what the next phase will test, how many actions and materials remain, and one advisory first priority with its trade-off. The command rail now reads **Choose What Survives** while retaining the exact authoritative repair, assignment, clear, and finish commands; terminal Results remains a separate debrief.
