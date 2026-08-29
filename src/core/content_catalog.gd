@@ -169,6 +169,7 @@ const REQUIRED_ENEMY_FIELDS: Array[String] = [
 	"damage",
 	"arrival_step",
 	"attack_interval",
+	"attack_style",
 	"target_mode",
 	"route",
 	"target_rooms",
@@ -528,6 +529,8 @@ func validate_enemy_definition(enemy: Dictionary, expected_id: String, known_roo
 	_validate_integer_minimum(enemy, "damage", enemy_id, "enemy", 0, validation_errors)
 	_validate_integer_minimum(enemy, "arrival_step", enemy_id, "enemy", 1, validation_errors)
 	_validate_integer_minimum(enemy, "attack_interval", enemy_id, "enemy", 1, validation_errors)
+	if not ["melee", "ranged", "demolition"].has(String(enemy.get("attack_style", ""))):
+		validation_errors.append("enemy %s attack_style must be melee, ranged, or demolition" % enemy_id)
 	if not ["unit_hunter", "room_destroyer"].has(String(enemy.get("target_mode", ""))):
 		validation_errors.append("enemy %s target_mode must be unit_hunter or room_destroyer" % enemy_id)
 	if enemy.has("armor"):

@@ -412,6 +412,7 @@ func _test_p0_placement_preview_and_inspection() -> void:
 	var enemy_inspection: Dictionary = keep.inspect_enemy(0)
 	_expect(bool(enemy_inspection.get("ok", false)), "P0 should inspect an active enemy")
 	_expect(String(enemy_inspection.get("doctrine", "")).contains("gate"), "enemy inspection should explain its doctrine")
+	_expect(String(enemy_inspection.get("attack_style", "")) == "melee", "enemy inspection should expose the data-driven attack style")
 
 func _test_p0_save_rejection_and_reset() -> void:
 	var keep: PackKeepState = PackKeepState.new(19)

@@ -176,16 +176,26 @@ func _initialize() -> void:
 	ui.keep_canvas.show_engagements(reduced_motion_traces)
 	if ui.keep_canvas.engagement_traces.is_empty() or ui.keep_canvas.engagement_ttl > 0.22 or ui.keep_canvas._enemy_reaction_offset(0) != Vector2.ZERO:
 		failures.append("reduced motion did not retain a static bounded impact while suppressing travel and hit reaction")
-	var target_snapshot: Dictionary = ui._combat_target_snapshot()
 	var original_gate_condition: int = ui.keep.room_condition("gate")
 	var original_target: String = String(ui.keep.enemies[0].get("target", ""))
+	var original_defeated: bool = bool(ui.keep.enemies[0].get("defeated", false))
+	var original_attacks_received: int = int(ui.keep.enemies[0].get("attacks_received", 0))
+	ui.keep.enemies[0].defeated = false
 	ui.keep.enemies[0].target = "gate"
+	var target_snapshot: Dictionary = ui._combat_target_snapshot()
+	ui.keep.enemies[0].attacks_received = int(ui.keep.enemies[0].get("attacks_received", 0)) + 1
 	ui.keep.rooms.gate.condition = original_gate_condition - 7
 	var detected_impacts: Array[Dictionary] = ui._resolved_target_impacts(target_snapshot)
-	if detected_impacts.is_empty() or int(detected_impacts[0].get("damage", 0)) != 7 or String(detected_impacts[0].get("target_kind", "")) != "room":
+	if detected_impacts.is_empty() or int(detected_impacts[0].get("damage", 0)) != 7 or String(detected_impacts[0].get("target_kind", "")) != "room" or String(detected_impacts[0].get("attack_style", "")) != "melee":
 		failures.append("authoritative before/after room state did not produce an exact target impact")
+	if ui.keep_canvas._enemy_impact_motion("melee") != "lunge" or ui.keep_canvas._enemy_impact_motion("ranged") != "projectile" or ui.keep_canvas._enemy_impact_motion("demolition") != "heavy_strike":
+		failures.append("enemy attack styles did not retain distinct presentation motions")
+	if ui.keep_canvas._impact_damage_label({"target_kind": "piece", "damage": 3}) != "-3 HP" or ui.keep_canvas._impact_damage_label({"target_kind": "room", "damage": 30}) != "-30 STRUCTURE":
+		failures.append("target impact labels did not distinguish defender health from room structure")
 	ui.keep.rooms.gate.condition = original_gate_condition
 	ui.keep.enemies[0].target = original_target
+	ui.keep.enemies[0].defeated = original_defeated
+	ui.keep.enemies[0].attacks_received = original_attacks_received
 
 	ui._set_battle_speed(2)
 	if ui.battle_speed_index != 2 or ui.keep.battle_step != paused_step + 1:

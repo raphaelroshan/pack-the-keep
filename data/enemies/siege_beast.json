@@ -9,6 +9,7 @@
   "damage": 3,
   "arrival_step": 3,
   "attack_interval": 2,
+  "attack_style": "demolition",
   "target_mode": "room_destroyer",
   "route": "outer_approach",
   "target_rooms": ["inner_yard", "outer_wall", "old_chapel", "workshop"],

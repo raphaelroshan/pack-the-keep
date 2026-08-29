@@ -9,6 +9,7 @@
   "damage": 3,
   "arrival_step": 3,
   "attack_interval": 2,
+  "attack_style": "demolition",
   "target_mode": "room_destroyer",
   "route": "service_lane",
   "target_rooms": ["workshop", "supply_room", "armory"],

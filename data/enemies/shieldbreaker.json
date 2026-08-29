@@ -2,7 +2,7 @@
   "id": "shieldbreaker", "content_version": 1, "status": "active", "name": "Shieldbreaker",
   "short_role": "Attack the strongest fortified piece and ignore static protection.",
   "question": "Did the keep preserve a second line instead of trusting one protected anchor?",
-  "health": 14, "damage": 3, "arrival_step": 2, "attack_interval": 2, "target_mode": "unit_hunter",
+  "health": 14, "damage": 3, "arrival_step": 2, "attack_interval": 2, "attack_style": "melee", "target_mode": "unit_hunter",
   "route": "gate_road", "target_rooms": ["gate", "barracks", "inner_yard"], "doctrine": "break_the_line",
   "counter": "shield_wardens", "telegraph": "A heavy hammer marker names protection piercing before contact.",
   "counter_families": ["frontline", "precision", "mobile_response", "commander_intervention"],

@@ -341,12 +341,29 @@ func _combat_target_snapshot() -> Dictionary:
 		snapshot["room:%s" % String(room_id)] = keep.room_condition(String(room_id))
 	for instance_id in keep.pieces.keys():
 		snapshot["piece:%s" % String(instance_id)] = int(keep.pieces[instance_id].get("health", 0))
+	var enemy_sources: Dictionary = {}
+	for enemy_index in range(keep.enemies.size()):
+		var enemy: Dictionary = keep.enemies[enemy_index]
+		var enemy_id: String = String(enemy.get("enemy_id", ""))
+		var definition: Dictionary = keep.enemy_definition(enemy_id)
+		enemy_sources[str(enemy_index)] = {
+			"enemy_index": enemy_index,
+			"enemy_id": enemy_id,
+			"attack_style": String(definition.get("attack_style", "melee")),
+			"attacks_before": int(enemy.get("attacks_received", 0)),
+			"target_before": String(enemy.get("target", "")),
+			"area_targets": definition.get("target_rooms", []).duplicate() if enemy_id == "siege_beast" else []
+		}
+	snapshot["__enemy_sources"] = enemy_sources
 	return snapshot
 
 func _resolved_target_impacts(before: Dictionary) -> Array[Dictionary]:
 	var impacts: Array[Dictionary] = []
+	var enemy_sources: Dictionary = before.get("__enemy_sources", {}) if before.get("__enemy_sources", {}) is Dictionary else {}
 	for target_key_value in before.keys():
 		var target_key: String = String(target_key_value)
+		if target_key.begins_with("__"):
+			continue
 		var parts: PackedStringArray = target_key.split(":", true, 1)
 		if parts.size() != 2:
 			continue
@@ -361,11 +378,34 @@ func _resolved_target_impacts(before: Dictionary) -> Array[Dictionary]:
 		if damage <= 0:
 			continue
 		var source_enemy_index: int = -1
-		for enemy_index in range(keep.enemies.size()):
-			if String(keep.enemies[enemy_index].get("target", "")) == target_id and not bool(keep.enemies[enemy_index].get("defeated", false)):
-				source_enemy_index = enemy_index
-				break
-		impacts.append({"target_kind": target_kind, "target_id": target_id, "enemy_index": source_enemy_index, "damage": damage})
+		var source_enemy_id: String = ""
+		var attack_style: String = ""
+		for source_key in enemy_sources.keys():
+			var source: Dictionary = enemy_sources[source_key]
+			var candidate_index: int = int(source.get("enemy_index", -1))
+			if candidate_index < 0 or candidate_index >= keep.enemies.size():
+				continue
+			var candidate: Dictionary = keep.enemies[candidate_index]
+			if int(candidate.get("attacks_received", 0)) <= int(source.get("attacks_before", 0)):
+				continue
+			var direct_target: String = String(candidate.get("target", source.get("target_before", "")))
+			var area_targets: Array = source.get("area_targets", [])
+			if direct_target != target_id and not area_targets.has(target_id):
+				continue
+			source_enemy_index = candidate_index
+			source_enemy_id = String(source.get("enemy_id", ""))
+			attack_style = String(source.get("attack_style", ""))
+			break
+		if source_enemy_index < 0:
+			for enemy_index in range(keep.enemies.size()):
+				if String(keep.enemies[enemy_index].get("target", "")) == target_id and not bool(keep.enemies[enemy_index].get("defeated", false)):
+					source_enemy_index = enemy_index
+					source_enemy_id = String(keep.enemies[enemy_index].get("enemy_id", ""))
+					attack_style = String(keep.enemy_definition(source_enemy_id).get("attack_style", "melee"))
+					break
+		if attack_style.is_empty():
+			attack_style = "demolition" if target_kind == "room" else "melee"
+		impacts.append({"target_kind": target_kind, "target_id": target_id, "enemy_index": source_enemy_index, "enemy_id": source_enemy_id, "attack_style": attack_style, "damage": damage})
 	return impacts
 
 func _set_feedback(color: Color, cue_id: String = "") -> void:
@@ -2940,6 +2980,33 @@ class KeepCanvas extends Control:
 		var duration: float = 0.22 if reduced_motion_mode else COMBAT_EFFECT_DURATION
 		return clampf(1.0 - engagement_ttl / duration, 0.0, 1.0)
 
+	func _enemy_impact_motion(attack_style: String) -> String:
+		return String({"melee": "lunge", "ranged": "projectile", "demolition": "heavy_strike"}.get(attack_style, "lunge"))
+
+	func _enemy_impact_color(attack_style: String) -> Color:
+		if attack_style == "ranged":
+			return Color("#c59cff")
+		if attack_style == "demolition":
+			return Color("#ffb15c")
+		return Color("#ff796f")
+
+	func _impact_damage_label(impact: Dictionary) -> String:
+		var damage_kind: String = "HP" if String(impact.get("target_kind", "")) == "piece" else "STRUCTURE"
+		return "-%d %s" % [int(impact.get("damage", 0)), damage_kind]
+
+	func _draw_enemy_impact_mark(target: Vector2, attack_style: String, color: Color, strength: float) -> void:
+		if attack_style == "ranged":
+			draw_circle(target, 3.5 + strength * 2.0, color)
+			draw_circle(target, 8.0 + strength * 4.0, Color(color, 0.78), false, 2.0)
+		elif attack_style == "demolition":
+			draw_circle(target, 9.0 + strength * 7.0, Color(color, 0.85), false, 3.0)
+			draw_circle(target, 15.0 + strength * 10.0, Color(color, 0.52), false, 2.0)
+		else:
+			var slash: Vector2 = Vector2(7.0 + strength * 4.0, 0.0)
+			draw_line(target - slash.rotated(-0.65), target + slash.rotated(-0.65), Color(color, 0.92), 2.5)
+			draw_line(target - slash.rotated(0.65), target + slash.rotated(0.65), Color(color, 0.7), 2.0)
+			draw_circle(target, 8.0 + strength * 4.0, Color(color, 0.55), false, 2.0)
+
 	func _enemy_reaction_offset(index: int) -> Vector2:
 		if reduced_motion_mode or engagement_ttl <= 0.0:
 			return Vector2.ZERO
@@ -3610,13 +3677,31 @@ class KeepCanvas extends Control:
 				continue
 			var source_index: int = int(impact.get("enemy_index", -1))
 			var source: Vector2 = _enemy_origin(source_index) if source_index >= 0 and source_index < keep.enemies.size() else target + Vector2(0, 28)
-			var pressure_color: Color = Color("#ff796f")
+			var attack_style: String = String(impact.get("attack_style", "melee"))
+			var pressure_color: Color = _enemy_impact_color(attack_style)
 			if not reduced_motion_mode:
-				var strike_progress: float = clampf(progress / 0.62, 0.0, 1.0)
-				draw_line(source, source.lerp(target, strike_progress), Color(pressure_color, 0.82), 3.0)
+				if attack_style == "ranged":
+					var projectile_progress: float = clampf(progress / 0.72, 0.0, 1.0)
+					var projectile: Vector2 = source.lerp(target, projectile_progress)
+					var tail: Vector2 = source.lerp(target, maxf(0.0, projectile_progress - 0.18))
+					draw_line(source, target, Color(pressure_color, 0.16), 1.0)
+					draw_line(tail, projectile, Color(pressure_color, 0.94), 3.5)
+					draw_circle(projectile, 4.0, pressure_color)
+				elif attack_style == "demolition":
+					var heavy_progress: float = clampf(progress / 0.68, 0.0, 1.0)
+					var heavy_head: Vector2 = source.lerp(target, heavy_progress)
+					draw_line(source, heavy_head, Color(pressure_color, 0.88), 5.0)
+					draw_circle(heavy_head, 5.0, pressure_color)
+				else:
+					var lunge_progress: float = sin(clampf(progress / 0.68, 0.0, 1.0) * PI)
+					var direction: Vector2 = source.direction_to(target)
+					var lunge: float = lunge_progress * minf(34.0, source.distance_to(target) * 0.32)
+					draw_line(source, source + direction * lunge, Color(pressure_color, 0.92), 4.0)
+					var slash_center: Vector2 = target - direction * 4.0
+					draw_line(slash_center + direction.rotated(PI * 0.5) * 7.0, slash_center - direction.rotated(PI * 0.5) * 7.0, Color(pressure_color, 0.72), 2.0)
 			if reduced_motion_mode or progress >= 0.48:
-				draw_circle(target, 9.0 + (1.0 - progress) * 8.0, Color(pressure_color, 0.85), false, 3.0)
-				draw_string(ThemeDB.fallback_font, target + Vector2(10, 12), "-%d STRUCTURE" % int(impact.get("damage", 0)), HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#ffb0a6"))
+				_draw_enemy_impact_mark(target, attack_style, pressure_color, 1.0 if reduced_motion_mode else 1.0 - progress)
+				draw_string(ThemeDB.fallback_font, target + Vector2(10, 12), _impact_damage_label(impact), HORIZONTAL_ALIGNMENT_LEFT, -1, 9, pressure_color.lightened(0.28))
 
 	func _draw() -> void:
 		if keep == null:

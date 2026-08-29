@@ -9,6 +9,7 @@
   "damage": 2,
   "arrival_step": 2,
   "attack_interval": 1,
+  "attack_style": "melee",
   "target_mode": "unit_hunter",
   "target_piece_floors": ["upper"],
   "target_piece_preference": "lowest_condition",
