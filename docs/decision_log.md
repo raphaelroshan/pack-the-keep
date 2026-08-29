@@ -671,3 +671,11 @@
 **Reason:** The prototype already had useful tones, but their profiles and event meaning were embedded in the main UI controller. A dedicated service creates one complete and testable battle-loop vocabulary without making sound a second combat clock.
 
 **Trade-off:** Cues remain synthesized placeholders rather than authored sound effects or music. Reduced motion selects a minimal one-tone sequence as a conservative sensory setting. The service records requests for tests but never schedules a tick, command, target, or saved field.
+
+## ADR-085: Assault readiness is derived presentation state at tick zero
+
+**Decision:** Create the authoritative assault immediately through `PackKeepState.start_wave()`, then pause presentation at tick zero for phase one and for later phases that change doctrine or introduce an enemy family. Use the existing pause/resume action as **Sound the Bell**, block manual stepping until acknowledged, and re-derive readiness from scenario data when loading an active tick-zero save.
+
+**Reason:** Continuous real-time combat was already the correct identity, but immediately advancing while the screen changed could hide first contact and make later doctrine shifts feel arbitrary. A bounded ready beat preserves the live battle while giving the player one clear moment to read the board.
+
+**Trade-off:** The ready flag is intentionally not serialized, so loading any active tick-zero wave reconstructs the warning even if the player had manually paused before the first tick. First Watch retains its stricter authored pause steps, and unchanged doctrine/roster transitions remain eligible to continue live.

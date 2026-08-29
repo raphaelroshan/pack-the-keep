@@ -89,10 +89,12 @@ func _initialize() -> void:
 	ui._on_start_wave()
 	await process_frame
 	await process_frame
-	_check(not ui.battle_paused, "new invasion should start in real-time playback before controller dispatch")
-	_check(root.gui_get_focus_owner() == ui.pause_button, "battle should focus the pause control for controller navigation")
+	_check(ui.battle_paused and not ui.assault_ready_reason.is_empty(), "new invasion should expose the tick-zero readiness beat before controller dispatch")
+	_check(root.gui_get_focus_owner() == ui.pause_button, "battle should focus the sound-the-bell control for controller navigation")
 	ui._unhandled_input(replacement)
-	_check(ui.battle_paused, "remapped controller event should pause the live battle through the named action")
+	_check(not ui.battle_paused and ui.assault_ready_reason.is_empty(), "remapped controller event should begin the ready assault through the named action")
+	ui._unhandled_input(replacement)
+	_check(ui.battle_paused, "the same remapped controller event should pause live combat")
 
 	ui._set_screen("title")
 	await process_frame

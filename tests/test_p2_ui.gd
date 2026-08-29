@@ -54,8 +54,11 @@ func _initialize() -> void:
 		failures.append("start wave did not activate the invasion")
 	if bool(ui.keep_canvas.board_presentation_snapshot().get("placement_guides_visible", true)):
 		failures.append("battle board kept preparation placement guides visible during combat")
-	if ui.battle_paused:
-		failures.append("new invasion should begin in real-time playback")
+	if not ui.battle_paused or ui.assault_ready_reason.is_empty():
+		failures.append("new invasion should open at tick zero in the explicit readiness beat")
+	ui._on_playtest_primary_action()
+	if ui.battle_paused or not ui.assault_ready_reason.is_empty():
+		failures.append("primary readiness action should begin continuous playback")
 	if ui.focused_enemy_index != ui._priority_enemy_index() or ui.focused_enemy_index < 0 or not String(ui.response_preview_label.text).contains("FOCUSED"):
 		failures.append("live battle did not begin with the highest-priority threat and a populated response preview")
 	if ui.enemy_option.selected < 0 or int(ui.enemy_option.get_item_metadata(ui.enemy_option.selected)) != ui.focused_enemy_index:

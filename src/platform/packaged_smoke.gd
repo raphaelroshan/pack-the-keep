@@ -160,8 +160,10 @@ func run(ui: Control) -> void:
 		var placed: Dictionary = ui.keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
 		_record_error(errors, bool(placed.get("ok", false)), "starter placement failed")
 		ui._on_start_wave()
-		initial_realtime_ready = ui.keep.wave_active and not ui.battle_paused and ui.screen == "battle"
-		_record_error(errors, initial_realtime_ready, "packaged assault did not begin in real-time playback on the Battle screen")
+		initial_realtime_ready = ui.keep.wave_active and ui.battle_paused and not ui.assault_ready_reason.is_empty() and ui.screen == "battle" and ui.keep.battle_step == 0
+		_record_error(errors, initial_realtime_ready, "packaged assault did not open in tick-zero readiness on the Battle screen")
+		ui._unhandled_input(replacement)
+		_record_error(errors, not ui.battle_paused and ui.assault_ready_reason.is_empty(), "remapped controller pause did not sound the bell from packaged readiness")
 		ui._unhandled_input(replacement)
 		var paused_step_before: int = ui.keep.battle_step
 		ui._process(2.0)

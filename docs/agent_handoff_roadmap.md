@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
 **Document status:** Active planning contract for post-v0.14.2 development
-**Current release baseline:** `0.22.1-battle-audio` on the current vertical-slice branch; remote `main` remains owner-controlled
+**Current release baseline:** `0.22.2-assault-readiness` on the current vertical-slice branch; remote `main` remains owner-controlled
 **Release posture:** CI-verified public repository with owner-controlled merges; no public alpha release or storefront claim yet
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
@@ -108,6 +108,7 @@ Milestones must be completed in order. An agent may split a milestone into small
 | P33 | Implemented; human comprehension evidence pending | Ordinary Preparation now names the current doctrine question, the layout's visible answer, and one open weakness above the primary assault action. | Strengthen board visual hierarchy and placement feedback without adding tactical clutter. |
 | P34 | Implemented; human silhouette-recognition evidence pending | A central visual registry defines the board layer order, distinct ground/upper treatments, critical-room cues, defender role cards, and enemy-type silhouettes. | Consolidate existing semantic tones into one focused battle-loop audio service. |
 | P35 | Implemented; human audio-recognition evidence pending | One presentation-only cue service covers assault start, contact, defender response, hostile impact, breach, recovery, and terminal outcomes while honoring mute, volume, reduced motion, and headless operation. | Reconcile the ready beat and later-wave start behavior without changing combat timing. |
+| P36 | Implemented; human pacing evidence pending | Phase one opens at tick-zero readiness; later doctrine or roster changes pause for a readable warning, while unchanged pressure can continue live. | Give inter-wave Recovery a compact what-changed/why/next hierarchy above its actions. |
 
 P13 onward are planning identifiers, not permission to release automatically. Every milestone still requires local validation, CI, visual review, and explicit human approval before external distribution. The existing P5–P12 sections below remain useful as acceptance contracts, but agents must not re-implement them unless a regression or refactor explicitly requires it.
 
