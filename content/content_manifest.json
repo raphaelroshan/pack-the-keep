@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.19.0",
+  "content_version": "0.20.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -403,7 +403,17 @@
     "compatibility": "existing_scenarios_keep_recoverable_defender_wipe_partial_breach",
     "determinism": "real_authored_wave_disables_the_recommended_two_piece_line_without_test_only_health_mutation_and_terminal_state_round_trips_through_save_load",
     "evidence": ["design/p30_last_stand_end_state.md", "tests/test_p30_last_stand.gd"],
-    "next_slice": "p30_human_last_stand_readability_session"
+    "next_slice": "p31_first_watch_tutorial"
+  },
+  "p31_first_watch_tutorial": {
+    "status": "implemented",
+    "route": ["main_menu", "war_council", "fortress", "assault_phase_one", "recovery", "assault_phase_two", "recovery", "assault_phase_three", "aftermath"],
+    "lessons": ["fortress_and_resources", "map_first_placement", "unit_and_room_inspection", "enemy_role_analysis", "real_time_pause_resume", "defender_repair", "specialist_assignment", "room_repair", "commander_intervention", "victory_and_collapse"],
+    "authority": "tutorial_gates_and_highlights_existing_ui_commands_while_pack_keep_state_owns_every_simulation_change",
+    "persistence": "versioned_tutorial_progress_and_phase_checkpoints_are_separate_from_schema_4_run_saves; completion_and_dismissal_use_settings_schema_5",
+    "recovery": "collapse_restores_the_current_assault_phase_checkpoint",
+    "evidence": ["design/p31_first_watch_tutorial.md", "docs/p31_first_watch_visual_verification.md", "tests/test_p31_tutorial_flow.gd", "tests/test_p31_tutorial_resilience.gd"],
+    "next_slice": "p31_human_onboarding_observation"
   },
   "campaign": {
     "title": "The Bell at Dusk",

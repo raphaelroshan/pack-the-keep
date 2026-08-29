@@ -50,7 +50,7 @@ func _initialize() -> void:
 	_check(bool(started.get("ok", false)), "Relief Road wave one did not start from preparation")
 	ui._set_screen("battle")
 	await process_frame
-	_check(String(ui.forecast_label.text).contains("feint and flank"), "battle did not show the Relief Road opening doctrine")
+	_check(String(ui.forecast_label.text).contains("Feint And Flank"), "battle did not show the Relief Road opening doctrine")
 	_check(String(ui.enemy_label.text).contains("Climber"), "battle did not show the scenario's opening mobile-response target")
 	await _resolve_wave(ui)
 	ui._set_screen("results")

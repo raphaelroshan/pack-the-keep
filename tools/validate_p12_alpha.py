@@ -159,7 +159,7 @@ def validate_report(path: Path, build_version: str, errors: list[str]) -> None:
         if phase != "missing_profile":
             if report.get("battle_step") != 1:
                 errors.append(f"packaged {phase} phase did not preserve battle step one")
-            if report.get("save_schema_version") != 4 or report.get("settings_schema_version") != 4:
+            if report.get("save_schema_version") != 4 or report.get("settings_schema_version") != 5:
                 errors.append(f"packaged {phase} persistence schemas do not match")
         content_status = report.get("content_status")
         if not isinstance(content_status, dict) or content_status.get("ok") is not True:

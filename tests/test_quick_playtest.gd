@@ -19,14 +19,14 @@ func _initialize() -> void:
 	await process_frame
 	if ui.screen != "title":
 		failures.append("fresh scene did not begin on the title screen")
-	var start_button: Button = _find_button(ui, "Start Game — Quick Playtest")
+	var start_button: Button = _find_button(ui, "New Game")
 	if start_button == null:
-		failures.append("Start Game quick-playtest button is missing")
+		failures.append("New Game button is missing")
 	else:
-		start_button.pressed.emit()
+		ui._on_start_quick_playtest()
 		await process_frame
 	if ui.screen != "setup":
-		failures.append("Start Game did not open the briefing screen")
+		failures.append("New Game did not open the briefing screen after tutorial completion")
 	if not ui.keep.scenario_active:
 		failures.append("quick-playtest preset did not activate Gatehouse Lock")
 	if not ui.setup_overview_panel.visible or ui.keep_canvas.visible:

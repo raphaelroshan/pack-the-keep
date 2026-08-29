@@ -143,7 +143,7 @@ func run(ui: Control) -> void:
 		_record_error(errors, upgrade_settings_ready, "legacy settings did not preserve supported values and default new fields")
 		ui._on_save()
 		_record_error(errors, ui._save_preferences(), "upgraded settings could not be rewritten")
-		upgraded_files_current = int(_read_json(SAVE_PATH).get("schema_version", 0)) == 4 and int(_read_json(SETTINGS_PATH).get("schema_version", 0)) == 4
+		upgraded_files_current = int(_read_json(SAVE_PATH).get("schema_version", 0)) == 4 and int(_read_json(SETTINGS_PATH).get("schema_version", 0)) == 5
 		_record_error(errors, upgraded_files_current, "legacy profile was not rewritten at current schemas")
 	elif phase == "clean_install":
 		_record_error(errors, not profile_files_present, "initial packaged profile was not clean")
@@ -185,7 +185,7 @@ func run(ui: Control) -> void:
 	if phase != "missing_profile":
 		_record_error(errors, String(save_payload.get("game_id", "")) == "pack-the-keep", "run save has the wrong game ID")
 		_record_error(errors, int(save_payload.get("schema_version", 0)) == 4, "run save has the wrong schema version")
-		_record_error(errors, int(settings_payload.get("schema_version", 0)) == 4, "settings have the wrong schema version")
+		_record_error(errors, int(settings_payload.get("schema_version", 0)) == 5, "settings have the wrong schema version")
 	var settings_scale_ready: bool = int(settings_payload.get("ui_scale_index", -1)) == 2 and int(settings_payload.get("window_size_index", -1)) == 3
 	var settings_remap_ready: bool = _settings_has_joypad_binding(settings_payload, "battle_pause", 10)
 	if phase == "clean_install":

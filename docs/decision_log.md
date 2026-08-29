@@ -631,3 +631,11 @@
 **Reason:** A strong vertical slice needs a genuine loss state that can be reached through normal combat, while the existing teaching scenarios still benefit from letting players inspect and repair a failed line. A scenario-level rule makes the difference intentional, testable, and visible before play.
 
 **Trade-off:** Scenario authors must decide whether a defender wipe is recoverable or terminal. The default remains recoverable for save compatibility, and the P12 viability matrix continues to cover the original nine non-collapse baselines while the stress scenario has its own deterministic collapse test.
+
+## ADR-080: First Watch is a strict presentation-owned tutorial
+
+**Decision:** Add a versioned `TutorialDirector` that sequences a skippable three-phase Gatehouse Lock lesson through existing UI commands. The director may gate commands, focus controls and board targets, and store progress in a separate tutorial file, but every placement, attack, repair, assignment, and ability still resolves through `PackKeepState`. Capture an authoritative snapshot at the start of each assault phase and restore it when the tutorial ends in collapse.
+
+**Reason:** The vertical slice exposed its systems but expected a new player to infer their order and meaning from a dense command rail. First Watch now teaches the real game from menu to victory: fortress purpose, resources, placement, enemy roles, live pause-and-inspect combat, recovery trade-offs, assignments, and commander timing.
+
+**Trade-off:** The tutorial intentionally prescribes one safe opening and pauses each new assault phase for analysis. It is optional, remains replayable from the main menu, and does not introduce a second simulation, tutorial-only combat rules, or a campaign progression dependency.

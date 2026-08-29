@@ -24,8 +24,9 @@ func _initialize() -> void:
 	_check(ui.screen == "title", "flow should begin at the main menu")
 	_check(ui.title_card.visible and ui.art_banner.visible, "main menu should show the hero presentation")
 	_check(not ui.gameplay_columns.visible, "main menu should not expose gameplay controls")
-	_check(_find_button(ui, "Start Game — Quick Playtest") != null, "main menu should expose the guided route")
-	_check(_find_button(ui, "Custom Defense") != null, "main menu should expose custom setup")
+	_check(_find_button(ui, "New Game") != null, "main menu should expose the campaign entry")
+	_check(_find_button(ui, "Learn to Play") != null, "main menu should expose the tutorial route")
+	_check(_find_button(ui, "Skirmish") != null, "main menu should expose custom setup")
 	_check(_find_button(ui, "Settings") != null, "main menu should expose settings")
 
 	ui._on_start_custom_setup()

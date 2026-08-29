@@ -9,8 +9,8 @@ func _initialize() -> void:
 	await process_frame
 	ui._set_screen("preparation")
 
-	if not ui.guidance_label.text.contains("FIRST BATTLE GUIDE"):
-		failures.append("preparation did not show the first-battle guide")
+	if not ui.guidance_label.text.contains("FORTRESS ORDERS"):
+		failures.append("preparation did not show the fortress orders")
 	if not ui.guidance_label.text.contains("recommended starter layout"):
 		failures.append("empty preparation guide did not recommend the starter layout")
 

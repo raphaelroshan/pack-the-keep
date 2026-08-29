@@ -42,7 +42,7 @@ func _initialize() -> void:
 	ui._refresh_ui()
 	await process_frame
 
-	_check(String(ui.forecast_label.text).contains("smoke and signal") and String(ui.forecast_label.text).contains("Signal: REDUNDANT"), "Battle forecast should name Smoke and Signal and its countered state")
+	_check(String(ui.forecast_label.text).contains("Smoke And Signal") and String(ui.forecast_label.text).contains("Signal: REDUNDANT"), "Battle forecast should name Smoke and Signal and its countered state")
 	_check(String(ui.enemy_label.text).contains("Ash Slinger") and String(ui.enemy_label.text).contains("signal RELAYED"), "Battle roster should show the Ash Slinger relay state")
 	var authoritative_before_inspection: String = JSON.stringify(ui.keep.serialize())
 	ui._select_enemy_focus(0, "P11 Bell Guard UI test")
