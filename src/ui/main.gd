@@ -4,6 +4,7 @@ const AuthoredEventPanelView = preload("res://src/ui/authored_event_panel.gd")
 const FirstWatchTutorial = preload("res://src/ui/tutorial_director.gd")
 const TerminalDebriefPanelView = preload("res://src/ui/terminal_debrief_panel.gd")
 const PreparationBriefPanelView = preload("res://src/ui/preparation_brief_panel.gd")
+const BoardVisuals = preload("res://src/ui/board_visual_registry.gd")
 
 const PackKeepState = preload("res://src/core/keep_state.gd")
 const PackagedSmoke = preload("res://src/platform/packaged_smoke.gd")
@@ -3886,7 +3887,20 @@ class KeepCanvas extends Control:
 		}
 
 	func board_presentation_snapshot() -> Dictionary:
-		return {"cell_size": Vector2(CELL_X, CELL_Y), "grid_visible": false, "placement_guides_visible": placement_guides_visible, "canvas_size": BASE_CANVAS_SIZE}
+		var snapshot: Dictionary = BoardVisuals.presentation_snapshot()
+		var terrain: String = String(keep.keep_definition().get("visual", {}).get("terrain", "fort")) if keep != null else "fort"
+		snapshot["ground"] = BoardVisuals.floor_profile("ground", terrain, high_contrast_mode)
+		snapshot["upper"] = BoardVisuals.floor_profile("upper", terrain, high_contrast_mode)
+		snapshot.merge({"cell_size": Vector2(CELL_X, CELL_Y), "grid_visible": false, "placement_guides_visible": placement_guides_visible, "canvas_size": BASE_CANVAS_SIZE})
+		return snapshot
+
+	func actor_visual_snapshot(piece_id: String, enemy_id: String) -> Dictionary:
+		var piece: Dictionary = keep.piece_definition(piece_id) if keep != null else {}
+		var enemy: Dictionary = keep.enemy_definition(enemy_id) if keep != null else {}
+		return {
+			"piece": BoardVisuals.piece_profile(piece_id, String(piece.get("combat_style", "support"))),
+			"enemy": BoardVisuals.enemy_profile(enemy_id, String(enemy.get("attack_style", "melee")))
+		}
 
 	func _timeline_marker_origin(tick_number: int, marker_index: int, marker_count: int) -> Vector2:
 		var layout: Dictionary = _timeline_layout()
@@ -4119,22 +4133,8 @@ class KeepCanvas extends Control:
 	func _room_color(room_id: String) -> Color:
 		if keep == null:
 			return Color("#3b3344")
-		var room_state: String = keep.room_state(room_id)
-		if high_contrast_mode:
-			if room_state == "breached":
-				return Color("#9d3441")
-			if room_state == "damaged":
-				return Color("#a66b27")
-			if room_state == "strained":
-				return Color("#81741b")
-			return Color("#24526b")
-		if room_state == "breached":
-			return Color("#733b45")
-		if room_state == "damaged":
-			return Color("#8a684d")
-		if room_state == "strained":
-			return Color("#6f6544")
-		return Color("#3d4b55")
+		var room: Dictionary = keep.room_definition(room_id)
+		return BoardVisuals.room_profile(bool(room.get("critical", false)), keep.room_state(room_id), high_contrast_mode).fill
 
 	func _draw_fort_backdrop(origin: Vector2) -> void:
 		var keep_definition: Dictionary = keep.keep_definition()
@@ -4170,11 +4170,37 @@ class KeepCanvas extends Control:
 		draw_string(ThemeDB.fallback_font, courtyard.position + Vector2(12, courtyard.size.y * 0.5), "OPEN COURTYARD", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#8bd1b4"))
 
 	func _draw_river_backdrop(origin: Vector2, visual: Dictionary) -> void:
-		draw_rect(Rect2(origin, MAP_SIZE), Color("#263745"), true)
+		var profile: Dictionary = BoardVisuals.floor_profile("ground", "river", high_contrast_mode)
+		draw_rect(Rect2(origin, MAP_SIZE), profile.surface, true)
 		for y in range(PackKeepState.GRID_SIZE.y):
 			var wave_y: float = origin.y + float(y) * CELL_Y + CELL_Y * 0.5
 			draw_line(origin + Vector2(0, wave_y - origin.y), origin + Vector2(MAP_SIZE.x, wave_y - origin.y), Color(0.36, 0.63, 0.69, 0.18), 1.0)
 		draw_string(ThemeDB.fallback_font, origin + Vector2(8, 16), String(visual.get("board_label", "ASH FORD / CROSSING DEFENSE")), HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#bcdbe0"))
+
+	func _draw_upper_backdrop(origin: Vector2, profile: Dictionary) -> void:
+		var inset: Rect2 = Rect2(origin + Vector2(CELL_X, CELL_Y), MAP_SIZE - Vector2(CELL_X * 2.0, CELL_Y * 2.0))
+		draw_rect(inset, profile.inset, true)
+		var walk_color: Color = profile.frame.darkened(0.34)
+		draw_rect(Rect2(inset.position, Vector2(inset.size.x, CELL_Y * 0.72)), walk_color, true)
+		draw_rect(Rect2(inset.position + Vector2(0, inset.size.y - CELL_Y * 0.72), Vector2(inset.size.x, CELL_Y * 0.72)), walk_color, true)
+		draw_rect(Rect2(inset.position, Vector2(CELL_X * 0.72, inset.size.y)), walk_color, true)
+		draw_rect(Rect2(inset.position + Vector2(inset.size.x - CELL_X * 0.72, 0), Vector2(CELL_X * 0.72, inset.size.y)), walk_color, true)
+		for x in range(1, 11, 2):
+			var post_x: float = origin.x + float(x) * CELL_X
+			draw_rect(Rect2(Vector2(post_x, origin.y + CELL_Y + 2), Vector2(7, 7)), profile.frame, true)
+			draw_rect(Rect2(Vector2(post_x, origin.y + MAP_SIZE.y - CELL_Y - 9), Vector2(7, 7)), profile.frame, true)
+		for corner in [inset.position, inset.position + Vector2(inset.size.x, 0), inset.position + Vector2(0, inset.size.y), inset.end]:
+			draw_circle(corner, 7.0, profile.frame.darkened(0.18))
+			draw_circle(corner, 3.0, Color("#d9e9dc"))
+		draw_string(ThemeDB.fallback_font, origin + Vector2(14, 18), "WALL WALK / UPPER POSTS", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, profile.header)
+
+	func _draw_floor_header(label_text: String, origin: Vector2, profile: Dictionary) -> void:
+		var header_width: float = maxf(112.0, ThemeDB.fallback_font.get_string_size(label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 24.0)
+		var header: Rect2 = Rect2(origin + Vector2(0, -23), Vector2(header_width, 18))
+		draw_rect(header, profile.surface.darkened(0.18), true)
+		draw_rect(header, profile.frame, false, 1.5)
+		draw_circle(header.position + Vector2(9, 9), 3.0, profile.header)
+		draw_string(ThemeDB.fallback_font, header.position + Vector2(17, 13), label_text, HORIZONTAL_ALIGNMENT_LEFT, header.size.x - 20.0, 11, profile.header)
 
 	func _draw_spatial_overlay(floor_name: String, origin: Vector2) -> void:
 		if floor_name != "ground":
@@ -4189,14 +4215,15 @@ class KeepCanvas extends Control:
 		draw_string(ThemeDB.fallback_font, origin + Vector2(58, 108), "CLEAR CAUSEWAY" if bool(rule.get("active", false)) else "CAUSEWAY BLOCKED", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#f3d39c"))
 
 	func _draw_floor(label_text: String, floor_name: String, origin: Vector2) -> void:
-		draw_string(ThemeDB.fallback_font, origin + Vector2(0, -10), label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#e2bd84"))
-		draw_rect(Rect2(origin, MAP_SIZE), Color("#27212e"), true)
+		var terrain: String = String(keep.keep_definition().get("visual", {}).get("terrain", "fort"))
+		var floor_profile: Dictionary = BoardVisuals.floor_profile(floor_name, terrain, high_contrast_mode)
+		_draw_floor_header(label_text, origin, floor_profile)
+		draw_rect(Rect2(origin, MAP_SIZE), floor_profile.surface, true)
 		if floor_name == "ground":
 			_draw_fort_backdrop(origin)
 		else:
-			draw_rect(Rect2(origin + Vector2(CELL_X, CELL_Y), MAP_SIZE - Vector2(CELL_X * 2.0, CELL_Y * 2.0)), Color("#3d5260"), true)
-			draw_string(ThemeDB.fallback_font, origin + Vector2(14, 18), "WALL WALK / UPPER POSTS", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#c8e0d1"))
-		draw_rect(Rect2(origin, MAP_SIZE), Color("#ae896d"), false, 3.0)
+			_draw_upper_backdrop(origin, floor_profile)
+		draw_rect(Rect2(origin, MAP_SIZE), floor_profile.frame, false, 3.0)
 		for connection in keep.keep_definition().get("connections", []):
 			var first_room: Dictionary = keep.room_definition(String(connection[0]))
 			var second_room: Dictionary = keep.room_definition(String(connection[1]))
@@ -4211,10 +4238,15 @@ class KeepCanvas extends Control:
 				continue
 			var rect: Rect2 = _room_rect(String(room_id), origin)
 			var show_room_text: bool = _room_label_visible(String(room_id), floor_name, origin)
-			draw_rect(rect, _room_color(String(room_id)), true)
+			var room_profile: Dictionary = BoardVisuals.room_profile(bool(room.get("critical", false)), keep.room_state(String(room_id)), high_contrast_mode)
+			draw_rect(rect, room_profile.fill, true)
 			draw_rect(rect, Color("#c8b6a0"), false, 1.0)
+			draw_rect(Rect2(rect.position + Vector2(1, 1), Vector2(rect.size.x - 2.0, 3.0)), room_profile.edge, true)
+			if bool(room.get("critical", false)):
+				var marker: Vector2 = rect.position + Vector2(rect.size.x - 8.0, 9.0)
+				draw_colored_polygon(PackedVector2Array([marker + Vector2(0, -4), marker + Vector2(4, 0), marker + Vector2(0, 4), marker + Vector2(-4, 0)]), room_profile.edge)
 			if show_room_text:
-				draw_string(ThemeDB.fallback_font, rect.position + Vector2(3, 13), _compact_board_label(String(room.name), rect.size.x - 6.0, 10, true), HORIZONTAL_ALIGNMENT_LEFT, rect.size.x - 6, 10, Color("#eadfce"))
+				draw_string(ThemeDB.fallback_font, rect.position + Vector2(3, 15), _compact_board_label(String(room.name), rect.size.x - 14.0, 10, true), HORIZONTAL_ALIGNMENT_LEFT, rect.size.x - 14, 10, Color("#eadfce"))
 			var condition: int = keep.room_condition(String(room_id))
 			var state_text: String = keep.room_state(String(room_id)).to_upper()
 			var room_health_rect: Rect2 = Rect2(rect.position + Vector2(3, rect.size.y - 9), Vector2(rect.size.x - 6.0, 6.0))
@@ -4236,21 +4268,15 @@ class KeepCanvas extends Control:
 			var piece_rect: Rect2 = Rect2(origin + Vector2(piece_origin.x * CELL_X, piece_origin.y * CELL_Y), Vector2(piece.size.x * CELL_X, piece.size.y * CELL_Y))
 			var piece_max_health: int = int(instance.get("max_health", piece.get("max_health", 0)))
 			piece_rect.position += _target_reaction_offset("piece", instance_id, piece_rect.get_center(), piece_max_health)
-			var color: Color = Color("#7598aa") if piece_id == "pike_squad" else Color("#83a47d") if piece_id == "repair_station" else Color("#ba6f55") if piece_id == "fire_team" else Color("#cbb56f")
-			if ["runner_pair", "supply_cache"].has(piece_id):
-				color = Color("#61aeb5")
-			elif ["rear_guard", "breakaway_barricade"].has(piece_id):
-				color = Color("#c88c5a")
-			elif ["crossbow_patrol", "watch_banner"].has(piece_id):
-				color = Color("#9272b8")
-			elif piece_id == "bellkeepers":
-				color = Color("#d3b65f")
-			elif ["shield_wardens", "emergency_shutters"].has(piece_id):
-				color = Color("#6f839d")
-			draw_rect(piece_rect.grow(-3), color, true)
+			var piece_profile: Dictionary = BoardVisuals.piece_profile(piece_id, String(piece.get("combat_style", "support")))
+			var color: Color = piece_profile.accent
+			var piece_card: Rect2 = piece_rect.grow(-3)
+			draw_rect(piece_card, piece_profile.card, true)
+			draw_rect(Rect2(piece_card.position, Vector2(4.0, piece_card.size.y)), color, true)
 			draw_rect(piece_rect.grow(-3), Color("#f1dfb8"), false, 1.5)
+			_draw_piece_role_badge(piece_rect, String(piece_profile.shape), color)
 			_draw_piece_glyph(piece_rect, piece_id, color)
-			draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(4, 14), _compact_board_label(String(piece.name), piece_rect.size.x - 18.0, 9), HORIZONTAL_ALIGNMENT_LEFT, piece_rect.size.x - 18, 9, Color("#201a25"))
+			draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(7, 14), _compact_board_label(String(piece.name), piece_rect.size.x - 24.0, 9), HORIZONTAL_ALIGNMENT_LEFT, piece_rect.size.x - 24, 9, Color("#f4e6ce"))
 			var piece_health: int = int(instance.get("health", 0))
 			var piece_health_rect: Rect2 = Rect2(piece_rect.position + Vector2(4, piece_rect.size.y - 10), Vector2(piece_rect.size.x - 8.0, 6.0))
 			_draw_health_bar(piece_health_rect, piece_health, piece_max_health)
@@ -4260,6 +4286,23 @@ class KeepCanvas extends Control:
 				draw_line(piece_rect.position + Vector2(5, 5), piece_rect.end - Vector2(5, 5), Color("#6f2430"), 3.0)
 				draw_line(Vector2(piece_rect.end.x - 5, piece_rect.position.y + 5), Vector2(piece_rect.position.x + 5, piece_rect.end.y - 5), Color("#6f2430"), 3.0)
 		_draw_placement_boxes(floor_name, origin, true)
+
+	func _draw_piece_role_badge(rect: Rect2, shape: String, color: Color) -> void:
+		var center: Vector2 = rect.position + Vector2(rect.size.x - 9.0, rect.size.y * 0.5 + 2.0)
+		if shape == "shield":
+			draw_colored_polygon(PackedVector2Array([center + Vector2(0, -9), center + Vector2(8, -5), center + Vector2(6, 6), center + Vector2(0, 10), center + Vector2(-6, 6), center + Vector2(-8, -5)]), color.darkened(0.38))
+		elif shape == "crosshair":
+			draw_circle(center, 9.0, color.darkened(0.38))
+			draw_circle(center, 6.0, Color("#202a31"))
+		elif shape == "barrier":
+			draw_rect(Rect2(center - Vector2(9, 7), Vector2(18, 14)), color.darkened(0.38), true)
+		elif shape == "linked":
+			draw_circle(center + Vector2(-4, 0), 6.0, color.darkened(0.38))
+			draw_circle(center + Vector2(4, 0), 6.0, color.darkened(0.38))
+		elif shape == "beacon":
+			draw_colored_polygon(PackedVector2Array([center + Vector2(0, -9), center + Vector2(8, 7), center + Vector2(-8, 7)]), color.darkened(0.38))
+		else:
+			draw_circle(center, 9.0, color.darkened(0.38))
 
 	func _draw_piece_glyph(rect: Rect2, piece_id: String, color: Color) -> void:
 		var center: Vector2 = rect.position + Vector2(rect.size.x - 9.0, rect.size.y * 0.5 + 2.0)
@@ -4319,10 +4362,38 @@ class KeepCanvas extends Control:
 		draw_circle(gate_point, 5.0, Color("#ffd19d"), false, 2.0)
 
 	func _enemy_marker_color(enemy_id: String) -> Color:
-		return Color("#d26155") if enemy_id == "raider" else Color("#d7a35b") if enemy_id == "sapper" else Color("#a77bd1") if enemy_id == "climber" else Color("#9e3f48") if enemy_id == "shield_guard" else Color("#77727b") if enemy_id == "ash_slinger" else Color("#78453c") if enemy_id == "shieldbreaker" else Color("#b36c45")
+		var definition: Dictionary = keep.enemy_definition(enemy_id) if keep != null else {}
+		return BoardVisuals.enemy_profile(enemy_id, String(definition.get("attack_style", "melee"))).color
 
 	func _enemy_marker_initial(enemy_id: String) -> String:
-		return "R" if enemy_id == "raider" else "S" if enemy_id == "sapper" else "C" if enemy_id == "climber" else "G" if enemy_id == "shield_guard" else "A" if enemy_id == "ash_slinger" else "X" if enemy_id == "shieldbreaker" else "B"
+		var definition: Dictionary = keep.enemy_definition(enemy_id) if keep != null else {}
+		return String(BoardVisuals.enemy_profile(enemy_id, String(definition.get("attack_style", "melee"))).initial)
+
+	func _draw_enemy_silhouette(origin: Vector2, radius: float, profile: Dictionary, outline_width: float = 1.5) -> void:
+		var shape: String = String(profile.get("shape", "chevron"))
+		var color: Color = profile.get("color", Color("#d26155"))
+		var points: PackedVector2Array
+		if shape == "diamond":
+			points = PackedVector2Array([origin + Vector2(0, -radius), origin + Vector2(radius, 0), origin + Vector2(0, radius), origin + Vector2(-radius, 0)])
+		elif shape == "claw":
+			points = PackedVector2Array([origin + Vector2(-radius, radius * 0.72), origin + Vector2(-radius * 0.52, -radius * 0.42), origin + Vector2(-radius * 0.16, radius * 0.12), origin + Vector2(0, -radius), origin + Vector2(radius * 0.16, radius * 0.12), origin + Vector2(radius * 0.52, -radius * 0.42), origin + Vector2(radius, radius * 0.72)])
+		elif shape == "shield":
+			points = PackedVector2Array([origin + Vector2(0, -radius), origin + Vector2(radius * 0.86, -radius * 0.55), origin + Vector2(radius * 0.66, radius * 0.6), origin + Vector2(0, radius), origin + Vector2(-radius * 0.66, radius * 0.6), origin + Vector2(-radius * 0.86, -radius * 0.55)])
+		elif shape == "axe":
+			points = PackedVector2Array([origin + Vector2(-radius * 0.8, -radius), origin + Vector2(radius * 0.15, -radius * 0.55), origin + Vector2(radius, -radius * 0.72), origin + Vector2(radius * 0.55, 0), origin + Vector2(radius, radius * 0.72), origin + Vector2(radius * 0.15, radius * 0.55), origin + Vector2(-radius * 0.8, radius)])
+		elif shape == "hex":
+			points = PackedVector2Array([origin + Vector2(-radius * 0.7, -radius), origin + Vector2(radius * 0.7, -radius), origin + Vector2(radius, 0), origin + Vector2(radius * 0.7, radius), origin + Vector2(-radius * 0.7, radius), origin + Vector2(-radius, 0)])
+		elif shape == "ring":
+			draw_circle(origin, radius, color)
+			draw_circle(origin, radius * 0.48, Color("#29232d"))
+			draw_circle(origin, radius, Color("#f1dfb8"), false, outline_width)
+			return
+		else:
+			points = PackedVector2Array([origin + Vector2(-radius, -radius * 0.72), origin + Vector2(0, -radius), origin + Vector2(radius, -radius * 0.72), origin + Vector2(radius * 0.66, radius), origin + Vector2(0, radius * 0.56), origin + Vector2(-radius * 0.66, radius)])
+		draw_colored_polygon(points, color)
+		var outline: PackedVector2Array = points.duplicate()
+		outline.append(points[0])
+		draw_polyline(outline, Color("#f1dfb8"), outline_width, true)
 
 	func defender_watch_snapshot() -> Array[Dictionary]:
 		var watches: Array[Dictionary] = []
@@ -4365,10 +4436,10 @@ class KeepCanvas extends Control:
 			var enemy_id: String = String(enemy.get("enemy_id", ""))
 			var enemy_def: Dictionary = keep.enemy_definition(enemy_id)
 			var enemy_origin: Vector2 = _enemy_origin(index) + _enemy_reaction_offset(index)
-			var enemy_color: Color = _enemy_marker_color(enemy_id)
-			var marker_radius: float = 12.0 if enemy_id == "siege_beast" else 9.0 if enemy_id == "shield_guard" else 8.0
-			draw_circle(enemy_origin, marker_radius, enemy_color)
-			draw_circle(enemy_origin, marker_radius, Color("#f1dfb8"), false, 1.5)
+			var enemy_profile: Dictionary = BoardVisuals.enemy_profile(enemy_id, String(enemy_def.get("attack_style", "melee")))
+			var enemy_color: Color = enemy_profile.color
+			var marker_radius: float = 8.0 * float(enemy_profile.scale)
+			_draw_enemy_silhouette(enemy_origin, marker_radius, enemy_profile)
 			var enemy_health: int = int(enemy.get("hp", 0))
 			var enemy_max_health: int = int(enemy.get("max_health", enemy_def.get("health", 1)))
 			var enemy_bar_width: float = 34.0 if enemy_id == "siege_beast" else 28.0
@@ -4450,8 +4521,9 @@ class KeepCanvas extends Control:
 				var marker: Dictionary = arrival_rows[marker_index]
 				var enemy_id: String = String(marker.get("enemy_id", ""))
 				var marker_origin: Vector2 = _timeline_marker_origin(tick_number, marker_index, arrival_rows.size())
-				draw_circle(marker_origin, 5.0, _enemy_marker_color(enemy_id))
-				draw_circle(marker_origin, 5.0, Color("#fff4df"), false, 1.0)
+				var enemy_definition: Dictionary = keep.enemy_definition(enemy_id)
+				var marker_profile: Dictionary = BoardVisuals.enemy_profile(enemy_id, String(enemy_definition.get("attack_style", "melee")))
+				_draw_enemy_silhouette(marker_origin, 5.0, marker_profile, 1.0)
 				if int(marker.get("index", -1)) == focused_enemy_index:
 					draw_circle(marker_origin, 8.0, Color("#fff4df"), false, 2.0)
 					draw_circle(marker_origin, 10.5, Color("#e2bd84"), false, 1.0)
