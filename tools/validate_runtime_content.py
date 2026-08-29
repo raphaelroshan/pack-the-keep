@@ -44,7 +44,7 @@ PIECE_TEXT_FIELDS = {
 }
 ENEMY_FIELDS = {
     "id", "content_version", "status", "name", "short_role", "question", "health",
-    "damage", "arrival_step", "attack_interval", "target_mode", "route", "target_rooms", "doctrine", "counter", "telegraph",
+    "damage", "arrival_step", "attack_interval", "attack_style", "target_mode", "route", "target_rooms", "doctrine", "counter", "telegraph",
     "counter_families", "failure_mode", "report_phrase", "presentation",
 }
 ENEMY_TEXT_FIELDS = {
@@ -77,6 +77,7 @@ MODIFIER_FIELDS = {
 SUPPORTED_FLOORS = {"ground", "upper"}
 SUPPORTED_ZONES = {"wall", "courtyard", "keep"}
 SUPPORTED_ATTACK_STYLES = {"melee", "ranged", "support", "fortification"}
+SUPPORTED_ENEMY_ATTACK_STYLES = {"melee", "ranged", "demolition"}
 SUPPORTED_DOCTRINES = {"gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach", "shielded_advance", "smoke_and_signal", "break_the_line"}
 SUPPORTED_NON_ENEMY_TARGETS = {"all"} | SUPPORTED_DOCTRINES
 SUPPORTED_EVENT_TYPES = {"forecast", "recovery", "scenario_conclusion"}
@@ -585,6 +586,8 @@ def validate_enemy(
         errors.append(f"{path}: arrival_step must be a positive integer")
     if not is_integer(enemy.get("attack_interval")) or enemy["attack_interval"] < 1:
         errors.append(f"{path}: attack_interval must be a positive integer")
+    if enemy.get("attack_style") not in SUPPORTED_ENEMY_ATTACK_STYLES:
+        errors.append(f"{path}: attack_style must be melee, ranged, or demolition")
     if "armor" in enemy:
         armor = enemy.get("armor")
         if not is_integer(armor) or armor < 0:

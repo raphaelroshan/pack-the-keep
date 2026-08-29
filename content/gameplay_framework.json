@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.18.2-friendly-targets",
+  "framework_version": "0.18.3-enemy-attack-styles",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -400,6 +400,13 @@
     "surfaces": ["enemy_inspector", "focused_response_card", "map_tooltip", "timeline_tooltip"],
     "authority_boundary": "target_readouts_resolve_existing_ids_without_selecting_retargeting_or_mutating_state",
     "non_goals": ["piece_nicknames", "target_selection_changes", "new_panels", "new_save_fields"]
+  },
+  "p27_enemy_attack_styles": {
+    "status": "implemented",
+    "styles": {"melee": ["raider", "climber", "shield_guard", "shieldbreaker"], "ranged": ["ash_slinger"], "demolition": ["sapper", "siege_beast"]},
+    "presentation": ["hostile_melee_lunge_and_slash", "hostile_ranged_projectile_and_tail", "demolition_heavy_strike_and_double_ring", "piece_hp_damage_labels", "room_structure_damage_labels", "static_reduced_motion_marks"],
+    "authority_boundary": "attack_style_selects_only_the_transient_trace_drawn_from_authoritative_before_after_damage",
+    "non_goals": ["projectile_physics", "sub_tick_damage", "knockback", "status_effects", "new_save_fields"]
   },
   "v090_multi_wave": {
     "status": "implemented",

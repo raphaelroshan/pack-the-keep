@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.18.2",
+  "content_version": "0.18.3",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -368,7 +368,15 @@
     "presentation": ["friendly_enemy_inspector_target", "friendly_focused_response_target", "friendly_map_and_timeline_tooltip_target"],
     "determinism": "target_readout_queries_do_not_select_or_change_targets_and_do_not_mutate_serialized_state",
     "evidence": ["design/p26_friendly_target_readouts.md", "docs/p26_friendly_target_visual_verification.md", "tests/test_keep_state.gd", "tests/test_p2_ui.gd"],
-    "next_slice": "p26_human_target_comprehension_sessions"
+    "next_slice": "p27_enemy_attack_styles"
+  },
+  "p27_enemy_attack_styles": {
+    "status": "implemented",
+    "enemy_styles": ["melee", "ranged", "demolition"],
+    "presentation": ["melee_lunge_and_slash", "hostile_projectile_travel", "heavy_demolition_strike", "target_specific_damage_language", "reduced_motion_static_marks"],
+    "determinism": "style_is_catalog_presentation_data_and_resolved_impacts_are_projected_from_authoritative_state_deltas",
+    "evidence": ["design/p27_enemy_attack_styles.md", "docs/p27_enemy_attack_styles_visual_verification.md", "tests/test_keep_state.gd", "tests/test_p2_ui.gd", "tests/test_runtime_content_validator.py"],
+    "next_slice": "p27_human_combat_readability_sessions"
   },
   "campaign": {
     "title": "The Bell at Dusk",

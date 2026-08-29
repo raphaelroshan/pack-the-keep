@@ -599,3 +599,11 @@
 **Reason:** Raw values such as `repair_station_1` are useful for deterministic state and tests but break the illustrated siege presentation. A shared projection keeps the inspector, response card, and tooltips consistent without duplicating target rules in the UI.
 
 **Trade-off:** Multiple copies of the same defender currently share the same display name. Persistent nicknames or player-managed numbering remain out of scope; the stable ID remains available in the read model for diagnostics.
+
+## ADR-076: Enemy role controls impact presentation, not damage authority
+
+**Decision:** Require every enemy definition to declare `melee`, `ranged`, or `demolition` as its attack style. Capture the due attacker's style alongside the existing before/after target snapshot, then draw a compact lunge and slash, hostile projectile, or heavy strike and double ring after the deterministic tick resolves. Use `HP` for defender damage and `STRUCTURE` for room condition damage.
+
+**Reason:** Unit-first targeting and visible cadence made enemy intent legible, but every successful enemy attack still used the same generic red line and room-oriented label. Distinct motion now makes Raider, Ash Slinger, and Sapper pressure recognizable at normal play distance without adding another HUD panel.
+
+**Trade-off:** The effects visualize already-resolved state deltas and do not simulate collision, dodging, knockback, or sub-tick damage. When multiple enemies damage one target in the same tick, the displayed value remains the authoritative net loss and uses the first stable due source for its style.

@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.18.2-friendly-targets` — the controlled playtest now names each targeted defender or room with current health or condition instead of exposing internal IDs; human sessions and owner approval remain pending
+**Current build identity:** `0.18.3-enemy-attack-styles` — the controlled playtest now distinguishes melee, ranged, and demolition enemy impacts while retaining friendly target health/condition readouts; human sessions and owner approval remain pending
 
 ## Purpose
 
@@ -295,6 +295,10 @@ Hover a Raider before contact and confirm its tooltip names contact tick, one-ti
 ## v0.18.2 acceptance checks
 
 Before contact, confirm the focused response, inspector, map tooltip, and timeline tooltip say `Approaching`. After a Raider acquires a Pike Squad, confirm every surface names `Pike Squad` with current/max HP and does not show `pike_squad_0`. Focus a Sapper targeting a room and confirm the readout names that room with condition and state. Disable the last valid defender and confirm the stale target is described as disabled until deterministic retargeting resolves.
+
+## v0.18.3 acceptance checks
+
+Run Distributed Sabotage through Sapper contact and confirm its amber demolition strike is visibly heavier than the Raider's compact red melee lunge. Run Smoke and Signal and confirm the Ash Slinger uses a travelling violet projectile rather than a melee line. Verify damage to defenders is labelled `HP`, room damage is labelled `STRUCTURE`, and the matching authoritative health or condition bar decreases. Enable reduced motion and confirm each style retains a static role-colored hit mark without travel or lunge.
 
 ## v0.16.6 acceptance checks
 

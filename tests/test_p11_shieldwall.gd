@@ -42,9 +42,10 @@ func _initialize() -> void:
 	malformed_breaker.target_piece_preference = "random"
 	malformed_breaker.target_mode = "anything"
 	malformed_breaker.attack_interval = 0
+	malformed_breaker.attack_style = "magic"
 	malformed_breaker.ignores_protection = "yes"
 	var breaker_errors: Array[String] = catalog.validate_enemy_definition(malformed_breaker, "shieldbreaker", PackKeepState.ROOMS.keys(), catalog.doctrine_ids())
-	_check(breaker_errors.size() >= 5, "catalog validation should reject malformed Shieldbreaker targeting, cadence, mode, and protection flags")
+	_check(breaker_errors.size() >= 6, "catalog validation should reject malformed Shieldbreaker targeting, cadence, style, mode, and protection flags")
 
 	var guarded = PackKeepState.new(5507)
 	guarded.open_pack("field_engineers")
