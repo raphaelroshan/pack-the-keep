@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.18.3-enemy-attack-styles",
+  "framework_version": "0.18.4-enemy-windups",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -407,6 +407,13 @@
     "presentation": ["hostile_melee_lunge_and_slash", "hostile_ranged_projectile_and_tail", "demolition_heavy_strike_and_double_ring", "piece_hp_damage_labels", "room_structure_damage_labels", "static_reduced_motion_marks"],
     "authority_boundary": "attack_style_selects_only_the_transient_trace_drawn_from_authoritative_before_after_damage",
     "non_goals": ["projectile_physics", "sub_tick_damage", "knockback", "status_effects", "new_save_fields"]
+  },
+  "p28_enemy_windup_telegraphs": {
+    "status": "implemented",
+    "projection": "contact_target_attack_style_and_existing_cadence_progress_produce_a_read_only_late_interval_warning",
+    "presentation": ["melee_directional_chevron", "ranged_charge_orb_and_aim_line", "demolition_brace_and_weight_rings", "style_colored_late_cadence_meter", "reduced_motion_static_glyph"],
+    "authority_boundary": "windups_read_existing_target_and_cadence_state_without_reserving_interrupting_or_resolving_attacks",
+    "non_goals": ["parry_commands", "interrupts", "dodging", "second_attack_clock", "new_save_fields"]
   },
   "v090_multi_wave": {
     "status": "implemented",

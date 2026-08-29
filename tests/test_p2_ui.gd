@@ -192,6 +192,21 @@ func _initialize() -> void:
 		failures.append("enemy attack styles did not retain distinct presentation motions")
 	if ui.keep_canvas._impact_damage_label({"target_kind": "piece", "damage": 3}) != "-3 HP" or ui.keep_canvas._impact_damage_label({"target_kind": "room", "damage": 30}) != "-30 STRUCTURE":
 		failures.append("target impact labels did not distinguish defender health from room structure")
+	var windup_step: int = ui.keep.battle_step
+	var windup_clock: float = ui.keep.battle_clock
+	ui.keep.battle_step = 2
+	ui.keep.battle_clock = 0.75
+	var windup_state_before: String = JSON.stringify(ui.keep.serialize())
+	var windup: Dictionary = ui.keep_canvas.enemy_windup_snapshot(0)
+	if not bool(windup.get("active", false)) or String(windup.get("attack_style", "")) != "melee" or float(windup.get("intensity", 0.0)) <= 0.0:
+		failures.append("contacted enemy did not expose a role-specific late-cadence wind-up")
+	if JSON.stringify(ui.keep.serialize()) != windup_state_before:
+		failures.append("enemy wind-up projection mutated authoritative state")
+	ui.keep.battle_clock = 0.2
+	if bool(ui.keep_canvas.enemy_windup_snapshot(0).get("active", true)):
+		failures.append("enemy wind-up appeared during the first half of its cadence")
+	ui.keep.battle_step = windup_step
+	ui.keep.battle_clock = windup_clock
 	ui.keep.rooms.gate.condition = original_gate_condition
 	ui.keep.enemies[0].target = original_target
 	ui.keep.enemies[0].defeated = original_defeated

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.18.3",
+  "content_version": "0.18.4",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -376,7 +376,15 @@
     "presentation": ["melee_lunge_and_slash", "hostile_projectile_travel", "heavy_demolition_strike", "target_specific_damage_language", "reduced_motion_static_marks"],
     "determinism": "style_is_catalog_presentation_data_and_resolved_impacts_are_projected_from_authoritative_state_deltas",
     "evidence": ["design/p27_enemy_attack_styles.md", "docs/p27_enemy_attack_styles_visual_verification.md", "tests/test_keep_state.gd", "tests/test_p2_ui.gd", "tests/test_runtime_content_validator.py"],
-    "next_slice": "p27_human_combat_readability_sessions"
+    "next_slice": "p28_enemy_windup_telegraphs"
+  },
+  "p28_enemy_windup_telegraphs": {
+    "status": "implemented",
+    "read_model": ["active", "attack_style", "motion", "target_id", "normalized_intensity"],
+    "presentation": ["late_cadence_melee_chevron", "ranged_charge_orb", "demolition_weight_rings", "style_colored_cadence_meter", "static_reduced_motion_warning"],
+    "determinism": "windup_queries_and_drawing_read_existing_battle_clock_target_and_enemy_definition_without_mutating_state",
+    "evidence": ["design/p28_enemy_windup_telegraphs.md", "docs/p28_enemy_windup_visual_verification.md", "tests/test_p2_ui.gd"],
+    "next_slice": "p28_human_attack_anticipation_sessions"
   },
   "campaign": {
     "title": "The Bell at Dusk",
