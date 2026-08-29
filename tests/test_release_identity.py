@@ -30,6 +30,35 @@ class ReleaseIdentityTests(unittest.TestCase):
         self.assertIn('binary_format/embed_pck=true', presets)
         self.assertIn('binary_format/architecture="x86_64"', presets)
 
+    def test_tagged_release_publishes_the_complete_playtest_kit(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
+        required_steps = [
+            "tools/write_playtest_build_manifest.py",
+            "tools/write_playtest_brief.py",
+            "tools/write_playtest_matrix_templates.py",
+        ]
+        for step in required_steps:
+            self.assertIn(step, workflow)
+        required_assets = [
+            '"artifacts/packaged-smoke.json"',
+            '"artifacts/playtest-build.json"',
+            '"artifacts/PLAYTEST_README.md"',
+            "artifacts/playtest-templates/*.json",
+            '"artifacts/release_manifest.json"',
+        ]
+        publish_start = workflow.index('gh release create "$GITHUB_REF_NAME"')
+        publish_block = workflow[publish_start:]
+        for asset in required_assets:
+            self.assertIn(asset, publish_block)
+        self.assertLess(
+            workflow.index("tools/write_playtest_build_manifest.py"),
+            workflow.index("tools/write_playtest_brief.py"),
+        )
+        self.assertLess(
+            workflow.index("tools/write_playtest_brief.py"),
+            workflow.index("tools/write_playtest_matrix_templates.py"),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.25.3",
+  "content_version": "0.25.4",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -547,6 +547,14 @@
     "dirty_detection": "current_serialized_state_vs_last_successful_save_or_load",
     "authority": "presentation_confirmation_over_existing_reset_and_navigation_handlers",
     "evidence": ["design/p46_navigation_safety.md", "docs/p46_navigation_safety_verification.md", "tests/test_p46_navigation_safety.gd"],
+    "next_slice": "p47_self_contained_playtest_release"
+  },
+  "p47_self_contained_playtest_release": {
+    "status": "implemented",
+    "release_assets": ["windows_executable", "packaged_smoke", "release_manifest", "playtest_build_manifest", "observer_brief", "four_unfilled_matrix_templates", "source_archive"],
+    "provenance": "playtest materials are regenerated from and validated against the exact tagged executable",
+    "human_boundary": "templates remain unfilled and invalid evidence until completed by a human observer",
+    "evidence": ["design/p47_self_contained_playtest_release.md", "docs/p47_self_contained_playtest_release_verification.md", "tests/test_release_identity.py", ".github/workflows/release.yml"],
     "next_slice": "p16_human_playtest_matrix"
   },
   "campaign": {

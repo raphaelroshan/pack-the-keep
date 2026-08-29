@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.25.3-navigation-safety` — Escape/controller-back is consistent and changed runs require an explicit in-game confirmation before leaving; human sessions and owner approval remain pending
+**Current build identity:** `0.25.4-playtest-release-kit` — the tagged Windows candidate includes its complete provenance-bound observer kit; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of ten authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.25.4 acceptance checks
+
+Download the tagged prerelease and confirm it exposes the Windows executable, packaged smoke report, `release_manifest.json`, `playtest-build.json`, `PLAYTEST_README.md`, four commander/modifier matrix templates, and the exact source archive. Confirm the playtest manifest names the downloaded executable and exact tag commit, and that every template remains unfilled with all observations marked `not_tested`.
 
 ## v0.25.3 acceptance checks
 

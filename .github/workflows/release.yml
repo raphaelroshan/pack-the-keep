@@ -47,6 +47,31 @@ jobs:
             --report-copy artifacts/packaged-smoke.json
       - name: Audit packaged alpha evidence
         run: python tools/validate_p12_alpha.py --report artifacts/packaged-smoke.json
+      - name: Record playtest artifact provenance
+        run: |
+          slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
+          python tools/write_playtest_build_manifest.py \
+            --executable "build/${slug}.exe" \
+            --ci-manifest tools/ci_manifest.json \
+            --source-revision "${GITHUB_SHA}" \
+            --run-id "${GITHUB_RUN_ID}" \
+            --output artifacts/playtest-build.json
+      - name: Write packaged playtest observer brief
+        run: |
+          slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
+          python tools/write_playtest_brief.py \
+            --protocol content/p16_playtest_protocol.json \
+            --build-manifest artifacts/playtest-build.json \
+            --artifact "build/${slug}.exe" \
+            --output artifacts/PLAYTEST_README.md
+      - name: Write unfilled playtest matrix templates
+        run: |
+          slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
+          python tools/write_playtest_matrix_templates.py \
+            --protocol content/p16_playtest_protocol.json \
+            --build-manifest artifacts/playtest-build.json \
+            --artifact "build/${slug}.exe" \
+            --output-directory artifacts/playtest-templates
       - name: Create release manifest
         run: |
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
@@ -68,6 +93,10 @@ jobs:
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
           gh release create "$GITHUB_REF_NAME" \
             "build/${slug}.exe" \
+            "artifacts/packaged-smoke.json" \
+            "artifacts/playtest-build.json" \
+            "artifacts/PLAYTEST_README.md" \
+            artifacts/playtest-templates/*.json \
             "artifacts/release_manifest.json" \
             "artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" \
             --repo "$GITHUB_REPOSITORY" \

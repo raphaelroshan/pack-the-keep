@@ -1,11 +1,11 @@
 # Pack the Keep — Game-Quality Transformation Plan
 
 **Audience:** GPT coding agents, art/UX agents, test agents, and the human owner
-**Current baseline:** `0.25.3-navigation-safety`
-**Current status:** Technically substantial public-source pre-alpha; presentation transformation in progress
+**Current baseline:** `0.25.4-playtest-release-kit`
+**Current status:** Engineering-complete public-source pre-alpha candidate; human validation pending
 **Primary objective:** Turn the existing deterministic fortress-defense systems into a coherent, attractive, immediately understandable game-quality private alpha without rewriting the simulation core.
 
-**Implementation ledger:** P32 gives terminal Results a dedicated debrief. P33 adds Preparation question/answer/weakness hierarchy. P34 adds board visual grammar. P35 centralizes semantic battle audio. P36 adds tick-zero readiness. P37 gives inter-wave Recovery a compact what-changed/why/next/action-budget/priority hierarchy. P38 replaces raw-first War Council selection with commander and defense choice cards. P39 gives Preparation a complete pack doctrine offer card. P40 groups Preparation into three stages. P41 gives rooms, defenders, and threats one action-oriented inspection hierarchy without raw IDs. P42 centers Battle on live state, pause/resume, commander intervention, and focused-threat inspection while collapsing expert timing controls. P43 adds explicit local-only observation and a stable nine-screen capture harness. P44 introduces the first complete screen-level presentation snapshot boundary for Battle. P45 adds a debug-only layout/focus/clipping audit overlay. P46 adds consistent Back/Escape behavior with explicit unsaved-progress confirmation. Human validation remains pending.
+**Implementation ledger:** P32 gives terminal Results a dedicated debrief. P33 adds Preparation question/answer/weakness hierarchy. P34 adds board visual grammar. P35 centralizes semantic battle audio. P36 adds tick-zero readiness. P37 gives inter-wave Recovery a compact what-changed/why/next/action-budget/priority hierarchy. P38 replaces raw-first War Council selection with commander and defense choice cards. P39 gives Preparation a complete pack doctrine offer card. P40 groups Preparation into three stages. P41 gives rooms, defenders, and threats one action-oriented inspection hierarchy without raw IDs. P42 centers Battle on live state, pause/resume, commander intervention, and focused-threat inspection while collapsing expert timing controls. P43 adds explicit local-only observation and a stable nine-screen capture harness. P44 introduces the first complete screen-level presentation snapshot boundary for Battle. P45 adds a debug-only layout/focus/clipping audit overlay. P46 adds consistent Back/Escape behavior with explicit unsaved-progress confirmation. P47 makes the tagged prerelease a durable, self-contained human-test cohort. Human validation remains pending.
 
 > **Central diagnosis:** Pack the Keep has enough mechanics for a real game loop. Its largest gap is not feature count. Its largest gap is presentation: the player must feel that they are preparing a fortress, watching a defense, making urgent but comprehensible interventions, recovering from damage, and learning from the result—not operating a debug panel surrounded by a board.
 
@@ -849,7 +849,7 @@ verification notes.
 
 Do not add another feature before observation.
 
-Package one exact `0.25.3-navigation-safety` cohort and run the required P16
+Use the exact `0.25.4-playtest-release-kit` prerelease cohort and run the required P16
 human matrix: Castellan baseline, Castellan with Hardened Vanguard, Warden
 baseline, and Warden with Hardened Vanguard. Observe without coaching, record
 all nine required signals, and implement only findings repeated across at
