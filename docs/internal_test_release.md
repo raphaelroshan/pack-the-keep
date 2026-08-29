@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.24.0-inspector-hierarchy` — room, defender, and enemy selections now share a game-facing identity/condition/purpose/next-action card; human sessions and owner approval remain pending
+**Current build identity:** `0.24.1-battle-command-hierarchy` — Battle now leads with live state, pause/resume, commander intervention, and focused-threat inspection while expert timing controls remain disclosed on demand; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of ten authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.24.1 acceptance checks
+
+Enter an assault and confirm the command rail opens at the battle-state summary, Sound the Bell or pause/resume action, commander intervention, and focused-threat inspection. Confirm deterministic single-step, speed, and fallback threat selection begin behind **Show tactical controls**, remain fully usable when revealed, and do not alter serialized keep state merely by opening or closing the disclosure. Confirm First Watch focuses the visible threat action and the hierarchy remains usable at 125% scale.
 
 ## v0.24.0 acceptance checks
 

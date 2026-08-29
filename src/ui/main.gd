@@ -134,6 +134,11 @@ var title_continue_button: Button
 var pause_button: Button
 var manual_step_button: Button
 var speed_button: Button
+var battle_state_label: Label
+var battle_inspection_label: Label
+var inspect_enemy_button: Button
+var battle_tactical_button: Button
+var battle_tactical_panel: VBoxContainer
 var mute_button: Button
 var contrast_button: Button
 var reduced_motion_button: Button
@@ -1444,21 +1449,16 @@ func _build_ui() -> void:
 	recovery_actions_panel.add_child(finish_interval_button)
 	controls.move_child(recovery_actions_panel, 3)
 
+	battle_state_label = Label.new()
+	battle_state_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	battle_state_label.custom_minimum_size = Vector2(292, 72)
+	battle_state_label.add_theme_color_override("font_color", Color("#bfe8cf"))
+	battle_section.add_child(battle_state_label)
 	pause_button = Button.new()
 	pause_button.text = "Pause battle (Space)"
-	pause_button.tooltip_text = "Pause or resume automatic battle timing. Manual N steps remain deterministic."
+	pause_button.tooltip_text = "Pause or resume automatic battle timing. Manual N steps remain available under Tactical controls."
 	pause_button.pressed.connect(_toggle_battle_pause)
 	battle_section.add_child(pause_button)
-	manual_step_button = Button.new()
-	manual_step_button.text = "Step once while paused (N)"
-	manual_step_button.tooltip_text = "Resolve exactly one deterministic combat tick while the assault is paused."
-	manual_step_button.pressed.connect(_on_advance_wave)
-	battle_section.add_child(manual_step_button)
-	speed_button = Button.new()
-	speed_button.text = "Speed: 1.0x (1/2/3)"
-	speed_button.tooltip_text = "Cycle battle speed; speed changes timing only, never outcomes."
-	speed_button.pressed.connect(_cycle_battle_speed)
-	battle_section.add_child(speed_button)
 
 	commander_ability_button = Button.new()
 	commander_ability_button.text = "Lockdown (Castellan)"
@@ -1466,13 +1466,44 @@ func _build_ui() -> void:
 	commander_ability_button.pressed.connect(_on_use_ability)
 	battle_section.add_child(commander_ability_button)
 
-	enemy_option = OptionButton.new()
-	var enemy_group: VBoxContainer = _labeled_control("Enemy to inspect", enemy_option)
-	battle_section.add_child(enemy_group)
-	var inspect_enemy_button: Button = Button.new()
-	inspect_enemy_button.text = "Inspect selected enemy"
+	battle_inspection_label = Label.new()
+	battle_inspection_label.text = "THREAT INSPECTION\nSelect a threat on the fort or contact timeline. The current focus drives the response preview and inspection card."
+	battle_inspection_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	battle_inspection_label.add_theme_color_override("font_color", Color("#d8c389"))
+	battle_section.add_child(battle_inspection_label)
+	inspect_enemy_button = Button.new()
+	inspect_enemy_button.text = "Inspect focused threat"
+	inspect_enemy_button.tooltip_text = "Open the current threat card. Use the map, timeline, or Tab to change focus."
 	inspect_enemy_button.pressed.connect(_on_inspect_enemy)
 	battle_section.add_child(inspect_enemy_button)
+
+	battle_tactical_button = Button.new()
+	battle_tactical_button.text = "Show tactical controls"
+	battle_tactical_button.tooltip_text = "Reveal deterministic stepping, timing speed, and the fallback threat list without changing combat state."
+	battle_tactical_button.pressed.connect(_toggle_battle_tactical_controls)
+	battle_section.add_child(battle_tactical_button)
+	battle_tactical_panel = VBoxContainer.new()
+	battle_tactical_panel.add_theme_constant_override("separation", 6)
+	battle_tactical_panel.visible = false
+	battle_section.add_child(battle_tactical_panel)
+	var tactical_heading: Label = Label.new()
+	tactical_heading.text = "TACTICAL CONTROLS"
+	tactical_heading.add_theme_font_size_override("font_size", 12)
+	tactical_heading.add_theme_color_override("font_color", Color("#8fc6d1"))
+	battle_tactical_panel.add_child(tactical_heading)
+	manual_step_button = Button.new()
+	manual_step_button.text = "Step once while paused (N)"
+	manual_step_button.tooltip_text = "Resolve exactly one deterministic combat tick while the assault is paused."
+	manual_step_button.pressed.connect(_on_advance_wave)
+	battle_tactical_panel.add_child(manual_step_button)
+	speed_button = Button.new()
+	speed_button.text = "Speed: 1.0x (1/2/3)"
+	speed_button.tooltip_text = "Cycle battle speed; speed changes timing only, never outcomes."
+	speed_button.pressed.connect(_cycle_battle_speed)
+	battle_tactical_panel.add_child(speed_button)
+	enemy_option = OptionButton.new()
+	var enemy_group: VBoxContainer = _labeled_control("Fallback threat list", enemy_option)
+	battle_tactical_panel.add_child(enemy_group)
 	inspection_panel = InspectionPanelView.new()
 	inspection_section.add_child(inspection_panel)
 	inspector_label = inspection_panel.detail_label
@@ -1578,6 +1609,7 @@ func _build_ui() -> void:
 	_style_button(quick_test_button, true)
 	_style_button(playtest_button, true)
 	_style_button(setup_confirm_button, true)
+	_style_button(pause_button, true)
 	_refresh_binding_controls()
 
 func _build_title_card() -> PanelContainer:
@@ -1893,7 +1925,7 @@ func _set_screen(next_screen: String) -> void:
 		input_help_label.text = {
 			"setup": "Choose the strategic context here. The board stays out of the way until the briefing is confirmed.",
 			"preparation": "Open a pack, select a piece, then arm placement and click the fort. The main action starts the assault in real time.",
-			"battle": "The assault runs continuously. Space pauses; N resolves one deterministic tick while paused.",
+			"battle": "The assault runs continuously. Sound the bell, pause when needed, and inspect threats before spending command.",
 			"results": "Use the two recovery actions deliberately. The next assault phase resumes only after explicit confirmation.",
 			"settings": "Every option here is presentation-only and remains separate from authoritative run state."
 		}.get(screen, "Tab/D-pad moves focus. Enter/A confirms.")
@@ -1950,7 +1982,10 @@ func _focus_screen_control() -> void:
 		return
 	target.grab_focus()
 	if command_scroll != null and command_panel.is_ancestor_of(target):
-		command_scroll.ensure_control_visible(target)
+		if screen == "battle" and target == pause_button:
+			command_scroll.scroll_vertical = 0
+		else:
+			command_scroll.ensure_control_visible(target)
 	if page_scroll != null:
 		if ui_scale_index >= 2 and command_panel.is_ancestor_of(target):
 			page_scroll.ensure_control_visible(target)
@@ -2266,6 +2301,19 @@ func _toggle_preparation_advanced() -> void:
 	preparation_advanced_button.text = "Hide advanced preparation" if preparation_advanced_panel.visible else "Show advanced preparation"
 	_set_event("Advanced preparation details shown." if preparation_advanced_panel.visible else "Advanced preparation details collapsed.")
 
+func _toggle_battle_tactical_controls() -> void:
+	if battle_tactical_panel == null:
+		return
+	battle_tactical_panel.visible = not battle_tactical_panel.visible
+	battle_tactical_button.text = "Hide tactical controls" if battle_tactical_panel.visible else "Show tactical controls"
+	_set_event("Tactical timing and fallback controls shown." if battle_tactical_panel.visible else "Tactical controls collapsed; live command priorities remain visible.")
+	if battle_tactical_panel.visible:
+		call_deferred("_reveal_battle_tactical_controls")
+
+func _reveal_battle_tactical_controls() -> void:
+	if command_scroll != null and battle_tactical_panel != null and battle_tactical_panel.is_visible_in_tree():
+		command_scroll.ensure_control_visible(battle_tactical_panel)
+
 func _on_open_pack() -> void:
 	var pack_id: String = _selected_id(pack_option)
 	if not _tutorial_allows("open_pack", pack_id):
@@ -2432,7 +2480,7 @@ func _format_inspection(data: Dictionary) -> String:
 func _on_inspect_enemy() -> void:
 	if enemy_option.selected < 0:
 		return
-	_select_enemy_focus(int(enemy_option.get_item_metadata(enemy_option.selected)), "Dropdown inspection")
+	_select_enemy_focus(int(enemy_option.get_item_metadata(enemy_option.selected)), "focused threat control")
 
 func _reveal_inspection_panel() -> void:
 	if command_scroll != null and inspection_panel != null and inspection_panel.is_visible_in_tree():
@@ -2529,6 +2577,33 @@ func _focus_selected_enemy() -> void:
 		_select_enemy_focus(focused_enemy_index, "keyboard focus")
 	else:
 		_cycle_enemy_focus(1)
+
+func _refresh_battle_command_hierarchy() -> void:
+	if battle_state_label == null or inspect_enemy_button == null:
+		return
+	var phase_text: String = "PHASE %d/%d  •  TICK %d" % [keep.wave_index, maxi(1, keep.authored_wave_count()), keep.battle_step]
+	if not keep.wave_active:
+		battle_state_label.text = "BATTLE STATE — NO ACTIVE ASSAULT\nPrepare the defense or review the resolved outcome."
+	elif not assault_ready_reason.is_empty():
+		battle_state_label.text = "BATTLE STATE — %s  •  PAUSED\nRead first contact, then sound the bell when the defense is understood." % phase_text
+	elif battle_paused:
+		battle_state_label.text = "BATTLE STATE — %s  •  PAUSED\nInspect targets and timing before resuming the real-time assault." % phase_text
+	else:
+		battle_state_label.text = "BATTLE STATE — %s  •  LIVE %.1fx\nWatch health, projectiles, and target lines; pause whenever the answer is unclear." % [phase_text, _battle_speed()]
+
+	var active_focus: bool = focused_enemy_index >= 0 and focused_enemy_index < keep.enemies.size() and not bool(keep.enemies[focused_enemy_index].get("defeated", false))
+	inspect_enemy_button.disabled = not keep.wave_active or not active_focus
+	if active_focus:
+		var enemy_id: String = String(keep.enemies[focused_enemy_index].get("enemy_id", ""))
+		var enemy_name: String = String(keep.enemy_definition(enemy_id).get("name", enemy_id.replace("_", " ").capitalize()))
+		inspect_enemy_button.text = "Inspect focused threat — %s" % enemy_name
+	else:
+		inspect_enemy_button.text = "Inspect focused threat"
+
+	var ability_spent: bool = bool(keep.lockdown_used) if keep.commander_id == "castellan" else bool(keep.rally_used)
+	var ability_ready: bool = keep.wave_active and keep.command_points > 0 and not ability_spent
+	commander_ability_button.disabled = not ability_ready
+	commander_ability_button.text += " — %s" % ("READY" if ability_ready else "SPENT" if ability_spent else "UNAVAILABLE")
 
 func _refresh_response_preview() -> void:
 	if response_preview_label == null:
@@ -2993,6 +3068,7 @@ func _on_load() -> void:
 	var result: Dictionary = selected.result
 	_clear_placement_mode()
 	selected_instance_id = ""
+	inspected_subject.clear()
 	inspected_text = "Save loaded. Click a room or piece to inspect the restored run."
 	_select_option_metadata(campaign_modifier_option, keep.equipped_modifier_id)
 	var source_text: String = " from backup" if loaded_from_backup else ""
@@ -3241,7 +3317,7 @@ func _focus_tutorial_target(target_id: String) -> void:
 		"setup_confirm": target = setup_confirm_button
 		"pack_open": target = pack_button
 		"primary_action": target = playtest_button
-		"enemy_inspector": target = enemy_option
+		"enemy_inspector": target = inspect_enemy_button
 		"commander_ability": target = commander_ability_button
 		"repair_piece": target = recovery_piece_button
 		"repair_room": target = recovery_room_button
@@ -3356,6 +3432,8 @@ func _reset_for_setup() -> void:
 	_clear_placement_mode()
 	selected_instance_id = ""
 	inspected_subject.clear()
+	if battle_tactical_panel != null:
+		battle_tactical_panel.visible = false
 
 func _on_confirm_setup() -> void:
 	if not _tutorial_allows("confirm_setup"):
@@ -3437,6 +3515,9 @@ func _on_reset_run() -> void:
 	last_log_size = 0
 	_clear_placement_mode()
 	selected_instance_id = ""
+	inspected_subject.clear()
+	if battle_tactical_panel != null:
+		battle_tactical_panel.visible = false
 	inspected_text = "New run ready. Choose the briefing before entering the keep."
 	_set_screen("setup")
 	_set_event("New run started. Choose a commander and scenario; no save was overwritten.")
@@ -3823,6 +3904,7 @@ func _refresh_ui() -> void:
 	pause_button.text = "Sound the bell (Space)" if not assault_ready_reason.is_empty() else "Resume battle (Space)" if battle_paused else "Pause battle (Space)"
 	manual_step_button.disabled = not keep.wave_active or not battle_paused or not assault_ready_reason.is_empty()
 	speed_button.text = "Speed: %.1fx (1/2/3)" % _battle_speed()
+	battle_tactical_button.text = "Hide tactical controls" if battle_tactical_panel.visible else "Show tactical controls"
 	mute_button.text = "Feedback tones: OFF" if audio_muted else "Feedback tones: ON"
 	contrast_button.text = "High-contrast cues: ON" if high_contrast else "High-contrast cues: OFF"
 	reduced_motion_button.text = "Reduced motion: ON" if reduced_motion else "Reduced motion: OFF"
@@ -3834,6 +3916,7 @@ func _refresh_ui() -> void:
 	event_feed_button.text = "Event feed: newest %d" % _event_feed_retention()
 	auto_pause_button.text = "Threat auto-pause: ON" if auto_pause_on_threat else "Threat auto-pause: OFF"
 	_refresh_binding_controls()
+	_refresh_battle_command_hierarchy()
 	_refresh_response_preview()
 	_refresh_layout_lens()
 	_refresh_preparation_brief()
