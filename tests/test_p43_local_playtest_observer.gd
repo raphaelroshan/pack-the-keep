@@ -57,7 +57,7 @@ func _initialize() -> void:
 	if FileAccess.file_exists(ui.local_metrics_path):
 		var exported: Variant = JSON.parse_string(FileAccess.get_file_as_string(ui.local_metrics_path))
 		_check(exported is Dictionary and bool(exported.get("local_only", false)) and not bool(exported.get("human_evidence", true)), "export should retain privacy and evidence-boundary markers")
-		_check(String(exported.get("context", {}).get("build_version", "")).contains("local-playtest-observer"), "export should identify the exact build")
+		_check(String(exported.get("context", {}).get("build_version", "")) == String(ProjectSettings.get_setting("application/config/version", "unknown")), "export should identify the exact build")
 		DirAccess.open("user://").remove(ui.local_metrics_path.get_file())
 
 	ui.queue_free()

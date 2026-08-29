@@ -735,3 +735,11 @@
 **Reason:** The roadmap requires before/after visual evidence and basic behavior counts, but the game must remain offline-first and must not silently collect or overstate evidence. A small presentation service gives observers useful context without touching `PackKeepState` or replacing the structured P16 human protocol.
 
 **Trade-off:** Observation must be enabled again after every launch and the export is deliberately manual. This produces less data than automatic analytics, but keeps consent and provenance obvious and prevents automated counts from being mistaken for human findings.
+
+## ADR-093: Battle presentation consumes one read-only snapshot
+
+**Decision:** Move Battle rail projection into `BattlePresentationSnapshot`, covering phase/readiness state, time-control labels, commander ability availability, focused-threat identity, and response-preview text. `main.gd` applies the returned fields and retains its existing command handlers.
+
+**Reason:** Battle presentation had become a cluster of direct reads spread across refresh helpers. One explicit snapshot makes the display deterministic, testable, and easier to extract into a dedicated panel without weakening simulation ownership.
+
+**Trade-off:** The snapshot still depends on several established `PackKeepState` read-model methods and produces player-facing strings rather than a fully theme-agnostic schema. This is an incremental boundary, not a broad UI rewrite.
