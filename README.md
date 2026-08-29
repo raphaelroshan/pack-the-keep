@@ -33,6 +33,8 @@ A successful run prints `PASS: Pack the Keep battle-state tests` and exits with 
 | `docs/agent_feeding_guide.md` | Staged prompts for building the game one risk slice at a time. |
 | `docs/agent_handoff_roadmap.md` | Detailed post-v0.10.0 roadmap, content schemas, UX plan, testing framework, and GPT-agent handoff contract. |
 | `docs/game_quality_transformation_plan.md` | Game-quality transformation plan for visual identity, screen flow, battle feedback, recovery/results UX, human playtesting, and staged AI execution. |
+| `docs/visual_evidence_gallery.md` | Versioned internal screenshots from the `0.20.0-first-watch` capture set with Kickstarter archive guidance. |
+| `docs/kickstarter_bonus_content.md` | Standalone backer-facing archive concept, suggested copy, provenance, and release guardrails. |
 | `docs/p16_human_playtest_protocol.md` | Controlled alpha session matrix, observation rules, privacy boundary, and evidence workflow. |
 | `docs/decision_log.md` | Architecture and scope decisions. |
 | `design/p5_recovery_action_cards.md` | P5 contract for authoritative, state-aware recovery choices. |
