@@ -47,7 +47,7 @@ func _initialize() -> void:
 	ui._select_enemy_focus(0, "P11 UI test")
 	await process_frame
 	_check(String(ui.inspector_label.text).contains("Shield Guard") and String(ui.inspector_label.text).contains("armor 2"), "Enemy inspection should expose Shield Guard armor")
-	_check(String(ui.inspector_label.text).contains("crossbow_patrol") and String(ui.response_preview_label.text).contains("Crossbow Patrol"), "Enemy inspection and response preview should name the authored precision counter")
+	_check(String(ui.inspector_label.text).contains("Crossbow Patrol") and not String(ui.inspector_label.text).contains("crossbow_patrol") and String(ui.response_preview_label.text).contains("Crossbow Patrol"), "Enemy inspection and response preview should name the authored precision counter without exposing its internal ID")
 	_check(JSON.stringify(ui.keep.serialize()) == authoritative_before_inspection, "Enemy focus and P11 UI refresh should not mutate authoritative state")
 
 	await _resolve_wave(ui)

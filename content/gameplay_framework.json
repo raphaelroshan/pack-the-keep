@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.23.2-preparation-hierarchy",
+  "framework_version": "0.24.0-inspector-hierarchy",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -1787,6 +1787,13 @@
     "advanced_controls": ["pack_catalogue", "invasion_doctrine", "full_layout_analysis"],
     "default": "advanced_controls_collapsed",
     "determinism_rule": "grouping_visibility_and_numbering_do_not_change_commands_or_pack_keep_state"
+  },
+  "inspection_action_hierarchy": {
+    "status": "implemented",
+    "subjects": ["room", "defender", "enemy"],
+    "read_model": ["identity", "condition", "tactical_purpose", "next_action", "existing_detail"],
+    "visibility": "explicit_map_or_threat_selection_reveals_card_automatic_focus_does_not_steal_scroll",
+    "determinism_rule": "inspection_reprojects_existing_authoritative_state_without_commands_or_serialized_fields"
   },
   "unit_availability": {
     "status": "vertical_slice",
