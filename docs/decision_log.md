@@ -711,3 +711,11 @@
 **Reason:** All necessary commands existed, but the rail interleaved high-frequency decisions with diagnostic selectors and repeated visual references. The new hierarchy makes the next meaningful verb visible while leaving the fortress and answer-quality brief as the primary surface.
 
 **Trade-off:** Advanced information now requires one disclosure action. It remains keyboard/controller accessible and preserves exact state, costs, and command paths; tutorial-required actions never depend on opening the Advanced panel.
+
+## ADR-090: Tactical inspection shares one presentation hierarchy
+
+**Decision:** Render room, defender, and enemy inspection through one `InspectionPanel` with identity, numeric condition, tactical purpose, contextual next action, and retained detail. Re-read the selected authoritative object on refresh and resolve counter IDs to player-facing names.
+
+**Reason:** The old inspector was accurate but read as an unstructured debug paragraph and changed shape between subject types. A stable hierarchy makes selection useful during Preparation, live Battle, and Recovery without inventing new actions.
+
+**Trade-off:** The detailed legacy readout remains at the bottom for mechanical depth and regression compatibility, making the card taller. Explicit selection scrolls it into view; automatic enemy focus intentionally does not, so assault controls remain stable at phase start.

@@ -9,6 +9,7 @@ const BattleAudioCues = preload("res://src/ui/battle_audio_cue_service.gd")
 const RecoveryBriefPanelView = preload("res://src/ui/recovery_brief_panel.gd")
 const WarCouncilChoicePanelView = preload("res://src/ui/war_council_choice_panel.gd")
 const PackOfferPanelView = preload("res://src/ui/pack_offer_panel.gd")
+const InspectionPanelView = preload("res://src/ui/inspection_panel.gd")
 
 const PackKeepState = preload("res://src/core/keep_state.gd")
 const PackagedSmoke = preload("res://src/platform/packaged_smoke.gd")
@@ -68,6 +69,7 @@ var preparation_advanced_panel: VBoxContainer
 var preparation_pack_stage_label: Label
 var preparation_placement_stage_label: Label
 var inspector_label: Label
+var inspection_panel: InspectionPanel
 var placement_label: Label
 var event_label: Label
 var log_label: Label
@@ -101,6 +103,7 @@ var preview_origin: Vector2i = Vector2i.ZERO
 var preview_valid: bool = false
 var selected_instance_id: String = ""
 var inspected_text: String = "Click a room or placed piece on the keep to inspect its authoritative state."
+var inspected_subject: Dictionary = {}
 var gameplay_columns: BoxContainer
 var gameplay_main_column: VBoxContainer
 var page_scroll: ScrollContainer
@@ -1470,11 +1473,9 @@ func _build_ui() -> void:
 	inspect_enemy_button.text = "Inspect selected enemy"
 	inspect_enemy_button.pressed.connect(_on_inspect_enemy)
 	battle_section.add_child(inspect_enemy_button)
-	inspector_label = Label.new()
-	inspector_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	inspector_label.custom_minimum_size = Vector2(292, 92)
-	inspector_label.add_theme_color_override("font_color", Color("#c9bfd0"))
-	inspection_section.add_child(inspector_label)
+	inspection_panel = InspectionPanelView.new()
+	inspection_section.add_child(inspection_panel)
+	inspector_label = inspection_panel.detail_label
 	response_preview_label = Label.new()
 	response_preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	response_preview_label.custom_minimum_size = Vector2(292, 120)
@@ -2385,11 +2386,13 @@ func _on_map_clicked(floor: String, cell: Vector2i) -> void:
 			return
 		selected_instance_id = instance_id
 		var piece_inspection: Dictionary = keep.inspect_piece(instance_id)
+		inspected_subject = {"kind": "piece", "id": instance_id}
 		_select_option_metadata(piece_option, String(piece_inspection.get("piece_id", "")))
 		inspected_text = _format_inspection(piece_inspection)
 		_set_event("Inspector focused on %s." % String(piece_inspection.get("name", instance_id)))
 		_tutorial_advance("inspect_piece", inspected_piece_id)
 		_refresh_ui()
+		call_deferred("_reveal_inspection_panel")
 		return
 	var room_id: String = keep.room_at_cell(floor, cell)
 	if not room_id.is_empty():
@@ -2399,9 +2402,11 @@ func _on_map_clicked(floor: String, cell: Vector2i) -> void:
 			selected_instance_id = ""
 		_select_option_metadata(room_option, room_id)
 		inspected_text = _format_inspection(keep.inspect_room(room_id))
+		inspected_subject = {"kind": "room", "id": room_id}
 		_set_event("Inspector focused on %s." % String(keep.inspect_room(room_id).get("name", room_id)))
 		_tutorial_advance("inspect_room", room_id)
 		_refresh_ui()
+		call_deferred("_reveal_inspection_panel")
 
 func _format_inspection(data: Dictionary) -> String:
 	if not bool(data.get("ok", false)):
@@ -2414,7 +2419,9 @@ func _format_inspection(data: Dictionary) -> String:
 		var protection_text: String = " | protection PIERCING" if bool(data.get("ignores_protection", false)) else ""
 		var target_role: String = "hunts defenders" if String(data.get("target_mode", "room_destroyer")) == "unit_hunter" else "breaks structures"
 		var target_readout: Dictionary = keep.enemy_target_readout(int(data.get("index", -1)))
-		return "INSPECTOR — ENEMY %s\n%s via %s | %s | %d/%d hp | damage %d%s%s%s | contact step %d\nCounter: %s | Target: %s" % [String(data.name), String(data.doctrine).replace("_", " "), String(data.route).replace("_", " "), target_role, int(data.health), int(data.max_health), int(data.damage), armor_text, signal_text, protection_text, int(data.get("arrival_step", 0)), String(data.counter), String(target_readout.get("summary", "Approaching"))]
+		var counter_id: String = String(data.get("counter", ""))
+		var counter_name: String = String(keep.piece_definition(counter_id).get("name", counter_id.replace("_", " ").capitalize()))
+		return "INSPECTOR — ENEMY %s\n%s via %s | %s | %d/%d hp | damage %d%s%s%s | contact step %d\nCounter: %s | Target: %s" % [String(data.name), String(data.doctrine).replace("_", " "), String(data.route).replace("_", " "), target_role, int(data.health), int(data.max_health), int(data.damage), armor_text, signal_text, protection_text, int(data.get("arrival_step", 0)), counter_name, String(target_readout.get("summary", "Approaching"))]
 	var special_state: String = ""
 	if String(data.get("piece_id", "")) == "supply_cache":
 		special_state = "\nReserve: %s" % ("SPENT" if bool(data.get("supply_spent", false)) else "READY")
@@ -2426,6 +2433,10 @@ func _on_inspect_enemy() -> void:
 	if enemy_option.selected < 0:
 		return
 	_select_enemy_focus(int(enemy_option.get_item_metadata(enemy_option.selected)), "Dropdown inspection")
+
+func _reveal_inspection_panel() -> void:
+	if command_scroll != null and inspection_panel != null and inspection_panel.is_visible_in_tree():
+		command_scroll.ensure_control_visible(inspection_panel)
 
 func _active_enemy_indices() -> Array[int]:
 	var indices: Array[int] = []
@@ -2466,7 +2477,9 @@ func _apply_enemy_focus(index: int) -> bool:
 	if index < 0 or index >= keep.enemies.size() or bool(keep.enemies[index].get("defeated", false)):
 		return false
 	focused_enemy_index = index
-	inspected_text = _format_inspection(keep.inspect_enemy(index))
+	var inspection: Dictionary = keep.inspect_enemy(index)
+	inspected_subject = {"kind": "enemy", "index": index}
+	inspected_text = _format_inspection(inspection)
 	if keep_canvas != null:
 		keep_canvas.call("set_focus", focused_enemy_index)
 	return true
@@ -2491,6 +2504,7 @@ func _select_enemy_focus(index: int, source: String) -> void:
 	_set_event("Enemy %d focused via %s. Pause and choose the response." % [index + 1, source])
 	_tutorial_advance("inspect_enemy", enemy_id)
 	_refresh_ui()
+	call_deferred("_reveal_inspection_panel")
 
 func _on_enemy_clicked(index: int) -> void:
 	_select_enemy_focus(index, "map click")
@@ -2731,6 +2745,7 @@ func _on_remove_piece() -> void:
 	var removed: Dictionary = keep.remove_piece(instance_id)
 	if bool(removed.get("ok", false)):
 		selected_instance_id = ""
+		inspected_subject.clear()
 		inspected_text = "Piece removed. Use the placement preview to test a different layout."
 	_run_result(removed, "Layout")
 
@@ -3340,6 +3355,7 @@ func _reset_for_setup() -> void:
 	last_log_size = 0
 	_clear_placement_mode()
 	selected_instance_id = ""
+	inspected_subject.clear()
 
 func _on_confirm_setup() -> void:
 	if not _tutorial_allows("confirm_setup"):
@@ -3597,6 +3613,39 @@ func _focus_terminal_debrief() -> void:
 	if terminal_debrief_panel != null:
 		terminal_debrief_panel.focus_primary()
 
+func _refresh_inspection_card() -> void:
+	if inspection_panel == null:
+		return
+	var data: Dictionary = {}
+	var kind: String = String(inspected_subject.get("kind", ""))
+	if kind == "room":
+		data = keep.inspect_room(String(inspected_subject.get("id", "")))
+	elif kind == "piece":
+		data = keep.inspect_piece(String(inspected_subject.get("id", "")))
+	elif kind == "enemy":
+		data = keep.inspect_enemy(int(inspected_subject.get("index", -1)))
+	if not bool(data.get("ok", false)):
+		inspection_panel.render({"detail": inspected_text})
+		return
+	inspected_text = _format_inspection(data)
+	if kind == "room":
+		var condition: int = int(data.get("condition", 0))
+		inspection_panel.render({"kind": kind, "eyebrow": "ROOM  •  %s FLOOR  •  %s" % [String(data.get("floor", "ground")).to_upper(), "CRITICAL" if bool(data.get("critical", false)) else "SUPPORT"], "name": String(data.get("name", "Room")), "condition": "CONDITION %d%%  •  %s" % [condition, String(data.get("state", "intact")).to_upper()], "critical": condition < 50, "purpose": String(data.get("role", "This room supports the keep.")), "next_action": "Repair this room during the current lull." if keep.repair_interval_active and condition < 100 else "Protect its function and watch incoming target lines.", "detail": inspected_text})
+	elif kind == "piece":
+		var health: int = int(data.get("health", 0))
+		var maximum: int = maxi(1, int(data.get("max_health", 1)))
+		var next_action: String = "Place or reposition this defender before the assault."
+		if keep.repair_interval_active and health < maximum:
+			next_action = "Repair this defender, or accept the damage and spend the action elsewhere."
+		elif keep.repair_interval_active and String(data.get("assignment", "")).is_empty():
+			next_action = "Assign this specialist to a compatible room during the lull."
+		inspection_panel.render({"kind": kind, "eyebrow": "DEFENDER  •  %s  •  %s" % [String(data.get("combat_style", "support")).to_upper(), String(data.get("floor", "ground")).to_upper()], "name": String(data.get("name", "Defender")), "condition": "HEALTH %d / %d  •  %s" % [health, maximum, "DISABLED" if bool(data.get("disabled", false)) else "READY"], "critical": health * 2 < maximum, "purpose": "%s Skill: %s" % [String(data.get("role", "Defends the keep.")), String(data.get("skill", ""))], "next_action": next_action, "detail": inspected_text})
+	else:
+		var target: String = String(keep.enemy_target_readout(int(data.get("index", -1))).get("summary", "Approaching"))
+		var counter_id: String = String(data.get("counter", ""))
+		var counter_name: String = String(keep.piece_definition(counter_id).get("name", counter_id.replace("_", " ").capitalize()))
+		inspection_panel.render({"kind": kind, "eyebrow": "THREAT  •  %s  •  %s" % [String(data.get("attack_style", "melee")).to_upper(), "CONTACT" if keep.battle_step >= int(data.get("arrival_step", 0)) else "APPROACH"], "name": String(data.get("name", "Enemy")), "condition": "HEALTH %d / %d  •  TARGET %s" % [int(data.get("health", 0)), int(data.get("max_health", 0)), target.to_upper()], "critical": true, "purpose": "%s through %s. Best visible counter: %s." % ["Clears defenders" if String(data.get("target_mode", "")) == "unit_hunter" else "Disables structures", String(data.get("route", "route")).replace("_", " "), counter_name], "next_action": "Pause to compare its strike timing and committed defenders." if not battle_paused else "Read the response preview, then resume when the answer is clear.", "detail": inspected_text})
+
 func _refresh_war_council_cards() -> void:
 	if war_council_choice_panel == null or commander_option == null or scenario_option == null:
 		return
@@ -3717,7 +3766,7 @@ func _refresh_ui() -> void:
 		enemy_option.set_item_metadata(enemy_option.item_count - 1, enemy_index)
 		if enemy_index == focused_enemy_index:
 			enemy_option.select(enemy_option.item_count - 1)
-	inspector_label.text = inspected_text
+	_refresh_inspection_card()
 	if placement_mode:
 		var selected_id: String = _selected_id(piece_option)
 		var preview: Dictionary = keep.piece_preview(selected_id, preview_origin, preview_floor)

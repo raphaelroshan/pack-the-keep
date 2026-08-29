@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.23.2-preparation-hierarchy` — Preparation now groups pack choice, defender placement/inspection, and assault commitment into a numbered game-facing hierarchy; human sessions and owner approval remain pending
+**Current build identity:** `0.24.0-inspector-hierarchy` — room, defender, and enemy selections now share a game-facing identity/condition/purpose/next-action card; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of ten authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.24.0 acceptance checks
+
+Select a room, defender, and enemy from the board. Confirm each uses the same Inspector hierarchy, exposes numeric condition or health, explains tactical purpose, and suggests a contextual next action. Explicit selection should reveal the card; automatic threat focus should not move the rail. Confirm enemy counters use player-facing names and refreshing the card never changes run state.
 
 ## v0.23.2 acceptance checks
 

@@ -88,6 +88,7 @@ if command -v godot >/dev/null 2>&1; then
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p38_war_council_choice_cards.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p39_pack_offer_card.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p40_preparation_command_hierarchy.gd
+  godot --headless --audio-driver Dummy --path . --script res://tests/test_p41_inspector_action_hierarchy.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_initial_combat.gd
 elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --import
@@ -158,6 +159,7 @@ elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p38_war_council_choice_cards.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p39_pack_offer_card.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p40_preparation_command_hierarchy.gd
+  godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p41_inspector_action_hierarchy.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_initial_combat.gd
 else
   echo "Godot 4.x is not installed or not on PATH."
