@@ -719,3 +719,11 @@
 **Reason:** The old inspector was accurate but read as an unstructured debug paragraph and changed shape between subject types. A stable hierarchy makes selection useful during Preparation, live Battle, and Recovery without inventing new actions.
 
 **Trade-off:** The detailed legacy readout remains at the bottom for mechanical depth and regression compatibility, making the card taller. Explicit selection scrolls it into view; automatic enemy focus intentionally does not, so assault controls remain stable at phase start.
+
+## ADR-091: Battle defaults to command priorities, not timing diagnostics
+
+**Decision:** Lead the Battle rail with a live state summary, the existing pause/resume command, commander intervention, and focused-threat inspection. Place deterministic single-step, presentation speed, and the fallback threat selector inside a collapsed **Tactical controls** disclosure. Keep keyboard/controller bindings and command handlers unchanged.
+
+**Reason:** The former flat stack gave debug-like timing tools the same visual weight as the decisions that define the assault. The new order communicates what is happening and what the player can meaningfully do while preserving exact access to expert controls.
+
+**Trade-off:** Manual stepping and speed changes require one extra disclosure click for mouse users. Their shortcuts remain immediate, the disclosure is presentation-only, and First Watch now focuses the visible threat action rather than a hidden fallback selector.

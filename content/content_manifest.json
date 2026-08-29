@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.24.0",
+  "content_version": "0.24.1",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -505,6 +505,15 @@
     "authority": "presentation_only_over_existing_inspection_and_response_read_models",
     "evidence": ["design/p41_inspector_action_hierarchy.md", "docs/p41_inspector_action_hierarchy_verification.md", "tests/test_p41_inspector_action_hierarchy.gd"],
     "next_slice": "p42_battle_command_hierarchy"
+  },
+  "p42_battle_command_hierarchy": {
+    "status": "implemented",
+    "primary_controls": ["live_state", "pause_resume", "commander_intervention", "focused_threat_inspection"],
+    "advanced_controls": ["manual_step", "battle_speed", "fallback_threat_list"],
+    "tutorial": "visible_focused_threat_action",
+    "authority": "presentation_only_grouping_over_existing_battle_commands_and_read_models",
+    "evidence": ["design/p42_battle_command_hierarchy.md", "docs/p42_battle_command_hierarchy_verification.md", "tests/test_p42_battle_command_hierarchy.gd"],
+    "next_slice": "p43_local_playtest_instrumentation"
   },
   "campaign": {
     "title": "The Bell at Dusk",
