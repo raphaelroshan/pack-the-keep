@@ -3,6 +3,7 @@ extends Control
 const AuthoredEventPanelView = preload("res://src/ui/authored_event_panel.gd")
 const FirstWatchTutorial = preload("res://src/ui/tutorial_director.gd")
 const TerminalDebriefPanelView = preload("res://src/ui/terminal_debrief_panel.gd")
+const PreparationBriefPanelView = preload("res://src/ui/preparation_brief_panel.gd")
 
 const PackKeepState = preload("res://src/core/keep_state.gd")
 const PackagedSmoke = preload("res://src/platform/packaged_smoke.gd")
@@ -94,6 +95,7 @@ var page_scroll: ScrollContainer
 var command_scroll: ScrollContainer
 var command_panel: PanelContainer
 var terminal_debrief_panel: TerminalDebriefPanel
+var preparation_brief_panel: PreparationBriefPanel
 var title_card: PanelContainer
 var build_identity_label: Label
 var screen_label: Label
@@ -1041,6 +1043,9 @@ func _build_ui() -> void:
 	status_label.add_theme_font_size_override("font_size", 16)
 	status_label.add_theme_color_override("font_color", Color("#f2e5d1"))
 	left.add_child(status_label)
+	preparation_brief_panel = PreparationBriefPanelView.new()
+	preparation_brief_panel.visible = false
+	left.add_child(preparation_brief_panel)
 	guidance_label = Label.new()
 	guidance_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	guidance_label.custom_minimum_size = Vector2(800, 64)
@@ -1783,8 +1788,10 @@ func _set_screen(next_screen: String) -> void:
 		settings_overview_panel.visible = screen == "settings"
 	if status_label:
 		status_label.visible = gameplay_screen
+	if preparation_brief_panel:
+		preparation_brief_panel.visible = screen == "preparation" and not tutorial.active
 	if guidance_label:
-		guidance_label.visible = gameplay_screen and not terminal_result
+		guidance_label.visible = gameplay_screen and screen != "preparation" and not terminal_result
 	if playtest_button:
 		playtest_button.visible = gameplay_screen and not terminal_result
 	if playtest_status_label:
@@ -2449,6 +2456,37 @@ func _refresh_layout_lens() -> void:
 	var spatial_state: String = "ACTIVE" if bool(spatial_rule.get("active", false)) else "INACTIVE" if String(spatial_rule.get("id", "")) == "clear_causeway" else "BASELINE"
 	layout_lens_label.text = "LAYOUT SUMMARY — %s | Ground %d | Upper %d | Wall %d | Courtyard %d | Keep %d\nSpatial rule [%s] — %s\nCoverage — room edge %d | open lane %d | support %d | assigned %d\nCASTELLAN [%s] — %s Risk: %s\nWARDEN [%s] — %s Risk: %s\nWARNINGS — %s" % [String(summary.get("keep_name", keep.keep_id)), int(counts.get("ground", 0)), int(counts.get("upper", 0)), int(counts.get("wall", 0)), int(counts.get("courtyard", 0)), int(counts.get("keep", 0)), spatial_state, String(spatial_rule.get("label", "No special spatial rule.")), int(summary.get("room_edge_count", 0)), int(summary.get("open_lane_count", 0)), int(summary.get("support_piece_count", 0)), int(summary.get("assigned_specialist_count", 0)), castellan_marker, String(castellan.get("summary", "")), String(castellan.get("risk", "")), warden_marker, String(warden.get("summary", "")), String(warden.get("risk", "")), " | ".join(warnings)]
 
+func _refresh_preparation_brief() -> void:
+	if preparation_brief_panel == null:
+		return
+	preparation_brief_panel.visible = screen == "preparation" and not tutorial.active
+	if not preparation_brief_panel.visible:
+		return
+	var forecast: Dictionary = keep.forecast()
+	var scenario: Dictionary = keep.scenario_preview()
+	var summary: Dictionary = keep.layout_summary()
+	var counts: Dictionary = summary.get("counts", {})
+	var doctrine_name: String = String(forecast.get("doctrine", "next pressure")).replace("_", " ").capitalize()
+	var question: String = "%s threatens %s. %s" % [doctrine_name, String(forecast.get("likely_target", "the keep")), String(scenario.get("lesson", "Read the route before committing the defense."))]
+	var answer: String
+	if keep.pieces.is_empty():
+		answer = "No defenders placed. Choose a pack and establish the first response line."
+	else:
+		var coverage: Array[String] = []
+		if int(counts.get("ground", 0)) > 0:
+			coverage.append("%d ground" % int(counts.get("ground", 0)))
+		if int(counts.get("upper", 0)) > 0:
+			coverage.append("%d upper" % int(counts.get("upper", 0)))
+		if int(summary.get("support_piece_count", 0)) > 0:
+			coverage.append("%d support" % int(summary.get("support_piece_count", 0)))
+		if int(summary.get("assigned_specialist_count", 0)) > 0:
+			coverage.append("%d assigned" % int(summary.get("assigned_specialist_count", 0)))
+		var commander_answer: String = "%d room-edge connection(s)" % int(summary.get("room_edge_count", 0)) if keep.commander_id == "castellan" else "%d open response lane(s)" % int(summary.get("open_lane_count", 0))
+		answer = "%s; %s. This is visible coverage, not a guaranteed hold." % [", ".join(coverage), commander_answer]
+	var warnings: Array = summary.get("duplicate_role_warnings", [])
+	var weakness: String = String(warnings[0]) if not warnings.is_empty() else "No immediate coverage warning; compare the layout against the forecast."
+	preparation_brief_panel.render({"question": question, "answer": answer, "weakness": weakness})
+
 func _refresh_recovery_priorities() -> void:
 	if recovery_priority_label == null:
 		return
@@ -2933,7 +2971,7 @@ func _refresh_tutorial_panel() -> void:
 	if main_subtitle_label != null:
 		main_subtitle_label.visible = screen != "title" and not (tutorial.active and gameplay_screen)
 	if guidance_label != null:
-		guidance_label.visible = gameplay_screen and not tutorial.active
+		guidance_label.visible = gameplay_screen and screen != "preparation" and not tutorial.active
 	var tutorial_primary_action: bool = tutorial.active and tutorial.expected_action() in ["start_wave", "resume_battle", "observe_wave", "finish_interval", "finish_tutorial", "retry_phase"]
 	if playtest_button != null:
 		playtest_button.visible = gameplay_screen and (not tutorial.active or tutorial_primary_action)
@@ -3306,7 +3344,7 @@ func _refresh_terminal_debrief() -> void:
 	if scorecard_label != null:
 		scorecard_label.visible = screen == "results" and not terminal_result
 	if guidance_label != null:
-		guidance_label.visible = screen in ["preparation", "battle", "results"] and not terminal_result and not tutorial.active
+		guidance_label.visible = screen in ["battle", "results"] and not terminal_result and not tutorial.active
 	if playtest_button != null:
 		playtest_button.visible = screen in ["preparation", "battle", "results"] and not terminal_result
 	if playtest_status_label != null:
@@ -3493,6 +3531,7 @@ func _refresh_ui() -> void:
 	_refresh_binding_controls()
 	_refresh_response_preview()
 	_refresh_layout_lens()
+	_refresh_preparation_brief()
 	_refresh_recovery_priorities()
 	_refresh_recovery_action_cards()
 	_refresh_result_explanation()

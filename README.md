@@ -75,6 +75,10 @@ A later Windows alpha should still add platform adapters, achievements, cloud-sa
 
 Completed scenarios now replace the recovery command rail with a dedicated final debrief while preserving the damaged keep beside it. The panel presents the outcome, resources, complete assault timeline, causal chain, persistent room and defender damage, authored consequences, and one concrete replay experiment. Review Setup remains the dominant action, while Save Result and Return to Main Menu are secondary. The debrief is derived entirely from existing authoritative state and adds no run-save fields.
 
+## v0.21.1 preparation brief
+
+Ordinary Preparation now presents the active doctrine question, the layout's visible answer, and one unresolved weakness immediately above **Begin Assault**. The compact summary derives from existing forecast, scenario, layout, and placed-piece read models, while detailed pack and layout information remains in the command rail. It never scores the build or guarantees an outcome, First Watch retains its authored objective card, and rendering the summary does not mutate the keep.
+
 ## Implemented first battle slice
 
 The current battle slice is **Greywatch Keep**, a two-floor 12×8 keep defended by **The Castellan** or **The Warden**. It implements four basic defenders—Pike Squad, Repair Station, Fire Team, and Scout Post—and four enemy doctrines: Raider gate assault, Sapper distributed sabotage, Climber wall bypass, and Siege Beast area pressure.

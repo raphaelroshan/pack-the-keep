@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.21.0",
+  "content_version": "0.21.1",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -423,6 +423,15 @@
     "persistence": "terminal_save_load_rederives_the_same_debrief_without_new_run_save_fields",
     "evidence": ["design/p32_terminal_debrief.md", "docs/p32_terminal_debrief_visual_verification.md", "tests/test_p32_terminal_debrief.gd"],
     "next_slice": "p33_preparation_answer_quality"
+  },
+  "p33_preparation_answer_quality": {
+    "status": "implemented",
+    "composition": ["current_question", "visible_answer", "open_weakness"],
+    "authority": "presentation_only_projection_of_forecast_scenario_layout_and_placed_piece_read_models",
+    "hierarchy": "compact_summary_above_primary_assault_action_with_full_detail_in_command_rail",
+    "tutorial": "first_watch_uses_its_authored_objective_instead_of_the_generic_summary",
+    "evidence": ["design/p33_preparation_answer_quality.md", "docs/p33_preparation_answer_quality_visual_verification.md", "tests/test_p33_preparation_answer_quality.gd"],
+    "next_slice": "p34_board_visual_hierarchy"
   },
   "campaign": {
     "title": "The Bell at Dusk",
