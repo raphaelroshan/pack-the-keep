@@ -1,11 +1,11 @@
 # Pack the Keep — Game-Quality Transformation Plan
 
 **Audience:** GPT coding agents, art/UX agents, test agents, and the human owner
-**Current baseline:** `0.22.0-board-hierarchy`
+**Current baseline:** `0.22.1-battle-audio`
 **Current status:** Technically substantial public-source pre-alpha; presentation transformation in progress
 **Primary objective:** Turn the existing deterministic fortress-defense systems into a coherent, attractive, immediately understandable game-quality private alpha without rewriting the simulation core.
 
-**Implementation ledger:** P32 gives terminal Results a dedicated debrief beside the persistent keep. P33 gives ordinary Preparation a compact current-question, visible-answer, and open-weakness hierarchy. P34 adds a central visual registry, distinct ground/upper treatments, critical-room accents, defender role cards, and enemy silhouettes while preserving geometry and hit testing. Human validation remains pending.
+**Implementation ledger:** P32 gives terminal Results a dedicated debrief. P33 adds the Preparation question/answer/weakness hierarchy. P34 adds the board visual registry and silhouette grammar. P35 consolidates the battle loop's semantic generated tones into one presentation-only service covering warning through outcome. Human validation remains pending.
 
 > **Central diagnosis:** Pack the Keep has enough mechanics for a real game loop. Its largest gap is not feature count. Its largest gap is presentation: the player must feel that they are preparing a fortress, watching a defense, making urgent but comprehensible interventions, recovering from damage, and learning from the result—not operating a debug panel surrounded by a board.
 
@@ -847,18 +847,15 @@ Start from the current Pack the Keep remote main. Read AGENTS.md, README.md,
 design/design_prompt.md, docs/agent_handoff_roadmap.md, and the latest visual
 verification notes.
 
-Implement the next game-quality slice: consolidate the existing semantic tones
-behind one focused battle-loop audio cue service. Cover forecast/start, contact,
-defender response, hostile impact, breach, recovery, and terminal outcome with
-short distinct cues that respect mute, effects volume, and reduced motion.
-Preserve deterministic state, pause/speed behavior, offline operation, and all
-existing command boundaries.
+Implement the next game-quality slice: reconcile assault start behavior. Add a
+short explicit ready beat before the first assault and ensure later phases begin
+paused or with a readable warning whenever a new doctrine or enemy family is
+introduced. Quick playtest may remain live only when its label says so.
 
-Add presentation-only tests proving cue selection does not mutate simulation,
-that mute and volume are honored, and that no cue owns combat timing. Run the
-full verification suite. Do not add music, voice, platform audio integration,
-new enemies, or combat math. Report exact files, tests, screenshots or waveform
-evidence where useful, risks, and one next bounded task.
+Preserve the six-tick authoritative simulation, save/load, pause/manual-step,
+First Watch checkpoints, and replay outcomes. Add tests for first-wave start,
+same-doctrine continuation, changed-doctrine warning, save/load during readiness,
+and speed invariance. Do not add enemies, waves, reactions, or combat math.
 ```
 
 ---

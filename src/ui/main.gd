@@ -5,6 +5,7 @@ const FirstWatchTutorial = preload("res://src/ui/tutorial_director.gd")
 const TerminalDebriefPanelView = preload("res://src/ui/terminal_debrief_panel.gd")
 const PreparationBriefPanelView = preload("res://src/ui/preparation_brief_panel.gd")
 const BoardVisuals = preload("res://src/ui/board_visual_registry.gd")
+const BattleAudioCues = preload("res://src/ui/battle_audio_cue_service.gd")
 
 const PackKeepState = preload("res://src/core/keep_state.gd")
 const PackagedSmoke = preload("res://src/platform/packaged_smoke.gd")
@@ -175,6 +176,7 @@ var setup_confirmed: bool = false
 var settings_return_screen: String = "title"
 var audio_player: AudioStreamPlayer
 var audio_stream: AudioStreamGenerator
+var battle_audio_cues: BattleAudioCueService
 var last_log_size: int = 0
 var focused_enemy_index: int = -1
 var response_preview_label: Label
@@ -226,6 +228,8 @@ func _ready() -> void:
 		_load_preferences()
 	else:
 		_apply_ui_scale()
+	battle_audio_cues = BattleAudioCues.new()
+	add_child(battle_audio_cues)
 	if DisplayServer.get_name() != "headless":
 		_setup_audio()
 	_build_ui()
@@ -270,7 +274,7 @@ func _process(delta: float) -> void:
 			_prepare_tutorial_step()
 	else:
 		if keep.battle_report.size() > last_log_size:
-			var exchange_cue: String = "impact" if not target_impacts.is_empty() else "volley" if not engagement_traces.is_empty() else "contact"
+			var exchange_cue: String = _cue_for_battle_beat("hostile_impact") if not target_impacts.is_empty() else _cue_for_battle_beat("defender_response") if not engagement_traces.is_empty() else _cue_for_battle_beat("contact")
 			_set_feedback(Color("#d26155") if not target_impacts.is_empty() else Color("#d7a35b"), exchange_cue)
 			last_log_size = keep.battle_report.size()
 		var first_threat_step: bool = keep.battle_step > battle_step_before and battle_step_before == 0 and last_auto_pause_wave_index != keep.wave_index
@@ -279,7 +283,7 @@ func _process(delta: float) -> void:
 			battle_paused = true
 			if first_threat_step:
 				last_auto_pause_wave_index = keep.wave_index
-			_play_cue("warning")
+			_play_battle_beat("breach" if new_breach else "assault_start")
 			_set_event("Accessibility auto-pause: %s resolved. Inspect the board, then resume when ready." % ("first threat step" if first_threat_step else "new breach"))
 			_refresh_ui()
 		elif keep.battle_step > battle_step_before:
@@ -337,13 +341,12 @@ func _handle_named_action(event: InputEvent) -> bool:
 	return true
 
 func _setup_audio() -> void:
-	audio_player = AudioStreamPlayer.new()
-	audio_stream = AudioStreamGenerator.new()
-	audio_stream.mix_rate = 44100.0
-	audio_stream.buffer_length = 0.35
-	audio_player.stream = audio_stream
-	add_child(audio_player)
-	audio_player.play()
+	if battle_audio_cues == null:
+		battle_audio_cues = BattleAudioCues.new()
+		add_child(battle_audio_cues)
+	battle_audio_cues.setup_output(true)
+	audio_player = battle_audio_cues.audio_player
+	audio_stream = battle_audio_cues.audio_stream
 
 func _battle_speed() -> float:
 	return [0.5, 1.0, 2.0][battle_speed_index]
@@ -447,51 +450,36 @@ func _set_feedback(color: Color, cue_id: String = "") -> void:
 	_play_cue(cue_id if not cue_id.is_empty() else "confirm" if color.g > color.r else "contact")
 
 func _cue_profile(cue_id: String) -> Dictionary:
-	var profiles: Dictionary = {
-		"warning": {"frequencies": [330.0, 440.0], "duration": 0.055, "gain": 0.9},
-		"contact": {"frequencies": [160.0], "duration": 0.085, "gain": 1.0},
-		"volley": {"frequencies": [610.0, 780.0], "duration": 0.04, "gain": 0.7},
-		"impact": {"frequencies": [135.0, 190.0], "duration": 0.065, "gain": 0.9},
-		"confirm": {"frequencies": [480.0], "duration": 0.07, "gain": 0.75},
-		"repair": {"frequencies": [390.0, 520.0], "duration": 0.06, "gain": 0.8},
-		"ability": {"frequencies": [520.0, 660.0], "duration": 0.065, "gain": 0.9},
-		"error": {"frequencies": [140.0], "duration": 0.1, "gain": 1.0},
-		"pause": {"frequencies": [300.0], "duration": 0.055, "gain": 0.65},
-		"resume": {"frequencies": [500.0], "duration": 0.055, "gain": 0.65},
-		"hold": {"frequencies": [520.0, 660.0, 780.0], "duration": 0.055, "gain": 0.85},
-		"partial_breach": {"frequencies": [360.0, 250.0], "duration": 0.075, "gain": 0.9},
-		"collapse": {"frequencies": [220.0, 150.0], "duration": 0.09, "gain": 1.0}
-	}
-	return Dictionary(profiles.get(cue_id, {})).duplicate(true)
+	return battle_audio_cues.profile(cue_id) if battle_audio_cues != null else {}
+
+func _cue_for_battle_beat(beat_id: String) -> String:
+	return battle_audio_cues.cue_for_beat(beat_id) if battle_audio_cues != null else ""
 
 func _outcome_cue(outcome: String) -> String:
 	if outcome in ["hold", "held"]:
-		return "hold"
+		return _cue_for_battle_beat("terminal_hold")
 	if outcome == "partial_breach":
-		return "partial_breach"
-	return "collapse" if outcome == "collapse" else "confirm"
+		return _cue_for_battle_beat("terminal_partial_breach")
+	return _cue_for_battle_beat("terminal_collapse") if outcome == "collapse" else "confirm"
 
 func _play_cue(cue_id: String) -> void:
-	var profile: Dictionary = _cue_profile(cue_id)
-	if profile.is_empty():
+	if battle_audio_cues == null:
 		return
-	last_cue_id = cue_id
-	if audio_muted:
+	var request: Dictionary = battle_audio_cues.play_cue(cue_id, audio_muted, _effects_gain(), reduced_motion)
+	if not String(request.get("cue_id", "")).is_empty():
+		last_cue_id = String(request.cue_id)
+
+func _play_battle_beat(beat_id: String) -> void:
+	if battle_audio_cues == null:
 		return
-	for frequency in profile.frequencies:
-		_play_tone(float(frequency), float(profile.duration), float(profile.gain))
+	var request: Dictionary = battle_audio_cues.play_beat(beat_id, audio_muted, _effects_gain(), reduced_motion)
+	if not String(request.get("cue_id", "")).is_empty():
+		last_cue_id = String(request.cue_id)
 
 func _play_tone(frequency: float, duration: float = 0.09, cue_gain: float = 1.0) -> void:
-	if audio_player == null or audio_muted:
+	if battle_audio_cues == null or audio_muted:
 		return
-	var playback: AudioStreamGeneratorPlayback = audio_player.get_stream_playback()
-	if playback == null:
-		return
-	var frame_count: int = int(audio_stream.mix_rate * duration)
-	for frame in range(frame_count):
-		var envelope: float = 1.0 - float(frame) / float(frame_count)
-		var sample: float = sin(TAU * frequency * float(frame) / audio_stream.mix_rate) * 0.08 * _effects_gain() * cue_gain * envelope
-		playback.push_frame(Vector2(sample, sample))
+	battle_audio_cues._play_tone(frequency, duration, cue_gain * _effects_gain())
 
 func _effects_gain() -> float:
 	return float(EFFECTS_VOLUME_PRESETS[effects_volume_index])
@@ -2688,7 +2676,7 @@ func _on_advance_wave() -> void:
 		if tutorial.active and tutorial.sync_wave_result(keep.wave_index, String(result.get("outcome", ""))):
 			_prepare_tutorial_step()
 	else:
-		var exchange_cue: String = "impact" if not target_impacts.is_empty() else "volley" if not engagement_traces.is_empty() else "contact"
+		var exchange_cue: String = _cue_for_battle_beat("hostile_impact") if not target_impacts.is_empty() else _cue_for_battle_beat("defender_response") if not engagement_traces.is_empty() else _cue_for_battle_beat("contact")
 		_set_feedback(Color("#d26155") if not target_impacts.is_empty() else Color("#d7a35b"), exchange_cue)
 		_set_event("Combat tick %d resolved. Inspect the exchange before committing the commander ability." % int(result.get("step", 0)))
 	_refresh_ui()
@@ -2704,7 +2692,7 @@ func _on_use_ability() -> void:
 func _run_result(result: Dictionary, label: String) -> void:
 	if bool(result.get("ok", false)):
 		_set_event("%s: %s" % [label, String(result.get("message", "command accepted"))])
-		var cue_id: String = "repair" if label == "Repair" else "ability" if label == "Ability" else "warning" if label == "Invasion" else "confirm"
+		var cue_id: String = _cue_for_battle_beat("recovery") if label == "Repair" else "ability" if label == "Ability" else _cue_for_battle_beat("assault_start") if label == "Invasion" else "confirm"
 		_set_feedback(Color("#9bd4c3") if label in ["Repair", "Assignment", "Placement"] else Color("#91b7da"), cue_id)
 	else:
 		_set_event("%s blocked: %s." % [label, String(result.get("reason", "unknown"))])
