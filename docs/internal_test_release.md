@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.18.4-enemy-windups` — the controlled playtest now telegraphs melee, ranged, and demolition attacks before their deterministic strike while retaining distinct impact feedback; human sessions and owner approval remain pending
+**Current build identity:** `0.18.5-damage-reactions` — the controlled playtest now shows recent health loss and target reactions when enemy attacks land, while retaining role-specific wind-ups and impacts; human sessions and owner approval remain pending
 
 ## Purpose
 
@@ -303,6 +303,10 @@ Run Distributed Sabotage through Sapper contact and confirm its amber demolition
 ## v0.18.4 acceptance checks
 
 Pause late in a contacted Raider's one-tick cadence and confirm a red directional chevron points toward its target. Pause late in an Ash Slinger's cadence and confirm a violet charge orb and faint aim line appear. Pause before a Sapper or Siege Beast strike and confirm amber weight rings gather around the attacker while its cadence meter changes to the matching style color. Resume and verify each warning ends in the corresponding P27 impact at the advertised tick. Enable reduced motion and confirm the warning stays static rather than pulsing.
+
+## v0.18.5 acceptance checks
+
+Let a Raider or Sapper damage a defender and confirm the defender briefly recoils away from the attacker, gains a role-colored outline, and shows the exact lost portion as a contrasting segment on its health bar. Let a demolition attack damage a room and confirm the room stays fixed while its outline and condition bar show the recent loss. Enable reduced motion and confirm recoil is removed while the outline and loss segment remain visible.
 
 ## v0.16.6 acceptance checks
 

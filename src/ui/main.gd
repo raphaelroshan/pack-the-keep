@@ -405,7 +405,7 @@ func _resolved_target_impacts(before: Dictionary) -> Array[Dictionary]:
 					break
 		if attack_style.is_empty():
 			attack_style = "demolition" if target_kind == "room" else "melee"
-		impacts.append({"target_kind": target_kind, "target_id": target_id, "enemy_index": source_enemy_index, "enemy_id": source_enemy_id, "attack_style": attack_style, "damage": damage})
+		impacts.append({"target_kind": target_kind, "target_id": target_id, "enemy_index": source_enemy_index, "enemy_id": source_enemy_id, "attack_style": attack_style, "damage": damage, "before_value": int(before[target_key]), "after_value": after_value})
 	return impacts
 
 func _set_feedback(color: Color, cue_id: String = "") -> void:
@@ -3273,7 +3273,9 @@ class KeepCanvas extends Control:
 	func _placement_box_occupied(box: Rect2, floor_name: String, origin: Vector2) -> bool:
 		if keep == null:
 			return false
-		for instance in keep.pieces.values():
+		for instance_id_value in keep.pieces.keys():
+			var instance_id: String = String(instance_id_value)
+			var instance: Dictionary = keep.pieces[instance_id]
 			if String(instance.get("floor", "ground")) != floor_name:
 				continue
 			var piece_id: String = String(instance.get("piece_id", ""))
@@ -3319,6 +3321,59 @@ class KeepCanvas extends Control:
 		draw_rect(rect, Color("#211a24"), true)
 		draw_rect(Rect2(rect.position + Vector2.ONE, Vector2(maxf(0.0, (rect.size.x - 2.0) * ratio), maxf(1.0, rect.size.y - 2.0))), Color("#70c99a") if ratio >= 0.7 else Color("#d7a35b") if ratio >= 0.35 else Color("#d26155"), true)
 		draw_rect(rect, Color("#f1dfb8"), false, 1.0)
+
+	func target_damage_feedback_snapshot(target_kind: String, target_id: String, maximum: int) -> Dictionary:
+		if engagement_ttl <= 0.0:
+			return {"active": false}
+		for impact in target_impacts:
+			if String(impact.get("target_kind", "")) != target_kind or String(impact.get("target_id", "")) != target_id:
+				continue
+			var before_value: int = int(impact.get("before_value", 0))
+			var after_value: int = int(impact.get("after_value", before_value))
+			return {
+				"active": before_value > after_value,
+				"before_value": before_value,
+				"after_value": after_value,
+				"before_ratio": _health_ratio(before_value, maximum),
+				"after_ratio": _health_ratio(after_value, maximum),
+				"attack_style": String(impact.get("attack_style", "melee")),
+				"enemy_index": int(impact.get("enemy_index", -1))
+			}
+		return {"active": false}
+
+	func _target_reaction_offset(target_kind: String, target_id: String, target_origin: Vector2, maximum: int) -> Vector2:
+		if target_kind != "piece" or reduced_motion_mode:
+			return Vector2.ZERO
+		var feedback: Dictionary = target_damage_feedback_snapshot(target_kind, target_id, maximum)
+		if not bool(feedback.get("active", false)):
+			return Vector2.ZERO
+		var enemy_index: int = int(feedback.get("enemy_index", -1))
+		if enemy_index < 0 or enemy_index >= keep.enemies.size():
+			return Vector2.ZERO
+		var hit_progress: float = clampf((_combat_effect_progress() - 0.38) / 0.62, 0.0, 1.0)
+		return _enemy_origin(enemy_index).direction_to(target_origin) * sin(hit_progress * PI) * 5.0
+
+	func _draw_recent_damage_feedback(rect: Rect2, target_kind: String, target_id: String, maximum: int) -> void:
+		var feedback: Dictionary = target_damage_feedback_snapshot(target_kind, target_id, maximum)
+		if not bool(feedback.get("active", false)):
+			return
+		var inner_width: float = maxf(0.0, rect.size.x - 2.0)
+		var after_ratio: float = float(feedback.get("after_ratio", 0.0))
+		var before_ratio: float = float(feedback.get("before_ratio", after_ratio))
+		var trail_width: float = maxf(0.0, inner_width * (before_ratio - after_ratio))
+		var color: Color = _enemy_impact_color(String(feedback.get("attack_style", "melee")))
+		var fade: float = 0.82 if reduced_motion_mode else clampf(1.0 - _combat_effect_progress() * 0.65, 0.25, 0.82)
+		if trail_width > 0.0:
+			draw_rect(Rect2(rect.position + Vector2(1.0 + inner_width * after_ratio, 1.0), Vector2(trail_width, maxf(1.0, rect.size.y - 2.0))), Color(color, fade), true)
+		draw_rect(rect.grow(2.0), Color(color, fade), false, 2.0)
+
+	func _draw_target_damage_outline(rect: Rect2, target_kind: String, target_id: String, maximum: int) -> void:
+		var feedback: Dictionary = target_damage_feedback_snapshot(target_kind, target_id, maximum)
+		if not bool(feedback.get("active", false)):
+			return
+		var color: Color = _enemy_impact_color(String(feedback.get("attack_style", "melee")))
+		var fade: float = 0.72 if reduced_motion_mode else clampf(1.0 - _combat_effect_progress() * 0.7, 0.2, 0.72)
+		draw_rect(rect.grow(-1.0), Color(color, fade), false, 2.5)
 
 	func _draw_placement_boxes(floor_name: String, origin: Vector2, outline_only: bool = false) -> void:
 		if not placement_guides_visible:
@@ -3435,18 +3490,25 @@ class KeepCanvas extends Control:
 				draw_string(ThemeDB.fallback_font, rect.position + Vector2(3, 13), _compact_board_label(String(room.name), rect.size.x - 6.0, 10, true), HORIZONTAL_ALIGNMENT_LEFT, rect.size.x - 6, 10, Color("#eadfce"))
 			var condition: int = keep.room_condition(String(room_id))
 			var state_text: String = keep.room_state(String(room_id)).to_upper()
-			_draw_health_bar(Rect2(rect.position + Vector2(3, rect.size.y - 9), Vector2(rect.size.x - 6.0, 6.0)), condition, 100)
+			var room_health_rect: Rect2 = Rect2(rect.position + Vector2(3, rect.size.y - 9), Vector2(rect.size.x - 6.0, 6.0))
+			_draw_health_bar(room_health_rect, condition, 100)
+			_draw_recent_damage_feedback(room_health_rect, "room", String(room_id), 100)
+			_draw_target_damage_outline(rect, "room", String(room_id), 100)
 			if show_room_text and state_text != "STABLE":
 				draw_string(ThemeDB.fallback_font, rect.position + Vector2(3, 24), _compact_board_label(state_text, rect.size.x - 6.0, 8), HORIZONTAL_ALIGNMENT_LEFT, rect.size.x - 6, 8, Color("#ffd19d"))
 		_draw_spatial_overlay(floor_name, origin)
 		_draw_placement_boxes(floor_name, origin)
-		for instance in keep.pieces.values():
+		for instance_id_value in keep.pieces.keys():
+			var instance_id: String = String(instance_id_value)
+			var instance: Dictionary = keep.pieces[instance_id]
 			if String(instance.get("floor", "ground")) != floor_name:
 				continue
 			var piece_id: String = String(instance.get("piece_id", ""))
 			var piece: Dictionary = keep.piece_definition(piece_id)
 			var piece_origin: Vector2i = instance.get("origin", Vector2i.ZERO)
 			var piece_rect: Rect2 = Rect2(origin + Vector2(piece_origin.x * CELL_X, piece_origin.y * CELL_Y), Vector2(piece.size.x * CELL_X, piece.size.y * CELL_Y))
+			var piece_max_health: int = int(instance.get("max_health", piece.get("max_health", 0)))
+			piece_rect.position += _target_reaction_offset("piece", instance_id, piece_rect.get_center(), piece_max_health)
 			var color: Color = Color("#7598aa") if piece_id == "pike_squad" else Color("#83a47d") if piece_id == "repair_station" else Color("#ba6f55") if piece_id == "fire_team" else Color("#cbb56f")
 			if ["runner_pair", "supply_cache"].has(piece_id):
 				color = Color("#61aeb5")
@@ -3463,8 +3525,10 @@ class KeepCanvas extends Control:
 			_draw_piece_glyph(piece_rect, piece_id, color)
 			draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(4, 14), _compact_board_label(String(piece.name), piece_rect.size.x - 18.0, 9), HORIZONTAL_ALIGNMENT_LEFT, piece_rect.size.x - 18, 9, Color("#201a25"))
 			var piece_health: int = int(instance.get("health", 0))
-			var piece_max_health: int = int(instance.get("max_health", piece.get("max_health", 0)))
-			_draw_health_bar(Rect2(piece_rect.position + Vector2(4, piece_rect.size.y - 10), Vector2(piece_rect.size.x - 8.0, 6.0)), piece_health, piece_max_health)
+			var piece_health_rect: Rect2 = Rect2(piece_rect.position + Vector2(4, piece_rect.size.y - 10), Vector2(piece_rect.size.x - 8.0, 6.0))
+			_draw_health_bar(piece_health_rect, piece_health, piece_max_health)
+			_draw_recent_damage_feedback(piece_health_rect, "piece", instance_id, piece_max_health)
+			_draw_target_damage_outline(piece_rect, "piece", instance_id, piece_max_health)
 			if bool(instance.get("disabled", false)):
 				draw_line(piece_rect.position + Vector2(5, 5), piece_rect.end - Vector2(5, 5), Color("#6f2430"), 3.0)
 				draw_line(Vector2(piece_rect.end.x - 5, piece_rect.position.y + 5), Vector2(piece_rect.position.x + 5, piece_rect.end.y - 5), Color("#6f2430"), 3.0)

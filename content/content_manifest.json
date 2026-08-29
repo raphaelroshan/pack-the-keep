@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.18.4",
+  "content_version": "0.18.5",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -384,7 +384,15 @@
     "presentation": ["late_cadence_melee_chevron", "ranged_charge_orb", "demolition_weight_rings", "style_colored_cadence_meter", "static_reduced_motion_warning"],
     "determinism": "windup_queries_and_drawing_read_existing_battle_clock_target_and_enemy_definition_without_mutating_state",
     "evidence": ["design/p28_enemy_windup_telegraphs.md", "docs/p28_enemy_windup_visual_verification.md", "tests/test_p2_ui.gd"],
-    "next_slice": "p28_human_attack_anticipation_sessions"
+    "next_slice": "p29_damage_reactions"
+  },
+  "p29_damage_reactions": {
+    "status": "implemented",
+    "read_model": ["before_value", "after_value", "before_ratio", "after_ratio", "source_attack_style"],
+    "presentation": ["health_bar_loss_segment", "target_outline", "piece_recoil", "reduced_motion_static_feedback"],
+    "determinism": "feedback_is_derived_from_authoritative_before_after_snapshots_and_does_not_change_target_positions_or_saved_state",
+    "evidence": ["design/p29_damage_reactions.md", "docs/p29_damage_reactions_visual_verification.md", "tests/test_p2_ui.gd"],
+    "next_slice": "p29_human_damage_readability_sessions"
   },
   "campaign": {
     "title": "The Bell at Dusk",
