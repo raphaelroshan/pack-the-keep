@@ -76,7 +76,8 @@ const SCENARIO_PATHS: Array[String] = [
 	"res://data/scenarios/ash_at_the_bell.json",
 	"res://data/scenarios/the_splintered_gate.json",
 	"res://data/scenarios/three_bells_at_dusk.json",
-	"res://data/scenarios/ash_ford_crossing.json"
+	"res://data/scenarios/ash_ford_crossing.json",
+	"res://data/scenarios/last_stand.json"
 ]
 
 const EVENT_PATHS: Array[String] = [
@@ -832,6 +833,10 @@ func validate_scenario_definition(scenario: Dictionary, expected_id: String, kno
 						validation_errors.append("scenario %s references unknown enemy: %s" % [scenario_id, String(enemy_id)])
 	if not doctrine_ids().has(String(scenario.get("starting_doctrine", ""))):
 		validation_errors.append("scenario %s starting doctrine is unknown" % scenario_id)
+	if scenario.has("difficulty") and (not scenario.difficulty is String or not ["guided", "standard", "advanced", "overwhelming"].has(String(scenario.difficulty))):
+		validation_errors.append("scenario %s difficulty must be guided, standard, advanced, or overwhelming" % scenario_id)
+	if scenario.has("collapse_on_defender_wipe") and not scenario.collapse_on_defender_wipe is bool:
+		validation_errors.append("scenario %s collapse_on_defender_wipe must be boolean" % scenario_id)
 	var variations: Variant = scenario.get("variations", [])
 	var has_standard: bool = false
 	if not variations is Array or variations.is_empty():

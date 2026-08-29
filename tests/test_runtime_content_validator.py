@@ -152,6 +152,21 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         for expected in ("exactly three", "variation id", "materials", "target_room", "standard_bell"):
             self.assertIn(expected, joined)
 
+    def test_scenario_rejects_invalid_difficulty_and_terminal_rule(self) -> None:
+        scenario = copy.deepcopy(load("data/scenarios/last_stand.json"))
+        scenario["difficulty"] = "impossible"
+        scenario["collapse_on_defender_wipe"] = "yes"
+        errors: list[str] = []
+        validator.validate_scenario(
+            Path("last_stand.json"), scenario, {"gate"},
+            {"raider", "shieldbreaker", "shield_guard", "ash_slinger", "sapper", "climber", "siege_beast"},
+            {"break_the_line", "smoke_and_signal", "area_pressure"}, {"greywatch_keep"},
+            {"shieldwall", "crossbow_watch"}, set(), errors,
+        )
+        joined = "\n".join(errors)
+        self.assertIn("difficulty", joined)
+        self.assertIn("collapse_on_defender_wipe", joined)
+
     def test_event_rejects_unknown_effect_trigger_and_duplicate_choice(self) -> None:
         event = copy.deepcopy(load("data/events/relief_road_warning.json"))
         event["trigger"] = {"phase": "missing", "wave": 7}

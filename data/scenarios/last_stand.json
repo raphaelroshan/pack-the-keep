@@ -1,0 +1,26 @@
+{
+  "id": "last_stand",
+  "content_version": 1,
+  "status": "active",
+  "name": "The Last Bell",
+  "short_role": "Stress-test a prepared Greywatch defense against overwhelming mixed pressure.",
+  "question": "How long can a layered defense keep fighting when every enemy role arrives in force?",
+  "objective": "Hold the line as long as possible; if every defender is disabled, the run ends immediately in collapse.",
+  "lesson": "A last stand needs several independent fighting lines because there is no recovery after a total defender wipe.",
+  "keep_id": "greywatch_keep",
+  "recommended_packs": ["shieldwall", "crossbow_watch"],
+  "starting_doctrine": "break_the_line",
+  "doctrines": ["break_the_line", "smoke_and_signal", "area_pressure"],
+  "wave_plans": [
+    ["raider", "raider", "raider", "shieldbreaker", "shieldbreaker"],
+    ["raider", "shield_guard", "ash_slinger", "ash_slinger", "shieldbreaker", "sapper"],
+    ["raider", "climber", "shield_guard", "ash_slinger", "shieldbreaker", "sapper", "siege_beast"]
+  ],
+  "difficulty": "overwhelming",
+  "collapse_on_defender_wipe": true,
+  "variations": [
+    {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
+    {"id": "thin_stores", "materials": -2, "morale": 0, "target_room": ""},
+    {"id": "final_reserve", "materials": 2, "morale": -1, "target_room": ""}
+  ]
+}

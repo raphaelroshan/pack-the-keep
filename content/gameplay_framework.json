@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.18.5-damage-reactions",
+  "framework_version": "0.19.0-last-stand",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -421,6 +421,15 @@
     "presentation": ["recent_damage_health_bar_trail", "role_colored_target_outline", "bounded_defender_recoil", "static_reduced_motion_feedback"],
     "authority_boundary": "damage_reactions_read_resolved_state_deltas_and_never_move_or_modify_simulation_entities",
     "non_goals": ["physics_knockback", "hit_stun", "invulnerability_frames", "persistent_damage_history", "new_save_fields"]
+  },
+  "p30_last_stand_end_state": {
+    "status": "implemented",
+    "scenario": "last_stand",
+    "terminal_rule": "all_defenders_disabled_collapses_only_when_the_scenario_opts_in",
+    "selection_readout": ["difficulty", "peak_attacker_count", "enemy_roster", "doctrine_sequence", "recommended_packs", "end_state"],
+    "navigation": "previous_next_and_direct_dropdown_share_the_same_authoritative_selection_path",
+    "compatibility": "existing_scenarios_keep_recoverable_defender_wipes",
+    "non_goals": ["global_permadeath", "campaign_deletion", "enemy_stat_rebalance", "adding_the_challenge_to_the_viability_matrix"]
   },
   "v090_multi_wave": {
     "status": "implemented",

@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.18.5-damage-reactions` — the controlled playtest now shows recent health loss and target reactions when enemy attacks land, while retaining role-specific wind-ups and impacts; human sessions and owner approval remain pending
+**Current build identity:** `0.19.0-last-stand` — the controlled playtest adds a clearly advertised overwhelming scenario, an immediate terminal defender-wipe state, and a richer scenario browser; human sessions and owner approval remain pending
 
 ## Purpose
 
-This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of nine authored scenarios, preview and reserve a limited pack offer, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, and recover during authored lulls.
+This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of ten authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.19.0 acceptance checks
+
+Open Custom Defense and use Previous/Next to move through the scenario catalogue. Select **The Last Bell** and confirm the briefing shows `10/10`, `OVERWHELMING`, peak pressure of seven attackers, the mixed enemy roster, the doctrine sequence, Shieldwall + Crossbow Watch, and **Defender wipe ends the run**. Enter with the recommended Pike Squad and Narrow Gate, start the assault, and make no intervention. Confirm both health bars reach zero through normal combat, Results opens immediately, no repair interval or next-wave action is offered, and the causal report says every defender was disabled. Save/load the terminal state and confirm it remains collapsed.
 
 ## v0.18.2 Friendly-target additions
 

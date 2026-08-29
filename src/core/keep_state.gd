@@ -301,7 +301,47 @@ func scenario_preview(id: String = "") -> Dictionary:
 		return {"ok": false, "reason": "unknown defensive scenario"}
 	var scenario: Dictionary = _scenario_definitions[selected_id]
 	var scenario_keep_id: String = String(scenario.get("keep_id", "greywatch_keep"))
-	return {"ok": true, "scenario_id": selected_id, "name": String(scenario.name), "objective": String(scenario.objective), "lesson": String(scenario.lesson), "keep_id": scenario_keep_id, "keep_name": String(_keep_definitions.get(scenario_keep_id, {}).get("name", scenario_keep_id)), "recommended_packs": scenario.get("recommended_packs", []).duplicate(), "starting_doctrine": String(scenario.starting_doctrine), "wave_count": scenario.wave_plans.size(), "variation_id": scenario_variation_id if selected_id == scenario_id else String(_variation_for_scenario(selected_id).get("id", "standard_bell"))}
+	var peak_wave_size: int = 0
+	var enemy_roster: Array[String] = []
+	for wave_plan in scenario.get("wave_plans", []):
+		if not wave_plan is Array:
+			continue
+		peak_wave_size = maxi(peak_wave_size, wave_plan.size())
+		for enemy_id_value in wave_plan:
+			var enemy_id: String = String(enemy_id_value)
+			if _enemy_definitions.has(enemy_id):
+				var enemy_name: String = String(_enemy_definitions[enemy_id].get("name", enemy_id))
+				if not enemy_roster.has(enemy_name):
+					enemy_roster.append(enemy_name)
+	var doctrine_names: Array[String] = []
+	for doctrine_id_value in scenario.get("doctrines", []):
+		var doctrine_id: String = String(doctrine_id_value)
+		if _doctrine_definitions.has(doctrine_id):
+			doctrine_names.append(String(_doctrine_definitions[doctrine_id].get("name", doctrine_id)))
+	var difficulty: String = String(scenario.get("difficulty", ""))
+	if difficulty.is_empty():
+		difficulty = "guided" if peak_wave_size <= 2 else "standard" if peak_wave_size <= 3 else "advanced"
+	var ordered_ids: Array[String] = scenario_ids()
+	return {
+		"ok": true,
+		"scenario_id": selected_id,
+		"catalog_index": ordered_ids.find(selected_id) + 1,
+		"catalog_count": ordered_ids.size(),
+		"name": String(scenario.name),
+		"objective": String(scenario.objective),
+		"lesson": String(scenario.lesson),
+		"keep_id": scenario_keep_id,
+		"keep_name": String(_keep_definitions.get(scenario_keep_id, {}).get("name", scenario_keep_id)),
+		"recommended_packs": scenario.get("recommended_packs", []).duplicate(),
+		"starting_doctrine": String(scenario.starting_doctrine),
+		"doctrine_names": doctrine_names,
+		"wave_count": scenario.wave_plans.size(),
+		"peak_wave_size": peak_wave_size,
+		"enemy_roster": enemy_roster,
+		"difficulty": difficulty,
+		"collapse_on_defender_wipe": bool(scenario.get("collapse_on_defender_wipe", false)),
+		"variation_id": scenario_variation_id if selected_id == scenario_id else String(_variation_for_scenario(selected_id).get("id", "standard_bell")),
+	}
 
 func current_event() -> Dictionary:
 	if active_event_id.is_empty() or not _event_definitions.has(active_event_id):
@@ -579,6 +619,9 @@ func _surviving_piece_count() -> int:
 		if not bool(piece.get("disabled", false)) and int(piece.get("health", 0)) > 0:
 			count += 1
 	return count
+
+func _defender_wipe_is_terminal() -> bool:
+	return not pieces.is_empty() and _surviving_piece_count() == 0 and scenario_active and bool(_scenario_definitions.get(scenario_id, {}).get("collapse_on_defender_wipe", false))
 
 func authored_wave_count() -> int:
 	if scenario_active and _scenario_definitions.has(scenario_id):
@@ -1872,6 +1915,8 @@ func _battle_step() -> Dictionary:
 		_battle_log("Rally coordinated the response across floors, then released.")
 		rally_pending = false
 	wave_progress = clamp(float(battle_step) / 6.0, 0.0, 1.0)
+	if _defender_wipe_is_terminal():
+		return _finish_wave()
 	if battle_step >= 6 or _all_enemies_defeated():
 		return _finish_wave()
 	return {"ok": true, "resolved": false, "step": battle_step, "timeline": battle_report.duplicate()}
@@ -1995,13 +2040,17 @@ func _finish_wave() -> Dictionary:
 	wave_active = false
 	var critical_breaches: int = _critical_breach_count()
 	var defense_line_broken: bool = not pieces.is_empty() and _surviving_piece_count() == 0
-	if critical_breaches >= 3 or morale <= 0:
+	var defender_wipe_is_terminal: bool = _defender_wipe_is_terminal()
+	if critical_breaches >= 3 or morale <= 0 or defender_wipe_is_terminal:
 		last_outcome = "collapse"
 		repair_interval_active = false
 		repair_actions_remaining = 0
 		repair_interval_reason = ""
 		_reload_ammunition()
-		_battle_log("Outcome: collapse. Three critical functions or morale failed; the report identifies the chain; surviving ranged defenders reload for the next attempt.")
+		if defender_wipe_is_terminal:
+			_battle_log("Outcome: collapse. Every defender was disabled under overwhelming pressure; this last stand has no recovery interval.")
+		else:
+			_battle_log("Outcome: collapse. Three critical functions or morale failed; the report identifies the chain; surviving ranged defenders reload for the next attempt.")
 		_append_wave_history()
 		_record_regional_consequence()
 	elif breach_level > 0 or defense_line_broken:
@@ -2232,7 +2281,10 @@ func scenario_report() -> Dictionary:
 		what_worked.append("The run produced a deterministic record that can be replayed with the same command sequence.")
 	var what_failed: Array[String] = []
 	if last_outcome == "collapse":
-		what_failed.append("The final state collapsed because critical functions or morale reached the failure threshold.")
+		if surviving_pieces == 0 and bool(_scenario_definitions.get(scenario_id, {}).get("collapse_on_defender_wipe", false)):
+			what_failed.append("Every defender was disabled; this last stand ended immediately without a recovery interval.")
+		else:
+			what_failed.append("The final state collapsed because critical functions or morale reached the failure threshold.")
 	elif breached_waves > 0:
 		what_failed.append("%d wave%s broke the defensive line or breached a keep function." % [breached_waves, "" if breached_waves == 1 else "s"])
 	if not damaged_rooms.is_empty():
@@ -2244,7 +2296,8 @@ func scenario_report() -> Dictionary:
 		what_failed.append("No structural failure was recorded in the resolved waves.")
 	var suggested_experiment: String = "Replay with The Warden and preserve an open response lane."
 	if last_outcome == "collapse":
-		suggested_experiment = "Replay the same seed and preserve one recovery action for the weakest critical function."
+		var terminal_defender_wipe: bool = surviving_pieces == 0 and bool(_scenario_definitions.get(scenario_id, {}).get("collapse_on_defender_wipe", false))
+		suggested_experiment = "Replay with an additional independent fighting line so one focus target cannot erase the whole defense." if terminal_defender_wipe else "Replay the same seed and preserve one recovery action for the weakest critical function."
 	elif room_condition("gate") < 100:
 		suggested_experiment = "Assign Pike Squad to Gate and compare the Gate Assault result."
 	elif room_condition("workshop") < 100 or room_condition("supply_room") < 100:
