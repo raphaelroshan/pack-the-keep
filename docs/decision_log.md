@@ -655,3 +655,11 @@
 **Reason:** Preparation exposed all relevant information, but the player had to synthesize doctrine, placement, and warnings from several dense command-rail sections. A stable three-part summary makes the decision legible at the moment of commitment while keeping the fortress as the main visual surface.
 
 **Trade-off:** The visible answer deliberately describes coverage rather than evaluating win probability, and the open weakness reports only the first deterministic warning. Full pack, comparison, and placement detail remains in the command rail. The panel adds no validation, scoring, simulation, or save authority.
+
+## ADR-083: Board identity uses a central procedural visual registry
+
+**Decision:** Move floor, room, defender-family, enemy-family, and render-layer visual tokens into `BoardVisualRegistry`. Keep the current data-driven geometry and `KeepCanvas` hit-testing, but draw distinct ground and upper structures, critical-room markers, dark defender role cards, and shape-coded enemy silhouettes from those tokens.
+
+**Reason:** The board already communicated detailed state, yet large areas and actors shared similar rectangular or circular treatments. A stable visual grammar makes structure and role readable before labels while keeping the current procedural fallback replaceable by future authored assets.
+
+**Trade-off:** These remain code-drawn placeholders, not final art. Enemy initials and labels stay as redundant accessibility cues, and the registry owns presentation tokens only; it cannot influence placement, routes, targeting, health, timing, or serialization.

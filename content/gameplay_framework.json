@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.21.1-preparation-brief",
+  "framework_version": "0.22.0-board-hierarchy",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -1732,6 +1732,14 @@
     "sources": ["forecast", "scenario_preview", "layout_summary", "placed_pieces"],
     "hierarchy": "compact_summary_above_primary_assault_action_with_full_detail_in_command_rail",
     "determinism_rule": "summary_describes_visible_coverage_without_scoring_or_guaranteeing_an_outcome"
+  },
+  "board_visual_hierarchy": {
+    "status": "implemented",
+    "registry": "src/ui/board_visual_registry.gd",
+    "layers": ["background_atmosphere", "structural_board", "room_surfaces", "placement_zones", "defender_actors", "enemy_routes_and_actors", "damage_and_status", "focus_and_selection", "tactical_labels"],
+    "floor_treatments": ["ground_fort_or_river", "upper_wall_walk"],
+    "actor_grammar": ["defender_role_badges", "enemy_type_silhouettes", "redundant_initials", "health_and_status_overlays"],
+    "determinism_rule": "visual_profiles_and_drawing_do_not_change_geometry_hit_testing_targeting_timing_or_save_state"
   },
   "unit_availability": {
     "status": "vertical_slice",

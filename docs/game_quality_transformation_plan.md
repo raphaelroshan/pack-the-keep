@@ -1,11 +1,11 @@
 # Pack the Keep — Game-Quality Transformation Plan
 
 **Audience:** GPT coding agents, art/UX agents, test agents, and the human owner
-**Current baseline:** `0.21.1-preparation-brief`
+**Current baseline:** `0.22.0-board-hierarchy`
 **Current status:** Technically substantial public-source pre-alpha; presentation transformation in progress
 **Primary objective:** Turn the existing deterministic fortress-defense systems into a coherent, attractive, immediately understandable game-quality private alpha without rewriting the simulation core.
 
-**Implementation ledger:** P32 gives terminal Results a dedicated debrief beside the persistent keep. P33 gives ordinary Preparation a compact current-question, visible-answer, and open-weakness hierarchy above the primary action. Both remain presentation-only projections of authoritative state; human validation remains pending.
+**Implementation ledger:** P32 gives terminal Results a dedicated debrief beside the persistent keep. P33 gives ordinary Preparation a compact current-question, visible-answer, and open-weakness hierarchy. P34 adds a central visual registry, distinct ground/upper treatments, critical-room accents, defender role cards, and enemy silhouettes while preserving geometry and hit testing. Human validation remains pending.
 
 > **Central diagnosis:** Pack the Keep has enough mechanics for a real game loop. Its largest gap is not feature count. Its largest gap is presentation: the player must feel that they are preparing a fortress, watching a defense, making urgent but comprehensible interventions, recovering from damage, and learning from the result—not operating a debug panel surrounded by a board.
 
@@ -847,18 +847,18 @@ Start from the current Pack the Keep remote main. Read AGENTS.md, README.md,
 design/design_prompt.md, docs/agent_handoff_roadmap.md, and the latest visual
 verification notes.
 
-Implement the first game-quality slice: a dedicated terminal Results/debrief
-panel that replaces the reused recovery rail after the final wave. It must
-show the outcome, three-wave timeline, key causal chain, persistent damage,
-resource outcome, and one concrete replay experiment. Preserve the keep board,
-primary action, controller focus, scaling, reduced motion, save semantics, and
-all existing command boundaries.
+Implement the next game-quality slice: consolidate the existing semantic tones
+behind one focused battle-loop audio cue service. Cover forecast/start, contact,
+defender response, hostile impact, breach, recovery, and terminal outcome with
+short distinct cues that respect mute, effects volume, and reduced motion.
+Preserve deterministic state, pause/speed behavior, offline operation, and all
+existing command boundaries.
 
-Add deterministic UI/state regression tests, save/load coverage at terminal
-Results, and a 1600x900 plus supported scaled visual capture. Run the full
-verification suite. Do not add new enemies, packs, factions, campaign map,
-or combat math. Report exact files, tests, screenshots, risks, and one next
-bounded task.
+Add presentation-only tests proving cue selection does not mutate simulation,
+that mute and volume are honored, and that no cue owns combat timing. Run the
+full verification suite. Do not add music, voice, platform audio integration,
+new enemies, or combat math. Report exact files, tests, screenshots or waveform
+evidence where useful, risks, and one next bounded task.
 ```
 
 ---

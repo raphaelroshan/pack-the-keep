@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.21.1",
+  "content_version": "0.22.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -432,6 +432,16 @@
     "tutorial": "first_watch_uses_its_authored_objective_instead_of_the_generic_summary",
     "evidence": ["design/p33_preparation_answer_quality.md", "docs/p33_preparation_answer_quality_visual_verification.md", "tests/test_p33_preparation_answer_quality.gd"],
     "next_slice": "p34_board_visual_hierarchy"
+  },
+  "p34_board_visual_hierarchy": {
+    "status": "implemented",
+    "registry": "src/ui/board_visual_registry.gd",
+    "layers": ["structural_board", "rooms", "placement", "defenders", "enemies", "damage", "focus", "labels"],
+    "floor_identity": ["ground_fort_or_river", "upper_wall_walk"],
+    "actor_identity": ["defender_role_badges", "enemy_type_silhouettes"],
+    "authority": "presentation_only_with_existing_geometry_and_hit_testing",
+    "evidence": ["design/p34_board_visual_hierarchy.md", "docs/p34_board_visual_hierarchy_verification.md", "tests/test_p34_board_visual_hierarchy.gd"],
+    "next_slice": "p35_battle_audio_cues"
   },
   "campaign": {
     "title": "The Bell at Dusk",

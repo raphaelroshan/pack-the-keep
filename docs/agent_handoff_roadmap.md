@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
 **Document status:** Active planning contract for post-v0.14.2 development
-**Current release baseline:** `0.21.1-preparation-brief` on the current vertical-slice branch; remote `main` remains owner-controlled
+**Current release baseline:** `0.22.0-board-hierarchy` on the current vertical-slice branch; remote `main` remains owner-controlled
 **Release posture:** CI-verified public repository with owner-controlled merges; no public alpha release or storefront claim yet
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
@@ -106,6 +106,7 @@ Milestones must be completed in order. An agent may split a milestone into small
 | P31 | Implemented; human onboarding evidence pending | First Watch provides a complete game-facing menu-to-victory tutorial with strict objectives, in-world coaching, separate resume data, and per-phase retry checkpoints. | Observe new players completing First Watch, then refine only repeated comprehension or pacing friction. |
 | P32 | Implemented; human debrief evidence pending | Terminal Results preserves the damaged keep beside a dedicated outcome, timeline, causal, damage, consequence, and replay composition with fixed actions. | Preserve as the terminal-flow reference. |
 | P33 | Implemented; human comprehension evidence pending | Ordinary Preparation now names the current doctrine question, the layout's visible answer, and one open weakness above the primary assault action. | Strengthen board visual hierarchy and placement feedback without adding tactical clutter. |
+| P34 | Implemented; human silhouette-recognition evidence pending | A central visual registry defines the board layer order, distinct ground/upper treatments, critical-room cues, defender role cards, and enemy-type silhouettes. | Consolidate existing semantic tones into one focused battle-loop audio service. |
 
 P13 onward are planning identifiers, not permission to release automatically. Every milestone still requires local validation, CI, visual review, and explicit human approval before external distribution. The existing P5–P12 sections below remain useful as acceptance contracts, but agents must not re-implement them unless a regression or refactor explicitly requires it.
 

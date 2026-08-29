@@ -79,6 +79,10 @@ Completed scenarios now replace the recovery command rail with a dedicated final
 
 Ordinary Preparation now presents the active doctrine question, the layout's visible answer, and one unresolved weakness immediately above **Begin Assault**. The compact summary derives from existing forecast, scenario, layout, and placed-piece read models, while detailed pack and layout information remains in the command rail. It never scores the build or guarantees an outcome, First Watch retains its authored objective card, and rendering the summary does not mutate the keep.
 
+## v0.22.0 board visual hierarchy
+
+The procedural fortress renderer now uses a central visual registry and an explicit structural-to-tactical layer order. Ground forts, river defenses, and upper wall walks have distinct surfaces and frames; critical rooms have a redundant shape cue; defenders use dark role cards and role-family badges; and every enemy family has its own silhouette in both the approach lane and assault timeline. Existing health, damage, focus, placement, hit-testing, targeting, and save behavior remain authoritative and unchanged.
+
 ## Implemented first battle slice
 
 The current battle slice is **Greywatch Keep**, a two-floor 12×8 keep defended by **The Castellan** or **The Warden**. It implements four basic defenders—Pike Squad, Repair Station, Fire Team, and Scout Post—and four enemy doctrines: Raider gate assault, Sapper distributed sabotage, Climber wall bypass, and Siege Beast area pressure.

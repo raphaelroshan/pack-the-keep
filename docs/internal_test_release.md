@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.21.1-preparation-brief` — Preparation now names the active tactical question, the layout's visible answer, and one unresolved weakness before the player commits to the assault; human sessions and owner approval remain pending
+**Current build identity:** `0.22.0-board-hierarchy` — the fortress now has an explicit structural-to-tactical layer hierarchy, distinct ground and upper treatments, critical-room cues, defender role cards, and enemy-type silhouettes; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of ten authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.22.0 acceptance checks
+
+Enter Preparation and compare the ground fortress with the upper wall walk. Confirm their frames, surfaces, header plates, and landmarks remain distinct without revealing the placement grid. Confirm critical rooms carry a gold strip and diamond cue, placed defenders use dark role cards with distinct silhouette families and health bars, and ordinary placement previews still align with the same rooms. Start an assault and confirm Raider, Sapper, Climber, and Siege Beast markers are distinguishable by shape as well as color and initial; the timeline must reuse those shapes while focus rings, target lines, cadence, damage, and tooltips remain intact.
 
 ## v0.21.1 acceptance checks
 
