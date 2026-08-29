@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.18.3-enemy-attack-styles` — the controlled playtest now distinguishes melee, ranged, and demolition enemy impacts while retaining friendly target health/condition readouts; human sessions and owner approval remain pending
+**Current build identity:** `0.18.4-enemy-windups` — the controlled playtest now telegraphs melee, ranged, and demolition attacks before their deterministic strike while retaining distinct impact feedback; human sessions and owner approval remain pending
 
 ## Purpose
 
@@ -299,6 +299,10 @@ Before contact, confirm the focused response, inspector, map tooltip, and timeli
 ## v0.18.3 acceptance checks
 
 Run Distributed Sabotage through Sapper contact and confirm its amber demolition strike is visibly heavier than the Raider's compact red melee lunge. Run Smoke and Signal and confirm the Ash Slinger uses a travelling violet projectile rather than a melee line. Verify damage to defenders is labelled `HP`, room damage is labelled `STRUCTURE`, and the matching authoritative health or condition bar decreases. Enable reduced motion and confirm each style retains a static role-colored hit mark without travel or lunge.
+
+## v0.18.4 acceptance checks
+
+Pause late in a contacted Raider's one-tick cadence and confirm a red directional chevron points toward its target. Pause late in an Ash Slinger's cadence and confirm a violet charge orb and faint aim line appear. Pause before a Sapper or Siege Beast strike and confirm amber weight rings gather around the attacker while its cadence meter changes to the matching style color. Resume and verify each warning ends in the corresponding P27 impact at the advertised tick. Enable reduced motion and confirm the warning stays static rather than pulsing.
 
 ## v0.16.6 acceptance checks
 

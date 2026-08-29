@@ -2990,6 +2990,50 @@ class KeepCanvas extends Control:
 			return Color("#ffb15c")
 		return Color("#ff796f")
 
+	func enemy_windup_snapshot(index: int) -> Dictionary:
+		if keep == null or index < 0 or index >= keep.enemies.size():
+			return {"active": false}
+		var enemy: Dictionary = keep.enemies[index]
+		if bool(enemy.get("defeated", false)):
+			return {"active": false}
+		var timing: Dictionary = keep.enemy_attack_timing(index)
+		var target_id: String = String(enemy.get("target", ""))
+		var cadence_progress: float = float(timing.get("cadence_progress", 0.0))
+		var active: bool = bool(timing.get("active", false)) and bool(timing.get("in_contact", false)) and bool(timing.get("within_wave", false)) and bool(timing.get("has_target", false)) and cadence_progress >= 0.55
+		var attack_style: String = String(keep.enemy_definition(String(enemy.get("enemy_id", ""))).get("attack_style", "melee"))
+		return {
+			"active": active,
+			"attack_style": attack_style,
+			"motion": _enemy_impact_motion(attack_style),
+			"target_id": target_id,
+			"intensity": clampf((cadence_progress - 0.55) / 0.45, 0.0, 1.0)
+		}
+
+	func _draw_enemy_windup(index: int, origin: Vector2, target: Vector2, marker_radius: float) -> void:
+		var windup: Dictionary = enemy_windup_snapshot(index)
+		if not bool(windup.get("active", false)):
+			return
+		var attack_style: String = String(windup.get("attack_style", "melee"))
+		var intensity: float = 1.0 if reduced_motion_mode else float(windup.get("intensity", 0.0))
+		var color: Color = _enemy_impact_color(attack_style)
+		var direction: Vector2 = origin.direction_to(target)
+		if attack_style == "ranged":
+			var charge_origin: Vector2 = origin + direction * (marker_radius + 5.0)
+			draw_line(charge_origin, target, Color(color, 0.12 + intensity * 0.18), 1.0)
+			draw_circle(charge_origin, 2.5 + intensity * 2.5, Color(color, 0.72), true)
+			draw_circle(charge_origin, 6.0, Color(color, 0.75), false, 1.5)
+		elif attack_style == "demolition":
+			var pulse: float = 0.0 if reduced_motion_mode else sin(intensity * PI * 3.0) * 1.5
+			draw_arc(origin, marker_radius + 5.0 + pulse, -PI * 0.82, PI * 0.82, 12, Color(color, 0.82), 2.5)
+			draw_arc(origin, marker_radius + 9.0 + intensity * 3.0, PI * 0.18, PI * 1.82, 12, Color(color, 0.45), 2.0)
+			draw_line(origin + direction * marker_radius, origin + direction * (marker_radius + 8.0), color, 3.0)
+		else:
+			var forward: Vector2 = origin + direction * (marker_radius + 5.0 + intensity * 4.0)
+			var side: Vector2 = direction.rotated(PI * 0.5) * 4.5
+			draw_line(origin + direction * marker_radius, forward, Color(color, 0.85), 3.0)
+			draw_line(forward, forward - direction * 5.0 + side, color, 2.0)
+			draw_line(forward, forward - direction * 5.0 - side, color, 2.0)
+
 	func _impact_damage_label(impact: Dictionary) -> String:
 		var damage_kind: String = "HP" if String(impact.get("target_kind", "")) == "piece" else "STRUCTURE"
 		return "-%d %s" % [int(impact.get("damage", 0)), damage_kind]
@@ -3543,7 +3587,8 @@ class KeepCanvas extends Control:
 			if bool(cadence.get("active", false)) and bool(cadence.get("in_contact", false)) and bool(cadence.get("within_wave", false)):
 				var cadence_progress: float = float(cadence.get("cadence_progress", 0.0))
 				var cadence_rect: Rect2 = Rect2(health_bar_rect.position - Vector2(0, 4), Vector2(health_bar_rect.size.x, 2.0))
-				var cadence_color: Color = Color("#ffd166") if high_contrast_mode else Color("#ef8d62")
+				var attack_style: String = String(enemy_def.get("attack_style", "melee"))
+				var cadence_color: Color = Color("#ffd166") if high_contrast_mode else _enemy_impact_color(attack_style) if cadence_progress >= 0.55 else Color("#ef8d62")
 				draw_rect(cadence_rect, Color(cadence_color, 0.18), true)
 				if cadence_progress > 0.0:
 					draw_rect(Rect2(cadence_rect.position, Vector2(cadence_rect.size.x * cadence_progress, cadence_rect.size.y)), cadence_color, true)
@@ -3581,6 +3626,7 @@ class KeepCanvas extends Control:
 					target_rect = Rect2(target_origin + Vector2(target_cell.x * CELL_X, target_cell.y * CELL_Y), Vector2(target_piece_definition.size.x * CELL_X, target_piece_definition.size.y * CELL_Y))
 				draw_line(enemy_origin, target_rect.get_center(), Color("#fff4df") if index == focused_enemy_index else Color(0.95, 0.38, 0.28, 0.7), 2.5 if index == focused_enemy_index else 1.5)
 				draw_circle(target_rect.get_center(), 8.0, Color("#fff4df") if index == focused_enemy_index else Color("#ffb0a6"), false, 2.0)
+				_draw_enemy_windup(index, enemy_origin, target_rect.get_center(), marker_radius)
 			var doctrine_initial: String = _enemy_marker_initial(enemy_id)
 			draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(-3, 4), doctrine_initial, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#271b22"))
 

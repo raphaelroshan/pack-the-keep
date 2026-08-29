@@ -607,3 +607,11 @@
 **Reason:** Unit-first targeting and visible cadence made enemy intent legible, but every successful enemy attack still used the same generic red line and room-oriented label. Distinct motion now makes Raider, Ash Slinger, and Sapper pressure recognizable at normal play distance without adding another HUD panel.
 
 **Trade-off:** The effects visualize already-resolved state deltas and do not simulate collision, dodging, knockback, or sub-tick damage. When multiple enemies damage one target in the same tick, the displayed value remains the authoritative net loss and uses the first stable due source for its style.
+
+## ADR-077: Wind-ups derive from the existing cadence clock
+
+**Decision:** Show a role-specific pre-strike warning after 55 percent of a contacted enemy's current attack interval has elapsed. Derive the warning from `enemy_attack_timing()`, the current target, and the enemy's presentation style; do not create a second timer or reserve an attack in UI state.
+
+**Reason:** Distinct impacts explain what just happened, but players also need a brief visual chance to interpret incoming pressure before health changes. Reusing the existing cadence projection keeps pause, speed, save/load, and deterministic strike timing aligned.
+
+**Trade-off:** The warning is intentionally short and schematic. It improves anticipation without promising reaction mechanics such as parries or interrupts; those remain out of scope until human testing shows the battle benefits from another command layer.
