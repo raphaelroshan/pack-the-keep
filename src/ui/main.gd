@@ -59,6 +59,8 @@ var commander_profile_label: Label
 var commander_ability_button: Button
 var scenario_option: OptionButton
 var scenario_preview_label: Label
+var scenario_previous_button: Button
+var scenario_next_button: Button
 var authored_event_panel: VBoxContainer
 var authored_event_title: Label
 var authored_event_setup: Label
@@ -1146,9 +1148,22 @@ func _build_ui() -> void:
 		scenario_option.set_item_metadata(scenario_option.item_count - 1, scenario_id)
 	var scenario_group: VBoxContainer = _labeled_control("Defensive scenario", scenario_option)
 	setup_section.add_child(scenario_group)
+	var scenario_navigation: HBoxContainer = HBoxContainer.new()
+	scenario_navigation.add_theme_constant_override("separation", 8)
+	setup_section.add_child(scenario_navigation)
+	scenario_previous_button = Button.new()
+	scenario_previous_button.text = "← Previous"
+	scenario_previous_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scenario_previous_button.pressed.connect(func() -> void: _cycle_scenario(-1))
+	scenario_navigation.add_child(scenario_previous_button)
+	scenario_next_button = Button.new()
+	scenario_next_button.text = "Next →"
+	scenario_next_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scenario_next_button.pressed.connect(func() -> void: _cycle_scenario(1))
+	scenario_navigation.add_child(scenario_next_button)
 	scenario_preview_label = Label.new()
 	scenario_preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	scenario_preview_label.custom_minimum_size = Vector2(292, 82)
+	scenario_preview_label.custom_minimum_size = Vector2(292, 168)
 	scenario_preview_label.add_theme_color_override("font_color", Color("#d8c389"))
 	setup_section.add_child(scenario_preview_label)
 	authored_event_panel = AuthoredEventPanelView.new()
@@ -1870,6 +1885,13 @@ func _on_select_scenario() -> void:
 				doctrine_option.select(index)
 				break
 
+func _cycle_scenario(direction: int) -> void:
+	if scenario_option == null or scenario_option.item_count == 0:
+		return
+	var next_index: int = wrapi(scenario_option.selected + direction, 0, scenario_option.item_count)
+	scenario_option.select(next_index)
+	_on_select_scenario()
+
 func _refresh_scenario_preview() -> void:
 	if scenario_preview_label == null:
 		return
@@ -1880,7 +1902,9 @@ func _refresh_scenario_preview() -> void:
 	var pack_names: Array[String] = []
 	for pack_id in preview.get("recommended_packs", []):
 		pack_names.append(String(keep.pack_definition(String(pack_id)).get("name", pack_id)))
-	scenario_preview_label.text = "SCENARIO — %s / %s\nObjective: %s\nLesson: %s\nRecommended doctrine: %s\nAssault phases: %d | Seed variation: %s" % [String(preview.get("keep_name", "Keep")), String(preview.get("name", "")), String(preview.get("objective", "")), String(preview.get("lesson", "")), " + ".join(pack_names), int(preview.get("wave_count", 0)), String(preview.get("variation_id", "standard"))]
+	var terminal_rule: String = "Defender wipe ends the run" if bool(preview.get("collapse_on_defender_wipe", false)) else "Defender wipe opens recovery"
+	scenario_preview_label.add_theme_color_override("font_color", Color("#ef9d78") if bool(preview.get("collapse_on_defender_wipe", false)) else Color("#d8c389"))
+	scenario_preview_label.text = "SCENARIO %d/%d — %s / %s\n%s · Assault phases: %d · Peak pressure: %d attackers\nObjective: %s\nEnemy roster: %s\nPressure plan: %s\nRecommended packs: %s\nEnd state: %s\nLesson: %s\nSeed variation: %s" % [int(preview.get("catalog_index", 0)), int(preview.get("catalog_count", 0)), String(preview.get("keep_name", "Keep")), String(preview.get("name", "")), String(preview.get("difficulty", "standard")).to_upper(), int(preview.get("wave_count", 0)), int(preview.get("peak_wave_size", 0)), String(preview.get("objective", "")), " · ".join(preview.get("enemy_roster", [])), " → ".join(preview.get("doctrine_names", [])), " + ".join(pack_names), terminal_rule, String(preview.get("lesson", "")), String(preview.get("variation_id", "standard"))]
 
 func _refresh_room_options() -> void:
 	if room_option == null:
@@ -2698,12 +2722,15 @@ func _refresh_ui() -> void:
 		var modifier_name: String = "None"
 		if not keep.equipped_modifier_id.is_empty():
 			modifier_name = String(keep.modifier_definition(keep.equipped_modifier_id).get("name", keep.equipped_modifier_id))
-		setup_overview_label.text = "%s\nCOMMANDER — %s · %s\nSCENARIO — %s · %s\nMODIFIER — %s" % [
+		var end_state_summary: String = "defender wipe ends the run" if bool(selected_scenario.get("collapse_on_defender_wipe", false)) else "defender wipe is recoverable"
+		setup_overview_label.text = "%s\nCOMMANDER — %s · %s\nSCENARIO — %s · %s\nRISK — %s · %s\nMODIFIER — %s" % [
 			setup_mode,
 			String(selected_commander.get("name", "Commander")),
 			String(selected_commander.get("passive", "Choose a doctrine lens.")),
 			String(selected_scenario.get("name", "Scenario")),
 			String(selected_scenario.get("objective", "Choose the pressure to test.")),
+			String(selected_scenario.get("difficulty", "standard")).to_upper(),
+			end_state_summary,
 			modifier_name,
 		]
 	if setup_confirm_button:

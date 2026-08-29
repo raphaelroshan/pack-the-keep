@@ -78,6 +78,7 @@ SUPPORTED_FLOORS = {"ground", "upper"}
 SUPPORTED_ZONES = {"wall", "courtyard", "keep"}
 SUPPORTED_ATTACK_STYLES = {"melee", "ranged", "support", "fortification"}
 SUPPORTED_ENEMY_ATTACK_STYLES = {"melee", "ranged", "demolition"}
+SUPPORTED_SCENARIO_DIFFICULTIES = {"guided", "standard", "advanced", "overwhelming"}
 SUPPORTED_DOCTRINES = {"gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach", "shielded_advance", "smoke_and_signal", "break_the_line"}
 SUPPORTED_NON_ENEMY_TARGETS = {"all"} | SUPPORTED_DOCTRINES
 SUPPORTED_EVENT_TYPES = {"forecast", "recovery", "scenario_conclusion"}
@@ -747,6 +748,10 @@ def validate_scenario(
             errors.append(f"{path}: unknown doctrine reference: {doctrine_id}")
     if scenario.get("starting_doctrine") not in doctrine_ids:
         errors.append(f"{path}: starting_doctrine is unknown")
+    if "difficulty" in scenario and scenario.get("difficulty") not in SUPPORTED_SCENARIO_DIFFICULTIES:
+        errors.append(f"{path}: difficulty must be guided, standard, advanced, or overwhelming")
+    if "collapse_on_defender_wipe" in scenario and not isinstance(scenario.get("collapse_on_defender_wipe"), bool):
+        errors.append(f"{path}: collapse_on_defender_wipe must be boolean")
     for wave in wave_plans:
         if not isinstance(wave, list) or not wave:
             errors.append(f"{path}: each wave plan must contain enemies")

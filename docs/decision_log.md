@@ -623,3 +623,11 @@
 **Reason:** Floating damage text identifies the amount, but the player's eye still has to find the changed bar and infer which object absorbed it. Keeping the previous value for the lifetime of the existing impact effect makes health loss spatially explicit without adding permanent UI.
 
 **Trade-off:** Room feedback shows net condition loss after same-tick mitigation or repair, matching the authoritative final state rather than reconstructing every intermediate operation. Recoil is illustrative and never affects targeting, placement, or saved coordinates.
+
+## ADR-079: Defender-wipe collapse is an explicit scenario contract
+
+**Decision:** Preserve the recoverable partial-breach result when all defenders are disabled in existing teaching scenarios, but allow an authored scenario to opt into an immediate terminal collapse with `collapse_on_defender_wipe`. The Last Bell uses that rule and advertises it in the scenario briefing.
+
+**Reason:** A strong vertical slice needs a genuine loss state that can be reached through normal combat, while the existing teaching scenarios still benefit from letting players inspect and repair a failed line. A scenario-level rule makes the difference intentional, testable, and visible before play.
+
+**Trade-off:** Scenario authors must decide whether a defender wipe is recoverable or terminal. The default remains recoverable for save compatibility, and the P12 viability matrix continues to cover the original nine non-collapse baselines while the stress scenario has its own deterministic collapse test.

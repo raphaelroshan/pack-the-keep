@@ -139,7 +139,7 @@ def validate_report(report_path: Path, profile_root: Path, expected_version: str
             "doctrine_count": 8,
             "keep_count": 2,
             "region_count": 1,
-            "scenario_count": 9,
+            "scenario_count": 10,
             "event_count": 9,
             "modifier_count": 2,
         }
