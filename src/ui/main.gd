@@ -8,6 +8,7 @@ const BoardVisuals = preload("res://src/ui/board_visual_registry.gd")
 const BattleAudioCues = preload("res://src/ui/battle_audio_cue_service.gd")
 const RecoveryBriefPanelView = preload("res://src/ui/recovery_brief_panel.gd")
 const WarCouncilChoicePanelView = preload("res://src/ui/war_council_choice_panel.gd")
+const PackOfferPanelView = preload("res://src/ui/pack_offer_panel.gd")
 
 const PackKeepState = preload("res://src/core/keep_state.gd")
 const PackagedSmoke = preload("res://src/platform/packaged_smoke.gd")
@@ -59,6 +60,9 @@ var metrics_label: Label
 var combat_explain_label: Label
 var availability_label: Label
 var pack_preview_label: Label
+var preparation_pack_offer_panel: PackOfferPanel
+var pack_button: Button
+var reserve_button: Button
 var inspector_label: Label
 var placement_label: Label
 var event_label: Label
@@ -1282,31 +1286,31 @@ func _build_ui() -> void:
 	left.add_child(setup_back_button)
 	setup_controls.append(setup_back_button)
 
+	preparation_pack_offer_panel = PackOfferPanelView.new()
+	preparation_pack_offer_panel.previous_requested.connect(func() -> void: _cycle_pack(-1))
+	preparation_pack_offer_panel.next_requested.connect(func() -> void: _cycle_pack(1))
+	preparation_pack_offer_panel.open_requested.connect(_on_open_pack)
+	preparation_pack_offer_panel.reserve_requested.connect(_on_reserve_pack)
+	preparation_section.add_child(preparation_pack_offer_panel)
+	pack_button = preparation_pack_offer_panel.open_button
+	reserve_button = preparation_pack_offer_panel.reserve_button
+	pack_preview_label = preparation_pack_offer_panel.detail_label
+	var pack_advanced_heading: Label = Label.new()
+	pack_advanced_heading.text = "ADVANCED PACK LIST"
+	pack_advanced_heading.add_theme_font_size_override("font_size", 12)
+	pack_advanced_heading.add_theme_color_override("font_color", Color("#8fc6d1"))
+	preparation_section.add_child(pack_advanced_heading)
 	pack_option = OptionButton.new()
 	pack_option.item_selected.connect(func(_index: int) -> void: _refresh_pack_preview())
 	for pack_id in keep.pack_ids():
 		pack_option.add_item(String(keep.pack_definition(pack_id).get("name", pack_id)))
 		pack_option.set_item_metadata(pack_option.item_count - 1, pack_id)
-	var pack_group: VBoxContainer = _labeled_control("Pack offer", pack_option)
+	var pack_group: VBoxContainer = _labeled_control("Pack catalogue", pack_option)
 	preparation_section.add_child(pack_group)
-	var pack_button: Button = Button.new()
-	pack_button.text = "Open pack"
-	pack_button.pressed.connect(_on_open_pack)
-	preparation_section.add_child(pack_button)
 	availability_label = Label.new()
 	availability_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	availability_label.add_theme_color_override("font_color", Color("#aab1b2"))
 	preparation_section.add_child(availability_label)
-	pack_preview_label = Label.new()
-	pack_preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	pack_preview_label.custom_minimum_size = Vector2(292, 112)
-	pack_preview_label.add_theme_color_override("font_color", Color("#d8c389"))
-	preparation_section.add_child(pack_preview_label)
-	var reserve_button: Button = Button.new()
-	reserve_button.text = "Reserve selected pack"
-	reserve_button.tooltip_text = "Hold this offer without granting its pieces; opening it later consumes a preparation opening and its shown material cost."
-	reserve_button.pressed.connect(_on_reserve_pack)
-	preparation_section.add_child(reserve_button)
 	var asset_strip: VBoxContainer = VBoxContainer.new()
 	for asset_row in [[PIKE_ICON, REPAIR_ICON, FIRE_ICON, SCOUT_ICON, GATE_ICON], [RAIDER_ICON, SAPPER_ICON, CLIMBER_ICON]]:
 		var row: HBoxContainer = HBoxContainer.new()
@@ -1903,7 +1907,7 @@ func _focus_screen_control() -> void:
 	elif screen == "setup":
 		target = war_council_choice_panel.commander_next_button if war_council_choice_panel != null and not tutorial.active else commander_option
 	elif screen == "preparation":
-		target = playtest_button if not playtest_button.disabled else pack_option
+		target = playtest_button if not playtest_button.disabled else pack_button
 	elif screen == "battle":
 		target = pause_button
 	elif screen == "results" and terminal_debrief_panel.visible:
@@ -2178,16 +2182,57 @@ func _on_toggle_campaign_modifier() -> void:
 	_run_result(keep.equip_modifier(modifier_id), "Campaign")
 
 func _refresh_pack_preview() -> void:
-	if pack_preview_label == null:
+	if preparation_pack_offer_panel == null:
 		return
-	var preview: Dictionary = keep.pack_preview(_selected_id(pack_option))
+	var pack_id: String = _selected_id(pack_option)
+	var preview: Dictionary = keep.pack_preview(pack_id)
 	if not bool(preview.get("ok", false)):
 		pack_preview_label.text = "PACK PREVIEW — %s" % String(preview.get("reason", "unavailable"))
 		return
 	var pieces: Array[String] = []
 	for piece in preview.get("pieces", []):
 		pieces.append("%s (%d)" % [String(piece.get("name", "")), int(piece.get("cost", 0))])
-	pack_preview_label.text = "PACK PREVIEW — %s\nDoctrine: %s | Open cost: %d materials\nAdds: %s\nSolves: %s\nAsks: %s\n%s" % [String(preview.name), String(preview.doctrine).replace("_", " "), int(preview.cost), ", ".join(pieces), String(preview.solves), String(preview.asks), String(preview.preview)]
+	var definition: Dictionary = keep.pack_definition(pack_id)
+	var demand: Dictionary = definition.get("spatial_demand", {})
+	var floors: Array[String] = []
+	for floor_id in demand.get("preferred_floors", []):
+		floors.append(String(floor_id).capitalize())
+	var zones: Array[String] = []
+	for zone_id in demand.get("preferred_zones", []):
+		zones.append(String(zone_id).capitalize())
+	var space: String = "%s floor; %s" % ["/".join(floors), "/".join(zones)]
+	space += "; open lane" if bool(demand.get("needs_open_lane", false)) else "; compact footprint"
+	space += "; adjacency" if bool(demand.get("needs_adjacency", false)) else ""
+	var owned: bool = bool(preview.get("owned", false))
+	var reserved: bool = bool(preview.get("reserved", false))
+	var openings: int = int(preview.get("openings_remaining", 0))
+	var enough_materials: bool = int(preview.get("materials", 0)) >= int(preview.get("cost", 0))
+	var tutorial_open: bool = not tutorial.active or (tutorial.expected_action() in ["open_pack", "open_pack:pike_line"] and pack_id == "pike_line")
+	var can_open: bool = not owned and openings > 0 and enough_materials and not keep.wave_active and not keep.repair_interval_active and tutorial_open
+	var state: String = "OPENED" if owned else "RESERVED" if reserved else "NO OPENINGS" if openings <= 0 else "NEEDS MATERIALS" if not enough_materials else "AVAILABLE"
+	var open_reason: String = "Open this doctrine and grant its pieces."
+	if owned:
+		open_reason = "This pack is already part of the keep."
+	elif openings <= 0:
+		open_reason = "This Preparation has no pack openings remaining."
+	elif not enough_materials:
+		open_reason = "Not enough materials to open this pack."
+	elif not tutorial_open:
+		open_reason = "First Watch opens Pike Line only when the lesson reaches that step."
+	preparation_pack_offer_panel.render({
+		"index": pack_option.selected + 1, "count": pack_option.item_count, "openings": openings, "materials": int(preview.get("materials", 0)), "state": state,
+		"name": String(preview.name), "role": String(definition.get("short_role", "")), "question": String(preview.get("question", "")), "doctrine": String(preview.doctrine).replace("_", " ").capitalize(), "cost": int(preview.cost),
+		"pieces": ", ".join(pieces), "strength": String(preview.solves), "weakness": String(preview.asks), "space": space, "choice": String(preview.preview),
+		"owned": owned, "reserved": reserved, "selection_locked": tutorial.active, "can_open": can_open, "can_reserve": not tutorial.active and not owned and not keep.wave_active and not keep.repair_interval_active,
+		"open_reason": open_reason, "reserve_reason": "Clear this reserve." if reserved else "Hold this offer for the next Preparation without granting its pieces.",
+	})
+	pack_option.disabled = tutorial.active
+
+func _cycle_pack(direction: int) -> void:
+	if pack_option == null or pack_option.item_count == 0 or tutorial.active:
+		return
+	pack_option.select(wrapi(pack_option.selected + direction, 0, pack_option.item_count))
+	_refresh_pack_preview()
 
 func _on_open_pack() -> void:
 	var pack_id: String = _selected_id(pack_option)
@@ -3148,7 +3193,7 @@ func _focus_tutorial_target(target_id: String) -> void:
 	match target_id:
 		"tutorial_continue": target = tutorial_continue_button
 		"setup_confirm": target = setup_confirm_button
-		"pack_open": target = pack_option
+		"pack_open": target = pack_button
 		"primary_action": target = playtest_button
 		"enemy_inspector": target = enemy_option
 		"commander_ability": target = commander_ability_button

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.23.0-war-council-cards",
+  "build_version": "0.23.1-pack-offer-card",
   "status": "ready_for_human_sessions",
   "release_ready": false,
   "minimum_completed_sessions": 4,

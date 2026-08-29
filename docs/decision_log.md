@@ -695,3 +695,11 @@
 **Reason:** The briefing contained the right information but made the player assemble it from a compact paragraph and a long command rail. Two stable cards make the run-defining contrast readable before the fortress appears and give mouse, keyboard, and controller users an obvious browsing path.
 
 **Trade-off:** The main setup screen becomes taller and may scroll at small windows or large UI scales. Cards therefore stack at 125% scale, while the detailed scenario preview and fallback selectors remain available in the command rail. No card field is serialized or allowed to select content during render.
+
+## ADR-088: Pack offers expose doctrine before purchase
+
+**Decision:** Replace the raw-first pack selector and prose preview with a dedicated `PackOfferPanel` at the top of Preparation commands. Project the selected pack's doctrine, contents, costs, strength, weakness, spatial demand, question, opening budget, and availability state, while routing Open and Reserve through existing handlers and retaining the dropdown as an advanced fallback.
+
+**Reason:** Packs are the game's signature strategic commitment, but the previous interface presented them like a debug catalogue. A single card makes the sacrifice and board demand visible before materials are spent and clearly distinguishes browsing from committing.
+
+**Trade-off:** The command rail card is taller than the former selector. Its information replaces rather than duplicates the old preview, and it remains scrollable at large scale. State labels are derived from `pack_preview()` and current tutorial context; only `PackKeepState` may grant, reserve, price, or reject a pack.
