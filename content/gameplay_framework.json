@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.20.0-first-watch",
+  "framework_version": "0.21.0-terminal-debrief",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -1717,6 +1717,14 @@
     "persistence": "separate_versioned_progress_with_phase_checkpoint_retry",
     "determinism_rule": "tutorial_state_may_gate_or_focus_existing_commands_but_never_resolves_combat_placement_recovery_or_damage",
     "exit_paths": ["complete", "skip", "retry_phase"]
+  },
+  "terminal_debrief": {
+    "status": "implemented",
+    "read_model": ["outcome", "resources", "wave_timeline", "causal_chain", "persistent_damage", "event_and_regional_consequences", "replay_experiment"],
+    "layout": "keep_board_preserved_beside_dedicated_scrollable_debrief_with_fixed_actions",
+    "primary_action": "review_setup_or_tutorial_completion_retry",
+    "secondary_actions": ["save_result", "return_to_main_menu"],
+    "determinism_rule": "debrief_derives_from_existing_authoritative_state_and_serializes_no_presentation_fields"
   },
   "unit_availability": {
     "status": "vertical_slice",

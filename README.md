@@ -71,6 +71,10 @@ First stabilize the current grid and headless tests. Then move commander, pack, 
 
 A later Windows alpha should still add platform adapters, achievements, cloud-safe saves, crash reporting, authored animation sheets, and a fuller soundscape. P10 establishes controller navigation, keyboard/controller remapping, user-persistent display/window controls, effects volume, reduced motion, and high-contrast presentation without moving those services into the core keep simulation.
 
+## v0.21.0 terminal debrief
+
+Completed scenarios now replace the recovery command rail with a dedicated final debrief while preserving the damaged keep beside it. The panel presents the outcome, resources, complete assault timeline, causal chain, persistent room and defender damage, authored consequences, and one concrete replay experiment. Review Setup remains the dominant action, while Save Result and Return to Main Menu are secondary. The debrief is derived entirely from existing authoritative state and adds no run-save fields.
+
 ## Implemented first battle slice
 
 The current battle slice is **Greywatch Keep**, a two-floor 12×8 keep defended by **The Castellan** or **The Warden**. It implements four basic defenders—Pike Squad, Repair Station, Fire Team, and Scout Post—and four enemy doctrines: Raider gate assault, Sapper distributed sabotage, Climber wall bypass, and Siege Beast area pressure.

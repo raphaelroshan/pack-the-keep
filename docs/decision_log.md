@@ -639,3 +639,11 @@
 **Reason:** The vertical slice exposed its systems but expected a new player to infer their order and meaning from a dense command rail. First Watch now teaches the real game from menu to victory: fortress purpose, resources, placement, enemy roles, live pause-and-inspect combat, recovery trade-offs, assignments, and commander timing.
 
 **Trade-off:** The tutorial intentionally prescribes one safe opening and pauses each new assault phase for analysis. It is optional, remains replayable from the main menu, and does not introduce a second simulation, tutorial-only combat rules, or a campaign progression dependency.
+
+## ADR-081: Terminal Results uses a dedicated presentation-only debrief
+
+**Decision:** Replace the ordinary command rail at a completed scenario with a dedicated `TerminalDebriefPanel`. Keep the final fortress board visible beside it, derive outcome, resources, wave history, causal explanation, persistent damage, consequences, and replay advice from existing authoritative read models, and route replay, save, and menu actions through existing handlers.
+
+**Reason:** Reusing inter-wave recovery presentation made a finished defense feel like another maintenance interval. A dedicated composition gives completion emotional and visual weight while retaining the damaged keep as evidence for the report.
+
+**Trade-off:** Detailed causal and fortress information scrolls inside the debrief so the replay action can remain fixed and visible. At 125% scale the keep and debrief stack vertically. No new result state is serialized, and unresolved terminal events continue to use their existing event flow until completion.

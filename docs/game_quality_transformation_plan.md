@@ -5,6 +5,8 @@
 **Current status:** Technically substantial private pre-alpha; visually and flow-wise still a prototype
 **Primary objective:** Turn the existing deterministic fortress-defense systems into a coherent, attractive, immediately understandable game-quality private alpha without rewriting the simulation core.
 
+**Implementation ledger:** P32 completes the first bounded flow slice: terminal Results now has a dedicated debrief beside the persistent keep, with a three-phase timeline, causal chain, damage summary, consequences, replay experiment, and fixed actions. Human validation remains pending.
+
 > **Central diagnosis:** Pack the Keep has enough mechanics for a real game loop. Its largest gap is not feature count. Its largest gap is presentation: the player must feel that they are preparing a fortress, watching a defense, making urgent but comprehensible interventions, recovering from damage, and learning from the result—not operating a debug panel surrounded by a board.
 
 ---

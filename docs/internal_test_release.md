@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.20.0-first-watch` — the controlled playtest adds a complete First Watch onboarding route, independent tutorial resume data, and checkpoint retries while preserving the overwhelming Last Bell end-state test; human sessions and owner approval remain pending
+**Current build identity:** `0.21.0-terminal-debrief` — the controlled playtest adds a dedicated final defense composition beside the persistent keep, with a three-phase timeline, causal chain, damage state, and replay experiment; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of ten authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.21.0 acceptance checks
+
+Complete any three-phase scenario and confirm terminal Results replaces the recovery command rail with a dedicated debrief. The damaged keep must remain visible beside the report at 100% scale. Confirm the report shows the final outcome, scenario and commander, morale/materials/defenders/breach, all three phase summaries, what held, what gave way, persistent room/defender damage, consequences, and one concrete replay experiment. Confirm Review Setup is the primary fixed action, Save Result and Return to Main Menu are secondary, a terminal save restores the same debrief, and 125% scale stacks the keep and report without horizontal page scrolling.
 
 ## v0.20.0 acceptance checks
 
