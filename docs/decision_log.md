@@ -727,3 +727,11 @@
 **Reason:** The former flat stack gave debug-like timing tools the same visual weight as the decisions that define the assault. The new order communicates what is happening and what the player can meaningfully do while preserving exact access to expert controls.
 
 **Trade-off:** Manual stepping and speed changes require one extra disclosure click for mouse users. Their shortcuts remain immediate, the disclosure is presentation-only, and First Watch now focuses the visible threat action rather than a hidden fallback selector.
+
+## ADR-092: Playtest observation is explicit, local, and non-authoritative
+
+**Decision:** Add a session-only `LocalPlaytestObserver` that begins disabled, accepts coarse presentation events only after explicit opt-in, and writes JSON only after an explicit local export. Add a graphical nine-screen capture harness with stable filenames and a manifest.
+
+**Reason:** The roadmap requires before/after visual evidence and basic behavior counts, but the game must remain offline-first and must not silently collect or overstate evidence. A small presentation service gives observers useful context without touching `PackKeepState` or replacing the structured P16 human protocol.
+
+**Trade-off:** Observation must be enabled again after every launch and the export is deliberately manual. This produces less data than automatic analytics, but keeps consent and provenance obvious and prevents automated counts from being mistaken for human findings.

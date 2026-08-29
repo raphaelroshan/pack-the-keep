@@ -2,6 +2,8 @@
 
 This gallery preserves the strongest screenshots from the `0.20.0-first-watch` development capture set. They document the transition from a functional combat prototype toward a readable, game-quality top-down keep-defense experience. These are internal alpha screenshots, not final store art.
 
+Current builds can regenerate equivalent comparison states with `tools/capture_vertical_slice.gd`. The harness writes nine stable 1600×900 PNG names and a machine-readable manifest to an explicit local directory; generated captures remain untracked unless deliberately curated into this gallery.
+
 ## Capture record
 
 | Field | Value |

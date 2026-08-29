@@ -1,11 +1,11 @@
 # Pack the Keep — Game-Quality Transformation Plan
 
 **Audience:** GPT coding agents, art/UX agents, test agents, and the human owner
-**Current baseline:** `0.24.1-battle-command-hierarchy`
+**Current baseline:** `0.25.0-local-playtest-observer`
 **Current status:** Technically substantial public-source pre-alpha; presentation transformation in progress
 **Primary objective:** Turn the existing deterministic fortress-defense systems into a coherent, attractive, immediately understandable game-quality private alpha without rewriting the simulation core.
 
-**Implementation ledger:** P32 gives terminal Results a dedicated debrief. P33 adds Preparation question/answer/weakness hierarchy. P34 adds board visual grammar. P35 centralizes semantic battle audio. P36 adds tick-zero readiness. P37 gives inter-wave Recovery a compact what-changed/why/next/action-budget/priority hierarchy. P38 replaces raw-first War Council selection with commander and defense choice cards. P39 gives Preparation a complete pack doctrine offer card. P40 groups Preparation into three stages. P41 gives rooms, defenders, and threats one action-oriented inspection hierarchy without raw IDs. P42 centers Battle on live state, pause/resume, commander intervention, and focused-threat inspection while collapsing expert timing controls. Human validation remains pending.
+**Implementation ledger:** P32 gives terminal Results a dedicated debrief. P33 adds Preparation question/answer/weakness hierarchy. P34 adds board visual grammar. P35 centralizes semantic battle audio. P36 adds tick-zero readiness. P37 gives inter-wave Recovery a compact what-changed/why/next/action-budget/priority hierarchy. P38 replaces raw-first War Council selection with commander and defense choice cards. P39 gives Preparation a complete pack doctrine offer card. P40 groups Preparation into three stages. P41 gives rooms, defenders, and threats one action-oriented inspection hierarchy without raw IDs. P42 centers Battle on live state, pause/resume, commander intervention, and focused-threat inspection while collapsing expert timing controls. P43 adds explicit local-only observation and a stable nine-screen capture harness. Human validation remains pending.
 
 > **Central diagnosis:** Pack the Keep has enough mechanics for a real game loop. Its largest gap is not feature count. Its largest gap is presentation: the player must feel that they are preparing a fortress, watching a defense, making urgent but comprehensible interventions, recovering from damage, and learning from the result—not operating a debug panel surrounded by a board.
 
@@ -847,15 +847,14 @@ Start from the current Pack the Keep remote main. Read AGENTS.md, README.md,
 design/design_prompt.md, docs/agent_handoff_roadmap.md, and the latest visual
 verification notes.
 
-Implement the next game-quality slice: add a stable, deterministic screen-state
-capture harness and opt-in local playtest metrics for screen duration, first
-action, pause count, focus usage, primary-action path, recovery choice, and
-result type. Keep all evidence local until the player explicitly exports it.
+Implement the next game-quality slice: introduce one explicit presentation
+snapshot boundary for the Battle screen, then render the battle-state summary
+and response projection from that snapshot. Keep commands routed through the
+existing handlers and keep `PackKeepState` authoritative.
 
-Preserve the current screen hierarchy, deterministic simulation, save schema,
-privacy posture, offline boundary, First Watch, and packaged smoke gates. Do
-not upload telemetry, invent human observations, or make capture code part of
-the authoritative battle state.
+Preserve current timing, targeting, save state, local observation, capture
+harness, First Watch, and scaling. Do not perform a monolithic UI rewrite or
+move combat rules into presentation code.
 ```
 
 ---

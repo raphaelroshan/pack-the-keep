@@ -10,6 +10,7 @@ const RecoveryBriefPanelView = preload("res://src/ui/recovery_brief_panel.gd")
 const WarCouncilChoicePanelView = preload("res://src/ui/war_council_choice_panel.gd")
 const PackOfferPanelView = preload("res://src/ui/pack_offer_panel.gd")
 const InspectionPanelView = preload("res://src/ui/inspection_panel.gd")
+const LocalPlaytestObserverView = preload("res://src/ui/local_playtest_observer.gd")
 
 const PackKeepState = preload("res://src/core/keep_state.gd")
 const PackagedSmoke = preload("res://src/platform/packaged_smoke.gd")
@@ -33,6 +34,7 @@ const SETTINGS_BACKUP_PATH := "user://pack_the_keep_settings.json.bak"
 const TUTORIAL_PATH := "user://pack_the_keep_tutorial.save"
 const TUTORIAL_TEMP_PATH := "user://pack_the_keep_tutorial.save.tmp"
 const TUTORIAL_BACKUP_PATH := "user://pack_the_keep_tutorial.save.bak"
+const LOCAL_METRICS_PATH := "user://pack_the_keep_local_playtest_metrics.json"
 const UI_SCALE_PRESETS := [0.8, 1.0, 1.25, 1.5, 2.0]
 const WINDOW_SIZE_PRESETS := [Vector2i(1280, 720), Vector2i(1600, 900), Vector2i(1920, 1080), Vector2i(2560, 1440)]
 const EFFECTS_VOLUME_PRESETS := [0.25, 0.5, 0.75, 1.0]
@@ -149,6 +151,9 @@ var effects_volume_button: Button
 var feedback_cue_label: Label
 var event_feed_button: Button
 var auto_pause_button: Button
+var local_metrics_button: Button
+var local_metrics_export_button: Button
+var local_metrics_status_label: Label
 var rebind_action_option: OptionButton
 var rebind_button: Button
 var reset_bindings_button: Button
@@ -224,6 +229,8 @@ var layout_lens_label: Label
 var playtest_button: Button
 var playtest_status_label: Label
 var tutorial: TutorialDirector
+var local_playtest_observer: LocalPlaytestObserver
+var local_metrics_path: String = LOCAL_METRICS_PATH
 var tutorial_panel: PanelContainer
 var tutorial_speaker_label: Label
 var tutorial_title_label: Label
@@ -240,6 +247,7 @@ var developer_ui_enabled: bool = false
 func _ready() -> void:
 	keep = PackKeepState.new(3307)
 	tutorial = FirstWatchTutorial.new()
+	local_playtest_observer = LocalPlaytestObserverView.new()
 	developer_ui_enabled = OS.get_cmdline_user_args().has("--debug-ui")
 	_restore_default_input_bindings()
 	_ensure_controller_navigation_bindings()
@@ -268,6 +276,8 @@ func _start_packaged_smoke() -> void:
 	smoke_harness.call_deferred("run", self)
 
 func _process(delta: float) -> void:
+	if local_playtest_observer != null:
+		local_playtest_observer.advance(delta)
 	if battle_paused or not keep.wave_active:
 		return
 	var battle_step_before: int = keep.battle_step
@@ -289,6 +299,7 @@ func _process(delta: float) -> void:
 	if bool(result.get("resolved", false)):
 		assault_ready_reason = ""
 		battle_paused = true
+		local_playtest_observer.record_result(String(result.get("outcome", "unknown")))
 		_set_feedback(Color("#bfe8cf"), _outcome_cue(String(result.get("outcome", "unknown"))))
 		_set_event("Assault phase resolved: %s. Use the recovery lull before the next pressure arrives." % String(result.get("outcome", "unknown")).replace("_", " "))
 		_set_screen("results")
@@ -329,6 +340,7 @@ func _handle_named_action(event: InputEvent) -> bool:
 	if not event.is_pressed() or (event is InputEventKey and event.echo):
 		return false
 	if event.is_action_pressed("battle_pause"):
+		local_playtest_observer.record_action("primary_action", {"primary_path": "%s:battle_pause" % ("controller" if event is InputEventJoypadButton else "keyboard")})
 		_toggle_battle_pause()
 	elif event.is_action_pressed("battle_advance"):
 		_on_advance_wave()
@@ -513,6 +525,7 @@ func _toggle_battle_pause() -> void:
 	var tutorial_action: String = "resume_battle" if battle_paused else "pause_battle"
 	if not _tutorial_allows(tutorial_action):
 		return
+	local_playtest_observer.record_action("pause_toggle")
 	if not assault_ready_reason.is_empty():
 		var ready_reason: String = assault_ready_reason
 		assault_ready_reason = ""
@@ -616,6 +629,31 @@ func _toggle_auto_pause_on_threat() -> void:
 	auto_pause_on_threat = not auto_pause_on_threat
 	_save_preferences()
 	_set_event("Threat auto-pause enabled; real-time play stops after the first threat step and new breaches." if auto_pause_on_threat else "Threat auto-pause disabled.")
+	_refresh_ui()
+
+func _toggle_local_playtest_observation() -> void:
+	if local_playtest_observer == null:
+		return
+	local_playtest_observer.set_enabled(not local_playtest_observer.enabled, screen)
+	_set_event("Local playtest observation enabled for this launch. Nothing is uploaded." if local_playtest_observer.enabled else "Local playtest observation paused. The in-memory snapshot remains available to export.")
+	_refresh_ui()
+
+func _export_local_playtest_observation() -> void:
+	if local_playtest_observer == null:
+		return
+	var result: Dictionary = local_playtest_observer.export_json(local_metrics_path, {
+		"build_version": String(ProjectSettings.get_setting("application/config/version", "unknown")),
+		"platform": OS.get_name(),
+		"commander": keep.commander_id,
+		"scenario": keep.scenario_id,
+		"modifier": keep.equipped_modifier_id,
+		"window_size": "%dx%d" % [int(size.x), int(size.y)],
+		"ui_scale_percent": int(UI_SCALE_PRESETS[ui_scale_index] * 100.0),
+	})
+	if bool(result.get("ok", false)):
+		_set_event("Local observation exported to %s. Share it only if you choose." % local_metrics_path)
+	else:
+		_set_event("Local observation export blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
 
 func _window_size_text() -> String:
@@ -1053,7 +1091,7 @@ func _build_ui() -> void:
 
 	settings_overview_panel = _build_overview_panel(
 		"READABILITY BEFORE PRESSURE",
-		"Display, audio, input, and pacing preferences live on their own screen. They never alter the deterministic keep state, seed, target selection, or battle outcome."
+		"Display, audio, input, and pacing preferences live on their own screen. Optional playtest observation is local, session-only, and explicitly exported; none of these settings alter battle outcomes."
 	)
 	left.add_child(settings_overview_panel)
 
@@ -1578,6 +1616,21 @@ func _build_ui() -> void:
 	auto_pause_button.tooltip_text = "Pause after first contact in each assault phase and after a new breach; resume manually when ready."
 	auto_pause_button.pressed.connect(_toggle_auto_pause_on_threat)
 	settings_section.add_child(auto_pause_button)
+	local_metrics_button = Button.new()
+	local_metrics_button.text = "Local playtest observation: OFF"
+	local_metrics_button.tooltip_text = "Opt in for this launch only. Records coarse interaction counts and screen time in memory; nothing is uploaded."
+	local_metrics_button.pressed.connect(_toggle_local_playtest_observation)
+	settings_section.add_child(local_metrics_button)
+	local_metrics_export_button = Button.new()
+	local_metrics_export_button.text = "Export local observation"
+	local_metrics_export_button.tooltip_text = "Write the current anonymous observation snapshot to the local user data folder."
+	local_metrics_export_button.pressed.connect(_export_local_playtest_observation)
+	settings_section.add_child(local_metrics_export_button)
+	local_metrics_status_label = Label.new()
+	local_metrics_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	local_metrics_status_label.add_theme_font_size_override("font_size", 10)
+	local_metrics_status_label.add_theme_color_override("font_color", Color("#aab1b2"))
+	settings_section.add_child(local_metrics_status_label)
 	rebind_action_option = OptionButton.new()
 	for action in REMAPPABLE_ACTIONS:
 		rebind_action_option.add_item(String(ACTION_LABELS.get(action, action)))
@@ -1836,6 +1889,8 @@ func _is_terminal_result() -> bool:
 
 func _set_screen(next_screen: String) -> void:
 	screen = next_screen
+	if local_playtest_observer != null:
+		local_playtest_observer.record_screen(screen)
 	var gameplay_screen: bool = screen in ["preparation", "battle", "results"]
 	var terminal_result: bool = _is_terminal_result()
 	if gameplay_columns:
@@ -2545,6 +2600,7 @@ func _select_enemy_focus(index: int, source: String) -> void:
 		return
 	if not _apply_enemy_focus(index):
 		return
+	local_playtest_observer.record_action("focus_threat")
 	for option_index in range(enemy_option.item_count):
 		if int(enemy_option.get_item_metadata(option_index)) == index:
 			enemy_option.select(option_index)
@@ -2920,12 +2976,16 @@ func _on_assign_piece() -> void:
 	var result: Dictionary = keep.assign_piece_to_room(_selected_piece_instance(), room_id)
 	_run_result(result, "Assignment")
 	if bool(result.get("ok", false)):
+		local_playtest_observer.record_action("recovery_choice", {"recovery_choice": "assign_piece"})
 		_tutorial_advance("assign_piece", room_id)
 
 func _on_clear_assignment() -> void:
 	if not _tutorial_allows("clear_assignment"):
 		return
-	_run_result(keep.clear_piece_assignment(_selected_piece_instance()), "Assignment")
+	var result: Dictionary = keep.clear_piece_assignment(_selected_piece_instance())
+	_run_result(result, "Assignment")
+	if bool(result.get("ok", false)):
+		local_playtest_observer.record_action("recovery_choice", {"recovery_choice": "clear_assignment"})
 
 func _on_repair_room() -> void:
 	var room_id: String = _selected_id(room_option)
@@ -2934,6 +2994,7 @@ func _on_repair_room() -> void:
 	var result: Dictionary = keep.repair_room(room_id)
 	_run_result(result, "Repair")
 	if bool(result.get("ok", false)):
+		local_playtest_observer.record_action("recovery_choice", {"recovery_choice": "repair_room"})
 		_tutorial_advance("repair_room", room_id)
 
 func _on_repair_piece() -> void:
@@ -2942,6 +3003,7 @@ func _on_repair_piece() -> void:
 	var result: Dictionary = keep.repair_piece(_selected_piece_instance())
 	_run_result(result, "Repair")
 	if bool(result.get("ok", false)):
+		local_playtest_observer.record_action("recovery_choice", {"recovery_choice": "repair_piece"})
 		_tutorial_advance("repair_piece")
 
 func _on_finish_interval() -> void:
@@ -2950,6 +3012,7 @@ func _on_finish_interval() -> void:
 	var result: Dictionary = keep.finish_repair_interval()
 	_run_result(result, "Interval")
 	if bool(result.get("ok", false)):
+		local_playtest_observer.record_action("recovery_choice", {"recovery_choice": "finish_interval"})
 		if bool(result.get("next_wave_started", false)):
 			_arm_assault_readiness()
 			focused_enemy_index = -1
@@ -2984,6 +3047,7 @@ func _on_advance_wave() -> void:
 	elif bool(result.get("resolved", false)):
 		assault_ready_reason = ""
 		battle_paused = true
+		local_playtest_observer.record_result(String(result.get("outcome", "unknown")))
 		_set_feedback(Color("#bfe8cf"), _outcome_cue(String(result.get("outcome", "unknown"))))
 		if keep.has_next_wave() and keep.repair_interval_active:
 			_set_event("Assault phase %d resolved: %s. Recovery lull open before phase %d." % [keep.wave_index, String(result.get("outcome", "unknown")).replace("_", " "), keep.wave_index + 1])
@@ -3093,6 +3157,7 @@ func _load_save_candidate(path: String) -> Dictionary:
 	return {"ok": true, "state": candidate, "result": result}
 
 func _on_playtest_primary_action() -> void:
+	local_playtest_observer.record_action("primary_action", {"primary_path": "button:%s" % screen})
 	if screen == "results":
 		if tutorial.active and (tutorial.failure_active or tutorial.expected_action() == "finish_tutorial"):
 			_on_tutorial_continue()
@@ -3110,12 +3175,14 @@ func _on_terminal_return_to_menu() -> void:
 	_set_event("Final defense retained in memory. Save Result before leaving if you want it available from Continue Saved Run.")
 
 func _on_new_game() -> void:
+	local_playtest_observer.record_action("new_game")
 	if not tutorial_completed and not tutorial_dismissed:
 		_start_tutorial()
 	else:
 		_on_start_custom_setup()
 
 func _start_tutorial() -> void:
+	local_playtest_observer.record_action("learn_to_play")
 	_reset_for_setup()
 	guided_setup = false
 	tutorial.start()
@@ -3129,6 +3196,7 @@ func _start_tutorial() -> void:
 	_prepare_tutorial_step()
 
 func _continue_tutorial() -> void:
+	local_playtest_observer.record_action("continue_tutorial")
 	var loaded: Dictionary = _load_tutorial_candidate(tutorial_path)
 	if not bool(loaded.get("ok", false)):
 		loaded = _load_tutorial_candidate(tutorial_backup_path)
@@ -3403,6 +3471,7 @@ func _complete_tutorial() -> void:
 	_set_event("First Watch complete. The War Council is open for your next defense.")
 
 func _on_start_quick_playtest() -> void:
+	local_playtest_observer.record_action("quick_start")
 	_reset_for_setup()
 	guided_setup = true
 	_select_option_metadata(commander_option, "castellan")
@@ -3414,6 +3483,7 @@ func _on_start_quick_playtest() -> void:
 	_refresh_ui()
 
 func _on_start_custom_setup() -> void:
+	local_playtest_observer.record_action("custom_setup")
 	_reset_for_setup()
 	guided_setup = false
 	keep.select_commander(_selected_id(commander_option))
@@ -3464,6 +3534,7 @@ func _on_close_settings() -> void:
 	_set_screen(target)
 
 func _on_continue_saved_run() -> void:
+	local_playtest_observer.record_action("continue_saved_run")
 	_on_load()
 	setup_confirmed = keep.scenario_active
 	if keep.wave_active:
@@ -3915,6 +3986,10 @@ func _refresh_ui() -> void:
 	feedback_cue_label.text = "Last feedback cue: %s" % last_cue_id.replace("_", " ").to_upper()
 	event_feed_button.text = "Event feed: newest %d" % _event_feed_retention()
 	auto_pause_button.text = "Threat auto-pause: ON" if auto_pause_on_threat else "Threat auto-pause: OFF"
+	local_metrics_button.text = "Local playtest observation: ON" if local_playtest_observer.enabled else "Local playtest observation: OFF"
+	local_metrics_export_button.disabled = not local_playtest_observer.started
+	var observation_snapshot: Dictionary = local_playtest_observer.snapshot()
+	local_metrics_status_label.text = "SESSION ONLY • LOCAL • NEVER UPLOADED\n%d screen(s) timed • %d pause(s) • %d threat focus action(s)" % [observation_snapshot.screen_durations_seconds.size(), int(observation_snapshot.pause_count), int(observation_snapshot.focus_count)]
 	_refresh_binding_controls()
 	_refresh_battle_command_hierarchy()
 	_refresh_response_preview()

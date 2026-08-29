@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.24.1",
+  "content_version": "0.25.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -514,6 +514,15 @@
     "authority": "presentation_only_grouping_over_existing_battle_commands_and_read_models",
     "evidence": ["design/p42_battle_command_hierarchy.md", "docs/p42_battle_command_hierarchy_verification.md", "tests/test_p42_battle_command_hierarchy.gd"],
     "next_slice": "p43_local_playtest_instrumentation"
+  },
+  "p43_local_playtest_instrumentation": {
+    "status": "implemented",
+    "metrics": ["screen_duration", "first_action", "pause_count", "focus_count", "primary_action_path", "recovery_choice", "result_type"],
+    "capture_states": ["title", "war_council", "preparation", "phase_1", "recovery_1", "phase_2", "recovery_2", "phase_3", "terminal_results"],
+    "privacy": "disabled_by_default_local_only_explicit_export_never_human_evidence",
+    "authority": "presentation_observation_only_no_run_save_or_simulation_fields",
+    "evidence": ["design/p43_local_playtest_observation.md", "docs/p43_local_playtest_observation_verification.md", "tests/test_p43_local_playtest_observer.gd", "tools/capture_vertical_slice.gd"],
+    "next_slice": "p44_presentation_snapshot_boundary"
   },
   "campaign": {
     "title": "The Bell at Dusk",

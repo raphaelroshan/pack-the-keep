@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.24.1-battle-command-hierarchy` — Battle now leads with live state, pause/resume, commander intervention, and focused-threat inspection while expert timing controls remain disclosed on demand; human sessions and owner approval remain pending
+**Current build identity:** `0.25.0-local-playtest-observer` — the game can explicitly collect coarse local-only observation data and generate a stable nine-screen visual sequence without upload or human-evidence claims; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of ten authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.25.0 acceptance checks
+
+Open Settings and confirm **Local playtest observation** begins OFF on every launch. Enable it, move through several screens, pause, focus a threat, use a primary action, and make a recovery choice. Disable collection and explicitly export; confirm the JSON is local-only, marks `human_evidence` false, and contains coarse counts rather than personal identifiers. Run the graphical capture harness and confirm it writes nine ordered 1600×900 screens plus a manifest.
 
 ## v0.24.1 acceptance checks
 
