@@ -679,3 +679,11 @@
 **Reason:** Continuous real-time combat was already the correct identity, but immediately advancing while the screen changed could hide first contact and make later doctrine shifts feel arbitrary. A bounded ready beat preserves the live battle while giving the player one clear moment to read the board.
 
 **Trade-off:** The ready flag is intentionally not serialized, so loading any active tick-zero wave reconstructs the warning even if the player had manually paused before the first tick. First Watch retains its stricter authored pause steps, and unchanged doctrine/roster transitions remain eligible to continue live.
+
+## ADR-086: Inter-wave Recovery gets a dedicated presentation-only brief
+
+**Decision:** Add a `RecoveryBriefPanel` above the persistent fortress during active inter-wave recovery. Derive what changed, why it matters, next pressure, action/material budget, first priority, and trade-off from wave history, damage state, and `recovery_advice()`. Keep exact recovery commands and validation in the existing command-rail cards.
+
+**Reason:** The action cards were mechanically clear but required the player to infer the phase outcome and next-wave stakes from separate long reports. A compact hierarchy frames the two-action sacrifice before the player evaluates individual buttons.
+
+**Trade-off:** The priority is advisory and selects only one visible damaged room or defender. It does not reorder, auto-select, or execute actions. Terminal Results, authored-event gating, and all recovery costs remain unchanged.

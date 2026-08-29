@@ -1,11 +1,11 @@
 # Pack the Keep — Game-Quality Transformation Plan
 
 **Audience:** GPT coding agents, art/UX agents, test agents, and the human owner
-**Current baseline:** `0.22.2-assault-readiness`
+**Current baseline:** `0.22.3-recovery-hierarchy`
 **Current status:** Technically substantial public-source pre-alpha; presentation transformation in progress
 **Primary objective:** Turn the existing deterministic fortress-defense systems into a coherent, attractive, immediately understandable game-quality private alpha without rewriting the simulation core.
 
-**Implementation ledger:** P32 gives terminal Results a dedicated debrief. P33 adds Preparation question/answer/weakness hierarchy. P34 adds the board visual registry and silhouette grammar. P35 centralizes semantic battle audio. P36 adds tick-zero Sound the Bell readiness and changed-pressure warnings without changing the continuous simulation. Human validation remains pending.
+**Implementation ledger:** P32 gives terminal Results a dedicated debrief. P33 adds Preparation question/answer/weakness hierarchy. P34 adds board visual grammar. P35 centralizes semantic battle audio. P36 adds tick-zero readiness. P37 gives inter-wave Recovery a compact what-changed/why/next/action-budget/priority hierarchy while preserving every command. Human validation remains pending.
 
 > **Central diagnosis:** Pack the Keep has enough mechanics for a real game loop. Its largest gap is not feature count. Its largest gap is presentation: the player must feel that they are preparing a fortress, watching a defense, making urgent but comprehensible interventions, recovering from damage, and learning from the result—not operating a debug panel surrounded by a board.
 
@@ -847,15 +847,15 @@ Start from the current Pack the Keep remote main. Read AGENTS.md, README.md,
 design/design_prompt.md, docs/agent_handoff_roadmap.md, and the latest visual
 verification notes.
 
-Implement the next game-quality slice: give inter-wave Recovery a dedicated,
-compact hierarchy that states what changed, why it matters, what the next phase
-will test, actions remaining, and one recommended priority before listing the
-existing repair and assignment actions.
+Implement the next game-quality slice: replace raw War Council commander and
+scenario selectors with compact choice cards that explain identity, strength,
+limitation, first teaching question, wave arc, and what is fixed for the run.
+Keep an advanced selector as a secondary accessibility/fallback path.
 
-Preserve every recovery command, cost, event gate, save field, and next-wave
-transition. Add non-mutating presentation tests, controller focus, 125% scaling,
-and recovery save/load coverage. Do not add recovery actions, resources, combat
-rules, or terminal Results content.
+Preserve selection commands, content IDs, modifier rules, First Watch locks,
+controller focus, and setup save semantics. Add tests for both commanders,
+scenario navigation, locked tutorial state, 125% scaling, and non-mutating card
+refresh. Do not add commanders, scenarios, packs, or campaign systems.
 ```
 
 ---
