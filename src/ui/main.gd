@@ -11,6 +11,7 @@ const WarCouncilChoicePanelView = preload("res://src/ui/war_council_choice_panel
 const PackOfferPanelView = preload("res://src/ui/pack_offer_panel.gd")
 const InspectionPanelView = preload("res://src/ui/inspection_panel.gd")
 const LocalPlaytestObserverView = preload("res://src/ui/local_playtest_observer.gd")
+const BattlePresentationSnapshotView = preload("res://src/ui/battle_presentation_snapshot.gd")
 
 const PackKeepState = preload("res://src/core/keep_state.gd")
 const PackagedSmoke = preload("res://src/platform/packaged_smoke.gd")
@@ -141,6 +142,7 @@ var battle_inspection_label: Label
 var inspect_enemy_button: Button
 var battle_tactical_button: Button
 var battle_tactical_panel: VBoxContainer
+var battle_presentation_snapshot: Dictionary = {}
 var mute_button: Button
 var contrast_button: Button
 var reduced_motion_button: Button
@@ -2635,61 +2637,27 @@ func _focus_selected_enemy() -> void:
 		_cycle_enemy_focus(1)
 
 func _refresh_battle_command_hierarchy() -> void:
-	if battle_state_label == null or inspect_enemy_button == null:
-		return
-	var phase_text: String = "PHASE %d/%d  •  TICK %d" % [keep.wave_index, maxi(1, keep.authored_wave_count()), keep.battle_step]
-	if not keep.wave_active:
-		battle_state_label.text = "BATTLE STATE — NO ACTIVE ASSAULT\nPrepare the defense or review the resolved outcome."
-	elif not assault_ready_reason.is_empty():
-		battle_state_label.text = "BATTLE STATE — %s  •  PAUSED\nRead first contact, then sound the bell when the defense is understood." % phase_text
-	elif battle_paused:
-		battle_state_label.text = "BATTLE STATE — %s  •  PAUSED\nInspect targets and timing before resuming the real-time assault." % phase_text
-	else:
-		battle_state_label.text = "BATTLE STATE — %s  •  LIVE %.1fx\nWatch health, projectiles, and target lines; pause whenever the answer is unclear." % [phase_text, _battle_speed()]
-
-	var active_focus: bool = focused_enemy_index >= 0 and focused_enemy_index < keep.enemies.size() and not bool(keep.enemies[focused_enemy_index].get("defeated", false))
-	inspect_enemy_button.disabled = not keep.wave_active or not active_focus
-	if active_focus:
-		var enemy_id: String = String(keep.enemies[focused_enemy_index].get("enemy_id", ""))
-		var enemy_name: String = String(keep.enemy_definition(enemy_id).get("name", enemy_id.replace("_", " ").capitalize()))
-		inspect_enemy_button.text = "Inspect focused threat — %s" % enemy_name
-	else:
-		inspect_enemy_button.text = "Inspect focused threat"
-
-	var ability_spent: bool = bool(keep.lockdown_used) if keep.commander_id == "castellan" else bool(keep.rally_used)
-	var ability_ready: bool = keep.wave_active and keep.command_points > 0 and not ability_spent
-	commander_ability_button.disabled = not ability_ready
-	commander_ability_button.text += " — %s" % ("READY" if ability_ready else "SPENT" if ability_spent else "UNAVAILABLE")
+	_refresh_battle_presentation()
 
 func _refresh_response_preview() -> void:
-	if response_preview_label == null:
+	_refresh_battle_presentation()
+
+func _refresh_battle_presentation() -> void:
+	if battle_state_label == null or inspect_enemy_button == null or response_preview_label == null:
 		return
-	if focused_enemy_index < 0 or focused_enemy_index >= keep.enemies.size() or bool(keep.enemies[focused_enemy_index].get("defeated", false)):
-		response_preview_label.text = "RESPONSE — Select an active enemy on the map or press Tab. The dropdown remains a fallback."
-		return
-	var inspection: Dictionary = keep.inspect_enemy(focused_enemy_index)
-	var ability_name: String = String(keep.commander_definition(keep.commander_id).get("ability_name", "Ability"))
-	var ability_state: String = "available" if keep.command_points > 0 and not bool(keep.lockdown_used if keep.commander_id == "castellan" else keep.rally_used) else "spent or unavailable"
-	var timing_text: String = "PAUSED PREVIEW — commit when ready" if battle_paused else "RUNNING — pause to inspect before committing"
-	var target_text: String = String(keep.enemy_target_readout(focused_enemy_index).get("summary", "Approaching"))
-	var counter_id: String = String(inspection.get("counter", ""))
-	var counter_name: String = String(keep.piece_definition(counter_id).get("name", counter_id.replace("_", " ").capitalize())) if not counter_id.is_empty() else "Read the forecast"
-	var response: Dictionary = keep.defender_response_preview(focused_enemy_index)
-	var strike_timing: Dictionary = keep.enemy_attack_timing(focused_enemy_index)
-	var strike_text: String = "STRIKE: cadence unavailable"
-	if bool(strike_timing.get("ok", false)):
-		var interval: int = int(strike_timing.get("attack_interval", 1))
-		if bool(strike_timing.get("within_wave", true)):
-			strike_text = "STRIKE: every %d tick%s · next T%d" % [interval, "" if interval == 1 else "s", int(strike_timing.get("next_attack_step", 0))]
-		else:
-			strike_text = "STRIKE: cadence complete for this assault phase"
-	var attacker_names: Array[String] = []
-	for attacker in response.get("attackers", []):
-		attacker_names.append("%s (%d)" % [String(attacker.get("name", "Defender")), int(attacker.get("damage", 0))])
-	var engagement_text: String = "NEXT STEP: no ready defender commits to this target"
-	if not attacker_names.is_empty():
-		engagement_text = "NEXT STEP: %s → %d damage · projected %d hp" % [", ".join(attacker_names), int(response.get("expected_damage", 0)), int(response.get("projected_health", 0))]
-	response_preview_label.text = "RESPONSE — FOCUSED %d: %s\n%s\nTHREAT: %s | TARGET: %s | %s\n%s\n%s\nCOUNTERS: %s\n%s: %s (%d command)" % [focused_enemy_index + 1, String(inspection.get("name", "enemy")), timing_text, String(inspection.get("doctrine", "approaching")).replace("_", " ").to_upper(), target_text, String(response.get("contact_state", "APPROACH")), strike_text, engagement_text, counter_name, ability_name, ability_state, keep.command_points]
+	battle_presentation_snapshot = BattlePresentationSnapshotView.build(keep, battle_paused, assault_ready_reason, focused_enemy_index, _battle_speed())
+	battle_state_label.text = String(battle_presentation_snapshot.get("state_text", ""))
+	pause_button.text = String(battle_presentation_snapshot.get("pause_text", "Pause battle (Space)"))
+	manual_step_button.disabled = not bool(battle_presentation_snapshot.get("manual_step_enabled", false))
+	speed_button.text = String(battle_presentation_snapshot.get("speed_text", "Speed: 1.0x (1/2/3)"))
+	var ability: Dictionary = battle_presentation_snapshot.get("ability", {})
+	commander_ability_button.text = "%s (%s) — %s" % [String(ability.get("name", "Ability")), String(ability.get("commander", keep.commander_id)), String(ability.get("status", "UNAVAILABLE"))]
+	commander_ability_button.tooltip_text = String(ability.get("tooltip", "Use once per assault phase."))
+	commander_ability_button.disabled = not bool(ability.get("ready", false))
+	var focus: Dictionary = battle_presentation_snapshot.get("focus", {})
+	inspect_enemy_button.text = String(focus.get("button_text", "Inspect focused threat"))
+	inspect_enemy_button.disabled = not keep.wave_active or not bool(focus.get("active", false))
+	response_preview_label.text = String(battle_presentation_snapshot.get("response_text", ""))
 
 func _refresh_layout_lens() -> void:
 	if layout_lens_label == null:
@@ -3874,8 +3842,6 @@ func _refresh_ui() -> void:
 	commander_profile_label.text = "%s\nPassive: %s\nAbility: %s — %s\nLimitation: %s" % [String(commander.get("name", keep.commander_id)), String(commander.get("passive", "")), String(commander.get("ability_name", "")), String(commander.get("ability_text", "")), String(commander.get("limitation", ""))]
 	commander_portrait.modulate = Color("#9fb9c3") if keep.commander_id == "warden" else Color.WHITE
 	commander_portrait.tooltip_text = "The Warden — Open Lanes and Rally" if keep.commander_id == "warden" else "The Castellan — Layered Masonry and Lockdown"
-	commander_ability_button.text = "%s (%s)" % [String(commander.get("ability_name", "Ability")), String(commander.get("name", keep.commander_id)).replace("The ", "")]
-	commander_ability_button.tooltip_text = String(commander.get("ability_text", "Use once per assault phase."))
 	var forecast: Dictionary = keep.forecast()
 	forecast_label.text = "INVASION FORECAST — %s\nLikely target: %s  •  Uncertainty: %s  •  Scout detail: %s" % [String(forecast.get("doctrine", "")).replace("_", " ").capitalize(), String(forecast.get("likely_target", "")), String(forecast.get("uncertainty", "")), "revealed" if bool(forecast.get("scout_bonus", false)) else "limited"]
 	if bool(forecast.get("signal_disrupted", false)):
@@ -3972,9 +3938,6 @@ func _refresh_ui() -> void:
 	recent.reverse()
 	log_label.text = "COMBAT EVENT FEED — newest %d, newest first\n" % _event_feed_retention() + ("\n".join(recent) if not recent.is_empty() else "No assault has started. This feed will name the forecast, response, target, damage, and recovery.")
 
-	pause_button.text = "Sound the bell (Space)" if not assault_ready_reason.is_empty() else "Resume battle (Space)" if battle_paused else "Pause battle (Space)"
-	manual_step_button.disabled = not keep.wave_active or not battle_paused or not assault_ready_reason.is_empty()
-	speed_button.text = "Speed: %.1fx (1/2/3)" % _battle_speed()
 	battle_tactical_button.text = "Hide tactical controls" if battle_tactical_panel.visible else "Show tactical controls"
 	mute_button.text = "Feedback tones: OFF" if audio_muted else "Feedback tones: ON"
 	contrast_button.text = "High-contrast cues: ON" if high_contrast else "High-contrast cues: OFF"
@@ -3991,8 +3954,7 @@ func _refresh_ui() -> void:
 	var observation_snapshot: Dictionary = local_playtest_observer.snapshot()
 	local_metrics_status_label.text = "SESSION ONLY • LOCAL • NEVER UPLOADED\n%d screen(s) timed • %d pause(s) • %d threat focus action(s)" % [observation_snapshot.screen_durations_seconds.size(), int(observation_snapshot.pause_count), int(observation_snapshot.focus_count)]
 	_refresh_binding_controls()
-	_refresh_battle_command_hierarchy()
-	_refresh_response_preview()
+	_refresh_battle_presentation()
 	_refresh_layout_lens()
 	_refresh_preparation_brief()
 	_refresh_recovery_brief()
