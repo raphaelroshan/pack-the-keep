@@ -84,9 +84,9 @@ func _initialize() -> void:
 	ui._on_playtest_primary_action()
 	_resolve_wave(ui)
 	_check(ui.keep.last_outcome != "collapse" and ui.tutorial.current_id() == "complete", "prescribed First Watch should finish without collapse")
-	_check(String(ui.playtest_button.text).contains("TUTORIAL COMPLETE"), "Aftermath should present a clear tutorial victory action")
+	_check(ui.terminal_debrief_panel.visible and String(ui.terminal_debrief_panel.primary_button.text) == "COMPLETE FIRST WATCH", "Final Debrief should present one clear tutorial victory action")
 	_check(not ui.metrics_label.visible and not ui.log_label.visible, "normal game UI should hide diagnostic metrics and raw event feed")
-	ui._on_tutorial_continue()
+	ui.terminal_debrief_panel.primary_button.pressed.emit()
 	_check(ui.tutorial_completed and not ui.tutorial.active and ui.screen == "setup", "finishing First Watch should persist completion and return to War Council")
 
 	ui.queue_free()

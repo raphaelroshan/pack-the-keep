@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
 **Document status:** Active planning contract for post-v0.14.2 development
-**Current release baseline:** `0.20.0-first-watch` on the current vertical-slice branch; remote `main` remains owner-controlled
+**Current release baseline:** `0.21.0-terminal-debrief` on the current vertical-slice branch; remote `main` remains owner-controlled
 **Release posture:** CI-verified public repository with owner-controlled merges; no public alpha release or storefront claim yet
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
@@ -104,6 +104,7 @@ Milestones must be completed in order. An agent may split a milestone into small
 | P15 | Implemented | Greywatch and Ash Ford provide distinct defense identities; completed runs now produce one persisted Low Mill/Miller's Road political consequence and bounded next-run support. | Preserve the no-map/no-economy boundary and begin only controlled P16 human playtest hardening. |
 | P16 | Playtest kit implemented; sessions pending | Controlled alpha protocol, bundled artifact identity, evidence schema, validation, and repeated-finding summaries are in place. | Run all four human-observed combinations against one artifact cohort, implement repeated friction tasks, and require explicit owner approval before release preparation. |
 | P31 | Implemented; human onboarding evidence pending | First Watch provides a complete game-facing menu-to-victory tutorial with strict objectives, in-world coaching, separate resume data, and per-phase retry checkpoints. | Observe new players completing First Watch, then refine only repeated comprehension or pacing friction. |
+| P32 | Implemented; human debrief evidence pending | Terminal Results preserves the damaged keep beside a dedicated outcome, timeline, causal, damage, consequence, and replay composition with fixed actions. | Add Preparation current-question and answer-quality hierarchy without changing placement authority. |
 
 P13 onward are planning identifiers, not permission to release automatically. Every milestone still requires local validation, CI, visual review, and explicit human approval before external distribution. The existing P5–P12 sections below remain useful as acceptance contracts, but agents must not re-implement them unless a regression or refactor explicitly requires it.
 

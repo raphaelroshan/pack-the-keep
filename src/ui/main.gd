@@ -2,6 +2,7 @@ extends Control
 
 const AuthoredEventPanelView = preload("res://src/ui/authored_event_panel.gd")
 const FirstWatchTutorial = preload("res://src/ui/tutorial_director.gd")
+const TerminalDebriefPanelView = preload("res://src/ui/terminal_debrief_panel.gd")
 
 const PackKeepState = preload("res://src/core/keep_state.gd")
 const PackagedSmoke = preload("res://src/platform/packaged_smoke.gd")
@@ -92,6 +93,7 @@ var gameplay_main_column: VBoxContainer
 var page_scroll: ScrollContainer
 var command_scroll: ScrollContainer
 var command_panel: PanelContainer
+var terminal_debrief_panel: TerminalDebriefPanel
 var title_card: PanelContainer
 var build_identity_label: Label
 var screen_label: Label
@@ -617,6 +619,8 @@ func _apply_responsive_layout() -> void:
 		return
 	var logical_width: float = size.x
 	var stacked: bool = logical_width < 1160.0
+	if screen_hint != null:
+		screen_hint.visible = screen == "title" or logical_width >= 1800.0
 	gameplay_columns.vertical = stacked
 	gameplay_columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if gameplay_main_column != null:
@@ -625,6 +629,9 @@ func _apply_responsive_layout() -> void:
 	if command_panel != null:
 		command_panel.custom_minimum_size.x = 810.0 if stacked else 360.0 if logical_width >= 1500.0 else 292.0
 		command_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL if stacked else Control.SIZE_SHRINK_BEGIN
+	if terminal_debrief_panel != null:
+		terminal_debrief_panel.custom_minimum_size.x = 810.0 if stacked else 430.0 if logical_width >= 1500.0 else 340.0
+		terminal_debrief_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL if stacked else Control.SIZE_SHRINK_BEGIN
 	if keep_canvas != null:
 		keep_canvas.custom_minimum_size.y = 488.0 if not stacked and size.y >= 900.0 else 382.0
 		keep_canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1115,6 +1122,12 @@ func _build_ui() -> void:
 	command_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL if ui_scale_index >= 2 else Control.SIZE_SHRINK_BEGIN
 	_style_panel(command_panel, Color("#211c29"), Color("#4e4357"), 8)
 	columns.add_child(command_panel)
+	terminal_debrief_panel = TerminalDebriefPanelView.new()
+	terminal_debrief_panel.visible = false
+	terminal_debrief_panel.primary_requested.connect(_on_playtest_primary_action)
+	terminal_debrief_panel.save_requested.connect(_on_save)
+	terminal_debrief_panel.menu_requested.connect(_on_terminal_return_to_menu)
+	columns.add_child(terminal_debrief_panel)
 	command_scroll = ScrollContainer.new()
 	command_scroll.custom_minimum_size = Vector2(286, 520)
 	command_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -1734,11 +1747,21 @@ func _style_buttons_recursive(node: Node) -> void:
 			_style_button(child, false)
 		_style_buttons_recursive(child)
 
+func _is_terminal_result() -> bool:
+	if screen != "results" or keep == null or keep.last_outcome.is_empty():
+		return false
+	return String(keep.scenario_report().get("status", "in_progress")) == "complete"
+
 func _set_screen(next_screen: String) -> void:
 	screen = next_screen
 	var gameplay_screen: bool = screen in ["preparation", "battle", "results"]
+	var terminal_result: bool = _is_terminal_result()
 	if gameplay_columns:
 		gameplay_columns.visible = screen != "title"
+	if command_panel:
+		command_panel.visible = screen != "title" and not terminal_result
+	if terminal_debrief_panel:
+		terminal_debrief_panel.visible = terminal_result
 	if title_card:
 		title_card.visible = screen == "title"
 	if tutorial_panel:
@@ -1761,11 +1784,11 @@ func _set_screen(next_screen: String) -> void:
 	if status_label:
 		status_label.visible = gameplay_screen
 	if guidance_label:
-		guidance_label.visible = gameplay_screen
+		guidance_label.visible = gameplay_screen and not terminal_result
 	if playtest_button:
-		playtest_button.visible = gameplay_screen
+		playtest_button.visible = gameplay_screen and not terminal_result
 	if playtest_status_label:
-		playtest_status_label.visible = gameplay_screen
+		playtest_status_label.visible = gameplay_screen and not terminal_result
 	if keep_canvas:
 		keep_canvas.set_placement_guides(screen == "preparation")
 		keep_canvas.visible = gameplay_screen
@@ -1776,9 +1799,9 @@ func _set_screen(next_screen: String) -> void:
 	if metrics_label:
 		metrics_label.visible = developer_ui_enabled and screen in ["battle", "results"]
 	if result_explain_label:
-		result_explain_label.visible = screen == "results"
+		result_explain_label.visible = screen == "results" and not terminal_result
 	if scorecard_label:
-		scorecard_label.visible = screen == "results"
+		scorecard_label.visible = screen == "results" and not terminal_result
 	if combat_explain_label:
 		combat_explain_label.visible = screen == "battle"
 	if placement_label:
@@ -1838,10 +1861,11 @@ func _set_screen(next_screen: String) -> void:
 			screen_hint.text = "A compact two-floor defense about pressure and recovery."
 	_refresh_ui()
 	_refresh_navigation()
+	_apply_responsive_layout()
 	if command_scroll != null:
 		command_scroll.scroll_vertical = 0
 	call_deferred("_focus_screen_control")
-	if screen == "results" and keep and keep.repair_interval_active:
+	if screen == "results" and keep and keep.repair_interval_active and not terminal_result:
 		call_deferred("_focus_recovery_controls")
 
 func _focus_screen_control() -> void:
@@ -1857,6 +1881,9 @@ func _focus_screen_control() -> void:
 		target = playtest_button if not playtest_button.disabled else pack_option
 	elif screen == "battle":
 		target = pause_button
+	elif screen == "results" and terminal_debrief_panel.visible:
+		terminal_debrief_panel.focus_primary()
+		return
 	elif screen == "results" and recovery_actions_panel.visible:
 		target = recovery_room_button
 	elif screen == "results":
@@ -2733,6 +2760,10 @@ func _on_playtest_primary_action() -> void:
 	elif screen == "battle":
 		_toggle_battle_pause()
 
+func _on_terminal_return_to_menu() -> void:
+	_set_screen("title")
+	_set_event("Final defense retained in memory. Save Result before leaving if you want it available from Continue Saved Run.")
+
 func _on_new_game() -> void:
 	if not tutorial_completed and not tutorial_dismissed:
 		_start_tutorial()
@@ -3192,6 +3223,116 @@ func _refresh_result_explanation() -> void:
 	var diagnostic_replay: String = "\nREPLAY KEY — %s" % String(report.get("replay_key", "")) if developer_ui_enabled else ""
 	scorecard_label.text = "%s — %s | %s\n%s%s%s%s" % [report_heading, String(report.get("scenario_name", keep.scenario_id)), String(report.get("commander_name", keep.commander_id)), "\n".join(score_rows) if not score_rows.is_empty() else "No resolved assault phases yet.", event_report, _regional_report_text(true), diagnostic_replay]
 
+func _terminal_debrief_view_model() -> Dictionary:
+	var report: Dictionary = keep.scenario_report()
+	var final_state: Dictionary = report.get("final_state", {})
+	var damaged_rooms: Array[Dictionary] = []
+	for room_id_value in keep.rooms.keys():
+		var room_id: String = String(room_id_value)
+		var condition: int = keep.room_condition(room_id)
+		if condition < 100:
+			damaged_rooms.append({"id": room_id, "name": String(keep.room_definition(room_id).get("name", room_id)), "condition": condition, "state": keep.room_state(room_id)})
+	damaged_rooms.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
+		if int(left.condition) == int(right.condition):
+			return String(left.id) < String(right.id)
+		return int(left.condition) < int(right.condition)
+	)
+	var damaged_pieces: Array[Dictionary] = []
+	for instance_id_value in keep.pieces.keys():
+		var instance_id: String = String(instance_id_value)
+		var piece: Dictionary = keep.pieces[instance_id]
+		var health: int = int(piece.get("health", 0))
+		var max_health: int = int(piece.get("max_health", 0))
+		if health < max_health or bool(piece.get("disabled", false)):
+			damaged_pieces.append({"id": instance_id, "name": String(keep.piece_definition(String(piece.get("piece_id", ""))).get("name", instance_id)), "health": health, "max_health": max_health, "disabled": bool(piece.get("disabled", false))})
+	var consequence_rows: Array[String] = []
+	var event_snapshot: Dictionary = keep.event_ledger_snapshot(5)
+	for event_entry in event_snapshot.get("entries", []):
+		consequence_rows.append("%s — %s" % [_event_ledger_name(event_entry), String(event_entry.get("visible_result", ""))])
+	var regional_text: String = _regional_report_text(true).strip_edges()
+	if not regional_text.is_empty():
+		consequence_rows.append(regional_text)
+	var outcome: String = String(report.get("final_outcome", keep.last_outcome))
+	var outcome_title: String = "DEFENSE COMPLETE"
+	if outcome in ["held", "hold"]:
+		outcome_title = "%s HOLDS" % String(keep.keep_definition().get("name", "THE KEEP")).to_upper()
+	elif outcome == "partial_breach":
+		outcome_title = "THE KEEP ENDURES"
+	elif outcome == "collapse":
+		outcome_title = "THE FORTRESS FALLS"
+	var primary_label: String = "REVIEW SETUP — PLAY AGAIN"
+	var primary_tooltip: String = "Return to the War Council and change the next defense."
+	if tutorial.active and tutorial.failure_active:
+		primary_label = "RETRY PHASE"
+		primary_tooltip = "Restore the exact checkpoint at the start of this tutorial phase."
+	elif tutorial.active and tutorial.expected_action() == "finish_tutorial":
+		primary_label = "COMPLETE FIRST WATCH"
+		primary_tooltip = "Record First Watch as complete and return to the War Council."
+	return {
+		"eyebrow": "FINAL DEFENSE · %d PHASES RESOLVED" % int(report.get("wave_rows", []).size()),
+		"outcome": outcome,
+		"outcome_title": outcome_title,
+		"scenario_name": String(report.get("scenario_name", keep.scenario_id)),
+		"commander_name": String(report.get("commander_name", keep.commander_id)),
+		"morale": int(final_state.get("morale", 0)),
+		"materials": int(final_state.get("materials", 0)),
+		"surviving_pieces": int(final_state.get("surviving_pieces", 0)),
+		"disabled_pieces": int(final_state.get("disabled_pieces", 0)),
+		"breach_level": int(final_state.get("breach_level", 0)),
+		"waves": report.get("wave_rows", []).duplicate(true),
+		"what_worked": report.get("what_worked", []).duplicate(),
+		"what_failed": report.get("what_failed", []).duplicate(),
+		"damaged_rooms": damaged_rooms,
+		"damaged_pieces": damaged_pieces,
+		"consequence_text": "CONSEQUENCES\n%s" % "\n".join(consequence_rows) if not consequence_rows.is_empty() else "",
+		"replay_experiment": String(report.get("suggested_experiment", "Replay one changed decision.")),
+		"primary_label": primary_label,
+		"primary_tooltip": primary_tooltip,
+		"primary_enabled": true,
+		"show_save": not tutorial.active,
+		"show_menu": not tutorial.active
+	}
+
+func _refresh_terminal_debrief() -> void:
+	if terminal_debrief_panel == null:
+		return
+	var terminal_result: bool = _is_terminal_result()
+	var became_visible: bool = terminal_result and not terminal_debrief_panel.visible
+	terminal_debrief_panel.visible = terminal_result
+	if command_panel != null:
+		command_panel.visible = screen != "title" and not terminal_result
+	if result_explain_label != null:
+		result_explain_label.visible = screen == "results" and not terminal_result
+	if scorecard_label != null:
+		scorecard_label.visible = screen == "results" and not terminal_result
+	if guidance_label != null:
+		guidance_label.visible = screen in ["preparation", "battle", "results"] and not terminal_result and not tutorial.active
+	if playtest_button != null:
+		playtest_button.visible = screen in ["preparation", "battle", "results"] and not terminal_result
+	if playtest_status_label != null:
+		playtest_status_label.visible = screen in ["preparation", "battle", "results"] and not terminal_result
+	if recovery_actions_panel != null and terminal_result:
+		recovery_actions_panel.visible = false
+	if not terminal_result:
+		return
+	terminal_debrief_panel.render(_terminal_debrief_view_model())
+	if tutorial.active and tutorial.expected_action() in ["finish_tutorial", "retry_phase"]:
+		tutorial_continue_button.visible = false
+	if main_title_label != null:
+		main_title_label.text = "%s — FINAL DEBRIEF" % String(keep.keep_definition().get("name", "The Keep")).to_upper()
+	if main_subtitle_label != null:
+		main_subtitle_label.text = "The fort remains beside the report: read the cost, the cause, and the next experiment."
+	if screen_label != null:
+		screen_label.text = "PACK THE KEEP / Final Debrief"
+	if screen_hint != null:
+		screen_hint.text = "The defense is complete. Review the evidence before choosing the next attempt."
+	if became_visible:
+		call_deferred("_focus_terminal_debrief")
+
+func _focus_terminal_debrief() -> void:
+	if terminal_debrief_panel != null:
+		terminal_debrief_panel.focus_primary()
+
 func _refresh_ui() -> void:
 	_refresh_tutorial_panel()
 	_refresh_room_options()
@@ -3355,6 +3496,7 @@ func _refresh_ui() -> void:
 	_refresh_recovery_priorities()
 	_refresh_recovery_action_cards()
 	_refresh_result_explanation()
+	_refresh_terminal_debrief()
 	_refresh_navigation()
 	keep_canvas.keep = keep
 	keep_canvas.call("set_focus", focused_enemy_index)

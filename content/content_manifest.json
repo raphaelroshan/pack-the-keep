@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.20.0",
+  "content_version": "0.21.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -413,7 +413,16 @@
     "persistence": "versioned_tutorial_progress_and_phase_checkpoints_are_separate_from_schema_4_run_saves; completion_and_dismissal_use_settings_schema_5",
     "recovery": "collapse_restores_the_current_assault_phase_checkpoint",
     "evidence": ["design/p31_first_watch_tutorial.md", "docs/p31_first_watch_visual_verification.md", "tests/test_p31_tutorial_flow.gd", "tests/test_p31_tutorial_resilience.gd"],
-    "next_slice": "p31_human_onboarding_observation"
+    "next_slice": "p32_terminal_debrief"
+  },
+  "p32_terminal_debrief": {
+    "status": "implemented",
+    "composition": ["outcome_banner", "resource_summary", "three_phase_timeline", "causal_chain", "persistent_damage", "consequences", "replay_experiment", "fixed_action_footer"],
+    "authority": "presentation_only_projection_of_scenario_report_and_existing_room_piece_state",
+    "flow": "terminal_results_replaces_command_rail_while_inter_wave_results_retains_recovery_actions",
+    "persistence": "terminal_save_load_rederives_the_same_debrief_without_new_run_save_fields",
+    "evidence": ["design/p32_terminal_debrief.md", "docs/p32_terminal_debrief_visual_verification.md", "tests/test_p32_terminal_debrief.gd"],
+    "next_slice": "p33_preparation_answer_quality"
   },
   "campaign": {
     "title": "The Bell at Dusk",
