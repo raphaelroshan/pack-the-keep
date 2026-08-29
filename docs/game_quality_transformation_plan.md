@@ -1,11 +1,11 @@
 # Pack the Keep — Game-Quality Transformation Plan
 
 **Audience:** GPT coding agents, art/UX agents, test agents, and the human owner
-**Current baseline:** `0.23.0-war-council-cards`
+**Current baseline:** `0.23.1-pack-offer-card`
 **Current status:** Technically substantial public-source pre-alpha; presentation transformation in progress
 **Primary objective:** Turn the existing deterministic fortress-defense systems into a coherent, attractive, immediately understandable game-quality private alpha without rewriting the simulation core.
 
-**Implementation ledger:** P32 gives terminal Results a dedicated debrief. P33 adds Preparation question/answer/weakness hierarchy. P34 adds board visual grammar. P35 centralizes semantic battle audio. P36 adds tick-zero readiness. P37 gives inter-wave Recovery a compact what-changed/why/next/action-budget/priority hierarchy. P38 replaces raw-first War Council selection with commander and defense choice cards while preserving advanced fallback selectors and every authoritative command. Human validation remains pending.
+**Implementation ledger:** P32 gives terminal Results a dedicated debrief. P33 adds Preparation question/answer/weakness hierarchy. P34 adds board visual grammar. P35 centralizes semantic battle audio. P36 adds tick-zero readiness. P37 gives inter-wave Recovery a compact what-changed/why/next/action-budget/priority hierarchy. P38 replaces raw-first War Council selection with commander and defense choice cards. P39 gives Preparation a complete pack doctrine offer card while preserving advanced fallback selectors and every authoritative command. Human validation remains pending.
 
 > **Central diagnosis:** Pack the Keep has enough mechanics for a real game loop. Its largest gap is not feature count. Its largest gap is presentation: the player must feel that they are preparing a fortress, watching a defense, making urgent but comprehensible interventions, recovering from damage, and learning from the result—not operating a debug panel surrounded by a board.
 
@@ -847,16 +847,16 @@ Start from the current Pack the Keep remote main. Read AGENTS.md, README.md,
 design/design_prompt.md, docs/agent_handoff_roadmap.md, and the latest visual
 verification notes.
 
-Implement the next game-quality slice: replace the raw-first Preparation pack
-selector with compact offer cards that explain each pack's doctrine, pieces,
-material cost, spatial demand, favored pressure, and limitation before opening.
-Keep the advanced selector as a secondary accessibility/fallback path.
+Implement the next game-quality slice: simplify the remaining Preparation
+command hierarchy around three readable verbs—choose a doctrine pack, place or
+inspect a defender, and commit the defense. Keep the fortress and current
+question/answer/weakness brief as the primary surface.
 
-Preserve pack-offer and reserve commands, availability rules, content IDs,
-First Watch locks, controller focus, opening limits, and setup/save semantics.
-Add tests for navigation, unavailable/opened/reserved states, tutorial behavior,
-125% scaling, and non-mutating card refresh. Do not add packs, pieces, rarity,
-random rewards, or campaign systems.
+Preserve every pack, placement, removal, assignment, forecast, and assault
+command; First Watch targets; controller navigation; and 125% scaling. Group
+advanced selectors and low-frequency actions without hiding their costs or
+blocked reasons. Do not add content, mechanics, drag-and-drop, or simulation
+state.
 ```
 
 ---

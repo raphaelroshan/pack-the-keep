@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.23.0-war-council-cards",
+  "framework_version": "0.23.1-pack-offer-card",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -1772,6 +1772,14 @@
     "fallback": "advanced_commander_and_scenario_dropdowns_remain_in_the_command_rail",
     "tutorial": "first_watch_visibly_locks_cards_and_fallback_selectors_to_castellan_and_gatehouse_lock",
     "determinism_rule": "card_rendering_and_focus_do_not_select_content_or_mutate_pack_keep_state"
+  },
+  "preparation_pack_offer_card": {
+    "status": "implemented",
+    "read_model": ["doctrine", "contents", "open_cost", "strength", "weakness", "spatial_demand", "strategic_question", "opening_budget", "offer_state"],
+    "commands": ["open_pack", "reserve_pack"],
+    "navigation": "card_previous_next_changes_only_existing_pack_selector",
+    "fallback": "advanced_pack_dropdown_remains_available_outside_first_watch",
+    "determinism_rule": "offer_rendering_and_browsing_do_not_grant_content_or_mutate_pack_keep_state"
   },
   "unit_availability": {
     "status": "vertical_slice",

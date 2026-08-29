@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.23.0",
+  "content_version": "0.23.1",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -478,7 +478,16 @@
     "tutorial": "locked_to_castellan_and_gatehouse_lock",
     "authority": "presentation_only_over_existing_commander_and_scenario_selection_commands",
     "evidence": ["design/p38_war_council_choice_cards.md", "docs/p38_war_council_choice_cards_verification.md", "tests/test_p38_war_council_choice_cards.gd"],
-    "next_slice": "p39_pack_offer_choice_cards"
+    "next_slice": "p39_pack_offer_card"
+  },
+  "p39_pack_offer_card": {
+    "status": "implemented",
+    "composition": ["doctrine", "contents", "open_cost", "strength", "weakness", "spatial_demand", "strategic_question", "opening_budget", "offer_state"],
+    "commands": ["open_pack", "reserve_pack"],
+    "tutorial": "browsing_and_reserve_locked_while_authored_pike_open_remains_available_at_its_step",
+    "authority": "presentation_only_over_pack_preview_open_pack_and_reserve_pack",
+    "evidence": ["design/p39_pack_offer_card.md", "docs/p39_pack_offer_card_verification.md", "tests/test_p39_pack_offer_card.gd"],
+    "next_slice": "p40_preparation_command_hierarchy"
   },
   "campaign": {
     "title": "The Bell at Dusk",

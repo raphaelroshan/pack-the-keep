@@ -65,7 +65,7 @@ func _initialize() -> void:
 	ui._set_screen("preparation")
 	await process_frame
 	await process_frame
-	_check(root.gui_get_focus_owner() == ui.pack_option, "preparation should focus the pack selector for controller navigation")
+	_check(root.gui_get_focus_owner() == ui.pack_button, "preparation should focus the pack card's primary Open action for controller navigation")
 
 	ui._begin_rebind("battle_pause")
 	var reserved_navigation: InputEventJoypadButton = InputEventJoypadButton.new()
