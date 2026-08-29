@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.18.4-enemy-windups",
+  "framework_version": "0.18.5-damage-reactions",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -414,6 +414,13 @@
     "presentation": ["melee_directional_chevron", "ranged_charge_orb_and_aim_line", "demolition_brace_and_weight_rings", "style_colored_late_cadence_meter", "reduced_motion_static_glyph"],
     "authority_boundary": "windups_read_existing_target_and_cadence_state_without_reserving_interrupting_or_resolving_attacks",
     "non_goals": ["parry_commands", "interrupts", "dodging", "second_attack_clock", "new_save_fields"]
+  },
+  "p29_damage_reactions": {
+    "status": "implemented",
+    "projection": "transient_impacts_retain_authoritative_before_and_after_target_values",
+    "presentation": ["recent_damage_health_bar_trail", "role_colored_target_outline", "bounded_defender_recoil", "static_reduced_motion_feedback"],
+    "authority_boundary": "damage_reactions_read_resolved_state_deltas_and_never_move_or_modify_simulation_entities",
+    "non_goals": ["physics_knockback", "hit_stun", "invulnerability_frames", "persistent_damage_history", "new_save_fields"]
   },
   "v090_multi_wave": {
     "status": "implemented",

@@ -186,12 +186,29 @@ func _initialize() -> void:
 	ui.keep.enemies[0].attacks_received = int(ui.keep.enemies[0].get("attacks_received", 0)) + 1
 	ui.keep.rooms.gate.condition = original_gate_condition - 7
 	var detected_impacts: Array[Dictionary] = ui._resolved_target_impacts(target_snapshot)
-	if detected_impacts.is_empty() or int(detected_impacts[0].get("damage", 0)) != 7 or String(detected_impacts[0].get("target_kind", "")) != "room" or String(detected_impacts[0].get("attack_style", "")) != "melee":
+	if detected_impacts.is_empty() or int(detected_impacts[0].get("damage", 0)) != 7 or int(detected_impacts[0].get("before_value", 0)) != original_gate_condition or int(detected_impacts[0].get("after_value", 0)) != original_gate_condition - 7 or String(detected_impacts[0].get("target_kind", "")) != "room" or String(detected_impacts[0].get("attack_style", "")) != "melee":
 		failures.append("authoritative before/after room state did not produce an exact target impact")
 	if ui.keep_canvas._enemy_impact_motion("melee") != "lunge" or ui.keep_canvas._enemy_impact_motion("ranged") != "projectile" or ui.keep_canvas._enemy_impact_motion("demolition") != "heavy_strike":
 		failures.append("enemy attack styles did not retain distinct presentation motions")
 	if ui.keep_canvas._impact_damage_label({"target_kind": "piece", "damage": 3}) != "-3 HP" or ui.keep_canvas._impact_damage_label({"target_kind": "room", "damage": 30}) != "-30 STRUCTURE":
 		failures.append("target impact labels did not distinguish defender health from room structure")
+	var no_damage_traces: Array[Dictionary] = []
+	ui.keep_canvas.show_combat_exchange(no_damage_traces, detected_impacts)
+	var room_damage_feedback: Dictionary = ui.keep_canvas.target_damage_feedback_snapshot("room", "gate", 100)
+	if not bool(room_damage_feedback.get("active", false)) or int(room_damage_feedback.get("before_value", 0)) != original_gate_condition or int(room_damage_feedback.get("after_value", 0)) != original_gate_condition - 7:
+		failures.append("recent room damage feedback did not retain the authoritative lost interval")
+	var piece_impacts: Array[Dictionary] = [{"target_kind": "piece", "target_id": "pike_squad_0", "enemy_index": 0, "attack_style": "melee", "damage": 3, "before_value": 14, "after_value": 11}]
+	ui.keep_canvas.show_combat_exchange(no_damage_traces, piece_impacts)
+	var piece_damage_feedback: Dictionary = ui.keep_canvas.target_damage_feedback_snapshot("piece", "pike_squad_0", 14)
+	if not bool(piece_damage_feedback.get("active", false)) or not is_equal_approx(float(piece_damage_feedback.get("before_ratio", 0.0)), 1.0) or not is_equal_approx(float(piece_damage_feedback.get("after_ratio", 0.0)), 11.0 / 14.0):
+		failures.append("recent defender damage feedback did not normalize the exact health loss")
+	if ui.keep_canvas._target_reaction_offset("piece", "pike_squad_0", ui.keep_canvas._piece_board_origin("pike_squad_0"), 14) != Vector2.ZERO:
+		failures.append("reduced motion did not suppress defender recoil")
+	ui.keep_canvas.set_reduced_motion(false)
+	ui.keep_canvas.show_combat_exchange(no_damage_traces, piece_impacts)
+	ui.keep_canvas.engagement_ttl = 0.2
+	if ui.keep_canvas._target_reaction_offset("piece", "pike_squad_0", ui.keep_canvas._piece_board_origin("pike_squad_0"), 14) == Vector2.ZERO:
+		failures.append("struck defender did not expose a bounded recoil offset")
 	var windup_step: int = ui.keep.battle_step
 	var windup_clock: float = ui.keep.battle_clock
 	ui.keep.battle_step = 2

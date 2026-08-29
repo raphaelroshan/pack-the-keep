@@ -615,3 +615,11 @@
 **Reason:** Distinct impacts explain what just happened, but players also need a brief visual chance to interpret incoming pressure before health changes. Reusing the existing cadence projection keeps pause, speed, save/load, and deterministic strike timing aligned.
 
 **Trade-off:** The warning is intentionally short and schematic. It improves anticipation without promising reaction mechanics such as parries or interrupts; those remain out of scope until human testing shows the battle benefits from another command layer.
+
+## ADR-078: Damage reactions retain transient before-and-after values
+
+**Decision:** Add the authoritative target value immediately before and after a resolved tick to each transient impact projection. Use that interval to draw a short recent-loss segment on the target health bar, a role-colored outline, and a small visual-only recoil for defender pieces. Rooms never move, and reduced motion suppresses recoil.
+
+**Reason:** Floating damage text identifies the amount, but the player's eye still has to find the changed bar and infer which object absorbed it. Keeping the previous value for the lifetime of the existing impact effect makes health loss spatially explicit without adding permanent UI.
+
+**Trade-off:** Room feedback shows net condition loss after same-tick mitigation or repair, matching the authoritative final state rather than reconstructing every intermediate operation. Recoil is illustrative and never affects targeting, placement, or saved coordinates.
