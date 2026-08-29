@@ -663,3 +663,11 @@
 **Reason:** The board already communicated detailed state, yet large areas and actors shared similar rectangular or circular treatments. A stable visual grammar makes structure and role readable before labels while keeping the current procedural fallback replaceable by future authored assets.
 
 **Trade-off:** These remain code-drawn placeholders, not final art. Enemy initials and labels stay as redundant accessibility cues, and the registry owns presentation tokens only; it cannot influence placement, routes, targeting, health, timing, or serialization.
+
+## ADR-084: Battle audio is a semantic presentation service
+
+**Decision:** Extract generated tone profiles and playback into `BattleAudioCueService`. Map assault start, contact, defender response, hostile impact, breach, recovery, and terminal outcomes to stable cue IDs after the UI observes authoritative state. Keep mute, effects volume, reduced-motion minimization, headless evidence, and the visible last-cue label at the presentation boundary.
+
+**Reason:** The prototype already had useful tones, but their profiles and event meaning were embedded in the main UI controller. A dedicated service creates one complete and testable battle-loop vocabulary without making sound a second combat clock.
+
+**Trade-off:** Cues remain synthesized placeholders rather than authored sound effects or music. Reduced motion selects a minimal one-tone sequence as a conservative sensory setting. The service records requests for tests but never schedules a tick, command, target, or saved field.

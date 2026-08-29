@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.22.0-board-hierarchy",
+  "framework_version": "0.22.1-battle-audio",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -1740,6 +1740,14 @@
     "floor_treatments": ["ground_fort_or_river", "upper_wall_walk"],
     "actor_grammar": ["defender_role_badges", "enemy_type_silhouettes", "redundant_initials", "health_and_status_overlays"],
     "determinism_rule": "visual_profiles_and_drawing_do_not_change_geometry_hit_testing_targeting_timing_or_save_state"
+  },
+  "battle_audio_cues": {
+    "status": "implemented",
+    "service": "src/ui/battle_audio_cue_service.gd",
+    "battle_beats": ["assault_start", "contact", "defender_response", "hostile_impact", "breach", "recovery", "terminal_hold", "terminal_partial_breach", "terminal_collapse"],
+    "accessibility": ["mute", "effects_volume", "reduced_motion_minimal_sequence", "visible_last_cue"],
+    "output": "offline_procedural_audio_stream_generator",
+    "determinism_rule": "cue_requests_observe_completed_presentation_beats_and_never_advance_or_mutate_simulation"
   },
   "unit_availability": {
     "status": "vertical_slice",

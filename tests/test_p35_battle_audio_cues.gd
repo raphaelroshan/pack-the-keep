@@ -1,0 +1,68 @@
+extends SceneTree
+
+var failures: Array[String] = []
+
+func _check(condition: bool, message: String) -> void:
+	if not condition:
+		failures.append(message)
+
+func _initialize() -> void:
+	var ui: Control = load("res://scenes/Main.tscn").instantiate()
+	root.add_child(ui)
+	await process_frame
+	await process_frame
+	ui.preferences_persistence_enabled = false
+	ui.display_application_enabled = false
+	_check(ui.battle_audio_cues != null and ui.audio_player == null, "headless mode should create the semantic cue service without opening an audio device")
+
+	var expected: Dictionary = {
+		"assault_start": "warning",
+		"contact": "contact",
+		"defender_response": "volley",
+		"hostile_impact": "impact",
+		"breach": "breach",
+		"recovery": "repair",
+		"terminal_hold": "hold",
+		"terminal_partial_breach": "partial_breach",
+		"terminal_collapse": "collapse"
+	}
+	var semantic: Dictionary = ui.battle_audio_cues.semantic_snapshot()
+	_check(semantic.get("battle_beats", {}) == expected, "battle-loop beats should map to one stable cue vocabulary")
+	var signatures: Dictionary = {}
+	for beat_id in expected.keys():
+		var cue_id: String = ui.battle_audio_cues.cue_for_beat(String(beat_id))
+		var profile: Dictionary = ui.battle_audio_cues.profile(cue_id)
+		_check(not profile.is_empty() and String(profile.get("beat", "")) == String(beat_id), "%s should resolve to a complete semantic cue profile" % beat_id)
+		signatures[String(beat_id)] = JSON.stringify(profile.get("frequencies", []))
+	_check(signatures.contact != signatures.defender_response and signatures.defender_response != signatures.hostile_impact, "contact, defender response, and hostile impact should sound distinct")
+	_check(signatures.breach != signatures.terminal_partial_breach and signatures.terminal_hold != signatures.terminal_collapse, "breach and terminal outcomes should retain distinct signatures")
+
+	var state_before: String = JSON.stringify(ui.keep.serialize())
+	var step_before: int = ui.keep.battle_step
+	var clock_before: float = ui.keep.battle_clock
+	var muted_request: Dictionary = ui.battle_audio_cues.play_beat("hostile_impact", true, 1.0)
+	_check(not bool(muted_request.get("played", true)) and String(muted_request.get("reason", "")) == "muted", "mute should suppress playback while recording the hostile-impact cue")
+	var zero_request: Dictionary = ui.battle_audio_cues.play_beat("recovery", false, 0.0)
+	_check(not bool(zero_request.get("played", true)) and String(zero_request.get("reason", "")) == "zero_volume", "zero effects volume should suppress playback independently of mute")
+	var reduced_request: Dictionary = ui.battle_audio_cues.play_beat("assault_start", false, 0.5, true)
+	_check(String(reduced_request.get("reason", "")) == "no_audio_device" and bool(reduced_request.get("reduced_motion", false)), "reduced-motion state should reach the cue service without creating a headless device")
+	_check(JSON.stringify(ui.keep.serialize()) == state_before and ui.keep.battle_step == step_before and is_equal_approx(ui.keep.battle_clock, clock_before), "cue selection and playback requests should never advance or mutate the simulation")
+
+	ui.audio_muted = true
+	ui._play_battle_beat("breach")
+	ui._refresh_ui()
+	_check(ui.last_cue_id == "breach" and String(ui.feedback_cue_label.text).contains("BREACH"), "muted semantic cues should remain visible as text")
+	ui._run_result({"ok": true, "message": "fixture invasion"}, "Invasion")
+	_check(ui.last_cue_id == "warning", "starting an invasion should route through the assault-start semantic beat")
+	ui._run_result({"ok": true, "message": "fixture repair"}, "Repair")
+	_check(ui.last_cue_id == "repair", "recovery commands should route through the recovery semantic beat")
+
+	ui.queue_free()
+	await process_frame
+	if failures.is_empty():
+		print("P35 battle audio cues: PASS")
+		quit(0)
+	else:
+		for failure in failures:
+			push_error(failure)
+		quit(1)

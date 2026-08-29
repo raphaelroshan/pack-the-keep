@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.22.0-board-hierarchy` — the fortress now has an explicit structural-to-tactical layer hierarchy, distinct ground and upper treatments, critical-room cues, defender role cards, and enemy-type silhouettes; human sessions and owner approval remain pending
+**Current build identity:** `0.22.1-battle-audio` — the complete battle loop now uses one semantic procedural cue service for warning, contact, response, impact, breach, recovery, and outcome while preserving mute, volume, reduced-motion, and offline boundaries; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of ten authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.22.1 acceptance checks
+
+With feedback tones enabled, start an assault and listen for a rising warning, a low first-contact pulse, a higher defender-response cue, a lower hostile-impact cue, and a distinct descending breach cue when structure is newly lost. Complete a recovery action and hear the repair confirmation. Compare Hold, Partial Breach, and Collapse outcomes. Confirm mute and 0% effects volume remain silent while Settings still names the last cue, and confirm reduced-motion mode uses the minimal one-tone form without changing battle timing.
 
 ## v0.22.0 acceptance checks
 
