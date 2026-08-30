@@ -16,7 +16,7 @@ You are the lead implementation agent for Pack the Keep. Read `design/design_pro
 
 ## Current post-P31 feed order
 
-The original feeds below describe the historical build-up from the prototype and should not be issued as unimplemented tasks. The current baseline is `0.20.0-first-watch`; issue the game-quality feeds in this order and do not begin content breadth until the presentation and human-comprehension gates pass.
+The original feeds below describe the historical build-up from the prototype and should not be issued as unimplemented tasks. The current baseline is `0.25.4-playtest-release-kit`; issue the game-quality feeds in this order. Automated verification, deterministic replay, full-flow launches, controller/scaling checks, and screenshot review are the active gates. Human sessions are optional validation and must not block implementation or controlled content breadth once the automated and visual contracts pass.
 
 ### Current feed 1 — P32.1 visual identity pass
 
