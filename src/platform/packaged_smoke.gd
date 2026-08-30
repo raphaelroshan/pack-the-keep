@@ -7,6 +7,7 @@ const SAVE_BACKUP_PATH := "user://packaged_smoke_run.save.bak"
 const SETTINGS_PATH := "user://packaged_smoke_settings.json"
 const SETTINGS_TEMP_PATH := "user://packaged_smoke_settings.json.tmp"
 const SETTINGS_BACKUP_PATH := "user://packaged_smoke_settings.json.bak"
+const FORCED_CLOSE_READY_PATH := "user://packaged_forced_close_ready"
 
 func _record_error(errors: Array[String], condition: bool, message: String) -> void:
 	if not condition:
@@ -17,6 +18,20 @@ func _read_json(path: String) -> Dictionary:
 		return {}
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	return parsed if parsed is Dictionary else {}
+
+func _write_text(path: String, value: String) -> bool:
+	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		return false
+	file.store_string(value)
+	file.flush()
+	file.close()
+	return true
+
+func _copy_text(source: String, destination: String) -> bool:
+	if not FileAccess.file_exists(source):
+		return false
+	return _write_text(destination, FileAccess.get_file_as_string(source))
 
 func _has_joypad_binding(action: String, button_index: int = -1) -> bool:
 	for event in InputMap.action_get_events(action):
@@ -50,7 +65,7 @@ func run(ui: Control) -> void:
 	var phase: String = OS.get_environment("PACK_THE_KEEP_SMOKE_PHASE")
 	if phase.is_empty():
 		phase = "clean_install"
-	var supported_phases: Array[String] = ["clean_install", "reinstall", "stale_backup", "missing_profile", "upgrade"]
+	var supported_phases: Array[String] = ["clean_install", "reinstall", "stale_backup", "missing_profile", "upgrade", "forced_close_prepare", "forced_close_recovery"]
 	_record_error(errors, supported_phases.has(phase), "unknown packaged smoke phase: %s" % phase)
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -99,9 +114,48 @@ func run(ui: Control) -> void:
 	var upgrade_run_migrated: bool = false
 	var upgrade_settings_ready: bool = false
 	var upgraded_files_current: bool = false
+	var forced_close_detected: bool = false
+	var forced_close_run_recovered: bool = false
+	var forced_close_settings_recovered: bool = false
+	var forced_close_files_current: bool = false
 	var authoritative_before_settings: String = JSON.stringify(ui.keep.serialize())
 	var settings_state_unchanged: bool = false
-	if phase == "reinstall":
+	if phase == "forced_close_prepare":
+		_record_error(errors, profile_files_complete, "forced-close preparation needs the existing run and settings")
+		ui._load_preferences()
+		ui._on_load()
+		_record_error(errors, ui.keep.seed == 3307 and ui.keep.wave_active and ui.keep.battle_step == 1, "forced-close preparation could not load the baseline run")
+		_record_error(errors, ui.ui_scale_index == 2 and _has_joypad_binding("battle_pause", 10), "forced-close preparation could not load the baseline settings")
+		_record_error(errors, _copy_text(SAVE_PATH, SAVE_BACKUP_PATH), "forced-close preparation could not protect the run backup")
+		_record_error(errors, _copy_text(SETTINGS_PATH, SETTINGS_BACKUP_PATH), "forced-close preparation could not protect the settings backup")
+		_record_error(errors, _write_text(SAVE_PATH, "{\"schema_version\":"), "forced-close preparation could not strand the run primary")
+		_record_error(errors, _write_text(SETTINGS_PATH, "{\"schema_version\":"), "forced-close preparation could not strand the settings primary")
+		if not errors.is_empty():
+			for error in errors:
+				push_error(error)
+			get_tree().quit(1)
+			return
+		if not _write_text(FORCED_CLOSE_READY_PATH, "ready"):
+			push_error("forced-close preparation could not publish readiness")
+			get_tree().quit(1)
+			return
+		while true:
+			await get_tree().create_timer(1.0).timeout
+	elif phase == "forced_close_recovery":
+		forced_close_detected = profile_files_complete and profile_backups_complete
+		_record_error(errors, forced_close_detected, "forced-close recovery needs malformed primaries and valid backups")
+		ui._load_preferences()
+		settings_state_unchanged = JSON.stringify(ui.keep.serialize()) == authoritative_before_settings
+		forced_close_settings_recovered = ui.ui_scale_index == 2 and ui.window_size_index == 3 and _has_joypad_binding("battle_pause", 10)
+		ui._on_load()
+		forced_close_run_recovered = ui.keep.seed == 3307 and ui.keep.wave_active and ui.keep.battle_step == 1
+		_record_error(errors, forced_close_settings_recovered, "forced-close recovery did not restore settings from backup")
+		_record_error(errors, forced_close_run_recovered, "forced-close recovery did not restore the run from backup")
+		ui._on_save()
+		_record_error(errors, ui._save_preferences(), "forced-close recovery could not rewrite settings")
+		forced_close_files_current = int(_read_json(SAVE_PATH).get("schema_version", 0)) == 4 and int(_read_json(SETTINGS_PATH).get("schema_version", 0)) == 5
+		_record_error(errors, forced_close_files_current, "forced-close recovery did not rewrite current primary files")
+	elif phase == "reinstall":
 		_record_error(errors, profile_files_complete, "reinstalled build could not see both existing profile files")
 		ui._load_preferences()
 		settings_state_unchanged = JSON.stringify(ui.keep.serialize()) == authoritative_before_settings
@@ -237,6 +291,10 @@ func run(ui: Control) -> void:
 		"upgrade_run_migrated": upgrade_run_migrated,
 		"upgrade_settings_ready": upgrade_settings_ready,
 		"upgraded_files_current": upgraded_files_current,
+		"forced_close_detected": forced_close_detected,
+		"forced_close_run_recovered": forced_close_run_recovered,
+		"forced_close_settings_recovered": forced_close_settings_recovered,
+		"forced_close_files_current": forced_close_files_current,
 		"settings_state_unchanged": settings_state_unchanged,
 		"main_scene_freed": main_scene_freed,
 		"smoke_guard": OS.get_environment("PACK_THE_KEEP_PACKAGED_SMOKE") == "1",

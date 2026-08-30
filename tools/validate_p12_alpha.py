@@ -29,7 +29,7 @@ EXPECTED_CONTENT_COUNTS = {
     "event_count": 9,
     "modifier_count": 2,
 }
-PACKAGED_PHASES = ("clean_install", "reinstall", "stale_backup", "missing_profile", "upgrade")
+PACKAGED_PHASES = ("clean_install", "reinstall", "stale_backup", "missing_profile", "upgrade", "forced_close_recovery")
 
 
 def load_object(path: Path, errors: list[str]) -> dict[str, Any]:
@@ -134,11 +134,14 @@ def validate_checklist(path: Path, root: Path, build_version: str, errors: list[
 
 def validate_report(path: Path, build_version: str, errors: list[str]) -> None:
     combined = load_object(path, errors)
-    if combined.get("schema_version") != 2:
-        errors.append("combined packaged smoke schema_version must be 2")
+    if combined.get("schema_version") != 3:
+        errors.append("combined packaged smoke schema_version must be 3")
+    forced_close = combined.get("forced_close")
+    if not isinstance(forced_close, dict) or forced_close.get("ready") is not True or forced_close.get("terminated") is not True or forced_close.get("exit_code") in (None, 0):
+        errors.append("combined packaged smoke needs forced-termination evidence")
     reports = {phase: combined.get(phase) for phase in PACKAGED_PHASES}
     if any(not isinstance(report, dict) for report in reports.values()):
-        errors.append("combined packaged smoke needs clean-install, reinstall, stale-backup, missing-profile, and upgrade reports")
+        errors.append("combined packaged smoke needs clean-install, reinstall, stale-backup, missing-profile, upgrade, and forced-close-recovery reports")
         return
     for phase, report in reports.items():
         assert isinstance(report, dict)
@@ -186,6 +189,7 @@ def validate_report(path: Path, build_version: str, errors: list[str]) -> None:
     stale_backup = reports["stale_backup"]
     missing_profile = reports["missing_profile"]
     upgrade = reports["upgrade"]
+    forced_close_recovery = reports["forced_close_recovery"]
     assert all(isinstance(report, dict) for report in reports.values())
     clean_install_fields = (
         "offline_proxy_guard", "controller_navigation_ready", "controller_defaults_ready",
@@ -211,6 +215,9 @@ def validate_report(path: Path, build_version: str, errors: list[str]) -> None:
     for field in ("legacy_profile_detected", "upgrade_run_migrated", "upgrade_settings_ready", "upgraded_files_current"):
         if upgrade.get(field) is not True:
             errors.append(f"upgrade packaged evidence failed: {field}")
+    for field in ("forced_close_detected", "forced_close_run_recovered", "forced_close_settings_recovered", "forced_close_files_current"):
+        if forced_close_recovery.get(field) is not True:
+            errors.append(f"forced-close packaged evidence failed: {field}")
     initial_executable = clean_install.get("executable_path")
     reinstall_executable = reinstall.get("executable_path")
     if not isinstance(initial_executable, str) or not isinstance(reinstall_executable, str):

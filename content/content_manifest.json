@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.30.0",
+  "content_version": "0.30.1",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -632,8 +632,18 @@
     "areas": ["accessibility", "persistence", "controller_navigation", "audio_settings", "clean_install", "migration", "performance", "package_provenance", "failure_recovery", "known_limitations"],
     "performance": "bounded_deterministic_scenario_resolution_and_2560x1440_large_text_refresh_workloads",
     "release_boundary": "release_public_alpha_and_storefront_flags_remain_false_with_seven_human_gates_pending",
-    "packaged_validation": "clean_install_reinstall_stale_backup_missing_profile_and_upgrade_reports_are_rechecked_by_the_k8_gate",
+    "packaged_validation": "clean_install_reinstall_stale_backup_missing_profile_upgrade_and_forced_close_recovery_reports_are_rechecked_by_the_k8_gate",
     "evidence": ["design/k8_private_alpha_gate.md", "docs/k8_private_alpha_gate_verification.md", "tests/test_k8_private_alpha_validator.py", "tests/test_k8_performance_budget.gd"],
+    "next_slice": "p54_packaged_forced_close_recovery"
+  },
+  "p54_packaged_forced_close_recovery": {
+    "status": "implemented",
+    "process_boundary": "windows_candidate_is_terminated_after_malformed_primaries_and_valid_backups_are_flushed",
+    "relaunch": "same_relocated_executable_and_profile_restore_run_and_settings_from_backups",
+    "rewrite": "recovered_state_is_saved_back_to_current_schema_primaries",
+    "artifact": "packaged_smoke_schema_3_with_forced_termination_metadata_and_recovery_report",
+    "human_boundary": "manual_timing_around_real_os_save_operations_remains_pending",
+    "evidence": ["design/p54_packaged_forced_close_recovery.md", "docs/p54_forced_close_recovery_verification.md", "src/platform/packaged_smoke.gd", "tools/run_packaged_smoke.py", "tests/test_packaged_smoke_runner.py"],
     "next_slice": "human_private_alpha_sessions_when_owner_schedules_them"
   },
   "campaign": {

@@ -49,7 +49,7 @@ class K8PrivateAlphaValidatorTests(unittest.TestCase):
             self.assertIn("known limitations", joined)
 
     def test_packaged_lifecycle_requires_clean_install_reinstall_and_migration_evidence(self) -> None:
-        report = {"schema_version": 2}
+        report = {"schema_version": 3, "forced_close": {"ready": True, "terminated": True, "exit_code": -9}}
         for phase in validator.PACKAGED_PHASES:
             report[phase] = {
                 "phase": phase,
@@ -72,6 +72,12 @@ class K8PrivateAlphaValidatorTests(unittest.TestCase):
             "upgrade_run_migrated": True,
             "upgrade_settings_ready": True,
             "upgraded_files_current": True,
+        })
+        report["forced_close_recovery"].update({
+            "forced_close_detected": True,
+            "forced_close_run_recovered": True,
+            "forced_close_settings_recovered": True,
+            "forced_close_files_current": True,
         })
         errors: list[str] = []
         validator.validate_packaged_report(report, "v", errors)

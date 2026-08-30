@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.30.0-private-alpha-gate",
+  "build_version": "0.30.1-forced-close-recovery",
   "status": "ready_for_human_sessions",
   "release_ready": false,
   "minimum_completed_sessions": 4,
