@@ -43,6 +43,7 @@ class ReleaseIdentityTests(unittest.TestCase):
             '"artifacts/packaged-smoke.json"',
             '"artifacts/playtest-build.json"',
             '"artifacts/PLAYTEST_README.md"',
+            '"artifacts/PRIVATE_ALPHA_LIMITATIONS.md"',
             "artifacts/playtest-templates/*.json",
             '"artifacts/release_manifest.json"',
         ]

@@ -47,6 +47,8 @@ jobs:
             --report-copy artifacts/packaged-smoke.json
       - name: Audit packaged alpha evidence
         run: python tools/validate_p12_alpha.py --report artifacts/packaged-smoke.json
+      - name: Audit K8 packaged private-alpha gate
+        run: python tools/validate_k8_private_alpha.py --packaged-report artifacts/packaged-smoke.json
       - name: Record playtest artifact provenance
         run: |
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
@@ -72,6 +74,8 @@ jobs:
             --build-manifest artifacts/playtest-build.json \
             --artifact "build/${slug}.exe" \
             --output-directory artifacts/playtest-templates
+      - name: Stage private-alpha limitations
+        run: cp docs/private_alpha_known_limitations.md artifacts/PRIVATE_ALPHA_LIMITATIONS.md
       - name: Create release manifest
         run: |
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
@@ -96,6 +100,7 @@ jobs:
             "artifacts/packaged-smoke.json" \
             "artifacts/playtest-build.json" \
             "artifacts/PLAYTEST_README.md" \
+            "artifacts/PRIVATE_ALPHA_LIMITATIONS.md" \
             artifacts/playtest-templates/*.json \
             "artifacts/release_manifest.json" \
             "artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" \

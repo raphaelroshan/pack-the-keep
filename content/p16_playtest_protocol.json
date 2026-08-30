@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.29.0-replay-mastery",
+  "build_version": "0.30.0-private-alpha-gate",
   "status": "ready_for_human_sessions",
   "release_ready": false,
   "minimum_completed_sessions": 4,
