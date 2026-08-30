@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.28.0-standard-cutter` — the tagged Windows candidate adds one controlled assigned-specialist-hunter slice to the complete provenance-bound observer kit; human sessions and owner approval remain pending
+**Current build identity:** `0.29.0-replay-mastery` — the tagged Windows candidate previews fixed seeded pressure before entry and compares doctrine fit, recovery commitment, pack plan, and the next replay experiment at terminal Results; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of eleven authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, assigned-specialist priority, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.29.0 acceptance checks
+
+Select The Cut Standard in War Council and confirm the concrete seeded material, morale, and applicable room-pressure variation is visible above **Enter Keep**. Complete the scenario with a partial doctrine answer and confirm terminal Results names the same seed pressure, covered and uncovered doctrines, recovery actions used versus capacity, opened packs, and a replay experiment aimed at the first uncovered doctrine. Save/load and accessibility settings must not change that summary.
 
 ## v0.28.0 acceptance checks
 

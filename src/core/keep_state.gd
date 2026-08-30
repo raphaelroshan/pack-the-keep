@@ -322,6 +322,7 @@ func scenario_preview(id: String = "") -> Dictionary:
 	if difficulty.is_empty():
 		difficulty = "guided" if peak_wave_size <= 2 else "standard" if peak_wave_size <= 3 else "advanced"
 	var ordered_ids: Array[String] = scenario_ids()
+	var variation: Dictionary = scenario_variation_preview(selected_id)
 	return {
 		"ok": true,
 		"scenario_id": selected_id,
@@ -340,7 +341,55 @@ func scenario_preview(id: String = "") -> Dictionary:
 		"enemy_roster": enemy_roster,
 		"difficulty": difficulty,
 		"collapse_on_defender_wipe": bool(scenario.get("collapse_on_defender_wipe", false)),
-		"variation_id": scenario_variation_id if selected_id == scenario_id else String(_variation_for_scenario(selected_id).get("id", "standard_bell")),
+		"variation_id": String(variation.get("id", "standard_bell")),
+		"variation": variation,
+	}
+
+func scenario_variation_preview(id: String = "") -> Dictionary:
+	var selected_id: String = scenario_id if id.is_empty() else id
+	if not _scenario_definitions.has(selected_id):
+		return {"ok": false, "reason": "unknown defensive scenario"}
+	var variation: Dictionary = _variation_for_scenario(selected_id)
+	if selected_id == scenario_id and scenario_active:
+		variation = {
+			"id": scenario_variation_id,
+			"materials": variation_materials,
+			"morale": variation_morale,
+			"target_room": variation_target_room,
+		}
+	var variation_id: String = String(variation.get("id", "standard_bell"))
+	var material_delta: int = int(variation.get("materials", 0))
+	var morale_delta: int = int(variation.get("morale", 0))
+	var target_room: String = String(variation.get("target_room", ""))
+	var effects: Array[String] = []
+	if material_delta != 0:
+		effects.append("%+d starting materials" % material_delta)
+	if morale_delta != 0:
+		effects.append("%+d starting morale" % morale_delta)
+	var target_applies: bool = false
+	if not target_room.is_empty():
+		for wave_plan in _scenario_definitions[selected_id].get("wave_plans", []):
+			for enemy_id_value in wave_plan:
+				var enemy: Dictionary = _enemy_definitions.get(String(enemy_id_value), {})
+				if String(enemy.get("target_mode", "")) == "room_destroyer" and enemy.get("target_rooms", []).has(target_room):
+					target_applies = true
+					break
+			if target_applies:
+				break
+	if target_applies:
+		effects.append("room pressure favors %s" % String(_room_definitions_for_scenario(selected_id).get(target_room, {}).get("name", target_room.replace("_", " ").capitalize())))
+	if effects.is_empty():
+		effects.append("baseline stores and morale; target priorities remain adaptive")
+	return {
+		"ok": true,
+		"id": variation_id,
+		"label": variation_id.replace("_", " ").capitalize(),
+		"materials": material_delta,
+		"morale": morale_delta,
+		"target_room": target_room,
+		"target_applies": target_applies,
+		"effects": effects,
+		"summary": "%s — %s." % [variation_id.replace("_", " ").capitalize(), "; ".join(effects)],
 	}
 
 func current_event() -> Dictionary:
@@ -2236,6 +2285,69 @@ func scenario_scorecard() -> Dictionary:
 		total_recovery_actions += int(row.get("recovery_actions_used", 0))
 	return {"keep_id": keep_id, "keep_name": String(_keep_definitions.get(keep_id, {}).get("name", keep_id)), "scenario_id": scenario_id, "scenario_name": String(_scenario_definitions.get(scenario_id, {}).get("name", scenario_id)), "completed_waves": wave_history.size(), "wave_count": authored_wave_count(), "outcomes": outcomes, "total_defeated": total_defeated, "total_room_damage": total_room_damage, "total_piece_damage": total_piece_damage, "recovery_actions_used": total_recovery_actions, "final_outcome": last_outcome, "replay_key": "%s/%s/%d" % [scenario_id, commander_id, seed]}
 
+func replay_mastery_summary() -> Dictionary:
+	var pack_families: Array[String] = []
+	var pack_names: Array[String] = []
+	for pack_id_value in owned_packs:
+		var pack_id: String = String(pack_id_value)
+		var pack: Dictionary = _pack_definitions.get(pack_id, {})
+		var family: String = String(pack.get("family", ""))
+		if not family.is_empty() and not pack_families.has(family):
+			pack_families.append(family)
+		pack_names.append(String(pack.get("name", pack_id.replace("_", " ").capitalize())))
+	pack_families.sort()
+	pack_names.sort()
+	var answer_families: Array[String] = pack_families.duplicate()
+	for instance in pieces.values():
+		var piece: Dictionary = _piece_definitions.get(String(instance.get("piece_id", "")), {})
+		var category: String = String(piece.get("category", ""))
+		if not category.is_empty() and not answer_families.has(category):
+			answer_families.append(category)
+	answer_families.sort()
+	var doctrines: Array[String] = []
+	if not wave_history.is_empty():
+		for history_row in wave_history:
+			doctrines.append(String(history_row.get("doctrine", "")))
+	elif _scenario_definitions.has(scenario_id):
+		for doctrine_id_value in _scenario_definitions[scenario_id].get("doctrines", []):
+			doctrines.append(String(doctrine_id_value))
+	var covered_phases: int = 0
+	var phase_rows: Array[Dictionary] = []
+	var uncovered_doctrines: Array[String] = []
+	for doctrine_id in doctrines:
+		var doctrine: Dictionary = _doctrine_definitions.get(doctrine_id, {})
+		var matching_families: Array[String] = []
+		for family in answer_families:
+			if doctrine.get("counter_families", []).has(family):
+				matching_families.append(family)
+		var covered: bool = not matching_families.is_empty()
+		if covered:
+			covered_phases += 1
+		elif not uncovered_doctrines.has(doctrine_id):
+			uncovered_doctrines.append(doctrine_id)
+		phase_rows.append({"doctrine": doctrine_id, "covered": covered, "matching_families": matching_families})
+	var recovery_capacity: int = mini(wave_history.size(), maxi(0, authored_wave_count() - 1)) * 2
+	var recovery_used: int = int(scenario_scorecard().get("recovery_actions_used", 0))
+	var coverage_text: String = "%d/%d pressure phases matched by placed or opened defense families" % [covered_phases, doctrines.size()]
+	var uncovered_names: Array[String] = []
+	for doctrine_id in uncovered_doctrines:
+		uncovered_names.append(String(_doctrine_definitions.get(doctrine_id, {}).get("name", doctrine_id.replace("_", " ").capitalize())))
+	return {
+		"variation": scenario_variation_preview(),
+		"pack_names": pack_names,
+		"pack_families": pack_families,
+		"answer_families": answer_families,
+		"phase_rows": phase_rows,
+		"covered_phases": covered_phases,
+		"phase_count": doctrines.size(),
+		"coverage_text": coverage_text,
+		"uncovered_doctrines": uncovered_doctrines,
+		"uncovered_names": uncovered_names,
+		"recovery_actions_used": recovery_used,
+		"recovery_capacity": recovery_capacity,
+		"recovery_text": "%d/%d available recovery actions committed" % [recovery_used, recovery_capacity],
+	}
+
 func scenario_report() -> Dictionary:
 	var scorecard: Dictionary = scenario_scorecard()
 	var wave_rows: Array[Dictionary] = []
@@ -2301,6 +2413,7 @@ func scenario_report() -> Dictionary:
 		what_failed.append("%d defensive piece%s finished disabled." % [disabled_pieces, "" if disabled_pieces == 1 else "s"])
 	if what_failed.is_empty():
 		what_failed.append("No structural failure was recorded in the resolved waves.")
+	var mastery: Dictionary = replay_mastery_summary()
 	var suggested_experiment: String = "Replay with The Warden and preserve an open response lane."
 	if last_outcome == "collapse":
 		var terminal_defender_wipe: bool = surviving_pieces == 0 and bool(_scenario_definitions.get(scenario_id, {}).get("collapse_on_defender_wipe", false))
@@ -2313,6 +2426,16 @@ func scenario_report() -> Dictionary:
 		suggested_experiment = "Preserve an upper response lane and test Scout Post coverage."
 	elif commander_id == "warden":
 		suggested_experiment = "Replay with The Castellan and compare a compact adjacent layout."
+	if last_outcome == "held" and not mastery.get("uncovered_doctrines", []).is_empty():
+		var uncovered_id: String = String(mastery.uncovered_doctrines[0])
+		var uncovered: Dictionary = _doctrine_definitions.get(uncovered_id, {})
+		var suggested_family: String = "another"
+		for family_value in uncovered.get("counter_families", []):
+			var family: String = String(family_value)
+			if family != "commander_intervention" and not mastery.get("answer_families", []).has(family):
+				suggested_family = family.replace("_", " ")
+				break
+		suggested_experiment = "Replay the same %s variation with a %s defense answer for %s." % [scenario_variation_id.replace("_", " "), suggested_family, String(uncovered.get("name", uncovered_id.replace("_", " ").capitalize()))]
 	return {
 		"scenario_id": scenario_id,
 		"scenario_name": String(scorecard.get("scenario_name", scenario_id)),
@@ -2329,6 +2452,7 @@ func scenario_report() -> Dictionary:
 		},
 		"what_worked": what_worked,
 		"what_failed": what_failed,
+		"mastery": mastery,
 		"suggested_experiment": suggested_experiment,
 		"replay_key": String(scorecard.get("replay_key", "")),
 		"event_history": event_history.duplicate(true),

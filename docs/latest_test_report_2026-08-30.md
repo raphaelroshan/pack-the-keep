@@ -4,8 +4,8 @@
 
 | Field | Result |
 |---|---|
-| Branch tested | `feat/k6-command-disruptor-slice` before merge to `main` |
-| Build | `v0.28.0-standard-cutter` |
+| Branch tested | `feat/k7-replay-mastery-summary` before merge to `main` |
+| Build | `v0.29.0-replay-mastery` |
 | Engine | Godot 4.7.2 |
 | Visual test display | 1600×900 local graphical renderer |
 | Automated verification | PASS: complete `scripts/verify.sh` suite |
@@ -13,20 +13,20 @@
 | Scenario matrix | PASS: 60 viable cases and 120 uninterrupted/resumed simulations |
 | Human playtest gate | PENDING: no human observations inferred from automation |
 
-## K6 evidence
+## K7 evidence
 
-The Standard Cutter is one controlled enemy-family addition. It prioritizes a living assigned specialist, falls back to the weakest precision/support/control piece, and never substitutes room damage for its unit-hunter role. The Cut Standard names Crossbow Watch and Fallback Convoy as separate answers.
+The existing seeded scenario variation is now visible before commitment. Terminal Results compares that pressure with placed or opened defense families, recovery investment, opened packs, and the first uncovered doctrine that offers a useful replay experiment.
 
-Focused verification covers malformed content rejection, assigned-first targeting, unit-only fallback, save/load parity, two commanders, two loadouts, three seeds, normal-flow scenario selection, focused threat inspection, large text, high contrast, reduced motion, and the dedicated forked-standard silhouette.
+Focused verification covers deterministic seed projection, applicable room-pressure wording, doctrine-family coverage, recovery-action accounting, first-uncovered-doctrine guidance, save/load parity, normal-flow War Council entry, terminal Results, large text, high contrast, and reduced motion.
 
-The 1600×900 screenshots in `/tmp/pack-the-keep-k6` show the Preparation question/answer framing and a paused tick-three contact with the assigned target, projected Rear Guard response, cadence, health, and counter visible while the keep remains primary.
+The 1600×900 screenshots in `/tmp/pack-the-keep-k7` show Thin Command directly above **Enter Keep** and a terminal debrief where seed pressure, 2/3 doctrine fit, 1/4 recovery commitment, and Crossbow Watch remain readable beside the damaged keep.
 
 ## Findings
 
-The new teaching question is readable without adding another menu or status subsystem. Precision fire stops the Cutter before contact; the mobile reserve accepts limited contact while maintaining a second line. The compact `CMD` board cue remains subordinate to health, focus, and target lines.
+The replay summary explains why a successful defense is still worth revisiting without adding rarity, grind, permanent power, or a new save field. It reuses authored doctrine counter families and existing variation state instead of inventing a second authority.
 
 No automated regression or deterministic divergence was found. The known release limitation remains unchanged: the build is an internal pre-alpha candidate and has no completed human-session evidence.
 
 ## Next roadmap step
 
-K7 should add one bounded, forecastable variation that changes the tactical question on replay and then compare the chosen answer with the encountered pressure in Results. It must retain at least two viable solutions and avoid rarity, grind, or hidden counters.
+K8 should consolidate the existing accessibility, persistence, controller, audio, clean-install, migration, performance, provenance, rollback, and known-limitation evidence into one honest private-alpha gate. Human sessions and owner approval remain separate and pending.
