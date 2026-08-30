@@ -767,3 +767,11 @@
 **Reason:** The ordinary CI artifact already contained the complete observer kit, but the durable GitHub prerelease exposed only the executable and generic manifests. Separating the instructions and templates from the tagged binary made it too easy to test an unproven combination or lose the cohort when short-lived CI artifacts expired.
 
 **Trade-off:** Tagged releases contain several small JSON assets rather than one minimal download. They remain intentionally marked pre-alpha, every template remains invalid human evidence until completed by an observer, and automation still cannot set `release_ready` or approve distribution.
+
+## ADR-097: Responsive composition follows effective width
+
+**Decision:** Fit windowed launch sizes inside the active screen usable rectangle and center them. Derive gameplay layout breakpoints from physical window width divided by the selected UI scale. Keep 1600×900 at 100% in the authored two-column composition, stack the main surface above the command rail when effective width is constrained, stack choice cards at the compact threshold, and hide only decorative phase navigation at large text while retaining Settings. Put the War Council commit action before its potentially tall cards and keep Preparation focused on its strategic brief and assault action.
+
+**Reason:** The fixed 1600×900 launch and logical-width-only breakpoint allowed the right rail to sit outside a 1280×720 display and caused enlarged text to behave like extra content rather than reduced usable space. Effective width captures both constraints, while a stable single-column fallback keeps every required action reachable without changing the game flow.
+
+**Trade-off:** Narrow and 150%+ layouts require vertical scrolling, and War Council may scroll enough to expose the focused commit action rather than preserving its decorative header. The layout remains presentation-only; window size, focus, stacking, and capture settings never enter `PackKeepState` or affect deterministic outcomes.

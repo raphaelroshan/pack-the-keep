@@ -41,6 +41,9 @@ const UI_SCALE_PRESETS := [0.8, 1.0, 1.25, 1.5, 2.0]
 const WINDOW_SIZE_PRESETS := [Vector2i(1280, 720), Vector2i(1600, 900), Vector2i(1920, 1080), Vector2i(2560, 1440)]
 const EFFECTS_VOLUME_PRESETS := [0.25, 0.5, 0.75, 1.0]
 const EVENT_FEED_RETENTION_PRESETS := [4, 8, 16, 32]
+const TWO_COLUMN_EFFECTIVE_WIDTH := 1420.0
+const COMPACT_CARD_EFFECTIVE_WIDTH := 920.0
+const PAGE_HORIZONTAL_MARGIN := 48.0
 const RESERVED_CONTROLLER_NAVIGATION_BUTTONS := [0, 11, 12, 13, 14]
 const REMAPPABLE_ACTIONS := [
 	"battle_pause", "battle_manual_step", "commander_ability", "placement_arm", "placement_cancel",
@@ -696,7 +699,16 @@ func _apply_display_settings() -> void:
 		get_window().mode = Window.MODE_FULLSCREEN
 	else:
 		get_window().mode = Window.MODE_WINDOWED
-		get_window().size = WINDOW_SIZE_PRESETS[window_size_index]
+		var usable_rect: Rect2i = DisplayServer.screen_get_usable_rect(get_window().current_screen)
+		var fitted_size: Vector2i = _fit_window_size(WINDOW_SIZE_PRESETS[window_size_index], usable_rect.size)
+		get_window().size = fitted_size
+		get_window().position = usable_rect.position + (usable_rect.size - fitted_size) / 2
+
+func _fit_window_size(requested: Vector2i, available: Vector2i) -> Vector2i:
+	if requested.x <= 0 or requested.y <= 0 or available.x <= 0 or available.y <= 0:
+		return requested
+	var fit_scale: float = minf(1.0, minf(float(available.x) / float(requested.x), float(available.y) / float(requested.y)))
+	return Vector2i(maxi(1, int(floor(requested.x * fit_scale))), maxi(1, int(floor(requested.y * fit_scale))))
 
 func _apply_ui_scale() -> void:
 	get_window().content_scale_factor = float(UI_SCALE_PRESETS[ui_scale_index])
@@ -705,27 +717,58 @@ func _apply_ui_scale() -> void:
 func _apply_responsive_layout() -> void:
 	if gameplay_columns == null:
 		return
-	var logical_width: float = size.x
-	var stacked: bool = logical_width < 1160.0
+	var ui_factor: float = maxf(0.01, float(get_window().content_scale_factor))
+	var effective_width: float = maxf(float(get_window().size.x), size.x) / ui_factor
+	var stacked: bool = effective_width < TWO_COLUMN_EFFECTIVE_WIDTH
+	var compact_cards: bool = effective_width < COMPACT_CARD_EFFECTIVE_WIDTH
+	var stacked_width: float = maxf(520.0, size.x - PAGE_HORIZONTAL_MARGIN)
+	var main_width: float = minf(810.0, stacked_width) if stacked else 810.0
+	var large_text_compact: bool = ui_factor >= 1.5 and effective_width < TWO_COLUMN_EFFECTIVE_WIDTH
 	if screen_hint != null:
-		screen_hint.visible = screen == "title" or logical_width >= 1800.0
+		screen_hint.visible = screen == "title" or effective_width >= 1800.0
 	gameplay_columns.vertical = stacked
 	gameplay_columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if gameplay_main_column != null:
-		gameplay_main_column.custom_minimum_size.x = 810.0
+		gameplay_main_column.custom_minimum_size.x = main_width
 		gameplay_main_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if war_council_choice_panel != null:
-		war_council_choice_panel.set_compact_layout(stacked)
+		war_council_choice_panel.set_responsive_layout(compact_cards, main_width)
+	if preparation_brief_panel != null:
+		preparation_brief_panel.set_responsive_layout(compact_cards, main_width)
+	if setup_overview_panel != null:
+		setup_overview_panel.visible = screen == "setup" and not large_text_compact
+	if art_banner != null and art_banner.visible:
+		art_banner.custom_minimum_size.y = 72.0 if large_text_compact else 100.0 if screen == "setup" else 150.0
+	for control: Control in [status_label, guidance_label, playtest_button, playtest_status_label, forecast_label, enemy_label, metrics_label, result_explain_label, scorecard_label, combat_explain_label, placement_label, event_label, log_label]:
+		if control != null:
+			control.custom_minimum_size.x = main_width - 10.0
 	if command_panel != null:
-		command_panel.custom_minimum_size.x = 810.0 if stacked else 360.0 if logical_width >= 1500.0 else 292.0
+		var command_width: float = main_width if stacked else 360.0 if effective_width >= 1500.0 else 292.0
+		command_panel.custom_minimum_size.x = command_width
 		command_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL if stacked else Control.SIZE_SHRINK_BEGIN
+		if recovery_stage_label != null:
+			recovery_stage_label.custom_minimum_size.x = maxf(220.0, command_width - 20.0)
 	if terminal_debrief_panel != null:
-		terminal_debrief_panel.custom_minimum_size.x = 810.0 if stacked else 430.0 if logical_width >= 1500.0 else 340.0
+		terminal_debrief_panel.custom_minimum_size.x = main_width if stacked else 430.0 if effective_width >= 1500.0 else 340.0
 		terminal_debrief_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL if stacked else Control.SIZE_SHRINK_BEGIN
 	if keep_canvas != null:
+		keep_canvas.custom_minimum_size.x = main_width
 		keep_canvas.custom_minimum_size.y = 488.0 if not stacked and size.y >= 900.0 else 382.0
 		keep_canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		keep_canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_refresh_navigation()
+
+func _responsive_layout_snapshot() -> Dictionary:
+	var ui_factor: float = maxf(0.01, float(get_window().content_scale_factor))
+	return {
+		"control_size": size,
+		"window_size": get_window().size,
+		"ui_scale": ui_factor,
+		"effective_width": maxf(float(get_window().size.x), size.x) / ui_factor,
+		"stacked": gameplay_columns != null and gameplay_columns.vertical,
+		"main_minimum_width": gameplay_main_column.custom_minimum_size.x if gameplay_main_column != null else 0.0,
+		"command_minimum_width": command_panel.custom_minimum_size.x if command_panel != null else 0.0,
+	}
 
 func _begin_rebind(action: String = "") -> void:
 	if action.is_empty() and rebind_action_option != null and rebind_action_option.selected >= 0:
@@ -1100,6 +1143,7 @@ func _build_ui() -> void:
 
 	main_subtitle_label = Label.new()
 	main_subtitle_label.text = "Greywatch’s defense: connect the floors, read the doctrine, hold what matters."
+	main_subtitle_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	main_subtitle_label.add_theme_color_override("font_color", Color("#c0b2c8"))
 	left.add_child(main_subtitle_label)
 
@@ -1114,6 +1158,7 @@ func _build_ui() -> void:
 	war_council_choice_panel.commander_next_requested.connect(func() -> void: _cycle_commander(1))
 	war_council_choice_panel.scenario_previous_requested.connect(func() -> void: _cycle_scenario(-1))
 	war_council_choice_panel.scenario_next_requested.connect(func() -> void: _cycle_scenario(1))
+	war_council_choice_panel.confirm_requested.connect(_on_confirm_setup)
 	setup_summary_panel = war_council_choice_panel
 	left.add_child(setup_summary_panel)
 	setup_overview_label = war_council_choice_panel.summary_label
@@ -1357,12 +1402,7 @@ func _build_ui() -> void:
 	campaign_modifier_button = Button.new()
 	campaign_modifier_button.pressed.connect(_on_toggle_campaign_modifier)
 	campaign_ledger_panel.add_child(campaign_modifier_button)
-	setup_confirm_button = Button.new()
-	setup_confirm_button.text = "Enter Keep — Recommended Layout"
-	setup_confirm_button.tooltip_text = "Confirm this briefing and enter Preparation with the guided two-piece baseline."
-	setup_confirm_button.pressed.connect(_on_confirm_setup)
-	_style_button(setup_confirm_button, true)
-	left.add_child(setup_confirm_button)
+	setup_confirm_button = war_council_choice_panel.confirm_button
 	setup_controls.append(setup_confirm_button)
 	setup_back_button = Button.new()
 	setup_back_button.text = "Back to Main Menu"
@@ -2086,7 +2126,7 @@ func _focus_screen_control() -> void:
 	if screen == "title":
 		target = quick_test_button
 	elif screen == "setup":
-		target = war_council_choice_panel.commander_next_button if war_council_choice_panel != null and not tutorial.active else commander_option
+		target = setup_confirm_button
 	elif screen == "preparation":
 		target = playtest_button if not playtest_button.disabled else pack_button
 	elif screen == "battle":
@@ -2111,11 +2151,25 @@ func _focus_screen_control() -> void:
 		else:
 			command_scroll.ensure_control_visible(target)
 	if page_scroll != null:
-		if ui_scale_index >= 2 and command_panel.is_ancestor_of(target):
-			page_scroll.ensure_control_visible(target)
+		if screen == "preparation" and target == playtest_button:
+			page_scroll.scroll_horizontal = 0
+			page_scroll.scroll_vertical = 0
+		elif ui_scale_index >= 2 or gameplay_columns.vertical:
+			_scroll_page_to_control(target)
 		else:
 			page_scroll.scroll_horizontal = 0
 			page_scroll.scroll_vertical = 0
+
+func _scroll_page_to_control(target: Control) -> void:
+	if page_scroll == null or target == null:
+		return
+	var viewport_rect: Rect2 = page_scroll.get_global_rect()
+	var target_rect: Rect2 = target.get_global_rect()
+	var padding: float = 16.0
+	if target_rect.end.y > viewport_rect.end.y - padding:
+		page_scroll.scroll_vertical += int(ceil(target_rect.end.y - viewport_rect.end.y + padding))
+	elif target_rect.position.y < viewport_rect.position.y + padding:
+		page_scroll.scroll_vertical -= int(ceil(viewport_rect.position.y + padding - target_rect.position.y))
 
 func _first_legal_recovery_control() -> Control:
 	for candidate in [recovery_room_button, recovery_piece_button, recovery_assign_button, recovery_clear_button, finish_interval_button]:
@@ -2124,7 +2178,7 @@ func _first_legal_recovery_control() -> Control:
 	return finish_interval_button
 
 func _focus_recovery_controls() -> void:
-	if command_scroll and recovery_actions_panel and recovery_actions_panel.visible:
+	if command_scroll and recovery_actions_panel and recovery_actions_panel.visible and recovery_stage_label != null:
 		command_scroll.scroll_vertical = 0
 
 func _set_group_visibility(nodes: Array[Control], visible: bool) -> void:
@@ -2135,8 +2189,10 @@ func _set_group_visibility(nodes: Array[Control], visible: bool) -> void:
 func _refresh_navigation() -> void:
 	if menu_buttons.is_empty():
 		return
+	var effective_width: float = maxf(float(get_window().size.x), size.x) / maxf(0.01, float(get_window().content_scale_factor))
+	var compact_navigation: bool = effective_width < 1100.0
 	for target in menu_buttons.keys():
-		menu_buttons[target].visible = screen != "title"
+		menu_buttons[target].visible = screen != "title" and (not compact_navigation or target == "settings")
 		menu_buttons[target].disabled = target != "settings" or target == screen
 		menu_buttons[target].modulate = Color.WHITE if target == screen else Color("#77717c") if target != "settings" else Color.WHITE
 
@@ -2607,7 +2663,10 @@ func _on_map_clicked(floor: String, cell: Vector2i) -> void:
 		_set_event("Inspector focused on %s." % String(piece_inspection.get("name", instance_id)))
 		_tutorial_advance("inspect_piece", inspected_piece_id)
 		_refresh_ui()
-		call_deferred("_reveal_inspection_panel")
+		if keep.repair_interval_active:
+			_focus_recovery_controls()
+		else:
+			call_deferred("_reveal_inspection_panel")
 		return
 	var room_id: String = keep.room_at_cell(floor, cell)
 	if not room_id.is_empty():
@@ -2621,7 +2680,10 @@ func _on_map_clicked(floor: String, cell: Vector2i) -> void:
 		_set_event("Inspector focused on %s." % String(keep.inspect_room(room_id).get("name", room_id)))
 		_tutorial_advance("inspect_room", room_id)
 		_refresh_ui()
-		call_deferred("_reveal_inspection_panel")
+		if keep.repair_interval_active:
+			_focus_recovery_controls()
+		else:
+			call_deferred("_reveal_inspection_panel")
 
 func _format_inspection(data: Dictionary) -> String:
 	if not bool(data.get("ok", false)):
@@ -2650,7 +2712,11 @@ func _on_inspect_enemy() -> void:
 	_select_enemy_focus(int(enemy_option.get_item_metadata(enemy_option.selected)), "focused threat control")
 
 func _reveal_inspection_panel() -> void:
-	if command_scroll != null and inspection_panel != null and inspection_panel.is_visible_in_tree():
+	if command_scroll == null:
+		return
+	if keep != null and keep.repair_interval_active and recovery_stage_label != null and recovery_stage_label.is_visible_in_tree():
+		command_scroll.scroll_vertical = 0
+	elif inspection_panel != null and inspection_panel.is_visible_in_tree():
 		command_scroll.ensure_control_visible(inspection_panel)
 
 func _active_enemy_indices() -> Array[int]:

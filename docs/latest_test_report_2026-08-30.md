@@ -25,6 +25,10 @@ The screenshots were captured from the actual latest main build and are stored u
 
 The latest build has a much stronger authored presentation than the earlier prototype and communicates the CHOOSE, BUILD, and HOLD framing clearly on the title screen. The real flow reaches War Council successfully. The main visible problem at 1280×720 is horizontal overflow: the right-hand selection panel is clipped while the left-side briefing remains readable. The lower menu row is also close to the viewport edge. This makes the preparation decision harder to understand and should be treated as a release-blocking presentation issue for the minimum supported layout.
 
+## Resolution
+
+P48 (`0.25.5-responsive-layout`) resolves this baseline finding. War Council and Preparation now choose a deliberate stacked fallback from effective width after UI scaling, windowed launches fit inside the active screen usable area, compact navigation retains Settings, and controller focus exposes the primary setup or assault action. The focused P48 regression and fresh 1280×720 at 150% plus 1600×900 at 100% capture sets pass; see [`p48_responsive_layout_verification.md`](p48_responsive_layout_verification.md).
+
 ## Next roadmap steps
 
 ### Keep Quality 1 — Responsive War Council and Preparation layout

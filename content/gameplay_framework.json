@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.25.4-playtest-release-kit",
+  "framework_version": "0.25.5-responsive-layout",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -1830,6 +1830,15 @@
     "priority": ["cancel_input_rebind", "cancel_active_placement", "close_confirmation", "navigate_back"],
     "dirty_detection": "serialized_run_compared_with_last_successful_save_or_load",
     "persistence_rule": "discarding_in_memory_progress_never_deletes_the_existing_save_file"
+  },
+  "responsive_gameplay_layout": {
+    "status": "implemented",
+    "supported_viewports": ["1280x720", "1600x900", "1920x1080", "2560x1440"],
+    "scale_rule": "effective_width_after_ui_scale_selects_two_column_or_single_column_composition",
+    "window_rule": "windowed_sizes_fit_and_center_inside_the_active_screen_usable_rect_without_enlargement",
+    "focus_rule": "war_council_commit_and_preparation_assault_actions_remain_visible_and_controller_reachable",
+    "capture_rule": "graphical_vertical_slice_capture_accepts_explicit_resolution_and_ui_scale",
+    "determinism_rule": "layout_window_focus_and_capture_settings_do_not_mutate_pack_keep_state"
   },
   "unit_availability": {
     "status": "vertical_slice",

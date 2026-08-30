@@ -1,9 +1,9 @@
 extends SceneTree
 
-const CAPTURE_SIZE := Vector2i(1600, 900)
-
 var output_dir: String = ""
 var captured_files: Array[String] = []
+var capture_size: Vector2i = Vector2i(1600, 900)
+var capture_scale_index: int = 1
 
 func _initialize() -> void:
 	if DisplayServer.get_name() == "headless":
@@ -11,6 +11,9 @@ func _initialize() -> void:
 		quit(2)
 		return
 	output_dir = _argument_value("--output-dir=")
+	capture_size.x = maxi(640, int(_argument_value("--width=").to_int())) if not _argument_value("--width=").is_empty() else 1600
+	capture_size.y = maxi(360, int(_argument_value("--height=").to_int())) if not _argument_value("--height=").is_empty() else 900
+	capture_scale_index = clampi(int(_argument_value("--ui-scale-index=").to_int()), 0, 4) if not _argument_value("--ui-scale-index=").is_empty() else 1
 	if output_dir.is_empty():
 		output_dir = ProjectSettings.globalize_path("user://visual-captures")
 	var directory_error: Error = DirAccess.make_dir_recursive_absolute(output_dir)
@@ -21,13 +24,17 @@ func _initialize() -> void:
 	call_deferred("_run_capture")
 
 func _run_capture() -> void:
-	root.size = CAPTURE_SIZE
+	root.size = capture_size
 	var ui: Control = load("res://scenes/Main.tscn").instantiate()
 	root.add_child(ui)
 	await process_frame
 	await process_frame
 	ui.preferences_persistence_enabled = false
 	ui.display_application_enabled = false
+	ui.ui_scale_index = capture_scale_index
+	ui._apply_ui_scale()
+	root.size = capture_size
+	ui._apply_responsive_layout()
 	await _capture("01_title", ui)
 	ui._on_start_quick_playtest()
 	await _capture("02_war_council", ui)
@@ -81,7 +88,8 @@ func _write_manifest() -> void:
 	var payload: Dictionary = {
 		"schema_version": 1,
 		"build_version": String(ProjectSettings.get_setting("application/config/version", "unknown")),
-		"resolution": {"width": CAPTURE_SIZE.x, "height": CAPTURE_SIZE.y},
+		"resolution": {"width": capture_size.x, "height": capture_size.y},
+		"ui_scale_percent": int(ui_scale_percent()),
 		"files": captured_files,
 		"debug_ui": OS.get_cmdline_user_args().has("--debug-ui"),
 		"human_evidence": false,
@@ -96,3 +104,6 @@ func _argument_value(prefix: String) -> String:
 		if argument.begins_with(prefix):
 			return argument.trim_prefix(prefix)
 	return ""
+
+func ui_scale_percent() -> float:
+	return [0.8, 1.0, 1.25, 1.5, 2.0][capture_scale_index] * 100.0

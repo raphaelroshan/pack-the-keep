@@ -51,7 +51,7 @@ func _initialize() -> void:
 	ui._set_screen("setup")
 	await process_frame
 	var focus: Control = root.gui_get_focus_owner()
-	_check(focus == panel.commander_next_button, "ordinary War Council controller focus should begin on the primary commander card action")
+	_check(focus == ui.setup_confirm_button, "ordinary War Council controller focus should begin on the primary Enter Keep action")
 	ui._set_ui_scale(2)
 	await process_frame
 	_check(panel.choice_row.vertical and panel.custom_minimum_size.x >= 800.0, "125 percent UI scale should stack the cards instead of compressing them")
