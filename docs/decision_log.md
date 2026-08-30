@@ -831,3 +831,11 @@
 **Reason:** The underlying hardening existed across many tests and documents, making it difficult to tell whether the roadmap was complete or whether a future change silently weakened a required area. A single gate makes the evidence auditable without treating automation as human approval.
 
 **Trade-off:** The performance test proves bounded headless workloads, not universal frame pacing, and packaged automation cannot replace physical controllers, broad Windows GPU review, listening tests, forced-close observation, signing, or storefront checks. Those limitations are explicit and remain outside the automated completion claim.
+
+## ADR-105: Forced-close recovery crosses a real process boundary
+
+**Decision:** Extend packaged smoke to flush valid run/settings backups, strand malformed primaries, publish a readiness sentinel, and wait. The external Python runner kills that Windows process, relaunches the same relocated executable and profile, requires backup restoration, and rewrites valid current-schema primaries.
+
+**Reason:** In-process malformed-file tests and clean shutdown do not prove that recovery survives an abrupt executable termination. Coordinating the kill outside Godot tests the persistence boundary while keeping the fixture deterministic and auditable.
+
+**Trade-off:** The fixture deliberately chooses the interrupted-file shape and termination moment. It does not emulate every antivirus, filesystem, power-loss, or physical-device condition, so the broader human forced-close checklist remains pending.

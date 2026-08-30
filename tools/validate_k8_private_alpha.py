@@ -18,7 +18,7 @@ REQUIRED_HUMAN_GATES = {
     "windows_gpu_presentation", "physical_controller_matrix", "procedural_audio_review",
     "forced_close_recovery", "signed_installer", "storefront_launch", "human_playtest",
 }
-PACKAGED_PHASES = ("clean_install", "reinstall", "stale_backup", "missing_profile", "upgrade")
+PACKAGED_PHASES = ("clean_install", "reinstall", "stale_backup", "missing_profile", "upgrade", "forced_close_recovery")
 
 
 def load_object(path: Path, errors: list[str]) -> dict[str, Any]:
@@ -100,8 +100,11 @@ def validate_gate(gate: dict[str, Any], manifest: dict[str, Any], root: Path, er
 
 
 def validate_packaged_report(report: dict[str, Any], build_version: str, errors: list[str]) -> None:
-    if report.get("schema_version") != 2:
-        errors.append("K8 packaged report schema_version must be 2")
+    if report.get("schema_version") != 3:
+        errors.append("K8 packaged report schema_version must be 3")
+    forced_close = report.get("forced_close")
+    if not isinstance(forced_close, dict) or forced_close.get("ready") is not True or forced_close.get("terminated") is not True or forced_close.get("exit_code") in (None, 0):
+        errors.append("K8 packaged report needs forced-termination evidence")
     for phase in PACKAGED_PHASES:
         row = report.get(phase)
         if not isinstance(row, dict):
@@ -128,6 +131,11 @@ def validate_packaged_report(report: dict[str, Any], build_version: str, errors:
     for field in ("legacy_profile_detected", "upgrade_run_migrated", "upgrade_settings_ready", "upgraded_files_current"):
         if upgrade.get(field) is not True:
             errors.append(f"K8 migration evidence failed: {field}")
+    recovery_value = report.get("forced_close_recovery", {})
+    recovery = recovery_value if isinstance(recovery_value, dict) else {}
+    for field in ("forced_close_detected", "forced_close_run_recovered", "forced_close_settings_recovered", "forced_close_files_current"):
+        if recovery.get(field) is not True:
+            errors.append(f"K8 forced-close evidence failed: {field}")
 
 
 def main() -> int:

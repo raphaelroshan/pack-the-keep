@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.30.0-private-alpha-gate` — the tagged Windows candidate enforces the complete automated K1–K8 game-quality roadmap, including performance and packaged lifecycle budgets, while human sessions and owner approval remain pending
+**Current build identity:** `0.30.1-forced-close-recovery` — the tagged Windows candidate adds real forced process termination, backup recovery, and current-schema rewrite evidence to the completed automated K1–K8 gate; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of eleven authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, assigned-specialist priority, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.30.1 acceptance checks
+
+Inspect packaged smoke schema 3 and confirm it records a non-zero forced process exit after the readiness sentinel. The following recovery phase must restore the active battle at step one, 125% UI scale, 2560×1440 preset, and controller remap from valid backups, then rewrite schema-4 run and schema-5 settings primaries. Both P12 and K8 packaged audits must pass.
 
 ## v0.30.0 acceptance checks
 

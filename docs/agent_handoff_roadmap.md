@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
 **Document status:** Implemented automated game-quality roadmap through K8
-**Current release baseline:** `0.30.0-private-alpha-gate`; K8 consolidates the automated accessibility, persistence, controller, audio, package lifecycle, migration, performance, provenance, failure-recovery, and limitations gates; optional human private-alpha evidence and owner distribution approval remain pending
+**Current release baseline:** `0.30.1-forced-close-recovery`; K8 consolidates the automated private-alpha gates and P54 adds real packaged process termination plus backup recovery/rewrite evidence; optional human private-alpha evidence and owner distribution approval remain pending
 **Release posture:** CI-verified public repository with owner-controlled merges; no public alpha release or storefront claim yet
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
@@ -127,7 +127,8 @@ Milestones must be completed in order. An agent may split a milestone into small
 | K5 | Implemented | Recovery names one priority, its sacrificed alternative, and why; terminal Results leads with the decisive pattern and remaining cost before chronology. | Preserve the distinction as content breadth grows. |
 | K6 | Implemented | Standard Cutters visibly hunt assigned specialists first; The Cut Standard teaches precision interception versus mobile reserve through two deterministic viable answers. | Preserve as the assigned-specialist teaching slice. |
 | K7 | Implemented | War Council previews the fixed seeded variation; Results compares doctrine fit, recovery commitment, pack plan, and the first uncovered pressure for replay. | Begin K8 private-alpha hardening. |
-| K8 | Implemented | One machine-readable gate enforces ten automated/documented readiness areas, conservative performance budgets, five-phase packaged evidence, known limitations, and seven pending human boundaries. | Schedule human private-alpha sessions only when the owner wants observational evidence. |
+| K8 | Implemented | One machine-readable gate enforces ten automated/documented readiness areas, conservative performance budgets, packaged lifecycle evidence, known limitations, and seven pending human boundaries. | Schedule human private-alpha sessions only when the owner wants observational evidence. |
+| P54 | Implemented | The Windows lifecycle now kills a prepared process with malformed primaries, relaunches the same profile, restores run/settings backups, and rewrites current schemas. | Preserve the manual forced-close timing check as human validation. |
 | P51 | Next: content breadth | Add one commander lens, one keep identity, two teaching packs, and two enemy families as complete question/counter/weakness slices. | Ship one isolated teaching scenario per slice before combinations. |
 | P52 | Next: replayable mastery | Add bounded scenario variation, pack choices, recovery trade-offs, and ending/report composition without grind or forced builds. | Preserve at least two viable answers per expanded teaching scenario. |
 | P53 | Next: alpha hardening | Complete accessibility, persistence, performance, audio, controller, packaging, and failure-recovery review across the quality flow. | Automated and visual evidence must pass; human testing is optional validation, not a prerequisite. |

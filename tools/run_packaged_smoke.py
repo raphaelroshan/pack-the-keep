@@ -9,12 +9,14 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 SAVE_FILENAME = "packaged_smoke_run.save"
 SETTINGS_FILENAME = "packaged_smoke_settings.json"
 REPORT_FILENAME = "packaged_smoke_report.json"
-SUPPORTED_PHASES = {"clean_install", "reinstall", "stale_backup", "missing_profile", "upgrade"}
+FORCED_CLOSE_READY_FILENAME = "packaged_forced_close_ready"
+SUPPORTED_PHASES = {"clean_install", "reinstall", "stale_backup", "missing_profile", "upgrade", "forced_close_recovery"}
 
 
 def run_process(command: list[str], environment: dict[str, str], timeout: float, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
@@ -127,6 +129,10 @@ def validate_report(report_path: Path, profile_root: Path, expected_version: str
         for field in ("upgrade_run_migrated", "upgrade_settings_ready", "upgraded_files_current"):
             if report.get(field) is not True:
                 errors.append(f"packaged upgrade assertion failed: {field}")
+    elif expected_phase == "forced_close_recovery":
+        for field in ("forced_close_detected", "forced_close_run_recovered", "forced_close_settings_recovered", "forced_close_files_current"):
+            if report.get(field) is not True:
+                errors.append(f"packaged forced-close assertion failed: {field}")
     content_status = report.get("content_status")
     if not isinstance(content_status, dict) or content_status.get("ok") is not True:
         errors.append("packaged runtime content catalog did not load")
@@ -191,6 +197,56 @@ def run_smoke_phase(
     if not isinstance(report.get("executable_path"), str) or not paths_equal(str(report["executable_path"]), executable):
         raise RuntimeError(f"{phase} smoke ran from unexpected executable: {report.get('executable_path')!r}")
     return report, report_path
+
+
+def run_forced_close_prepare(executable: Path, profile_root: Path, timeout: float) -> dict[str, object]:
+    for stale_ready in profile_root.rglob(FORCED_CLOSE_READY_FILENAME) if profile_root.exists() else []:
+        stale_ready.unlink()
+    command = [str(executable), "--headless", "--audio-driver", "Dummy", "--", "--packaged-smoke"]
+    environment = smoke_environment(profile_root, "forced_close_prepare")
+    process = subprocess.Popen(
+        command,
+        env=environment,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        cwd=executable.parent,
+    )
+    deadline = time.monotonic() + timeout
+    ready_path: Path | None = None
+    try:
+        while time.monotonic() < deadline:
+            matches = list(profile_root.rglob(FORCED_CLOSE_READY_FILENAME)) if profile_root.exists() else []
+            if len(matches) == 1:
+                ready_path = matches[0]
+                break
+            if len(matches) > 1:
+                raise RuntimeError(f"forced-close preparation wrote multiple readiness files below {profile_root}")
+            return_code = process.poll()
+            if return_code is not None:
+                stdout, stderr = process.communicate()
+                output = "\n".join(part for part in (stdout, stderr) if part)
+                raise RuntimeError(f"forced-close preparation exited {return_code} before readiness\n{output}")
+            time.sleep(0.05)
+        if ready_path is None:
+            raise RuntimeError(f"forced-close preparation did not become ready within {timeout}s")
+        process.kill()
+        stdout, stderr = process.communicate(timeout=5)
+        return_code = int(process.returncode or 0)
+        if return_code == 0:
+            raise RuntimeError("forced-close preparation exited cleanly instead of being terminated")
+        ready_path.unlink(missing_ok=True)
+        return {
+            "ready": True,
+            "terminated": True,
+            "exit_code": return_code,
+            "stdout_tail": stdout[-1000:],
+            "stderr_tail": stderr[-1000:],
+        }
+    finally:
+        if process.poll() is None:
+            process.kill()
+            process.communicate()
 
 
 def copy_executable(executable: Path, profile_root: Path, label: str) -> Path:
@@ -271,21 +327,26 @@ def main() -> int:
         write_legacy_profile(clean_install_report, profile_root, upgrade_profile_root)
         upgraded_executable = copy_executable(executable, profile_root, "upgraded")
         upgrade_report, _ = run_smoke_phase(upgraded_executable, upgrade_profile_root, expected_version, "upgrade", args.timeout)
+
+        forced_close = run_forced_close_prepare(reinstalled_executable, profile_root, args.timeout)
+        forced_close_recovery_report, _ = run_smoke_phase(reinstalled_executable, profile_root, expected_version, "forced_close_recovery", args.timeout)
     except (RuntimeError, OSError, json.JSONDecodeError, ValueError) as exc:
         print(f"ERROR: {exc}")
         return 1
     if args.report_copy is not None:
         args.report_copy.parent.mkdir(parents=True, exist_ok=True)
         combined = {
-            "schema_version": 2,
+            "schema_version": 3,
             "clean_install": clean_install_report,
             "reinstall": reinstall_report,
             "stale_backup": stale_backup_report,
             "missing_profile": missing_profile_report,
             "upgrade": upgrade_report,
+            "forced_close": forced_close,
+            "forced_close_recovery": forced_close_recovery_report,
         }
         args.report_copy.write_text(json.dumps(combined, indent=2), encoding="utf-8")
-    print(f"packaged smoke: PASS (five lifecycle phases; relocated to {reinstalled_executable})")
+    print(f"packaged smoke: PASS (six lifecycle phases plus forced termination; relocated to {reinstalled_executable})")
     return 0
 
 

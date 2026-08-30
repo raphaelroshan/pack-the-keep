@@ -59,6 +59,13 @@ def packaged_report(phase: str, profile: str, executable: str) -> dict[str, obje
             "legacy_profile_detected": True, "upgrade_run_migrated": True,
             "upgrade_settings_ready": True, "upgraded_files_current": True,
         })
+    elif phase == "forced_close_recovery":
+        report.update({
+            "profile_files_present": True, "profile_files_complete": True,
+            "profile_backups_complete": True,
+            "forced_close_detected": True, "forced_close_run_recovered": True,
+            "forced_close_settings_recovered": True, "forced_close_files_current": True,
+        })
     return report
 
 
@@ -87,8 +94,9 @@ class P12AlphaValidatorTests(unittest.TestCase):
                 "stale_backup": packaged_report("stale_backup", r"C:\profile", r"C:\reinstalled-app\pack-the-keep.exe"),
                 "missing_profile": packaged_report("missing_profile", r"C:\missing-profile", r"C:\reinstalled-app\pack-the-keep.exe"),
                 "upgrade": packaged_report("upgrade", r"C:\upgrade-profile", r"C:\upgraded-app\pack-the-keep.exe"),
+                "forced_close_recovery": packaged_report("forced_close_recovery", r"C:\profile", r"C:\reinstalled-app\pack-the-keep.exe"),
             }
-            path.write_text(json.dumps({"schema_version": 2, **reports}), encoding="utf-8")
+            path.write_text(json.dumps({"schema_version": 3, "forced_close": {"ready": True, "terminated": True, "exit_code": -9}, **reports}), encoding="utf-8")
             errors: list[str] = []
             validator.validate_report(path, "v", errors)
             self.assertEqual(errors, [])
@@ -102,6 +110,7 @@ class P12AlphaValidatorTests(unittest.TestCase):
                 "stale_backup": packaged_report("stale_backup", r"C:\second", r"C:\same\pack-the-keep.exe"),
                 "missing_profile": packaged_report("missing_profile", r"C:\first", r"C:\same\pack-the-keep.exe"),
                 "upgrade": packaged_report("upgrade", r"C:\first", r"C:\same\pack-the-keep.exe"),
+                "forced_close_recovery": packaged_report("forced_close_recovery", r"C:\second", r"C:\same\pack-the-keep.exe"),
             }
             reports["clean_install"]["main_scene_freed"] = False
             reports["clean_install"]["errors"] = ["failure"]
@@ -109,7 +118,8 @@ class P12AlphaValidatorTests(unittest.TestCase):
             reports["clean_install"]["save_path"] = r"C:\escaped\run.save"
             reports["reinstall"]["profile_files_complete"] = False
             reports["reinstall"]["restored_run_ready"] = False
-            path.write_text(json.dumps({"schema_version": 2, **reports}), encoding="utf-8")
+            reports["forced_close_recovery"]["forced_close_run_recovered"] = False
+            path.write_text(json.dumps({"schema_version": 3, "forced_close": {"ready": True, "terminated": True, "exit_code": -9}, **reports}), encoding="utf-8")
             errors: list[str] = []
             validator.validate_report(path, "v", errors)
             joined = "\n".join(errors)
@@ -121,6 +131,7 @@ class P12AlphaValidatorTests(unittest.TestCase):
             self.assertIn("runtime errors", joined)
             self.assertIn("outside user data", joined)
             self.assertIn("reused the clean-install profile", joined)
+            self.assertIn("forced-close packaged evidence failed", joined)
 
 
 if __name__ == "__main__":

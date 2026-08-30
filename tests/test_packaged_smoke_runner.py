@@ -63,6 +63,13 @@ def complete_report(profile_dir: Path, version: str, phase: str, executable: Pat
             "legacy_profile_detected": True, "upgrade_run_migrated": True,
             "upgrade_settings_ready": True, "upgraded_files_current": True,
         })
+    elif phase == "forced_close_recovery":
+        report.update({
+            "profile_files_present": True, "profile_files_complete": True,
+            "profile_backups_complete": True,
+            "forced_close_detected": True, "forced_close_run_recovered": True,
+            "forced_close_settings_recovered": True, "forced_close_files_current": True,
+        })
     return report
 
 
@@ -116,19 +123,57 @@ class PackagedSmokeReportTests(unittest.TestCase):
                 "--profile-root", str(profile_root), "--report-copy", str(report_copy),
                 "--manifest", str(manifest),
             ]
-            with patch.object(runner, "run_process", side_effect=fake_run), patch.object(sys, "argv", arguments), redirect_stdout(StringIO()):
+            def fake_forced_close(executable_path: Path, active_profile: Path, _timeout: int):
+                working_directories.append(("forced_close_prepare", executable_path.parent.resolve()))
+                return {"ready": True, "terminated": True, "exit_code": -9, "stdout_tail": "", "stderr_tail": ""}
+
+            with patch.object(runner, "run_process", side_effect=fake_run), patch.object(runner, "run_forced_close_prepare", side_effect=fake_forced_close), patch.object(sys, "argv", arguments), redirect_stdout(StringIO()):
                 self.assertEqual(runner.main(), 0)
 
             combined = json.loads(report_copy.read_text(encoding="utf-8"))
-            self.assertEqual(combined["schema_version"], 2)
-            self.assertEqual(set(combined) - {"schema_version"}, runner.SUPPORTED_PHASES)
+            self.assertEqual(combined["schema_version"], 3)
+            self.assertEqual(set(combined) - {"schema_version", "forced_close"}, runner.SUPPORTED_PHASES)
+            self.assertTrue(combined["forced_close"]["terminated"])
             smoke_phases = [phase for phase, _cwd in working_directories if phase in runner.SUPPORTED_PHASES]
-            self.assertEqual(smoke_phases, ["clean_install", "reinstall", "stale_backup", "missing_profile", "upgrade"])
+            self.assertEqual(smoke_phases, ["clean_install", "reinstall", "stale_backup", "missing_profile", "upgrade", "forced_close_recovery"])
             phase_directories = {phase: cwd for phase, cwd in working_directories if phase in runner.SUPPORTED_PHASES}
             self.assertNotEqual(phase_directories["clean_install"], phase_directories["reinstall"])
             self.assertEqual(phase_directories["reinstall"], phase_directories["stale_backup"])
             self.assertEqual(phase_directories["reinstall"], phase_directories["missing_profile"])
+            self.assertEqual(phase_directories["reinstall"], phase_directories["forced_close_recovery"])
             self.assertNotIn(phase_directories["upgrade"], {phase_directories["clean_install"], phase_directories["reinstall"]})
+
+    def test_forced_close_prepare_terminates_after_readiness(self) -> None:
+        class FakeProcess:
+            def __init__(self, ready_path: Path) -> None:
+                self.returncode: int | None = None
+                self.ready_path = ready_path
+
+            def poll(self):
+                if self.returncode is None and not self.ready_path.exists():
+                    self.ready_path.write_text("ready", encoding="utf-8")
+                return self.returncode
+
+            def kill(self) -> None:
+                self.returncode = -9
+
+            def communicate(self, timeout=None):
+                return ("ready", "")
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            executable = root / "pack-the-keep.exe"
+            executable.write_bytes(b"fixture")
+            ready_dir = root / "Godot" / "app_userdata" / "Pack the Keep"
+            ready_dir.mkdir(parents=True)
+            ready_path = ready_dir / runner.FORCED_CLOSE_READY_FILENAME
+            ready_path.write_text("stale", encoding="utf-8")
+            with patch.object(runner.subprocess, "Popen", return_value=FakeProcess(ready_path)):
+                evidence = runner.run_forced_close_prepare(executable, root, 1)
+            self.assertTrue(evidence["ready"])
+            self.assertTrue(evidence["terminated"])
+            self.assertEqual(evidence["exit_code"], -9)
+            self.assertFalse(ready_path.exists())
 
     def test_accepts_complete_report_inside_profile(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -146,11 +191,11 @@ class PackagedSmokeReportTests(unittest.TestCase):
             report_path.write_text(json.dumps(complete_report(report_path.parent, "v", "reinstall", root / "pack-the-keep.exe")), encoding="utf-8")
             self.assertEqual(runner.validate_report(report_path, root, "v", "reinstall"), [])
 
-    def test_accepts_missing_profile_stale_backup_and_upgrade_reports(self) -> None:
+    def test_accepts_missing_profile_stale_backup_upgrade_and_forced_close_reports(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             executable = root / "pack-the-keep.exe"
-            for phase in ("missing_profile", "stale_backup", "upgrade"):
+            for phase in ("missing_profile", "stale_backup", "upgrade", "forced_close_recovery"):
                 report_path = root / f"{phase}.json"
                 report_path.write_text(json.dumps(complete_report(root, "v", phase, executable)), encoding="utf-8")
                 self.assertEqual(runner.validate_report(report_path, root, "v", phase), [])
@@ -163,6 +208,7 @@ class PackagedSmokeReportTests(unittest.TestCase):
                 ("stale_backup", "primary_preferred_ready", "prefer valid primary"),
                 ("missing_profile", "missing_profile_state_unchanged", "missing-profile assertion"),
                 ("upgrade", "upgraded_files_current", "upgrade assertion"),
+                ("forced_close_recovery", "forced_close_run_recovered", "forced-close assertion"),
             )
             for phase, field, expected in cases:
                 with self.subTest(phase=phase, field=field):

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.30.0-private-alpha-gate",
+  "build_version": "0.30.1-forced-close-recovery",
   "status": "automated_candidate",
   "release_ready": false,
   "public_alpha_ready": false,
@@ -14,7 +14,7 @@
     {"id": "migration", "status": "packaged", "evidence": ["design/p14_packaged_lifecycle_safety.md", "src/platform/packaged_smoke.gd"]},
     {"id": "performance", "status": "automated", "evidence": ["tests/test_k8_performance_budget.gd"]},
     {"id": "package_provenance", "status": "packaged", "evidence": ["tests/test_release_identity.py", "docs/p47_self_contained_playtest_release_verification.md"]},
-    {"id": "failure_recovery", "status": "automated", "evidence": ["tests/test_p12_save_recovery.gd", "tests/test_p46_navigation_safety.gd"]},
+    {"id": "failure_recovery", "status": "packaged", "evidence": ["tests/test_p12_save_recovery.gd", "tests/test_p46_navigation_safety.gd", "src/platform/packaged_smoke.gd", "tools/run_packaged_smoke.py"]},
     {"id": "known_limitations", "status": "documented", "evidence": ["docs/private_alpha_known_limitations.md"]}
   ],
   "performance_budget": {

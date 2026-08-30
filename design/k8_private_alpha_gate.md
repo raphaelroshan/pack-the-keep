@@ -9,7 +9,7 @@ K8 turns the existing accessibility, persistence, controller, audio, package lif
 - `content/k8_private_alpha_gate.json` lists every required automated or documented area and preserves all human gates.
 - `tools/validate_k8_private_alpha.py` rejects missing evidence, version drift, release claims, removed human gates, and incomplete packaged lifecycle evidence.
 - `tests/test_k8_performance_budget.gd` measures deterministic scenario resolution and repeated 2560×1440 large-text UI refresh against deliberately conservative CI budgets.
-- Tagged packages still ship the exact executable, provenance, source, observer brief, and unfilled session templates.
+- Tagged packages still ship the exact executable, provenance, source, observer brief, unfilled session templates, and explicit limitations; packaged smoke also proves external forced termination and backup recovery.
 
 ## Non-goals
 

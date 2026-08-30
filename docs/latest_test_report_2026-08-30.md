@@ -4,8 +4,8 @@
 
 | Field | Result |
 |---|---|
-| Branch tested | `feat/k8-private-alpha-gate` before merge to `main` |
-| Build | `v0.30.0-private-alpha-gate` |
+| Branch tested | `feat/forced-close-recovery` before merge to `main` |
+| Build | `v0.30.1-forced-close-recovery` |
 | Engine | Godot 4.7.2 |
 | Visual test display | 1600×900 local graphical renderer |
 | Automated verification | PASS: complete `scripts/verify.sh` suite |
@@ -13,17 +13,17 @@
 | Scenario matrix | PASS: 60 viable cases and 120 uninterrupted/resumed simulations |
 | Human playtest gate | PENDING: no human observations inferred from automation |
 
-## K8 evidence
+## P54 evidence
 
-One version-bound manifest now consolidates accessibility, persistence, controller navigation, audio settings, clean install, migration, performance, package provenance, failure recovery, and known limitations. CI rejects missing evidence, weakened human boundaries, or any release/public-alpha/storefront claim.
+The Windows lifecycle now externally terminates the packaged process after it flushes valid backups and deliberately strands malformed primary run/settings files. Relaunching the same relocated executable and profile must restore both backups and rewrite valid current-schema primaries.
 
-Focused verification covers the K8 manifest and negative validator cases, forty deterministic three-phase scenario resolutions, 120 repeated 2560×1440 large-text refreshes, and the five-phase packaged Windows lifecycle. The complete local run finished those workloads in 2914 ms and 123 ms against separate 10000 ms budgets.
+Focused verification covers the termination coordinator, packaged smoke schema 3, run/settings recovery fields, validator rejection of missing evidence, and the existing lifecycle matrix. The tagged Windows workflow is the authoritative end-to-end kill/relaunch evidence.
 
-K8 changes no player-facing composition, so the reviewed K7 War Council and Results captures remain the current visual baseline. The new limitations document explicitly separates headless performance evidence from Windows GPU frame-pacing claims.
+P54 changes no player-facing composition, so the reviewed K7 War Council and Results captures remain the current visual baseline.
 
 ## Findings
 
-The automated K1–K8 roadmap is complete without changing simulation authority or save schemas. The build remains an internal, unsigned pre-alpha candidate: human comprehension, physical controllers, broad Windows GPUs, audio listening, forced-close recovery, signing, and storefront launch are still pending.
+The automated K1–K8 roadmap and deterministic forced-close fixture are complete without changing simulation authority or save schemas. Human comprehension, physical controllers, broad Windows GPUs, audio listening, varied real-world forced-close timing, signing, and storefront launch remain pending.
 
 No automated regression or deterministic divergence was found. The known release limitation remains unchanged: the build is an internal pre-alpha candidate and has no completed human-session evidence.
 
