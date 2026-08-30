@@ -47,6 +47,7 @@ The optional width, height, and UI-scale index (`0`–`4` for 80%–200%) make r
 | `docs/visual_evidence_gallery.md` | Versioned internal screenshots from the `0.20.0-first-watch` capture set with Kickstarter archive guidance. |
 | `docs/kickstarter_bonus_content.md` | Standalone backer-facing archive concept, suggested copy, provenance, and release guardrails. |
 | `docs/latest_test_report_2026-08-30.md` | Latest main-branch automated and visual smoke-test results, screenshots, findings, and next roadmap steps. |
+| `docs/latest_visual_review_2026-08-30.md` | Fresh latest-main visual review, exact build metadata, screenshots, findings, and execution priorities. |
 | `docs/p16_human_playtest_protocol.md` | Controlled alpha session matrix, observation rules, privacy boundary, and evidence workflow. |
 | `docs/decision_log.md` | Architecture and scope decisions. |
 | `design/p5_recovery_action_cards.md` | P5 contract for authoritative, state-aware recovery choices. |
