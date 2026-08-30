@@ -53,7 +53,8 @@ const ENEMY_PATHS: Array[String] = [
 	"res://data/enemies/siege_beast.json",
 	"res://data/enemies/shield_guard.json",
 	"res://data/enemies/ash_slinger.json",
-	"res://data/enemies/shieldbreaker.json"
+	"res://data/enemies/shieldbreaker.json",
+	"res://data/enemies/standard_cutter.json"
 ]
 
 const DOCTRINE_PATHS: Array[String] = [
@@ -64,7 +65,8 @@ const DOCTRINE_PATHS: Array[String] = [
 	"res://data/doctrines/rolling_breach.json",
 	"res://data/doctrines/shielded_advance.json",
 	"res://data/doctrines/smoke_and_signal.json",
-	"res://data/doctrines/break_the_line.json"
+	"res://data/doctrines/break_the_line.json",
+	"res://data/doctrines/cut_the_chain.json"
 ]
 
 const SCENARIO_PATHS: Array[String] = [
@@ -77,6 +79,7 @@ const SCENARIO_PATHS: Array[String] = [
 	"res://data/scenarios/the_splintered_gate.json",
 	"res://data/scenarios/three_bells_at_dusk.json",
 	"res://data/scenarios/ash_ford_crossing.json",
+	"res://data/scenarios/the_cut_standard.json",
 	"res://data/scenarios/last_stand.json"
 ]
 
@@ -565,6 +568,8 @@ func validate_enemy_definition(enemy: Dictionary, expected_id: String, known_roo
 				validation_errors.append("enemy %s target_piece_floors contains unsupported floor: %s" % [enemy_id, String(floor)])
 	if enemy.has("target_piece_preference") and not ["lowest_condition", "highest_max_health"].has(String(enemy.get("target_piece_preference", ""))):
 		validation_errors.append("enemy %s target_piece_preference must be lowest_condition or highest_max_health" % enemy_id)
+	if enemy.has("targets_assigned_first") and not enemy.get("targets_assigned_first") is bool:
+		validation_errors.append("enemy %s targets_assigned_first must be boolean" % enemy_id)
 	if enemy.has("ignores_protection") and not enemy.get("ignores_protection") is bool:
 		validation_errors.append("enemy %s ignores_protection must be boolean" % enemy_id)
 	for field in ["name", "short_role", "question", "route", "doctrine", "counter", "telegraph", "failure_mode", "report_phrase"]:

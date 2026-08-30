@@ -1,6 +1,6 @@
 # Pack the Keep — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.27.1-recovery-results-distinction` and later
+**Applies to:** `v0.28.0-standard-cutter` and later
 
 **Purpose:** Turn the First Watch prototype into a readable, tactile, game-quality keep-defense vertical slice. Automated verification, deterministic simulation checks, scripted flow coverage, and screenshot review are the active gates. Human testing remains useful for later confidence and tuning, but it is not a prerequisite for execution.
 
@@ -19,7 +19,7 @@ The game is a spatial defensive puzzle, not a rarity treadmill or a command spre
 | **K3 — Complete** | Extract presentation panels | War Council, Preparation, Battle, Recovery, and Results render from deterministic read-only snapshots without moving simulation ownership or changing command semantics. |
 | **K4 — Complete** | Finish the battle readability pass | Forecast, approach, target lock, wind-up, response, impact, consequence, and settle now form a coherent speed-scaled beat grammar over each authoritative tick. |
 | **K5 — Complete** | Make recovery and Results distinct | Recovery exposes the first priority and sacrificed alternative; terminal Results leads with the decisive pattern, remaining cost, and a specific replay experiment. |
-| **K6** | Add a controlled content slice | Add one commander lens, one keep identity, one teaching pack, or one enemy family—not all at once. Define its player question, counter, weakness, spatial rule, recovery consequence, data schema, and isolated tests. |
+| **K6 — Complete** | Add a controlled content slice | Standard Cutters hunt assigned specialists first; The Cut Standard teaches precision interception and mobile reserve as two deterministic viable answers. |
 | **K7** | Build composition and replay mastery | Add bounded variation, pack choices, recovery trade-offs, and scenario/report composition. Preserve at least two viable answers; do not add grind, rarity tiers, or forced builds. |
 | **K8** | Harden the private alpha | Verify accessibility, persistence, controller navigation, audio settings, clean install, migration, performance, package provenance, and known limitations. Human sessions may validate the result later but do not block this gate. |
 
@@ -31,7 +31,7 @@ A task is incomplete if it hides the fort behind a menu, adds a unit before its 
 
 ## Recommended next prompt
 
-> Read `docs/agent_handoff_roadmap.md`, `docs/game_quality_transformation_plan.md`, this document, and `docs/k5_recovery_results_distinction_verification.md`. Implement **K6 Add a controlled content slice** next. Choose exactly one new commander lens, keep identity, teaching pack, or enemy family and define its question, counter, weakness, visual states, authored scenario fixture, and deterministic balance coverage. Preserve at least two viable answers and all existing save, accessibility, and presentation contracts. Do not bundle unrelated content.
+> Read `docs/agent_handoff_roadmap.md`, `docs/game_quality_transformation_plan.md`, this document, and `docs/k6_standard_cutter_verification.md`. Implement **K7 Build composition and replay mastery** next. Add one bounded, forecastable source of scenario variation and make the terminal report compare the chosen answer with the pressure encountered. Preserve at least two viable answers, deterministic replay, and pause-based solo fairness. Do not add grind, rarity tiers, or permanent power escalation.
 
 ## Definition of game-quality readiness
 

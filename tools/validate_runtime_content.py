@@ -79,7 +79,7 @@ SUPPORTED_ZONES = {"wall", "courtyard", "keep"}
 SUPPORTED_ATTACK_STYLES = {"melee", "ranged", "support", "fortification"}
 SUPPORTED_ENEMY_ATTACK_STYLES = {"melee", "ranged", "demolition"}
 SUPPORTED_SCENARIO_DIFFICULTIES = {"guided", "standard", "advanced", "overwhelming"}
-SUPPORTED_DOCTRINES = {"gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach", "shielded_advance", "smoke_and_signal", "break_the_line"}
+SUPPORTED_DOCTRINES = {"gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach", "shielded_advance", "smoke_and_signal", "break_the_line", "cut_the_chain"}
 SUPPORTED_NON_ENEMY_TARGETS = {"all"} | SUPPORTED_DOCTRINES
 SUPPORTED_EVENT_TYPES = {"forecast", "recovery", "scenario_conclusion"}
 SUPPORTED_EVENT_PHASES = {"preparation", "recovery", "results"}
@@ -624,6 +624,8 @@ def validate_enemy(
                 errors.append(f"{path}: target_piece_floors contains unsupported floor: {floor}")
     if "target_piece_preference" in enemy and enemy.get("target_piece_preference") not in {"lowest_condition", "highest_max_health"}:
         errors.append(f"{path}: target_piece_preference must be lowest_condition or highest_max_health")
+    if "targets_assigned_first" in enemy and not isinstance(enemy.get("targets_assigned_first"), bool):
+        errors.append(f"{path}: targets_assigned_first must be boolean")
     if "ignores_protection" in enemy and not isinstance(enemy.get("ignores_protection"), bool):
         errors.append(f"{path}: ignores_protection must be boolean")
     for field in sorted(ENEMY_TEXT_FIELDS):

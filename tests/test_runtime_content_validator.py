@@ -126,6 +126,17 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         for expected in ("target_piece_categories", "target_piece_preference", "target_mode", "attack_interval", "attack_style", "ignores_protection"):
             self.assertIn(expected, joined)
 
+    def test_assigned_first_targeting_requires_boolean(self) -> None:
+        enemy = copy.deepcopy(load("data/enemies/standard_cutter.json"))
+        enemy["targets_assigned_first"] = "yes"
+        errors: list[str] = []
+        validator.validate_enemy(
+            Path("standard_cutter.json"), enemy,
+            {"barracks", "workshop", "inner_yard", "north_tower"},
+            {"crossbow_patrol"}, {"cut_the_chain"}, set(), {}, set(), errors,
+        )
+        self.assertIn("targets_assigned_first must be boolean", "\n".join(errors))
+
     def test_doctrine_allows_repeated_actors_but_rejects_unknown_ones(self) -> None:
         doctrine = copy.deepcopy(load("data/doctrines/gate_assault.json"))
         errors: list[str] = []

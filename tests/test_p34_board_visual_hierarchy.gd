@@ -38,7 +38,7 @@ func _initialize() -> void:
 	var unique_shapes: Dictionary = {}
 	for shape in enemy_shapes.values():
 		unique_shapes[String(shape)] = true
-	_check(unique_shapes.size() == 4, "Raider, Sapper, Climber, and Siege Beast should have distinct silhouettes")
+	_check(unique_shapes.size() == 5, "Raider, Sapper, Climber, Siege Beast, and Standard Cutter should have distinct silhouettes")
 	var beast: Dictionary = ui.keep_canvas.actor_visual_snapshot("pike_squad", "siege_beast")
 	_check(String(beast.enemy.get("shape", "")) == "hex" and float(beast.enemy.get("scale", 1.0)) > 1.0, "Siege Beast should reserve the largest heavy silhouette")
 

@@ -4,49 +4,29 @@
 
 | Field | Result |
 |---|---|
-| Branch tested | `origin/main` |
-| Build | `v0.25.4-playtest-release-kit` |
-| Engine | Godot 4.4.1 |
-| Visual test display | 1280×720 Xvfb display |
-| Automated verification | PASS: repository policy, content, P13–P46 progression, event, persistence, controller, and auto-battle suites |
-| Runtime smoke | PASS: project launched and advanced from Main Menu into War Council |
+| Branch tested | `feat/k6-command-disruptor-slice` before merge to `main` |
+| Build | `v0.28.0-standard-cutter` |
+| Engine | Godot 4.7.2 |
+| Visual test display | 1600×900 local graphical renderer |
+| Automated verification | PASS: complete `scripts/verify.sh` suite |
+| Runtime content | PASS: 2 keeps, 17 pieces, 9 packs, 8 enemies, 9 doctrines, 11 scenarios |
+| Scenario matrix | PASS: 60 viable cases and 120 uninterrupted/resumed simulations |
+| Human playtest gate | PENDING: no human observations inferred from automation |
 
-## Captured evidence
+## K6 evidence
 
-The screenshots were captured from the actual latest main build and are stored under [`docs/visual_evidence/v0.25.4-playtest-release-kit-latest-test-2026-08-30/`](visual_evidence/v0.25.4-playtest-release-kit-latest-test-2026-08-30/).
+The Standard Cutter is one controlled enemy-family addition. It prioritizes a living assigned specialist, falls back to the weakest precision/support/control piece, and never substitutes room damage for its unit-hunter role. The Cut Standard names Crossbow Watch and Fallback Convoy as separate answers.
 
-![Latest Pack the Keep title](visual_evidence/v0.25.4-playtest-release-kit-latest-test-2026-08-30/pack_01_title.png)
+Focused verification covers malformed content rejection, assigned-first targeting, unit-only fallback, save/load parity, two commanders, two loadouts, three seeds, normal-flow scenario selection, focused threat inspection, large text, high contrast, reduced motion, and the dedicated forked-standard silhouette.
 
-![Latest Pack the Keep War Council](visual_evidence/v0.25.4-playtest-release-kit-latest-test-2026-08-30/pack_02_first_action.png)
-
-![Latest Pack the Keep follow-up](visual_evidence/v0.25.4-playtest-release-kit-latest-test-2026-08-30/pack_03_followup.png)
+The 1600×900 screenshots in `/tmp/pack-the-keep-k6` show the Preparation question/answer framing and a paused tick-three contact with the assigned target, projected Rear Guard response, cadence, health, and counter visible while the keep remains primary.
 
 ## Findings
 
-The latest build has a much stronger authored presentation than the earlier prototype and communicates the CHOOSE, BUILD, and HOLD framing clearly on the title screen. The real flow reaches War Council successfully. The main visible problem at 1280×720 is horizontal overflow: the right-hand selection panel is clipped while the left-side briefing remains readable. The lower menu row is also close to the viewport edge. This makes the preparation decision harder to understand and should be treated as a release-blocking presentation issue for the minimum supported layout.
+The new teaching question is readable without adding another menu or status subsystem. Precision fire stops the Cutter before contact; the mobile reserve accepts limited contact while maintaining a second line. The compact `CMD` board cue remains subordinate to health, focus, and target lines.
 
-## Resolution
+No automated regression or deterministic divergence was found. The known release limitation remains unchanged: the build is an internal pre-alpha candidate and has no completed human-session evidence.
 
-P48 (`0.25.5-responsive-layout`) resolves this baseline finding. War Council and Preparation now choose a deliberate stacked fallback from effective width after UI scaling, windowed launches fit inside the active screen usable area, compact navigation retains Settings, and controller focus exposes the primary setup or assault action. The focused P48 regression and fresh 1280×720 at 150% plus 1600×900 at 100% capture sets pass; see [`p48_responsive_layout_verification.md`](p48_responsive_layout_verification.md).
+## Next roadmap step
 
-## Next roadmap steps
-
-### Keep Quality 1 — Responsive War Council and Preparation layout
-
-Create a responsive split-pane contract for 1280×720, 1600×900, and large-text settings. At narrow widths, the inspector must move below the briefing or collapse into a clearly reachable single-column selection flow. The selected commander, scenario, risk, objective, and primary commit action must remain visible together without clipping. Add screenshot assertions for each supported viewport.
-
-### Keep Quality 2 — One unmistakable preparation-to-battle handoff
-
-Ensure the player can see what the chosen commander, keep, pack doctrine, and forecast mean before committing. The first battle should begin with a readable forecast and a clear pause/inspection affordance. Do not add new unit families until this handoff works for a first-time player.
-
-### Keep Quality 3 — Visual combat and recovery evidence
-
-Capture one complete First Watch sequence at 1600×900: War Council, Preparation, paused wave, live impact, inter-wave recovery, next wave, and final Results. Store the sequence under a new versioned directory and keep the existing deterministic seed so screenshot comparisons remain meaningful.
-
-### Keep Quality 4 — Human comprehension and difficulty calibration
-
-Run moderated sessions using the existing P16 protocol. Record where players fail to identify the threat, understand a placement trade-off, notice ammunition or repair limits, or know why a result occurred. Tune only after the evidence is recorded; preserve at least two viable answers for each teaching scenario.
-
-## Evidence interpretation
-
-This report records an internal pre-alpha test. The screenshots demonstrate current implementation progress and are appropriate for a development archive, but they are not final store art or evidence of release readiness.
+K7 should add one bounded, forecastable variation that changes the tactical question on replay and then compare the chosen answer with the encountered pressure in Results. It must retain at least two viable solutions and avoid rarity, grind, or hidden counters.

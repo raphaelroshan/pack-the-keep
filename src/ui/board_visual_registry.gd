@@ -108,6 +108,7 @@ static func enemy_profile(enemy_id: String, attack_style: String = "melee") -> D
 		"shield_guard": {"shape": "shield", "color": Color("#9e3f48"), "initial": "G", "scale": 1.12},
 		"ash_slinger": {"shape": "ring", "color": Color("#77727b"), "initial": "A", "scale": 1.0},
 		"shieldbreaker": {"shape": "axe", "color": Color("#78453c"), "initial": "X", "scale": 1.05},
+		"standard_cutter": {"shape": "standard", "color": Color("#a84f67"), "initial": "T", "scale": 1.08},
 		"siege_beast": {"shape": "hex", "color": Color("#b36c45"), "initial": "B", "scale": 1.5}
 	}
 	if profiles.has(enemy_id):
@@ -132,6 +133,7 @@ static func presentation_snapshot() -> Dictionary:
 			"raider": enemy_profile("raider").shape,
 			"sapper": enemy_profile("sapper", "demolition").shape,
 			"climber": enemy_profile("climber").shape,
-			"siege_beast": enemy_profile("siege_beast", "demolition").shape
+			"siege_beast": enemy_profile("siege_beast", "demolition").shape,
+			"standard_cutter": enemy_profile("standard_cutter").shape
 		}
 	}

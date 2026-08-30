@@ -2677,7 +2677,7 @@ func _format_inspection(data: Dictionary) -> String:
 		var armor_text: String = " | armor %d" % int(data.get("armor", 0)) if int(data.get("armor", 0)) > 0 else ""
 		var signal_text: String = " | signal DISRUPTED" if bool(data.get("signal_disrupted", false)) else " | signal RELAYED" if bool(data.get("has_signal_disruption", false)) else ""
 		var protection_text: String = " | protection PIERCING" if bool(data.get("ignores_protection", false)) else ""
-		var target_role: String = "hunts defenders" if String(data.get("target_mode", "room_destroyer")) == "unit_hunter" else "breaks structures"
+		var target_role: String = "hunts assigned specialists first" if bool(data.get("targets_assigned_first", false)) else "hunts defenders" if String(data.get("target_mode", "room_destroyer")) == "unit_hunter" else "breaks structures"
 		var target_readout: Dictionary = keep.enemy_target_readout(int(data.get("index", -1)))
 		var counter_id: String = String(data.get("counter", ""))
 		var counter_name: String = String(keep.piece_definition(counter_id).get("name", counter_id.replace("_", " ").capitalize()))
@@ -3750,7 +3750,8 @@ func _refresh_inspection_card() -> void:
 		var target: String = String(keep.enemy_target_readout(int(data.get("index", -1))).get("summary", "Approaching"))
 		var counter_id: String = String(data.get("counter", ""))
 		var counter_name: String = String(keep.piece_definition(counter_id).get("name", counter_id.replace("_", " ").capitalize()))
-		inspection_panel.render({"kind": kind, "eyebrow": "THREAT  •  %s  •  %s" % [String(data.get("attack_style", "melee")).to_upper(), "CONTACT" if keep.battle_step >= int(data.get("arrival_step", 0)) else "APPROACH"], "name": String(data.get("name", "Enemy")), "condition": "HEALTH %d / %d  •  TARGET %s" % [int(data.get("health", 0)), int(data.get("max_health", 0)), target.to_upper()], "critical": true, "purpose": "%s through %s. Best visible counter: %s." % ["Clears defenders" if String(data.get("target_mode", "")) == "unit_hunter" else "Disables structures", String(data.get("route", "route")).replace("_", " "), counter_name], "next_action": "Pause to compare its strike timing and committed defenders." if not battle_paused else "Read the response preview, then resume when the answer is clear.", "detail": inspected_text})
+		var threat_purpose: String = "Hunts assigned specialists first" if bool(data.get("targets_assigned_first", false)) else "Clears defenders" if String(data.get("target_mode", "")) == "unit_hunter" else "Disables structures"
+		inspection_panel.render({"kind": kind, "eyebrow": "THREAT  •  %s  •  %s" % [String(data.get("attack_style", "melee")).to_upper(), "CONTACT" if keep.battle_step >= int(data.get("arrival_step", 0)) else "APPROACH"], "name": String(data.get("name", "Enemy")), "condition": "HEALTH %d / %d  •  TARGET %s" % [int(data.get("health", 0)), int(data.get("max_health", 0)), target.to_upper()], "critical": true, "purpose": "%s through %s. Best visible counter: %s." % [threat_purpose, String(data.get("route", "route")).replace("_", " "), counter_name], "next_action": "Pause to compare its strike timing and committed defenders." if not battle_paused else "Read the response preview, then resume when the answer is clear.", "detail": inspected_text})
 
 func _refresh_war_council_cards() -> void:
 	if war_council_choice_panel == null or commander_option == null or scenario_option == null:
@@ -3812,7 +3813,8 @@ func _refresh_ui() -> void:
 		var armor_text: String = " — armor %d" % int(enemy_definition.get("armor", 0)) if int(enemy_definition.get("armor", 0)) > 0 else ""
 		var signal_text: String = " — signal DISRUPTED" if bool(enemy.get("signal_disrupted", false)) else " — signal RELAYED" if enemy_definition.get("disruption_profile") is Dictionary else ""
 		var protection_text: String = " — protection PIERCING" if bool(enemy_definition.get("ignores_protection", false)) else ""
-		enemy_lines.append("%s — %s / %s%s%s%s — route %s — target %s" % [String(enemy_definition.get("name", enemy_id)), phase, enemy_state, armor_text, signal_text, protection_text, String(enemy_definition.get("route", "")).replace("_", " "), target])
+		var command_text: String = " — assigned HUNTER" if bool(enemy_definition.get("targets_assigned_first", false)) else ""
+		enemy_lines.append("%s — %s / %s%s%s%s%s — route %s — target %s" % [String(enemy_definition.get("name", enemy_id)), phase, enemy_state, armor_text, signal_text, protection_text, command_text, String(enemy_definition.get("route", "")).replace("_", " "), target])
 	enemy_label.text = "ACTIVE THREATS\n" + ("\n".join(enemy_lines) if not enemy_lines.is_empty() else "No active enemies.")
 	var metrics: Dictionary = keep.combat_metrics
 	metrics_label.text = "METRICS — steps %d | unit attacks %d | damage dealt %d | ammo spent %d | enemy attacks %d | room damage %d | piece damage %d | repairs %d | disabled %d | defeated %d" % [int(metrics.get("battle_steps", 0)), int(metrics.get("unit_attacks", 0)), int(metrics.get("damage_dealt", 0)), int(metrics.get("ammo_spent", 0)), int(metrics.get("enemy_attacks", 0)), int(metrics.get("room_damage", 0)), int(metrics.get("piece_damage", 0)), int(metrics.get("repairs", 0)), int(metrics.get("disabled_units", 0)), int(metrics.get("defeated_enemies", 0))]
@@ -4887,6 +4889,8 @@ class KeepCanvas extends Control:
 			draw_circle(origin, radius * 0.48, Color("#29232d"))
 			draw_circle(origin, radius, Color("#f1dfb8"), false, outline_width)
 			return
+		elif shape == "standard":
+			points = PackedVector2Array([origin + Vector2(-radius * 0.72, -radius), origin + Vector2(radius * 0.78, -radius * 0.62), origin + Vector2(radius * 0.18, 0), origin + Vector2(radius * 0.78, radius * 0.62), origin + Vector2(-radius * 0.72, radius)])
 		else:
 			points = PackedVector2Array([origin + Vector2(-radius, -radius * 0.72), origin + Vector2(0, -radius), origin + Vector2(radius, -radius * 0.72), origin + Vector2(radius * 0.66, radius), origin + Vector2(0, radius * 0.56), origin + Vector2(-radius * 0.66, radius)])
 		draw_colored_polygon(points, color)
@@ -4972,6 +4976,9 @@ class KeepCanvas extends Control:
 				draw_line(enemy_origin + Vector2(-6, -6), enemy_origin + Vector2(6, 6), Color("#fff4df"), 3.0)
 				draw_line(enemy_origin + Vector2(2, -8), enemy_origin + Vector2(8, -2), Color("#f1dfb8"), 3.0)
 				draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(marker_radius + 4, -3), "BREAK", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#fff4df"))
+			elif enemy_id == "standard_cutter":
+				draw_line(enemy_origin + Vector2(-marker_radius * 0.72, -marker_radius), enemy_origin + Vector2(-marker_radius * 0.72, marker_radius + 5.0), Color("#f1dfb8"), 2.0)
+				draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(marker_radius + 4, -3), "CMD", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#fff4df"))
 			var target_id: String = String(enemy.get("target", ""))
 			if not target_id.is_empty() and (keep.room_definitions().has(target_id) or keep.pieces.has(target_id)):
 				var target_rect: Rect2

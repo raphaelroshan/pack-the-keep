@@ -1,0 +1,9 @@
+{
+  "id": "cut_the_chain", "content_version": 1, "status": "active", "name": "Cut the Chain",
+  "short_role": "Bypass the obvious wall and isolate the specialist carrying a room assignment.",
+  "question": "Can the keep defend its command anchors while preserving a response elsewhere?",
+  "composition": ["standard_cutter", "standard_cutter"], "route_pattern": "command_lane_to_assigned_specialist",
+  "target_priority": "assigned_specialist_then_lowest_condition_vulnerable_unit", "principal_pressure": "Assigned specialists and the room benefits they enable",
+  "likely_target": "an assigned specialist or exposed precision/support unit", "uncertainty": "which command anchor becomes weakest before contact",
+  "counter_families": ["precision", "mobile_response", "commander_intervention"]
+}

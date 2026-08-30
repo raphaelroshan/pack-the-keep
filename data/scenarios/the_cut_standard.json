@@ -1,0 +1,17 @@
+{
+  "id": "the_cut_standard", "content_version": 1, "status": "active", "name": "The Cut Standard",
+  "short_role": "Teach protection of assigned specialists against a dedicated unit hunter.",
+  "question": "Can one command anchor remain useful without becoming the keep's single point of failure?",
+  "objective": "Preserve at least one specialist response while Standard Cutters pressure the command chain.",
+  "lesson": "Precision can stop the Cutter early; a mobile reserve can absorb contact without sacrificing the whole line.",
+  "keep_id": "greywatch_keep",
+  "recommended_packs": ["crossbow_watch", "fallback_convoy"],
+  "starting_doctrine": "cut_the_chain",
+  "doctrines": ["cut_the_chain", "gate_assault", "cut_the_chain"],
+  "wave_plans": [["standard_cutter"], ["standard_cutter", "raider"], ["standard_cutter", "sapper", "raider"]],
+  "variations": [
+    {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
+    {"id": "thin_command", "materials": -2, "morale": 1, "target_room": "barracks"},
+    {"id": "deep_reserve", "materials": 2, "morale": -1, "target_room": "workshop"}
+  ]
+}

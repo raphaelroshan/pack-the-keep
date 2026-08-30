@@ -100,6 +100,8 @@ if command -v godot >/dev/null 2>&1; then
   godot --headless --audio-driver Dummy --path . --script res://tests/test_k3_screen_presentation_snapshots.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_k4_battle_beat_readability.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_k5_recovery_results_distinction.gd
+  godot --headless --audio-driver Dummy --path . --script res://tests/test_k6_standard_cutter.gd
+  godot --headless --audio-driver Dummy --path . --script res://tests/test_k6_standard_cutter_ui.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_initial_combat.gd
 elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --import
@@ -182,6 +184,8 @@ elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_k3_screen_presentation_snapshots.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_k4_battle_beat_readability.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_k5_recovery_results_distinction.gd
+  godot4 --headless --audio-driver Dummy --path . --script res://tests/test_k6_standard_cutter.gd
+  godot4 --headless --audio-driver Dummy --path . --script res://tests/test_k6_standard_cutter_ui.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_initial_combat.gd
 else
   echo "Godot 4.x is not installed or not on PATH."

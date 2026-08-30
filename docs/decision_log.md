@@ -807,3 +807,11 @@
 **Reason:** Recovery already exposed exact actions, while Results already contained complete evidence, but their highest-value questions were not visually first. Recovery should make the constrained choice explicit; Results should explain the outcome before asking the player to parse chronology.
 
 **Trade-off:** The recommendation remains advisory and may not match every player strategy. The complete action cards and timeline remain available immediately below, and neither summary selects an action, changes a report, or enters persistence.
+
+## ADR-102: Standard Cutters make assignments a visible liability
+
+**Decision:** Add one K6 enemy family, the Standard Cutter, whose deterministic unit-hunter targeting prefers any living assigned specialist before the lowest-condition precision, support, or control unit. Teach it in The Cut Standard with Crossbow Watch precision interception and Fallback Convoy mobile reserve as separate viable answers.
+
+**Reason:** Assignments previously offered benefits without an enemy that directly tested their exposure. This slice turns the command anchor into a readable risk while preserving the established rule that ordinary attackers clear defenders and only explicit demolition specialists target rooms.
+
+**Trade-off:** Assigned-first targeting adds one optional enemy data field and a narrow targeting branch. The Cutter does not introduce a stun, aura, or new persistent status; its recovery consequence remains ordinary defender damage and the existing two-action repair trade-off.
