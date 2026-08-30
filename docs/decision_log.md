@@ -799,3 +799,11 @@
 **Reason:** Real-time movement, target lines, projectiles, melee lunges, health trails, and damage labels existed, but simultaneous playback made cause and effect difficult to parse. A compact board badge and ordered effect windows make the same deterministic exchange legible without adding player commands or delaying simulation.
 
 **Trade-off:** The board presents a short visual replay immediately after an atomic tick, so the label describes presentation order rather than a second simulation phase. At high speed the window is intentionally compressed; at reduced motion it becomes static. No beat state is serialized or included in replay identity.
+
+## ADR-101: Recovery names sacrifice; Results leads with cause
+
+**Decision:** Extend the Recovery snapshot with a concrete remaining-action sacrifice and render it beside the first priority and trade-off. Extend the terminal Results snapshot with a concise decisive-pattern summary and place that causal section before the detailed assault timeline.
+
+**Reason:** Recovery already exposed exact actions, while Results already contained complete evidence, but their highest-value questions were not visually first. Recovery should make the constrained choice explicit; Results should explain the outcome before asking the player to parse chronology.
+
+**Trade-off:** The recommendation remains advisory and may not match every player strategy. The complete action cards and timeline remain available immediately below, and neither summary selects an action, changes a report, or enters persistence.

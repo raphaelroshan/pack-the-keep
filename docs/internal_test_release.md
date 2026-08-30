@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.27.0-battle-beat-readability` — the tagged Windows candidate includes its complete provenance-bound observer kit, keep-first surface, screen snapshots, and eight-beat combat presentation; human sessions and owner approval remain pending
+**Current build identity:** `0.27.1-recovery-results-distinction` — the tagged Windows candidate includes its complete provenance-bound observer kit, keep-first surface, screen snapshots, eight-beat combat presentation, and distinct post-assault decision/debrief hierarchy; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of ten authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.27.1 acceptance checks
+
+Complete phase one and confirm Recovery names what changed, why it matters, the next pressure, one first priority, the concrete one-action sacrifice, and the broader trade-off before the action cards. Complete the scenario and confirm terminal Results replaces Recovery, places the decisive pattern and remaining cost before the phase timeline, preserves the damaged keep, and keeps one run-specific replay experiment with fixed replay/save/menu actions.
 
 ## v0.27.0 acceptance checks
 
