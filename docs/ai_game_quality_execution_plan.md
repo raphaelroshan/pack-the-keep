@@ -39,7 +39,7 @@ Pack the Keep is ready for private alpha when a new run clearly communicates cho
 
 ## Historical evidence
 
-The latest baseline is recorded in [`latest_test_report_2026-08-30.md`](latest_test_report_2026-08-30.md), and the versioned captures are in `docs/visual_evidence/`. The broader roadmap remains [`agent_handoff_roadmap.md`](agent_handoff_roadmap.md).
+The latest baseline is recorded in [`latest_visual_review_2026-08-30.md`](latest_visual_review_2026-08-30.md) and [`latest_test_report_2026-08-30.md`](latest_test_report_2026-08-30.md), and the versioned captures are in `docs/visual_evidence/`. The broader roadmap remains [`agent_handoff_roadmap.md`](agent_handoff_roadmap.md).
 
 ## References
 
