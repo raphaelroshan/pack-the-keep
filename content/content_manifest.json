@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.27.1",
+  "content_version": "0.28.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -180,10 +180,10 @@
   },
   "p12_alpha_scenario_matrix": {
     "status": "implemented",
-    "scenarios": 9,
+    "scenarios": 10,
     "commanders": 2,
     "seeds_per_pair": 3,
-    "simulation_executions": 108,
+    "simulation_executions": 120,
     "resume_boundaries": ["wave_one_pre_step", "first_recovery_before_event_resolution", "wave_two_pre_step"],
     "contract": "byte_identical_uninterrupted_and_resumed_three_wave_non_collapse_baselines_with_closed_terminal_recovery_and_event_state",
     "evidence": ["design/p12_alpha_scenario_matrix.md", "tests/test_p12_alpha_scenario_matrix.gd"],
@@ -602,6 +602,18 @@
     "authority": "presentation_only_over_recovery_previews_and_deterministic_scenario_report",
     "evidence": ["design/k5_recovery_results_distinction.md", "docs/k5_recovery_results_distinction_verification.md", "tests/test_k5_recovery_results_distinction.gd", "tests/test_p37_recovery_hierarchy.gd", "tests/test_p32_terminal_debrief.gd"],
     "next_slice": "k6_controlled_content_slice"
+  },
+  "k6_standard_cutter_enemy_family": {
+    "status": "implemented",
+    "enemy": "standard_cutter",
+    "doctrine": "cut_the_chain",
+    "scenario": "the_cut_standard",
+    "question": "protect_an_assigned_command_anchor_without_abandoning_the_wider_defense",
+    "targeting": "assigned_living_specialist_first_then_lowest_condition_precision_support_or_control_then_any_living_unit",
+    "viable_answers": ["crossbow_watch_precision_intercept", "fallback_convoy_mobile_reserve"],
+    "recovery_consequence": "repair_the_disabled_specialist_or_accept_its_inactive_room_benefit",
+    "evidence": ["design/k6_standard_cutter_enemy_family.md", "docs/k6_standard_cutter_verification.md", "tests/test_k6_standard_cutter.gd", "tests/test_k6_standard_cutter_ui.gd"],
+    "next_slice": "k7_replay_mastery"
   },
   "campaign": {
     "title": "The Bell at Dusk",
@@ -1111,6 +1123,13 @@
       "role": "frontline disruption",
       "teaching_question": "Did the player preserve a second line behind static protection?",
       "counter_options": ["direct_damage", "precision", "mobile_response", "commander_intervention"]
+    },
+    {
+      "id": "standard_cutter",
+      "name": "Standard Cutter",
+      "role": "assigned-specialist hunter",
+      "teaching_question": "Can the player protect a command anchor without abandoning the wider defense?",
+      "counter_options": ["crossbow_watch", "fallback_convoy", "precision", "mobile_response"]
     }
   ],
   "events": [
@@ -1498,7 +1517,8 @@
       "siege_beast",
       "shield_guard",
       "ash_slinger",
-      "shieldbreaker"
+      "shieldbreaker",
+      "standard_cutter"
     ],
     "scenario_ids": [
       "gatehouse_lock",
@@ -1510,6 +1530,7 @@
       "the_splintered_gate",
       "three_bells_at_dusk",
       "ash_ford_crossing",
+      "the_cut_standard",
       "last_stand"
     ],
     "event_ids": [

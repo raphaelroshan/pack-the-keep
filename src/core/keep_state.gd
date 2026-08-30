@@ -960,7 +960,7 @@ func inspect_enemy(index: int) -> Dictionary:
 	if not _enemy_definitions.has(enemy_id):
 		return {"ok": false, "reason": "enemy definition is unavailable"}
 	var definition: Dictionary = _enemy_definitions[enemy_id]
-	return {"ok": true, "kind": "enemy", "id": enemy_id, "index": index, "name": String(definition.name), "doctrine": String(definition.doctrine), "route": String(definition.route), "counter": String(definition.counter), "target_mode": String(definition.get("target_mode", "room_destroyer")), "attack_style": String(definition.get("attack_style", "melee")), "health": int(enemy.get("hp", 0)), "max_health": int(enemy.get("max_health", definition.health)), "damage": int(definition.damage), "attack_interval": int(definition.get("attack_interval", 1)), "armor": int(definition.get("armor", 0)), "armor_counter_tag": String(definition.get("armor_counter_tag", "")), "arrival_step": int(enemy.get("arrival_step", definition.arrival_step)), "base_arrival_step": int(definition.arrival_step), "has_signal_disruption": definition.get("disruption_profile") is Dictionary, "signal_disrupted": bool(enemy.get("signal_disrupted", false)), "ignores_protection": bool(definition.get("ignores_protection", false)), "target_piece_categories": definition.get("target_piece_categories", []).duplicate(), "target": String(enemy.get("target", "")), "defeated": bool(enemy.get("defeated", false))}
+	return {"ok": true, "kind": "enemy", "id": enemy_id, "index": index, "name": String(definition.name), "doctrine": String(definition.doctrine), "route": String(definition.route), "counter": String(definition.counter), "target_mode": String(definition.get("target_mode", "room_destroyer")), "attack_style": String(definition.get("attack_style", "melee")), "health": int(enemy.get("hp", 0)), "max_health": int(enemy.get("max_health", definition.health)), "damage": int(definition.damage), "attack_interval": int(definition.get("attack_interval", 1)), "armor": int(definition.get("armor", 0)), "armor_counter_tag": String(definition.get("armor_counter_tag", "")), "arrival_step": int(enemy.get("arrival_step", definition.arrival_step)), "base_arrival_step": int(definition.arrival_step), "has_signal_disruption": definition.get("disruption_profile") is Dictionary, "signal_disrupted": bool(enemy.get("signal_disrupted", false)), "ignores_protection": bool(definition.get("ignores_protection", false)), "targets_assigned_first": bool(definition.get("targets_assigned_first", false)), "target_piece_categories": definition.get("target_piece_categories", []).duplicate(), "target": String(enemy.get("target", "")), "defeated": bool(enemy.get("defeated", false))}
 
 func enemy_attack_timing(index: int) -> Dictionary:
 	if index < 0 or index >= enemies.size():
@@ -1627,8 +1627,10 @@ func defender_response_preview(enemy_index: int) -> Dictionary:
 
 func _living_piece_targets(enemy: Dictionary, apply_preferences: bool) -> Array[String]:
 	var candidates: Array[String] = []
+	var assigned_candidates: Array[String] = []
 	var target_categories: Array = enemy.get("target_piece_categories", [])
 	var target_floors: Array = enemy.get("target_piece_floors", [])
+	var assigned_first: bool = bool(enemy.get("targets_assigned_first", false))
 	var instance_ids: Array = pieces.keys()
 	instance_ids.sort()
 	for instance_id_value in instance_ids:
@@ -1638,11 +1640,16 @@ func _living_piece_targets(enemy: Dictionary, apply_preferences: bool) -> Array[
 			continue
 		if apply_preferences:
 			var piece: Dictionary = _piece_definitions[String(instance.get("piece_id", ""))]
+			if assigned_first and not String(instance.get("assignment", "")).is_empty():
+				assigned_candidates.append(instance_id)
+				continue
 			if not target_categories.is_empty() and not target_categories.has(String(piece.get("category", ""))):
 				continue
 			if not target_floors.is_empty() and not target_floors.has(String(instance.get("floor", "ground"))):
 				continue
 		candidates.append(instance_id)
+	if apply_preferences and assigned_first and not assigned_candidates.is_empty():
+		return assigned_candidates
 	return candidates
 
 func _choose_piece_target(enemy: Dictionary) -> String:

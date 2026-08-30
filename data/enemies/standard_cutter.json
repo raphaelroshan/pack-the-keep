@@ -1,0 +1,13 @@
+{
+  "id": "standard_cutter", "content_version": 1, "status": "active", "name": "Standard Cutter",
+  "short_role": "Hunt the assigned specialist carrying a room's command benefit.",
+  "question": "Can the keep protect its command anchors without abandoning the wider defense?",
+  "health": 9, "damage": 3, "arrival_step": 3, "attack_interval": 2, "attack_style": "melee", "target_mode": "unit_hunter",
+  "target_piece_categories": ["precision", "support", "control"], "target_piece_preference": "lowest_condition", "targets_assigned_first": true,
+  "route": "command_lane", "target_rooms": ["barracks", "workshop", "inner_yard", "north_tower"], "doctrine": "cut_the_chain",
+  "counter": "crossbow_patrol", "telegraph": "A forked standard marks the assigned specialist the Cutter intends to isolate.",
+  "counter_families": ["precision", "mobile_response", "commander_intervention"],
+  "failure_mode": "An assigned specialist is disabled and its room benefit falls silent before the next pressure.",
+  "report_phrase": "The Standard Cutter reached an exposed command anchor.",
+  "presentation": {"icon": "", "marker_color_role": "command_disruption", "radius_scale": 1.08}
+}

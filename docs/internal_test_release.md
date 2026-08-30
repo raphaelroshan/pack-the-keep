@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.27.1-recovery-results-distinction` — the tagged Windows candidate includes its complete provenance-bound observer kit, keep-first surface, screen snapshots, eight-beat combat presentation, and distinct post-assault decision/debrief hierarchy; human sessions and owner approval remain pending
+**Current build identity:** `0.28.0-standard-cutter` — the tagged Windows candidate adds one controlled assigned-specialist-hunter slice to the complete provenance-bound observer kit; human sessions and owner approval remain pending
 
 ## Purpose
 
-This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of ten authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of eleven authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, assigned-specialist priority, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.28.0 acceptance checks
+
+Select The Cut Standard and confirm its briefing names both Crossbow Watch and Fallback Convoy as viable answers. During Cut the Chain, assign a specialist and confirm the Standard Cutter visibly prioritizes it, shows the `CMD` silhouette cue, names Crossbow Patrol as its direct counter, and falls back to another living unit rather than attacking a room. Replay with the mobile reserve and confirm both paths complete all three waves without a forced build.
 
 ## v0.27.1 acceptance checks
 
@@ -198,7 +202,7 @@ Presentation settings now use the same validated primary/backup candidate discip
 
 ## v0.12.7 Alpha scenario matrix
 
-Local headless verification now runs a documented viable baseline for every combination of nine authored scenarios, both commanders, and three seeds. Each of the 54 cases runs twice, producing 108 simulations that must serialize identically, resolve all three waves without collapse, close final recovery and event state, and retain the canonical replay key. This is deterministic viability evidence only; human playtest and presentation approval remain pending.
+Local headless verification now runs a documented viable baseline for every combination of ten non-overwhelming authored scenarios, both commanders, and three seeds. Each of the 60 cases runs twice, producing 120 simulations that must serialize identically, resolve all three waves without collapse, close final recovery and event state, and retain the canonical replay key. This is deterministic viability evidence only; human playtest and presentation approval remain pending.
 
 ## v0.12.8 Scenario resume matrix
 
