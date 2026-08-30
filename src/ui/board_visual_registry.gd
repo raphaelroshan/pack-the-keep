@@ -51,6 +51,27 @@ static func room_profile(critical: bool, state: String, high_contrast: bool = fa
 		"symbol": "diamond" if critical else "notch"
 	}
 
+static func surface_finish_profile(keep_id: String, floor_name: String, high_contrast: bool = false) -> Dictionary:
+	if keep_id != "greywatch_keep":
+		return {
+			"authored": false,
+			"material": "terrain_fallback",
+			"source_region": Rect2(),
+			"texture_opacity": 0.0,
+			"state_fill_opacity": 1.0,
+			"selection_width": 3.0 if high_contrast else 2.0,
+		}
+	var upper: bool = floor_name == "upper"
+	return {
+		"authored": true,
+		"material": "timber_wall_walk" if upper else "stone_work_yard",
+		"source_region": Rect2(344, 38, 592, 278) if upper else Rect2(344, 296, 592, 326),
+		"texture_opacity": 0.20 if high_contrast else 0.46,
+		"state_fill_opacity": 0.88 if high_contrast else 0.72,
+		"selection_width": 4.0 if high_contrast else 2.5,
+		"surface_tint": Color("#26323a") if upper else Color("#332a2b"),
+	}
+
 static func piece_profile(piece_id: String, combat_style: String = "support") -> Dictionary:
 	var family: String = "support"
 	var accent: Color = Color("#83a47d")
@@ -103,6 +124,10 @@ static func presentation_snapshot() -> Dictionary:
 		"layers": LAYER_ORDER.duplicate(),
 		"ground": floor_profile("ground"),
 		"upper": floor_profile("upper"),
+		"greywatch_finish": {
+			"ground": surface_finish_profile("greywatch_keep", "ground"),
+			"upper": surface_finish_profile("greywatch_keep", "upper"),
+		},
 		"enemy_shapes": {
 			"raider": enemy_profile("raider").shape,
 			"sapper": enemy_profile("sapper", "demolition").shape,

@@ -1,11 +1,11 @@
 # Pack the Keep — Game-Quality Transformation Plan
 
 **Audience:** GPT coding agents, art/UX agents, test agents, and the human owner
-**Current baseline:** `0.25.5-responsive-layout`
+**Current baseline:** `0.26.0-keep-first-visual-finish`
 **Current status:** Engineering-complete public-source pre-alpha candidate; human validation pending
 **Primary objective:** Turn the existing deterministic fortress-defense systems into a coherent, attractive, immediately understandable game-quality private alpha without rewriting the simulation core.
 
-**Implementation ledger:** P32 gives terminal Results a dedicated debrief. P33 adds Preparation question/answer/weakness hierarchy. P34 adds board visual grammar. P35 centralizes semantic battle audio. P36 adds tick-zero readiness. P37 gives inter-wave Recovery a compact what-changed/why/next/action-budget/priority hierarchy. P38 replaces raw-first War Council selection with commander and defense choice cards. P39 gives Preparation a complete pack doctrine offer card. P40 groups Preparation into three stages. P41 gives rooms, defenders, and threats one action-oriented inspection hierarchy without raw IDs. P42 centers Battle on live state, pause/resume, commander intervention, and focused-threat inspection while collapsing expert timing controls. P43 adds explicit local-only observation and a stable nine-screen capture harness. P44 introduces the first complete screen-level presentation snapshot boundary for Battle. P45 adds a debug-only layout/focus/clipping audit overlay. P46 adds consistent Back/Escape behavior with explicit unsaved-progress confirmation. P47 makes the tagged prerelease a durable, self-contained human-test cohort. P48 repairs the minimum-layout flow with display-aware window fitting, effective-width breakpoints, compact navigation, responsive War Council and Preparation cards, and primary-action focus. Human validation remains pending.
+**Implementation ledger:** P32 gives terminal Results a dedicated debrief. P33 adds Preparation question/answer/weakness hierarchy. P34 adds board visual grammar. P35 centralizes semantic battle audio. P36 adds tick-zero readiness. P37 gives inter-wave Recovery a compact what-changed/why/next/action-budget/priority hierarchy. P38 replaces raw-first War Council selection with commander and defense choice cards. P39 gives Preparation a complete pack doctrine offer card. P40 groups Preparation into three stages. P41 gives rooms, defenders, and threats one action-oriented inspection hierarchy without raw IDs. P42 centers Battle on live state, pause/resume, commander intervention, and focused-threat inspection while collapsing expert timing controls. P43 adds explicit local-only observation and a stable nine-screen capture harness. P44 introduces the first complete screen-level presentation snapshot boundary for Battle. P45 adds a debug-only layout/focus/clipping audit overlay. P46 adds consistent Back/Escape behavior with explicit unsaved-progress confirmation. P47 makes the tagged prerelease a durable, self-contained human-test cohort. P48 repairs the minimum-layout flow with display-aware window fitting, effective-width breakpoints, compact navigation, responsive War Council and Preparation cards, and primary-action focus. P49 reuses authored Greywatch material regions beneath unchanged tactical geometry and projects selected room/defender identity, condition, purpose, and next action directly onto the keep. Human validation remains pending.
 
 > **Central diagnosis:** Pack the Keep has enough mechanics for a real game loop. Its largest gap is not feature count. Its largest gap is presentation: the player must feel that they are preparing a fortress, watching a defense, making urgent but comprehensible interventions, recovering from damage, and learning from the result—not operating a debug panel surrounded by a board.
 
@@ -847,14 +847,14 @@ Start from the current Pack the Keep remote main. Read AGENTS.md, README.md,
 design/design_prompt.md, docs/agent_handoff_roadmap.md, and the latest visual
 verification notes.
 
-Implement P49 / K2 next: make the fortress the primary decision surface and
-replace the highest-noise procedural Greywatch surfaces with a coherent tactile
-2D treatment. Preserve exact board geometry, hit testing, state colors,
-responsive breakpoints, high contrast, reduced motion, controller focus,
-simulation outcomes, and replay keys. Capture before/after evidence at 1280×720
-and 2560×1440 and run the complete verification wrapper. Do not add new units,
-enemies, currencies, or campaign systems. Do not convert automated metrics into
-human evidence.
+Implement K3 next. Extract Preparation presentation into a read-only snapshot
+and dedicated panel boundary, then repeat in small slices for War Council,
+Recovery, and Results. Preserve exact command handlers, board geometry, focus,
+responsive breakpoints, high contrast, reduced motion, controller paths,
+simulation outcomes, saves, and replay keys. Add snapshot and full-flow tests
+before removing direct UI projection from `main.gd`. Do not add new mechanics or
+content during extraction, and do not convert automated metrics into human
+evidence.
 ```
 
 ---

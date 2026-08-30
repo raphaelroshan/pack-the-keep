@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.25.5",
+  "content_version": "0.26.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -565,7 +565,18 @@
     "window_rule": "selected_window_size_fits_and_centers_inside_active_screen_usable_rect",
     "authority": "presentation_only_no_simulation_content_or_save_schema_changes",
     "evidence": ["design/p48_responsive_layout.md", "docs/p48_responsive_layout_verification.md", "tests/test_p48_responsive_layout.gd", "tools/capture_vertical_slice.gd"],
-    "next_slice": "p49_authored_visual_finish"
+    "next_slice": "p49_keep_first_visual_finish"
+  },
+  "p49_keep_first_visual_finish": {
+    "status": "implemented",
+    "authored_source": "assets/greywatch_background.png",
+    "materials": ["stone_work_yard", "timber_wall_walk"],
+    "selection_projection": ["identity", "condition", "purpose", "next_action"],
+    "accessibility": "high_contrast_reduces_texture_noise_and_strengthens_selection_outlines",
+    "fallback": "ash_ford_retains_terrain_specific_procedural_surface_until_its_authored_slice",
+    "authority": "presentation_only_no_geometry_hit_test_simulation_or_save_changes",
+    "evidence": ["design/p49_keep_first_visual_finish.md", "docs/p49_keep_first_visual_finish_verification.md", "tests/test_p49_keep_first_visual_finish.gd", "assets/ASSETS.md"],
+    "next_slice": "k3_presentation_panel_extraction"
   },
   "campaign": {
     "title": "The Bell at Dusk",

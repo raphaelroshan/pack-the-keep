@@ -775,3 +775,11 @@
 **Reason:** The fixed 1600×900 launch and logical-width-only breakpoint allowed the right rail to sit outside a 1280×720 display and caused enlarged text to behave like extra content rather than reduced usable space. Effective width captures both constraints, while a stable single-column fallback keeps every required action reachable without changing the game flow.
 
 **Trade-off:** Narrow and 150%+ layouts require vertical scrolling, and War Council may scroll enough to expose the focused commit action rather than preserving its decorative header. The layout remains presentation-only; window size, focus, stacking, and capture settings never enter `PackKeepState` or affect deterministic outcomes.
+
+## ADR-098: Authored fortress texture remains subordinate to tactical geometry
+
+**Decision:** Reuse `assets/greywatch_background.png` as two restrained material source regions—stone work yard for the ground floor and timber wall walk for the upper floor—beneath the existing deterministic board renderer. Keep room rectangles, walls, connections, pieces, threats, health bars, placement guides, target lines, and focus layers procedural and authoritative. Project the selected room or defender into an on-board outline and one-line plate containing identity, condition, purpose, and next action.
+
+**Reason:** Greywatch already had a strong authored reference asset, but the playable board reduced it to a menu banner and presented the fortress as mostly flat colored rectangles. Sampling the existing art as material preserves provenance and visual identity while avoiding a replacement image whose painted geometry could disagree with gameplay. The selection plate keeps the current decision tied to the fort instead of forcing the player to reconstruct it from the command rail.
+
+**Trade-off:** The material is intentionally subtle and does not make every painted architectural detail interactive. High contrast reduces its opacity further. Ash Ford keeps its existing river renderer until a dedicated authored source exists, and the hybrid renderer remains a vertical-slice treatment rather than a final production tileset.

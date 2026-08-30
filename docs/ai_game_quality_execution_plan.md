@@ -1,6 +1,6 @@
 # Pack the Keep — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.25.5-responsive-layout` and later
+**Applies to:** `v0.26.0-keep-first-visual-finish` and later
 
 **Purpose:** Turn the First Watch prototype into a readable, tactile, game-quality keep-defense vertical slice. Automated verification, deterministic simulation checks, scripted flow coverage, and screenshot review are the active gates. Human testing remains useful for later confidence and tuning, but it is not a prerequisite for execution.
 
@@ -15,7 +15,7 @@ The game is a spatial defensive puzzle, not a rarity treadmill or a command spre
 | Step | Objective | Required outcome |
 |---|---|---|
 | **K1 — Complete** | Repair responsive War Council and Preparation | At 1280×720, 1600×900, large text, and controller focus, commander, keep, pack, forecast, placement, and commit information remain reachable without clipping. Narrow layouts use a deliberate single-column fallback. |
-| **K2** | Make the keep the primary decision surface | The board remains visible while selecting packs, placing defenders, inspecting rooms, and committing. One selected subject has one clear identity, purpose, condition, and next action. |
+| **K2 — Complete** | Make the keep the primary decision surface | The board remains the visual anchor through placement, inspection, and commitment. Greywatch has authored material surfaces, and one selected room or defender has one clear identity, purpose, condition, and next action on the board. |
 | **K3** | Extract presentation panels | Separate War Council, Preparation, Battle, Recovery, and Results presentation from the monolithic UI script without moving simulation ownership or changing command semantics. |
 | **K4** | Finish the battle readability pass | Present forecast, approach, target lock, wind-up, response, impact, dependency consequence, and settle as a coherent beat grammar. Pause and manual-step must freeze/advance presentation with the same authoritative tick. |
 | **K5** | Make recovery and Results distinct | Recovery answers what changed, why it matters, what can be repaired, and what trade-off remains. Terminal Results explains the causal story and offers a specific replay experiment. |
@@ -31,7 +31,7 @@ A task is incomplete if it hides the fort behind a menu, adds a unit before its 
 
 ## Recommended next prompt
 
-> Read `docs/agent_handoff_roadmap.md`, `docs/game_quality_transformation_plan.md`, this document, and `docs/p48_responsive_layout_verification.md`. Implement **K2 Make the keep the primary decision surface** as the P49 keep-first visual pass. Preserve `KeepState`, board geometry, all deterministic commands, save schemas, responsive breakpoints, and accessibility settings. Keep pack choice, placement, inspection, and commitment visually anchored to the fortress; give one selected subject one clear identity, purpose, condition, and next action. Capture before/after evidence at 1280×720 and 2560×1440, run the full verification suite, and report any remaining visual noise. Do not add new units, packs, enemies, or currencies.
+> Read `docs/agent_handoff_roadmap.md`, `docs/game_quality_transformation_plan.md`, this document, and `docs/p49_keep_first_visual_finish_verification.md`. Implement **K3 Extract presentation panels** next. Move War Council, Preparation, Recovery, and Results projection/composition out of the monolithic UI controller in small reviewable slices, starting with Preparation. Preserve `KeepState`, exact command handlers, board geometry, save schemas, responsive breakpoints, accessibility, and deterministic outcomes. Add snapshot and full-flow regressions before each extraction. Do not redesign mechanics or add content while moving ownership.
 
 ## Definition of game-quality readiness
 
