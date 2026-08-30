@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.25.5-responsive-layout",
+  "framework_version": "0.26.0-keep-first-visual-finish",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -1839,6 +1839,15 @@
     "focus_rule": "war_council_commit_and_preparation_assault_actions_remain_visible_and_controller_reachable",
     "capture_rule": "graphical_vertical_slice_capture_accepts_explicit_resolution_and_ui_scale",
     "determinism_rule": "layout_window_focus_and_capture_settings_do_not_mutate_pack_keep_state"
+  },
+  "keep_first_visual_finish": {
+    "status": "implemented",
+    "authored_source": "existing_greywatch_background_material_regions",
+    "surface_layers": ["ground_stone_work_yard", "upper_timber_wall_walk"],
+    "selected_subject": ["board_outline", "identity", "condition", "purpose", "next_action"],
+    "accessibility_rule": "high_contrast_reduces_texture_opacity_and_increases_selection_width",
+    "fallback_rule": "keeps_without_authored_materials_retain_their_existing_terrain_renderer",
+    "determinism_rule": "surface_sampling_selection_projection_and_drawing_do_not_mutate_geometry_hit_testing_or_pack_keep_state"
   },
   "unit_availability": {
     "status": "vertical_slice",

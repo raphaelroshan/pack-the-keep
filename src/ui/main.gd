@@ -1202,6 +1202,7 @@ func _build_ui() -> void:
 	keep_canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	keep_canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	keep_canvas.keep = keep
+	keep_canvas.call("set_authored_fort_texture", GREYWATCH_BACKGROUND)
 	keep_canvas.connect("map_hovered", Callable(self, "_on_map_hovered"))
 	keep_canvas.connect("map_clicked", Callable(self, "_on_map_clicked"))
 	keep_canvas.connect("enemy_clicked", Callable(self, "_on_enemy_clicked"))
@@ -4144,6 +4145,7 @@ func _refresh_ui() -> void:
 	_refresh_navigation()
 	keep_canvas.keep = keep
 	keep_canvas.call("set_focus", focused_enemy_index)
+	keep_canvas.call("set_inspected_subject", inspected_subject)
 	keep_canvas.call("set_accessibility", high_contrast)
 	keep_canvas.call("set_reduced_motion", reduced_motion)
 	keep_canvas.queue_redraw()
@@ -4181,6 +4183,16 @@ class KeepCanvas extends Control:
 	var tutorial_target_cell: Vector2i = Vector2i(-1, -1)
 	var tutorial_target_size: Vector2i = Vector2i.ONE
 	var tutorial_target_label: String = ""
+	var authored_fort_texture: Texture2D
+	var inspected_subject: Dictionary = {}
+
+	func set_authored_fort_texture(texture: Texture2D) -> void:
+		authored_fort_texture = texture
+		queue_redraw()
+
+	func set_inspected_subject(subject: Dictionary) -> void:
+		inspected_subject = subject.duplicate(true)
+		queue_redraw()
 
 	func set_focus(index: int) -> void:
 		focused_enemy_index = index
@@ -4493,10 +4505,56 @@ class KeepCanvas extends Control:
 	func board_presentation_snapshot() -> Dictionary:
 		var snapshot: Dictionary = BoardVisuals.presentation_snapshot()
 		var terrain: String = String(keep.keep_definition().get("visual", {}).get("terrain", "fort")) if keep != null else "fort"
+		var keep_id: String = String(keep.keep_id) if keep != null else ""
 		snapshot["ground"] = BoardVisuals.floor_profile("ground", terrain, high_contrast_mode)
 		snapshot["upper"] = BoardVisuals.floor_profile("upper", terrain, high_contrast_mode)
+		snapshot["surface_finish"] = {
+			"ground": BoardVisuals.surface_finish_profile(keep_id, "ground", high_contrast_mode),
+			"upper": BoardVisuals.surface_finish_profile(keep_id, "upper", high_contrast_mode),
+			"texture_assigned": authored_fort_texture != null,
+		}
 		snapshot.merge({"cell_size": Vector2(CELL_X, CELL_Y), "grid_visible": false, "placement_guides_visible": placement_guides_visible, "canvas_size": BASE_CANVAS_SIZE})
 		return snapshot
+
+	func selected_subject_snapshot() -> Dictionary:
+		if keep == null:
+			return {}
+		var kind: String = String(inspected_subject.get("kind", ""))
+		if kind == "room":
+			var room_id: String = String(inspected_subject.get("id", ""))
+			var room: Dictionary = keep.inspect_room(room_id)
+			if not bool(room.get("ok", false)):
+				return {}
+			var condition: int = int(room.get("condition", 0))
+			return {
+				"kind": kind,
+				"id": room_id,
+				"name": String(room.get("name", room_id)),
+				"condition": "%d%% %s" % [condition, String(room.get("state", "stable")).to_upper()],
+				"purpose": String(room.get("role", "Supports the keep.")),
+				"next_action": "Repair during this lull." if keep.repair_interval_active and condition < 100 else "Protect this function and watch target lines.",
+			}
+		if kind == "piece":
+			var instance_id: String = String(inspected_subject.get("id", ""))
+			var piece: Dictionary = keep.inspect_piece(instance_id)
+			if not bool(piece.get("ok", false)):
+				return {}
+			var health: int = int(piece.get("health", 0))
+			var maximum: int = maxi(1, int(piece.get("max_health", 1)))
+			var next_action: String = "Watch its target response during the assault." if keep.wave_active else "Reposition or inspect its coverage before committing."
+			if keep.repair_interval_active and health < maximum:
+				next_action = "Repair this defender or spend the action elsewhere."
+			elif keep.repair_interval_active and String(piece.get("assignment", "")).is_empty():
+				next_action = "Assign this specialist to a compatible room."
+			return {
+				"kind": kind,
+				"id": instance_id,
+				"name": String(piece.get("name", instance_id)),
+				"condition": "%d/%d %s" % [health, maximum, "DISABLED" if bool(piece.get("disabled", false)) else "READY"],
+				"purpose": String(piece.get("role", "Defends the keep.")),
+				"next_action": next_action,
+			}
+		return {}
 
 	func actor_visual_snapshot(piece_id: String, enemy_id: String) -> Dictionary:
 		var piece: Dictionary = keep.piece_definition(piece_id) if keep != null else {}
@@ -4740,17 +4798,64 @@ class KeepCanvas extends Control:
 		var room: Dictionary = keep.room_definition(room_id)
 		return BoardVisuals.room_profile(bool(room.get("critical", false)), keep.room_state(room_id), high_contrast_mode).fill
 
+	func _surface_finish(floor_name: String) -> Dictionary:
+		return BoardVisuals.surface_finish_profile(String(keep.keep_id) if keep != null else "", floor_name, high_contrast_mode)
+
+	func _draw_authored_floor_surface(origin: Vector2, floor_name: String, finish: Dictionary) -> void:
+		if authored_fort_texture == null or not bool(finish.get("authored", false)):
+			return
+		var source_region: Rect2 = finish.get("source_region", Rect2())
+		if source_region.size.x <= 0.0 or source_region.size.y <= 0.0:
+			return
+		var opacity: float = float(finish.get("texture_opacity", 0.0))
+		draw_texture_rect_region(authored_fort_texture, Rect2(origin, MAP_SIZE), source_region, Color(1.0, 1.0, 1.0, opacity))
+		var tint: Color = finish.get("surface_tint", Color("#2b222d"))
+		draw_rect(Rect2(origin, MAP_SIZE), Color(tint, 0.30 if not high_contrast_mode else 0.56), true)
+
+	func _is_selected_subject(kind: String, subject_id: String) -> bool:
+		return String(inspected_subject.get("kind", "")) == kind and String(inspected_subject.get("id", "")) == subject_id
+
+	func _draw_selection_outline(rect: Rect2, floor_name: String) -> void:
+		var finish: Dictionary = _surface_finish(floor_name)
+		var color: Color = Color("#fff4df") if high_contrast_mode else Color("#f2c879")
+		var width: float = float(finish.get("selection_width", 2.5))
+		draw_rect(rect.grow(2.0), Color(color, 0.16), true)
+		draw_rect(rect.grow(2.0), color, false, width)
+		var corner: float = 7.0
+		for anchor in [rect.position, Vector2(rect.end.x, rect.position.y), Vector2(rect.position.x, rect.end.y), rect.end]:
+			draw_circle(anchor, corner, Color(color, 0.16), true)
+			draw_circle(anchor, 2.5, color, true)
+
+	func _draw_selected_subject_plate() -> void:
+		var subject: Dictionary = selected_subject_snapshot()
+		if subject.is_empty():
+			return
+		var kind: String = "DEFENDER" if String(subject.get("kind", "")) == "piece" else String(subject.get("kind", "subject")).to_upper()
+		var name_text: String = String(subject.get("name", "Selected subject"))
+		var condition: String = String(subject.get("condition", ""))
+		var purpose: String = String(subject.get("purpose", ""))
+		var next_action: String = String(subject.get("next_action", ""))
+		var plate: Rect2 = Rect2(Vector2(12, 307), Vector2(740, 27))
+		var accent: Color = Color("#fff4df") if high_contrast_mode else Color("#d7af6b")
+		draw_rect(plate, Color(0.08, 0.07, 0.09, 0.94), true)
+		draw_rect(Rect2(plate.position, Vector2(4, plate.size.y)), accent, true)
+		draw_rect(plate, Color(accent, 0.78), false, 1.5)
+		var summary: String = "%s · %s · %s  |  %s  |  NEXT — %s" % [kind, name_text, condition, purpose, next_action]
+		draw_string(ThemeDB.fallback_font, plate.position + Vector2(11, 18), _compact_board_label(summary, plate.size.x - 20.0, 10), HORIZONTAL_ALIGNMENT_LEFT, plate.size.x - 20.0, 10, Color("#f6e8cf"))
+
 	func _draw_fort_backdrop(origin: Vector2) -> void:
 		var keep_definition: Dictionary = keep.keep_definition()
 		var visual: Dictionary = keep_definition.get("visual", {})
 		if String(visual.get("terrain", "fort")) == "river":
 			_draw_river_backdrop(origin, visual)
 			return
+		var authored: bool = bool(_surface_finish("ground").get("authored", false))
 		var outer: Rect2 = Rect2(origin + Vector2(CELL_X, CELL_Y), MAP_SIZE - Vector2(CELL_X * 2.0, CELL_Y * 2.0))
 		var courtyard: Rect2 = Rect2(origin + Vector2(CELL_X * 3.0, CELL_Y * 2.0), Vector2(CELL_X * 6.0, CELL_Y * 4.0))
-		draw_rect(outer, Color("#514451"), true)
+		draw_rect(outer.grow(5.0), Color(0.03, 0.025, 0.035, 0.72), true)
+		draw_rect(outer, Color(Color("#514451"), 0.76 if authored else 1.0), true)
 		draw_rect(outer, Color("#d4a66f"), false, 4.0)
-		draw_rect(courtyard, Color("#332c38"), true)
+		draw_rect(courtyard, Color(Color("#332c38"), 0.68 if authored else 1.0), true)
 		for x in range(2, 10, 2):
 			var top_block: Rect2 = Rect2(origin + Vector2(x * CELL_X + 2, CELL_Y + 2), Vector2(CELL_X - 4, 6))
 			var bottom_block: Rect2 = Rect2(origin + Vector2(x * CELL_X + 2, MAP_SIZE.y - CELL_Y - 8), Vector2(CELL_X - 4, 6))
@@ -4763,7 +4868,7 @@ class KeepCanvas extends Control:
 			draw_rect(right_block, Color("#d4a66f"), true)
 		var tower_size: Vector2 = Vector2(CELL_X * 1.6, CELL_Y * 1.35)
 		for tower_position in [origin + Vector2(CELL_X, CELL_Y), origin + Vector2(MAP_SIZE.x - CELL_X - tower_size.x, CELL_Y), origin + Vector2(CELL_X, MAP_SIZE.y - CELL_Y - tower_size.y), origin + Vector2(MAP_SIZE.x - CELL_X - tower_size.x, MAP_SIZE.y - CELL_Y - tower_size.y)]:
-			draw_rect(Rect2(tower_position, tower_size), Color("#665562"), true)
+			draw_rect(Rect2(tower_position, tower_size), Color(Color("#665562"), 0.84 if authored else 1.0), true)
 			draw_rect(Rect2(tower_position, tower_size), Color("#edbd79"), false, 2.0)
 			draw_circle(tower_position + tower_size * 0.5, 4.0, Color("#f3bf6b"))
 		draw_string(ThemeDB.fallback_font, courtyard.position + Vector2(8, courtyard.size.y - 8), String(visual.get("board_label", "KEEP ROOMS / DEFENSE BOARD")), HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#a68f9e"))
@@ -4821,8 +4926,11 @@ class KeepCanvas extends Control:
 	func _draw_floor(label_text: String, floor_name: String, origin: Vector2) -> void:
 		var terrain: String = String(keep.keep_definition().get("visual", {}).get("terrain", "fort"))
 		var floor_profile: Dictionary = BoardVisuals.floor_profile(floor_name, terrain, high_contrast_mode)
+		var surface_finish: Dictionary = _surface_finish(floor_name)
 		_draw_floor_header(label_text, origin, floor_profile)
+		draw_rect(Rect2(origin, MAP_SIZE).grow(6.0), Color(0.02, 0.018, 0.025, 0.78), true)
 		draw_rect(Rect2(origin, MAP_SIZE), floor_profile.surface, true)
+		_draw_authored_floor_surface(origin, floor_name, surface_finish)
 		if floor_name == "ground":
 			_draw_fort_backdrop(origin)
 		else:
@@ -4843,9 +4951,11 @@ class KeepCanvas extends Control:
 			var rect: Rect2 = _room_rect(String(room_id), origin)
 			var show_room_text: bool = _room_label_visible(String(room_id), floor_name, origin)
 			var room_profile: Dictionary = BoardVisuals.room_profile(bool(room.get("critical", false)), keep.room_state(String(room_id)), high_contrast_mode)
-			draw_rect(rect, room_profile.fill, true)
+			var state_fill_opacity: float = float(surface_finish.get("state_fill_opacity", 1.0))
+			draw_rect(rect, Color(room_profile.fill, state_fill_opacity), true)
 			draw_rect(rect, Color("#c8b6a0"), false, 1.0)
 			draw_rect(Rect2(rect.position + Vector2(1, 1), Vector2(rect.size.x - 2.0, 3.0)), room_profile.edge, true)
+			draw_line(rect.position + Vector2(3, rect.size.y - 3), rect.end - Vector2(3, 3), Color(0.08, 0.07, 0.09, 0.42), 1.0)
 			if bool(room.get("critical", false)):
 				var marker: Vector2 = rect.position + Vector2(rect.size.x - 8.0, 9.0)
 				draw_colored_polygon(PackedVector2Array([marker + Vector2(0, -4), marker + Vector2(4, 0), marker + Vector2(0, 4), marker + Vector2(-4, 0)]), room_profile.edge)
@@ -4857,6 +4967,8 @@ class KeepCanvas extends Control:
 			_draw_health_bar(room_health_rect, condition, 100)
 			_draw_recent_damage_feedback(room_health_rect, "room", String(room_id), 100)
 			_draw_target_damage_outline(rect, "room", String(room_id), 100)
+			if _is_selected_subject("room", String(room_id)):
+				_draw_selection_outline(rect, floor_name)
 			if show_room_text and state_text != "STABLE":
 				draw_string(ThemeDB.fallback_font, rect.position + Vector2(3, 24), _compact_board_label(state_text, rect.size.x - 6.0, 8), HORIZONTAL_ALIGNMENT_LEFT, rect.size.x - 6, 8, Color("#ffd19d"))
 		_draw_spatial_overlay(floor_name, origin)
@@ -4886,6 +4998,8 @@ class KeepCanvas extends Control:
 			_draw_health_bar(piece_health_rect, piece_health, piece_max_health)
 			_draw_recent_damage_feedback(piece_health_rect, "piece", instance_id, piece_max_health)
 			_draw_target_damage_outline(piece_rect, "piece", instance_id, piece_max_health)
+			if _is_selected_subject("piece", instance_id):
+				_draw_selection_outline(piece_rect, floor_name)
 			if bool(instance.get("disabled", false)):
 				draw_line(piece_rect.position + Vector2(5, 5), piece_rect.end - Vector2(5, 5), Color("#6f2430"), 3.0)
 				draw_line(Vector2(piece_rect.end.x - 5, piece_rect.position.y + 5), Vector2(piece_rect.position.x + 5, piece_rect.end.y - 5), Color("#6f2430"), 3.0)
@@ -5224,6 +5338,7 @@ class KeepCanvas extends Control:
 		var visual: Dictionary = keep.keep_definition().get("visual", {})
 		_draw_floor(String(visual.get("ground_label", "GROUND FLOOR")), "ground", MAP_ORIGIN)
 		_draw_floor(String(visual.get("upper_label", "UPPER FLOOR")), "upper", UPPER_ORIGIN)
+		_draw_selected_subject_plate()
 		if not tutorial_target_floor.is_empty() and tutorial_target_cell.x >= 0:
 			var tutorial_origin: Vector2 = UPPER_ORIGIN if tutorial_target_floor == "upper" else MAP_ORIGIN
 			var tutorial_rect: Rect2 = Rect2(tutorial_origin + Vector2(tutorial_target_cell.x * CELL_X, tutorial_target_cell.y * CELL_Y), Vector2(tutorial_target_size.x * CELL_X, tutorial_target_size.y * CELL_Y)).grow(3)

@@ -4,6 +4,7 @@ var output_dir: String = ""
 var captured_files: Array[String] = []
 var capture_size: Vector2i = Vector2i(1600, 900)
 var capture_scale_index: int = 1
+var capture_starting_defender: bool = false
 
 func _initialize() -> void:
 	if DisplayServer.get_name() == "headless":
@@ -14,6 +15,7 @@ func _initialize() -> void:
 	capture_size.x = maxi(640, int(_argument_value("--width=").to_int())) if not _argument_value("--width=").is_empty() else 1600
 	capture_size.y = maxi(360, int(_argument_value("--height=").to_int())) if not _argument_value("--height=").is_empty() else 900
 	capture_scale_index = clampi(int(_argument_value("--ui-scale-index=").to_int()), 0, 4) if not _argument_value("--ui-scale-index=").is_empty() else 1
+	capture_starting_defender = OS.get_cmdline_user_args().has("--inspect-starting-defender")
 	if output_dir.is_empty():
 		output_dir = ProjectSettings.globalize_path("user://visual-captures")
 	var directory_error: Error = DirAccess.make_dir_recursive_absolute(output_dir)
@@ -39,6 +41,8 @@ func _run_capture() -> void:
 	ui._on_start_quick_playtest()
 	await _capture("02_war_council", ui)
 	ui._on_confirm_setup()
+	if capture_starting_defender:
+		ui._on_map_clicked("ground", Vector2i(4, 5))
 	await _capture("03_preparation", ui)
 	ui._on_start_wave()
 	await _capture("04_assault_phase_1", ui)
@@ -90,6 +94,7 @@ func _write_manifest() -> void:
 		"build_version": String(ProjectSettings.get_setting("application/config/version", "unknown")),
 		"resolution": {"width": capture_size.x, "height": capture_size.y},
 		"ui_scale_percent": int(ui_scale_percent()),
+		"starting_defender_inspected": capture_starting_defender,
 		"files": captured_files,
 		"debug_ui": OS.get_cmdline_user_args().has("--debug-ui"),
 		"human_evidence": false,

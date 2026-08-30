@@ -5,7 +5,7 @@ The Greywatch kit is an original, first-pass 2D illustrated asset set generated 
 | File | Dimensions | Role | Integration status |
 |---|---:|---|---|
 | `greywatch_visual_reference.png` | 1280×720 | Internal art-direction reference showing the intended Greywatch presentation language | Reference only; retained to guide future asset work |
-| `greywatch_background.png` | 1280×720 | Reusable Greywatch keep banner/background for the playable prototype | Integrated in `src/ui/main.gd` behind the command table |
+| `greywatch_background.png` | 1280×720 | Reusable Greywatch keep banner and authored stone/timber material source | Integrated in `src/ui/main.gd` as the menu banner and beneath the unchanged ground/upper tactical geometry |
 | `castellan_portrait.png` | 512×512 | The Castellan’s commander identity and command-table portrait | Integrated in `src/ui/main.gd` |
 | `pike_squad_icon.png` | 512×512 | Starter defender identity | Integrated in the defender asset strip in `src/ui/main.gd` |
 | `repair_station_icon.png` | 512×512 | Repair facility identity | Integrated in the defender/facility asset strip in `src/ui/main.gd` |
@@ -15,7 +15,7 @@ The Greywatch kit is an original, first-pass 2D illustrated asset set generated 
 | `raider_icon.png` | 512×512 | Raider identity; direct gate-pressure doctrine | Integrated in the enemy asset strip in `src/ui/main.gd` |
 | `sapper_icon.png` | 512×512 | Sapper identity; support-sabotage doctrine | Integrated in the enemy asset strip in `src/ui/main.gd` |
 | `climber_icon.png` | 512×512 | Climber identity; upper-floor bypass doctrine | Integrated in the enemy asset strip in `src/ui/main.gd` |
-| Procedural square fort renderer | N/A | Functional first-run map with thick walls, open courtyard, open gate, gate approach, upper wall walk, crenellations, towers, torches, and placement overlays | Integrated in `KeepCanvas`; deterministic pixel-board treatment, not final art |
+| Hybrid Greywatch fort renderer | N/A | Authored stone/timber material sampling plus deterministic walls, rooms, open courtyard, gate approach, upper wall walk, towers, health, selection, and placement overlays | Integrated in `KeepCanvas`; authored texture never owns geometry, hit testing, state color, or simulation |
 | Top-down board art direction | N/A | Map-first composition, readable silhouettes, persistent overlays, and high-level pixel-board reference principles | Documented in `design/top_down_board_art_direction.md`; public reference image kept outside the repository |
 | Warden profile treatment | N/A | P1 commander identity: Open Lanes, Rally, and Spread Thin | Integrated as readable profile text and a tinted shared portrait; dedicated portrait deferred until the next image-generation window |
 | Siege Beast marker | N/A | P2 area-pressure identity and impact-radius telegraph | Integrated as an enlarged ember procedural marker with an `AREA` label and radius ring; dedicated icon deferred until the next image-generation window |
