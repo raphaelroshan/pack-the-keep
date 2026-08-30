@@ -1,6 +1,6 @@
 # Pack the Keep — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.25.4-playtest-release-kit` and later
+**Applies to:** `v0.25.5-responsive-layout` and later
 
 **Purpose:** Turn the First Watch prototype into a readable, tactile, game-quality keep-defense vertical slice. Automated verification, deterministic simulation checks, scripted flow coverage, and screenshot review are the active gates. Human testing remains useful for later confidence and tuning, but it is not a prerequisite for execution.
 
@@ -14,7 +14,7 @@ The game is a spatial defensive puzzle, not a rarity treadmill or a command spre
 
 | Step | Objective | Required outcome |
 |---|---|---|
-| **K1** | Repair responsive War Council and Preparation | At 1280×720, 1600×900, large text, and controller focus, commander, keep, pack, forecast, placement, and commit information remain reachable without clipping. Narrow layouts use a deliberate single-column fallback. |
+| **K1 — Complete** | Repair responsive War Council and Preparation | At 1280×720, 1600×900, large text, and controller focus, commander, keep, pack, forecast, placement, and commit information remain reachable without clipping. Narrow layouts use a deliberate single-column fallback. |
 | **K2** | Make the keep the primary decision surface | The board remains visible while selecting packs, placing defenders, inspecting rooms, and committing. One selected subject has one clear identity, purpose, condition, and next action. |
 | **K3** | Extract presentation panels | Separate War Council, Preparation, Battle, Recovery, and Results presentation from the monolithic UI script without moving simulation ownership or changing command semantics. |
 | **K4** | Finish the battle readability pass | Present forecast, approach, target lock, wind-up, response, impact, dependency consequence, and settle as a coherent beat grammar. Pause and manual-step must freeze/advance presentation with the same authoritative tick. |
@@ -29,9 +29,9 @@ The agent must run the complete verification wrapper and the relevant focused te
 
 A task is incomplete if it hides the fort behind a menu, adds a unit before its teaching question is visible, changes combat behavior through animation timing, removes a useful action at narrow widths, or relies on human playtest results that do not yet exist. Automated evidence must be treated as evidence of behavior, not proof of enjoyment.
 
-## Recommended first prompt
+## Recommended next prompt
 
-> Read `docs/agent_handoff_roadmap.md`, `docs/game_quality_transformation_plan.md`, this document, and `docs/latest_test_report_2026-08-30.md`. Implement **K1 Responsive War Council and Preparation** only. Preserve `KeepState`, all deterministic commands, save schemas, and accessibility settings. At 1280×720, make the selected commander, scenario, risk, objective, pack/placement context, and primary commit action readable and reachable. Add layout/focus assertions, capture 1280×720 and 1600×900 evidence, run the full verification suite, and report remaining clipping. Do not add new units, packs, enemies, or currencies.
+> Read `docs/agent_handoff_roadmap.md`, `docs/game_quality_transformation_plan.md`, this document, and `docs/p48_responsive_layout_verification.md`. Implement **K2 Make the keep the primary decision surface** as the P49 keep-first visual pass. Preserve `KeepState`, board geometry, all deterministic commands, save schemas, responsive breakpoints, and accessibility settings. Keep pack choice, placement, inspection, and commitment visually anchored to the fortress; give one selected subject one clear identity, purpose, condition, and next action. Capture before/after evidence at 1280×720 and 2560×1440, run the full verification suite, and report any remaining visual noise. Do not add new units, packs, enemies, or currencies.
 
 ## Definition of game-quality readiness
 

@@ -5,6 +5,7 @@ signal commander_previous_requested
 signal commander_next_requested
 signal scenario_previous_requested
 signal scenario_next_requested
+signal confirm_requested
 
 var summary_label: Label
 var choice_row: BoxContainer
@@ -27,6 +28,9 @@ var scenario_fixed_label: Label
 var scenario_previous_button: Button
 var scenario_next_button: Button
 var lock_label: Label
+var confirm_button: Button
+var commander_card: PanelContainer
+var scenario_card: PanelContainer
 
 func _init() -> void:
 	name = "WarCouncilChoicePanel"
@@ -65,12 +69,20 @@ func _init() -> void:
 	lock_label.visible = false
 	body.add_child(lock_label)
 
+	confirm_button = Button.new()
+	confirm_button.text = "ENTER KEEP — BUILD DEFENSE"
+	confirm_button.tooltip_text = "Commit the selected commander and defense, then enter Preparation."
+	confirm_button.custom_minimum_size.y = 40
+	confirm_button.pressed.connect(func() -> void: confirm_requested.emit())
+	body.add_child(confirm_button)
+
 	choice_row = BoxContainer.new()
 	choice_row.add_theme_constant_override("separation", 10)
 	choice_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.add_child(choice_row)
 
 	var commander: Dictionary = _build_choice_card("COMMANDER")
+	commander_card = commander.panel
 	choice_row.add_child(commander.panel)
 	commander_index_label = commander.index
 	commander_name_label = commander.title
@@ -85,6 +97,7 @@ func _init() -> void:
 	commander_next_button.pressed.connect(func() -> void: commander_next_requested.emit())
 
 	var scenario: Dictionary = _build_choice_card("DEFENSE")
+	scenario_card = scenario.panel
 	choice_row.add_child(scenario.panel)
 	scenario_index_label = scenario.index
 	scenario_name_label = scenario.title
@@ -131,7 +144,16 @@ func render(view_model: Dictionary) -> void:
 		button.tooltip_text = "First Watch fixes this choice." if locked else "Browse the authored catalogue through the existing selection command."
 
 func set_compact_layout(compact: bool) -> void:
+	set_responsive_layout(compact, 800.0)
+
+func set_responsive_layout(compact: bool, available_width: float) -> void:
 	choice_row.vertical = compact
+	custom_minimum_size.x = minf(800.0, maxf(0.0, available_width))
+	var card_width: float = 0.0 if compact else minf(380.0, maxf(300.0, (available_width - 34.0) * 0.5))
+	if commander_card != null:
+		commander_card.custom_minimum_size.x = card_width
+	if scenario_card != null:
+		scenario_card.custom_minimum_size.x = card_width
 
 func focus_primary() -> void:
 	if commander_next_button != null and commander_next_button.is_visible_in_tree() and not commander_next_button.disabled:
