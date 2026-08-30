@@ -14,50 +14,56 @@ Give the coding agent the persistent prompt once, then feed it one risk slice at
 You are the lead implementation agent for Pack the Keep. Read `design/design_prompt.md`, `README.md`, `AGENTS.md`, `docs/decision_log.md`, `docs/agent_handoff_roadmap.md`, and the relevant design card before editing. The current baseline is `0.23.1-pack-offer-card`: two commanders, nine packs, ten scenarios across Greywatch and Ash Ford, one Low Mill/Miller's Road consequence, seven enemy types, authored multi-phase combat presented continuously with one deterministic target commitment per defender per tick, unit-first attacker targeting with explicit Sapper/Siege Beast demolition roles, friendly target projections, data-driven enemy attack cadence with next-strike projections, distinct enemy melee/ranged/demolition impacts and wind-up telegraphs, target recoil and recent-damage health trails, an opt-in terminal defender-wipe rule demonstrated by The Last Bell, an expanded scenario briefing with difficulty/roster/doctrine/end-state information, data-driven defender combat exchange effects, authoritative room/defender/enemy health bars, a larger gridless keep with preparation-only placement guides, room hover detail, a six-tick timeline with selectable enemy arrivals and next contact, automatic threat focus and defeated-target handoff, matching map/timeline hover details, a dedicated ground-route approach apron, width-fitted board labels with occupied-room decluttering, runtime JSON content under `data/`, bounded authored events, Campaign Ledger modifiers, controller/scaling/accessibility settings including 2560x1440 support, a separate main-menu/briefing/preparation/battle/report journey with contextual controls, packaged Windows lifecycle smoke coverage, a strict but skippable three-phase First Watch tutorial, a dedicated terminal debrief that preserves the damaged keep beside its outcome, timeline, causal chain, persistent damage, and replay action, a compact Preparation question/answer/weakness brief, a centralized board visual grammar with distinct floor treatments, critical-room cues, defender role cards, and enemy silhouettes, one presentation-only semantic audio service covering the complete battle loop, a tick-zero Sound the Bell readiness beat for first or materially changed assault phases, a dedicated inter-wave Recovery brief for what changed, why it matters, next pressure, and the two-action trade-off, game-facing War Council cards for commander identity and authored scenario pressure, and a complete pack doctrine offer card with advanced fallback selectors. The human-authored P16 evidence protocol remains pending. The core promise remains commander-and-pack-driven top-down fort defense: choose a doctrine, arrange a readable keep, and adapt when an invasion tests it. Keep simulation separate from UI. Work in small reversible slices, preserve deterministic seeded outcomes and save compatibility, add tests before polish, and report intent, plan, changed files, exact verification, risks, and one next task. Never fabricate human observations or infer approval for public distribution or storefront release.
 ```
 
-## Current post-P12 feed order
+## Current post-P31 feed order
 
-The original feeds below describe the historical build-up from the prototype and should not be issued as unimplemented tasks. For the current remote baseline, issue these feeds in order:
+The original feeds below describe the historical build-up from the prototype and should not be issued as unimplemented tasks. The current baseline is `0.20.0-first-watch`; issue the game-quality feeds in this order and do not begin content breadth until the presentation and human-comprehension gates pass.
 
-### Current feed 1 — implement one event from the occurrence bible
+### Current feed 1 — P32.1 visual identity pass
 
 ```text
-Implement one complete event, preferably workshop_can_wait or family_blue_blanket. Read design/events_occurrences_bible.md and the current data/events/ schema. Add one runtime JSON definition, explicit eligibility, two valid choices, typed effects, visible board/report consequences, save/load persistence, deterministic replay coverage, UI smoke coverage, and a 1280x720 visual checkpoint. Do not build a generic random scheduler, a campaign map, or a new combat exception in this slice.
+Replace the highest-noise procedural Greywatch board surfaces with a coherent warm tactile top-down treatment. Preserve all board geometry, placement coordinates, room graphs, state colors, condition bars, target lanes, high-contrast cues, large-text layout, reduced motion, and authoritative state. Produce an asset manifest, before/after captures at 1280x720 and 2560x1440, and run the complete verification wrapper. Do not add units, enemies, campaign systems, or decorative effects that reduce tactical readability.
 ```
 
-### Current feed 2 — connect event history to existing Results and Ledger
+### Current feed 2 — P33.1 Preparation inspector
 
 ```text
-Expose resolved event history, relationship flags, and event consequences through the existing Campaign Ledger and final Results without adding a second progression system. Keep history bounded and newest-first. Add tests proving inspection and presentation toggles do not mutate PackKeepState, and capture the event result at normal play distance.
+Make Preparation a board-first decision surface. For one selected defender, show pack doctrine, footprint, valid/invalid placement reason, affected room/dependency, next threat, and one strength/weakness summary without opening multiple panels. Preserve mouse, keyboard, controller, large-text, high-contrast, save/load, and presentation-only state invariants. Add targeted placement and focus regression tests plus a normal-distance visual checkpoint.
 ```
 
-### Current feed 3 — implement one three-event chain
+### Current feed 3 — P34.1 battle beat readability
 
 ```text
-Implement one authored chain such as The Wrong Wall or The Refuge Bell: forecast, meeting/recovery choice, and consequence report. Include a decline path, scarcity path, collapse-safe path, active-event save/load, and same-seed replay. Use only validated typed effects and stable IDs.
+Stage one existing deterministic assault as forecast, approach, target commitment, wind-up, response, impact, damage reaction, and settling beat. Use presentation-only interpolation/effects; do not change KeepState outcomes, tick timing, target rules, or replay keys. Verify pause, speed, manual step, same-seed replay, focus handoff, and screenshots showing the threat, target, counter, and result.
 ```
 
-### Current feed 4 — add one character arc
+### Current feed 4 — P35.1 recovery/results separation
 
 ```text
-Choose Mara Venn or Jory Pike. Add three bounded relationship/arc flags, two commander-aware variants, and one changed future event. The arc must alter a spatial or operational question; it must not become a dialogue-only reputation subsystem.
+Split the terminal Results composition from inter-wave Recovery. Results must show the final defense, causal timeline, fortress condition, resources, saved/lost elements, and one run-specific replay experiment. Preserve collapse-safe behavior, save/resume, controller focus, large text, and deterministic reports. Add hold, partial breach, collapse, victory, defender-wipe, recovery-save, and results-save coverage.
 ```
 
-### Current feed 5 — reduce UX and content-maintenance risk
+### Current feed 5 — P36 human comprehension pass
 
 ```text
-Extract one self-contained panel/controller from src/ui/main.gd, preferably event cards, the Campaign Ledger, or settings. Preserve all existing signals, mouse/keyboard/controller paths, pause semantics, and authoritative command boundaries. Add regression coverage before changing layout or copy.
+Run the existing P16 protocol against one artifact cohort using First Watch and the quick path. Record only observed player behavior. Triage repeated confusion about what to do, why it matters, or what happened. Implement only repeated high-severity fixes, then update the observation matrix and evidence package. Never fabricate human observations from automated tests.
 ```
 
-### Completed feed 6 — finish packaged alpha hardening
+### Current feed 6 — P37 controlled content breadth
 
 ```text
-Complete the remaining clean-install, upgrade, missing-profile, and stale-backup Windows smoke cases. Keep platform behavior behind adapters, preserve offline operation, and verify that no packaged setting changes authoritative combat outcomes.
+Only after P32–P36 gates pass, add one commander lens, one keep identity, two teaching packs, and two enemy families. For each item create a design card, stable runtime definition, visual-state list, counter/weakness relationship, scenario fixture, deterministic test, and player-facing explanation. Introduce each question in isolation before composing it with existing doctrines.
 ```
 
-### Current feed 7 — add a second defensive identity
+### Current feed 7 — P38 replayable mastery
 
 ```text
-Add one bounded second defensive identity with a distinct spatial rule, one compatible pack pairing, one teaching scenario, and deterministic balance/save/UI coverage. Do not begin the regional map until this identity is playable and legible.
+Add bounded scenario variation, pack choices, recovery trade-offs, challenge modifiers, and causal replay reports without rarity tiers, duplicate grinding, forced build orders, or permanent power creep. Prove at least two viable solutions per expanded scenario and preserve pause-based solo fairness.
+```
+
+### Current feed 8 — P39/P40 alpha gate
+
+```text
+Complete accessibility, performance, save migration, clean-install, controller, high-DPI, audio, failure-recovery, provenance, and rollback checks. Package one honest private-alpha artifact with build manifest, observer brief, known limitations, and human evidence. Do not make a public-alpha, Steam-ready, or Epic-ready claim without explicit owner approval.
 ```
 
 ## Historical feeds: prototype build sequence

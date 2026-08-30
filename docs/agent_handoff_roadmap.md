@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
-**Document status:** Active planning contract for post-v0.14.2 development
-**Current release baseline:** `0.25.4-playtest-release-kit` on the current vertical-slice branch; remote `main` remains owner-controlled
+**Document status:** Active planning contract for post-v0.25.4 game-quality development
+**Current release baseline:** `0.25.4-playtest-release-kit`; the current vertical slice is technically substantial, while the game-quality transformation and human alpha evidence remain in progress
 **Release posture:** CI-verified public repository with owner-controlled merges; no public alpha release or storefront claim yet
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
@@ -22,7 +22,7 @@ The current slice supports two commanders, seventeen active defender pieces/equi
 
 P11 content breadth is complete. Three teaching pairs are implemented: Crossbow Watch versus Shielded Advance, Bell Guard versus Smoke and Signal, and Shieldwall versus Break the Line. Three Bells at Dusk composes all three questions across two viable two-pack baselines. The Campaign Ledger offers Roadside Intelligence or the Hardened Vanguard durability challenge through one data-driven selection boundary. P12 alpha hardening now has machine-readable evidence for Windows launch, offline play, persistence location, malformed saves, migration, controller, scaling, remapping, pause, close, and clean reinstall. Run saves and presentation settings both validate primary/backup candidates without promoting stranded temporary files; run-save loading also validates nested identities and collection shapes before mutating candidate state. P15 adds Ash Ford Redoubt as a second isolated defensive identity with a different room graph, clear-causeway spatial rule, Runner Network plus Field Engineers doctrine, and shallow distributed repairs. Terminal runs now also produce one persisted Low Mill/Miller's Road consequence and bounded one-shot support for the next scenario, without a map or economy. A local all-scenario matrix runs all nine baseline scenarios for both commanders across three seeds both uninterrupted and through active-wave or recovery/event save checkpoints, proving 54 viable cases and 108 deterministic simulations without treating automation as a human playtest. P16 readiness supplies a polished main-menu → briefing → preparation → battle journey, phase-specific command groups, separate settings, a privacy-light four-session matrix, exact observation contract, deterministic repeated-finding triage, exact executable/source provenance, and a CI-generated playtest-build manifest, observer brief, and four unfilled matrix templates bundled with the Windows candidate. Combat hardening through P30 adds live 2560×1440 presentation, readable combat timing and impacts, unit-first targeting with explicit demolition roles, and The Last Bell's opt-in terminal defender-wipe challenge. P31 adds First Watch: a strict, skippable, three-phase in-world tutorial that teaches the War Council, map-first placement and inspection, enemy analysis, real-time pause/resume, defender and room repair, specialist assignment, commander intervention, success, and checkpoint retry. Tutorial progress is stored separately from run saves through settings schema 5. No human session has been fabricated or inferred; automated status remains a candidate pending human alpha approval.
 
-The next objective is no longer to complete P5–P12. Those milestones are historical implementation contracts and should be treated as regression requirements. The next objective is to make the now-expanded content breadth coherent, to implement the strongest portion of the event/occurrence bible, and to reduce UX/core maintainability risk before adding a large campaign layer or more combat exceptions.
+The next objective is no longer to complete P5–P12, or to add isolated combat exceptions. Those milestones are historical implementation contracts and should be treated as regression requirements. The immediate objective is to execute the [Game-Quality Transformation Plan](game_quality_transformation_plan.md): make Preparation, Battle, Recovery, and Results feel like four intentional chapters; give Greywatch and Ash Ford a coherent visual identity; prove that new players understand the first defense; and only then broaden the campaign, keep roster, or event library.
 
 ### P4 completion means the following is now the reference behavior
 
@@ -104,6 +104,7 @@ Milestones must be completed in order. An agent may split a milestone into small
 | P15 | Implemented | Greywatch and Ash Ford provide distinct defense identities; completed runs now produce one persisted Low Mill/Miller's Road political consequence and bounded next-run support. | Preserve the no-map/no-economy boundary and begin only controlled P16 human playtest hardening. |
 | P16 | Playtest kit implemented; sessions pending | Controlled alpha protocol, bundled artifact identity, evidence schema, validation, and repeated-finding summaries are in place. | Run all four human-observed combinations against one artifact cohort, implement repeated friction tasks, and require explicit owner approval before release preparation. |
 | P31 | Implemented; human onboarding evidence pending | First Watch provides a complete game-facing menu-to-victory tutorial with strict objectives, in-world coaching, separate resume data, and per-phase retry checkpoints. | Observe new players completing First Watch, then refine only repeated comprehension or pacing friction. |
+<<<<<<< HEAD
 | P32 | Implemented; human debrief evidence pending | Terminal Results preserves the damaged keep beside a dedicated outcome, timeline, causal, damage, consequence, and replay composition with fixed actions. | Preserve as the terminal-flow reference. |
 | P33 | Implemented; human comprehension evidence pending | Ordinary Preparation now names the current doctrine question, the layout's visible answer, and one open weakness above the primary assault action. | Strengthen board visual hierarchy and placement feedback without adding tactical clutter. |
 | P34 | Implemented; human silhouette-recognition evidence pending | A central visual registry defines the board layer order, distinct ground/upper treatments, critical-room cues, defender role cards, and enemy-type silhouettes. | Consolidate existing semantic tones into one focused battle-loop audio service. |
@@ -120,6 +121,17 @@ Milestones must be completed in order. An agent may split a milestone into small
 | P45 | Implemented; human visual review remains pending | `--debug-ui` now outlines major visible regions and reports viewport, focus owner, and clipping counts without intercepting input or existing in normal launches. | Add a consistent Escape/back path and explicit unsaved-progress language. |
 | P46 | Implemented; human navigation evidence pending | Escape/controller-back now prioritizes cancel actions, returns from Settings and War Council predictably, and confirms before abandoning changes not stored in Continue Saved Run. | Run the required human playtest matrix and address only repeated observed friction. |
 | P47 | Implemented; human sessions remain pending | Tagged prereleases publish the exact Windows executable, smoke report, provenance, observer brief, four unfilled matrix templates, release manifest, and source archive as one durable cohort. | Run the required human playtest matrix and address only repeated observed friction. |
+=======
+| P32 | Next: visual identity pass | Replace the procedural-debug impression with a coherent tactile top-down fortress language while preserving geometry and state readability. | Establish the board asset grammar and verify it at supported viewports before adding new mechanics. |
+| P33 | Next: Preparation hierarchy | Make the fort the primary decision surface and make pack, forecast, placement, and commit actions legible without command-table archaeology. | Test a clean-save player’s first placement and first commit without verbal coaching. |
+| P34 | Next: battle staging | Turn deterministic ticks into readable forecast, approach, wind-up, impact, consequence, and recovery beats. | Verify that a player can name the imminent threat, target, counter, and result. |
+| P35 | Next: recovery/results identity | Separate inter-wave recovery from terminal debrief and make every consequence lead to a specific next experiment. | Verify that players understand what was lost, what can be repaired, and why replaying is attractive. |
+| P36 | Next: human comprehension pass | Run the controlled P16 cohort against First Watch and the quick path, then fix only repeated comprehension, pacing, or input failures. | Require observed evidence; automation must not be used as a substitute for human sessions. |
+| P37 | Planned: content breadth | Add one new commander lens, one new keep identity, two teaching packs, and two enemy families only after P32–P36 gates pass. | Every addition must introduce one question, one counter, one weakness, and one visual identity. |
+| P38 | Planned: replayable mastery | Add bounded scenario variation, pack choices, recovery trade-offs, and ending/report composition without grind or forced build orders. | Two viable solutions must exist for each expanded teaching scenario. |
+| P39 | Planned: alpha hardening | Complete accessibility, performance, save migration, clean-install, controller, high-DPI, audio, and failure-recovery review across the game-quality flow. | All automated gates pass and the human owner signs off on the evidence package. |
+| P40 | Planned: private alpha gate | Package one honest internal artifact with known limitations, observer brief, reproducibility data, and rollback path. | No storefront or public-alpha claim until manual approval is recorded. |
+>>>>>>> 59a5ed9 (Update post-P31 game-quality roadmap)
 
 P13 onward are planning identifiers, not permission to release automatically. Every milestone still requires local validation, CI, visual review, and explicit human approval before external distribution. The existing P5–P12 sections below remain useful as acceptance contracts, but agents must not re-implement them unless a regression or refactor explicitly requires it.
 
@@ -1071,3 +1083,162 @@ A future agent implementation is successful when another agent can inspect the d
 A future content expansion is successful when it creates a new decision while preserving the old game’s clarity. More pieces, events, or scenarios are not progress if the player can no longer tell what matters.
 
 > **The long-term standard:** Build fewer systems, make each one legible, and let the player feel clever because the keep’s answer was visible before it worked.
+
+
+---
+
+# 12. Post-P31 game-quality roadmap
+
+This section is the active execution plan after First Watch. It supersedes the older assumption that the next valuable step is another isolated mechanic. The project now has enough systems for a credible game; the remaining work is to make those systems feel intentional, readable, and worth replaying.
+
+The companion [Game-Quality Transformation Plan](game_quality_transformation_plan.md) contains the visual and flow diagnosis. This section converts that diagnosis into agent-sized milestones with strict boundaries and verification expectations.
+
+## 12.1 P32 — Fortress visual identity pass
+
+**Objective:** Make Greywatch and Ash Ford look like authored places rather than procedural debug boards, without changing placement geometry, room graphs, combat authority, or save identity.
+
+The first art pass should establish a small, reusable visual grammar: warm stone, dark timber, iron hardware, canvas, ash, lantern light, worn floorboards, smoke, and practical repair marks. Greywatch should read as a compact gatehouse keep under siege. Ash Ford should read as a more exposed causeway redoubt. The two identities should share the same readability language while differing in silhouette, palette emphasis, and spatial rhythm.
+
+The agent must create an asset inventory before implementation. Every visual state needs a treatment for ready, selected, valid placement, invalid placement, strained, disabled, threatened, damaged, breached, enemy approach, enemy wind-up, impact, and defeated. Art must remain subordinate to the board’s tactical information. No texture, particle, or outline may make a placement box, target lane, condition bar, or enemy state harder to read.
+
+**Acceptance gate:** A player can identify the gate, courtyard, rooms, upper wall, approach lane, selected piece, and damaged area at 1280×720 and 2560×1440 without reading the debug report. The board remains fully usable with high-contrast mode, large text, and reduced motion enabled.
+
+**Required evidence:** Before/after screenshots of Preparation and Battle for both keeps, asset manifest, visual-state checklist, and unchanged deterministic test results.
+
+## 12.2 P33 — Preparation hierarchy and placement ergonomics
+
+**Objective:** Make Preparation a clear decision surface rather than a command table.
+
+The fort must occupy the visual center. The right or lower rail should be organized into three levels: immediate threat and commit action, tactical pack/piece/placement information, and optional reference detail. The player should be able to select a pack, inspect its doctrine, select a defender, preview the footprint and affected dependency, place it, and understand the resulting weakness without opening multiple unrelated panels.
+
+Placement must support mouse, keyboard, controller, large text, and high-contrast use. Valid and invalid placement must state the reason. Removing or moving a piece must preserve the authoritative rules and must never create a refund or duplicate instance. A compact “answer quality” statement should describe the selected layout in terms of the next threat and its exposed weakness, but it must not become a hidden score that dictates the correct build.
+
+**Acceptance gate:** A first-time tester can place two defenders, identify one strength and one weakness, and commit the first assault within three minutes without verbal coaching. The fort remains visible while the command rail scrolls. No mandatory build order is introduced.
+
+**Required tests:** Placement legality matrix by floor and zone, focus order, controller placement, large-text enclosure, invalid-placement explanations, save/load of the prepared layout, and deterministic state equality before and after presentation-only inspection.
+
+## 12.3 P34 — Battle staging and threat readability
+
+**Objective:** Turn deterministic six-tick combat into a readable sequence of authored beats.
+
+The simulation remains authoritative and step-based. Presentation may interpolate movement and stage effects around the ticks, but it must never invent damage, targets, timing, or outcomes. Each meaningful pressure should read as forecast pulse, approach, target commitment, attack wind-up, defender response, impact or counter, damage reaction, and settling beat.
+
+Every enemy family needs a distinct silhouette, approach signature, attack signature, target-priority explanation, and counter cue. The player must be able to pause before the first meaningful contact, inspect the threat, understand its likely target, and identify at least one available response. Effects should be directional and short. The timeline should answer what is next without becoming a second spreadsheet.
+
+**Acceptance gate:** During a first assault, a tester can name the active threat, likely target, counter family, and result of the most recent exchange. Pause, resume, speed, and manual step must all preserve the same authoritative outcome.
+
+**Required evidence:** Captures at normal and large text, threat-focused screenshots, one manual-step trace, one same-seed replay comparison, and a list of all presentation-only effects.
+
+## 12.4 P35 — Recovery and Results as separate chapters
+
+**Objective:** Make damage and completion emotionally legible.
+
+Recovery must answer what changed, why it matters, what the next wave will test, how many actions remain, what the recommended priority is, and what the selected repair or assignment gives up. Disabled actions must explain their constraint. The player should feel they are deciding what survives, not clearing a checklist.
+
+Terminal Results must not reuse the recovery composition as its dominant identity. It should show the final defense, wave timeline, causal chain, fortress condition, material and morale outcome, what was saved or lost, and one specific replay experiment. A replay experiment might be “protect the Workshop before the second Sapper,” “trade one upper-wall shooter for a Gate reserve,” or “try the same doctrine with the Warden.” It must be based on the actual run, not a generic tip.
+
+**Acceptance gate:** A tester can distinguish Recovery from Results at a glance, explain the main cause of the outcome, and identify one concrete alternative worth trying. A collapse must still produce a respectful and actionable report rather than a punitive dead end.
+
+**Required tests:** Hold, partial breach, collapse, terminal victory, terminal defender-wipe challenge, save/resume during recovery, save/resume from Results, and report determinism across repeated seeds.
+
+## 12.5 P36 — Human comprehension and pacing pass
+
+**Objective:** Use real human observation to refine the first thirty minutes before adding campaign breadth.
+
+Run the existing P16 protocol with one artifact cohort across First Watch and the quick path. Observe at least four sessions with the documented combinations of input method and onboarding path. Record only what was observed. Automation may validate reproducibility and package integrity, but it must never fabricate comprehension, enjoyment, or successful onboarding.
+
+Prioritize repeated findings using three questions: did the player know what to do, did the player know why it mattered, and did the player understand the result? Fix repeated confusion before isolated preferences. Pacing changes should target excessive reading, idle waiting, unclear transitions, and overlong effects. Do not solve a comprehension problem by adding more text to the command rail.
+
+**Acceptance gate:** The owner has a completed session matrix, repeated-finding summary, artifact identity, and explicit disposition for every high-severity observation. First Watch may be refined or shortened, but its teaching contract must remain testable and skippable.
+
+## 12.6 P37 — Controlled content breadth
+
+**Objective:** Expand the game only after the current slice is visually and cognitively coherent.
+
+The first expansion should add one commander lens, one new defensive identity, two teaching packs, and two enemy families. Each item must introduce one new question and one readable counter. Content should be selected to create different spatial and operational decisions, not merely to increase numerical variety.
+
+Recommended additions are a commander who values mobile reserves, a keep with a split or exposed approach, a pack that trades direct damage for information or mobility, a pack that protects dependencies at a spatial cost, a fast bypass enemy, and a disruption enemy that tests recovery or ammunition. These are examples, not permission to implement them all in one task.
+
+Each addition requires a design card, stable machine-readable ID, visual state list, counter relationship, failure mode, scenario placement, deterministic fixture, and player-facing explanation. New content must be introduced in isolation before it is composed with existing doctrines.
+
+**Acceptance gate:** Every expanded teaching scenario has at least two viable pack/layout solutions, a readable counter, a meaningful weakness, and a complete normal/large-text/high-contrast presentation review.
+
+## 12.7 P38 — Replayable mastery without grind
+
+**Objective:** Make repeated runs produce different decisions rather than a larger checklist.
+
+Replayability should come from commander lenses, pack combinations, bounded scenario variations, recovery trade-offs, challenge modifiers, and causal reports. Avoid duplicate collection, rarity tiers, mandatory unlock grinds, and permanent power escalation that trivializes the first keep.
+
+Scenario variation may alter enemy timing, target priority, route pressure, event availability, or recovery scarcity, but it must remain forecastable enough for a solo player with pause. A seed should create a different problem, not an unknowable ambush. The report should compare the player’s chosen doctrine with the pressure they actually faced.
+
+**Acceptance gate:** A tester can replay a scenario with a different commander or pack plan and identify a changed question. The alternative must be viable without requiring a hidden counter or a specific sequence of clicks.
+
+## 12.8 P39 — Alpha hardening and maintainability
+
+**Objective:** Reduce technical and operational risk before private alpha distribution.
+
+Extract presentation panels from `src/ui/main.gd` only when the seam is behaviorally understood. The preferred order is Results/debrief, Preparation inspector, event panel, and settings. Extraction must preserve signals, focus paths, semantic web fallbacks where applicable, pause behavior, controller behavior, and all authoritative command boundaries.
+
+Complete the existing hardening matrix for Windows high-DPI, controller navigation, clean reinstall, save migration, malformed and stale backups, missing profile directories, offline operation, reduced motion, high contrast, large text, and audio settings. Add performance checks for the first thirty minutes at supported window sizes. Any new caching or interpolation must be presentation-only and must not alter the deterministic replay key.
+
+**Acceptance gate:** `scripts/verify.sh`, content validators, package smoke, clean-install smoke, and deterministic replay matrix all pass. The working tree is clean, artifact provenance is recorded, and no test claims human success.
+
+## 12.9 P40 — Private alpha gate
+
+**Objective:** Produce one honest, reviewable internal build for human approval.
+
+The private alpha artifact must include the executable or package, source revision, build manifest, observer brief, known limitations, save/reset instructions, input map, playtest matrix, rollback path, and a concise report of what is and is not validated. It must not be described as public alpha, Steam-ready, or Epic-ready until the owner approves the evidence.
+
+The alpha gate is passed only when the owner confirms that the game’s visual identity, first-session flow, battle readability, recovery/results distinction, and human comprehension evidence are strong enough for external observation. Technical green status alone is insufficient.
+
+---
+
+# 13. Agent task format for post-P31 work
+
+Every future task must use this structure:
+
+```text
+Task: [one player-facing behavior]
+
+Why now: [which P32–P40 gate it advances]
+
+Player outcome: [what the player can now see, understand, or choose]
+
+Authoritative boundary: [core state/command that owns the rule]
+
+Out of scope: [features and systems the agent must not touch]
+
+Files expected: [specific source, content, test, and evidence files]
+
+Acceptance criteria:
+1. [observable player behavior]
+2. [deterministic state behavior]
+3. [accessibility/input behavior]
+4. [visual evidence requirement]
+
+Verification:
+- [exact local command]
+- [targeted headless test]
+- [capture or manual observation]
+
+Report:
+- changed files
+- verification results
+- visual evidence
+- known limitations
+- next smallest task
+```
+
+The recommended next task is **P32.1: replace the Greywatch board’s highest-noise procedural surfaces with a coherent authored visual treatment while preserving all placement and combat geometry**. If the owner prefers to prioritize comprehension over art, the alternative is **P33.1: extract and redesign the Preparation inspector around one selected defender and its affected room**. Do not start P37 content expansion until P32–P36 evidence is complete.
+
+## 13.1 Global regression invariants
+
+The following must remain true through every post-P31 task:
+
+- `PackKeepState` remains the sole authority for combat, placement, resources, recovery, events, progression, and save identity.
+- The same seed, commands, and scenario produce the same authoritative result regardless of speed, pause, viewport, input device, or presentation settings.
+- The fort remains visible and usable during Preparation, Battle, Recovery, and Results.
+- Every new threat has a readable counter and every new defender has a readable weakness or cost.
+- Partial loss remains informative and recoverable when the scenario contract allows recovery.
+- Automation validates technical behavior; it does not claim human comprehension or enjoyment.
+- No external release, storefront claim, or public-alpha label is made without explicit owner approval.
