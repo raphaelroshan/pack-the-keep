@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.26.0-keep-first-visual-finish",
+  "build_version": "0.26.1-presentation-snapshots",
   "status": "ready_for_human_sessions",
   "release_ready": false,
   "minimum_completed_sessions": 4,

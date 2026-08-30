@@ -12,6 +12,10 @@ const PackOfferPanelView = preload("res://src/ui/pack_offer_panel.gd")
 const InspectionPanelView = preload("res://src/ui/inspection_panel.gd")
 const LocalPlaytestObserverView = preload("res://src/ui/local_playtest_observer.gd")
 const BattlePresentationSnapshotView = preload("res://src/ui/battle_presentation_snapshot.gd")
+const PreparationPresentationSnapshotView = preload("res://src/ui/preparation_presentation_snapshot.gd")
+const WarCouncilPresentationSnapshotView = preload("res://src/ui/war_council_presentation_snapshot.gd")
+const RecoveryPresentationSnapshotView = preload("res://src/ui/recovery_presentation_snapshot.gd")
+const ResultsPresentationSnapshotView = preload("res://src/ui/results_presentation_snapshot.gd")
 const PresentationAuditOverlayView = preload("res://src/ui/presentation_audit_overlay.gd")
 
 const PackKeepState = preload("res://src/core/keep_state.gd")
@@ -147,6 +151,10 @@ var inspect_enemy_button: Button
 var battle_tactical_button: Button
 var battle_tactical_panel: VBoxContainer
 var battle_presentation_snapshot: Dictionary = {}
+var preparation_presentation_snapshot: Dictionary = {}
+var war_council_presentation_snapshot: Dictionary = {}
+var recovery_presentation_snapshot: Dictionary = {}
+var results_presentation_snapshot: Dictionary = {}
 var presentation_audit_overlay: PresentationAuditOverlay
 var navigation_confirm_layer: Control
 var navigation_confirm_label: Label
@@ -2466,51 +2474,24 @@ func _on_toggle_campaign_modifier() -> void:
 	_run_result(keep.equip_modifier(modifier_id), "Campaign")
 
 func _refresh_pack_preview() -> void:
-	if preparation_pack_offer_panel == null:
+	_refresh_preparation_presentation()
+
+func _refresh_preparation_presentation() -> void:
+	if preparation_pack_offer_panel == null or pack_option == null:
 		return
-	var pack_id: String = _selected_id(pack_option)
-	var preview: Dictionary = keep.pack_preview(pack_id)
-	if not bool(preview.get("ok", false)):
-		pack_preview_label.text = "PACK PREVIEW — %s" % String(preview.get("reason", "unavailable"))
-		return
-	var pieces: Array[String] = []
-	for piece in preview.get("pieces", []):
-		pieces.append("%s (%d)" % [String(piece.get("name", "")), int(piece.get("cost", 0))])
-	var definition: Dictionary = keep.pack_definition(pack_id)
-	var demand: Dictionary = definition.get("spatial_demand", {})
-	var floors: Array[String] = []
-	for floor_id in demand.get("preferred_floors", []):
-		floors.append(String(floor_id).capitalize())
-	var zones: Array[String] = []
-	for zone_id in demand.get("preferred_zones", []):
-		zones.append(String(zone_id).capitalize())
-	var space: String = "%s floor; %s" % ["/".join(floors), "/".join(zones)]
-	space += "; open lane" if bool(demand.get("needs_open_lane", false)) else "; compact footprint"
-	space += "; adjacency" if bool(demand.get("needs_adjacency", false)) else ""
-	var owned: bool = bool(preview.get("owned", false))
-	var reserved: bool = bool(preview.get("reserved", false))
-	var openings: int = int(preview.get("openings_remaining", 0))
-	var enough_materials: bool = int(preview.get("materials", 0)) >= int(preview.get("cost", 0))
-	var tutorial_open: bool = not tutorial.active or (tutorial.expected_action() in ["open_pack", "open_pack:pike_line"] and pack_id == "pike_line")
-	var can_open: bool = not owned and openings > 0 and enough_materials and not keep.wave_active and not keep.repair_interval_active and tutorial_open
-	var state: String = "OPENED" if owned else "RESERVED" if reserved else "NO OPENINGS" if openings <= 0 else "NEEDS MATERIALS" if not enough_materials else "AVAILABLE"
-	var open_reason: String = "Open this doctrine and grant its pieces."
-	if owned:
-		open_reason = "This pack is already part of the keep."
-	elif openings <= 0:
-		open_reason = "This Preparation has no pack openings remaining."
-	elif not enough_materials:
-		open_reason = "Not enough materials to open this pack."
-	elif not tutorial_open:
-		open_reason = "First Watch opens Pike Line only when the lesson reaches that step."
-	preparation_pack_offer_panel.render({
-		"index": pack_option.selected + 1, "count": pack_option.item_count, "openings": openings, "materials": int(preview.get("materials", 0)), "state": state,
-		"name": String(preview.name), "role": String(definition.get("short_role", "")), "question": String(preview.get("question", "")), "doctrine": String(preview.doctrine).replace("_", " ").capitalize(), "cost": int(preview.cost),
-		"pieces": ", ".join(pieces), "strength": String(preview.solves), "weakness": String(preview.asks), "space": space, "choice": String(preview.preview),
-		"owned": owned, "reserved": reserved, "selection_locked": tutorial.active, "can_open": can_open, "can_reserve": not tutorial.active and not owned and not keep.wave_active and not keep.repair_interval_active,
-		"open_reason": open_reason, "reserve_reason": "Clear this reserve." if reserved else "Hold this offer for the next Preparation without granting its pieces.",
-	})
-	pack_option.disabled = tutorial.active
+	preparation_presentation_snapshot = PreparationPresentationSnapshotView.build(keep, _selected_id(pack_option), pack_option.selected, pack_option.item_count, tutorial.active, tutorial.expected_action())
+	var pack_offer: Dictionary = preparation_presentation_snapshot.get("pack_offer", {})
+	if bool(pack_offer.get("ok", false)):
+		preparation_pack_offer_panel.render(pack_offer)
+	else:
+		pack_preview_label.text = String(pack_offer.get("error_text", "PACK PREVIEW — unavailable"))
+	pack_option.disabled = bool(pack_offer.get("selection_locked", tutorial.active))
+	if layout_lens_label != null:
+		layout_lens_label.text = String(preparation_presentation_snapshot.get("layout_lens_text", ""))
+	if preparation_brief_panel != null:
+		preparation_brief_panel.visible = screen == "preparation" and not tutorial.active
+		if preparation_brief_panel.visible:
+			preparation_brief_panel.render(preparation_presentation_snapshot.get("brief", {}))
 
 func _cycle_pack(direction: int) -> void:
 	if pack_option == null or pack_option.item_count == 0 or tutorial.active:
@@ -2837,176 +2818,66 @@ func _refresh_battle_presentation() -> void:
 	response_preview_label.text = String(battle_presentation_snapshot.get("response_text", ""))
 
 func _refresh_layout_lens() -> void:
-	if layout_lens_label == null:
-		return
-	var summary: Dictionary = keep.layout_summary()
-	var counts: Dictionary = summary.get("counts", {})
-	var comparison: Dictionary = summary.get("commander_comparison", {})
-	var castellan: Dictionary = comparison.get("castellan", {})
-	var warden: Dictionary = comparison.get("warden", {})
-	var warnings: Array[String] = []
-	for warning in summary.get("duplicate_role_warnings", []):
-		warnings.append(String(warning))
-	var castellan_marker: String = "CURRENT" if keep.commander_id == "castellan" else "COMPARE"
-	var warden_marker: String = "CURRENT" if keep.commander_id == "warden" else "COMPARE"
-	var spatial_rule: Dictionary = summary.get("spatial_rule", {})
-	var spatial_state: String = "ACTIVE" if bool(spatial_rule.get("active", false)) else "INACTIVE" if String(spatial_rule.get("id", "")) == "clear_causeway" else "BASELINE"
-	layout_lens_label.text = "LAYOUT SUMMARY — %s | Ground %d | Upper %d | Wall %d | Courtyard %d | Keep %d\nSpatial rule [%s] — %s\nCoverage — room edge %d | open lane %d | support %d | assigned %d\nCASTELLAN [%s] — %s Risk: %s\nWARDEN [%s] — %s Risk: %s\nWARNINGS — %s" % [String(summary.get("keep_name", keep.keep_id)), int(counts.get("ground", 0)), int(counts.get("upper", 0)), int(counts.get("wall", 0)), int(counts.get("courtyard", 0)), int(counts.get("keep", 0)), spatial_state, String(spatial_rule.get("label", "No special spatial rule.")), int(summary.get("room_edge_count", 0)), int(summary.get("open_lane_count", 0)), int(summary.get("support_piece_count", 0)), int(summary.get("assigned_specialist_count", 0)), castellan_marker, String(castellan.get("summary", "")), String(castellan.get("risk", "")), warden_marker, String(warden.get("summary", "")), String(warden.get("risk", "")), " | ".join(warnings)]
+	_refresh_preparation_presentation()
 
 func _refresh_preparation_brief() -> void:
-	if preparation_brief_panel == null:
-		return
-	preparation_brief_panel.visible = screen == "preparation" and not tutorial.active
-	if not preparation_brief_panel.visible:
-		return
-	var forecast: Dictionary = keep.forecast()
-	var scenario: Dictionary = keep.scenario_preview()
-	var summary: Dictionary = keep.layout_summary()
-	var counts: Dictionary = summary.get("counts", {})
-	var doctrine_name: String = String(forecast.get("doctrine", "next pressure")).replace("_", " ").capitalize()
-	var question: String = "%s threatens %s. %s" % [doctrine_name, String(forecast.get("likely_target", "the keep")), String(scenario.get("lesson", "Read the route before committing the defense."))]
-	var answer: String
-	if keep.pieces.is_empty():
-		answer = "No defenders placed. Choose a pack and establish the first response line."
-	else:
-		var coverage: Array[String] = []
-		if int(counts.get("ground", 0)) > 0:
-			coverage.append("%d ground" % int(counts.get("ground", 0)))
-		if int(counts.get("upper", 0)) > 0:
-			coverage.append("%d upper" % int(counts.get("upper", 0)))
-		if int(summary.get("support_piece_count", 0)) > 0:
-			coverage.append("%d support" % int(summary.get("support_piece_count", 0)))
-		if int(summary.get("assigned_specialist_count", 0)) > 0:
-			coverage.append("%d assigned" % int(summary.get("assigned_specialist_count", 0)))
-		var commander_answer: String = "%d room-edge connection(s)" % int(summary.get("room_edge_count", 0)) if keep.commander_id == "castellan" else "%d open response lane(s)" % int(summary.get("open_lane_count", 0))
-		answer = "%s; %s. This is visible coverage, not a guaranteed hold." % [", ".join(coverage), commander_answer]
-	var warnings: Array = summary.get("duplicate_role_warnings", [])
-	var weakness: String = String(warnings[0]) if not warnings.is_empty() else "No immediate coverage warning; compare the layout against the forecast."
-	preparation_brief_panel.render({"question": question, "answer": answer, "weakness": weakness})
+	_refresh_preparation_presentation()
 
 func _recovery_priority_rows() -> Array[Dictionary]:
-	var priorities: Array[Dictionary] = []
-	for room_id in keep.rooms.keys():
-		var id: String = String(room_id)
-		var state: String = keep.room_state(id)
-		var condition: int = keep.room_condition(id)
-		var room_definition: Dictionary = keep.room_definition(id)
-		var critical: bool = bool(room_definition.get("critical", false))
-		var score: int = 0
-		if state == "breached":
-			score = 400 if critical else 300
-		elif state == "damaged":
-			score = 200 if critical else 100
-		elif state == "strained":
-			score = 50
-		score += 100 - condition
-		priorities.append({"id": id, "name": String(room_definition.get("name", id)), "state": state.to_upper(), "condition": condition, "score": score})
-	for outer in range(priorities.size()):
-		for inner in range(outer + 1, priorities.size()):
-			var left: Dictionary = priorities[outer]
-			var right: Dictionary = priorities[inner]
-			if int(right.get("score", 0)) > int(left.get("score", 0)) or (int(right.get("score", 0)) == int(left.get("score", 0)) and String(right.get("id", "")) < String(left.get("id", ""))):
-				priorities[outer] = right
-				priorities[inner] = left
-	return priorities
+	return RecoveryPresentationSnapshotView.priority_rows(keep)
 
-func _refresh_recovery_priorities() -> void:
+func _refresh_recovery_presentation() -> void:
+	if recovery_actions_panel == null:
+		return
+	recovery_presentation_snapshot = RecoveryPresentationSnapshotView.build(keep, _selected_piece_instance(), _selected_id(room_option))
+
+func _refresh_recovery_priorities(rebuild_snapshot: bool = true) -> void:
 	if recovery_priority_label == null:
 		return
-	if not keep.repair_interval_active and keep.last_outcome.is_empty():
-		recovery_priority_label.text = "RECOVERY PRIORITIES — Appear after a Hold or Partial Breach. The ranking is advisory; repair commands remain authoritative."
-		return
-	var priorities: Array[Dictionary] = _recovery_priority_rows()
-	var rows: Array[String] = []
-	for index in range(mini(3, priorities.size())):
-		var row: Dictionary = priorities[index]
-		rows.append("%s — %s %d%%" % [String(row.get("name", "room")), String(row.get("state", "STABLE")), int(row.get("condition", 0))])
-	var advice: Dictionary = keep.recovery_advice()
-	if bool(advice.get("ok", false)):
-		recovery_priority_label.text = "RECOVERY PRIORITIES — %s\n%s\nNEXT: %s | %s\nTRADE-OFF: %s" % ["advisory order", " | ".join(rows), String(advice.get("next_doctrine", "next doctrine")).replace("_", " "), String(advice.get("target", "preserve the most important function")), String(advice.get("tradeoff", "choose deliberately"))]
-	else:
-		recovery_priority_label.text = "RECOVERY PRIORITIES — %s\n%s" % ["advisory order", " | ".join(rows)]
+	if rebuild_snapshot:
+		_refresh_recovery_presentation()
+	recovery_priority_label.text = String(recovery_presentation_snapshot.get("priorities_text", ""))
 
 func _recovery_brief_view_model() -> Dictionary:
-	var latest: Dictionary = keep.wave_history.back() if not keep.wave_history.is_empty() else {}
-	var outcome: String = String(latest.get("outcome", keep.last_outcome)).replace("_", " ").to_upper()
-	var changed: String = "Phase %d %s · %d enemies defeated · %d room / %d defender damage." % [int(latest.get("wave", keep.wave_index)), outcome, int(latest.get("defeated_enemies", 0)), int(latest.get("room_damage", 0)), int(latest.get("piece_damage", 0))]
-	var priorities: Array[Dictionary] = _recovery_priority_rows()
-	var first_priority: Dictionary = priorities[0] if not priorities.is_empty() else {}
-	var damaged_piece: Dictionary = {}
-	var largest_piece_loss: int = 0
-	for instance_id_value in keep.pieces.keys():
-		var instance_id: String = String(instance_id_value)
-		var instance: Dictionary = keep.pieces[instance_id]
-		var maximum: int = int(instance.get("max_health", 0))
-		var health: int = int(instance.get("health", maximum))
-		var loss: int = maximum - health
-		if loss > largest_piece_loss:
-			largest_piece_loss = loss
-			damaged_piece = {"name": String(keep.piece_definition(String(instance.get("piece_id", ""))).get("name", instance_id)), "health": health, "maximum": maximum, "disabled": bool(instance.get("disabled", false))}
-	var matters: String
-	var room_needs_attention: bool = not first_priority.is_empty() and int(first_priority.get("score", 0)) > 0
-	if not damaged_piece.is_empty() and not room_needs_attention:
-		matters = "%s is %s at %d/%d health." % [String(damaged_piece.get("name", "A defender")), "DISABLED" if bool(damaged_piece.get("disabled", false)) else "DAMAGED", int(damaged_piece.get("health", 0)), int(damaged_piece.get("maximum", 0))]
-	elif first_priority.is_empty():
-		matters = "No damaged room is currently ranked; preserve flexibility before the next pressure."
-	else:
-		matters = "%s is %s at %d%% condition." % [String(first_priority.get("name", "The keep")), String(first_priority.get("state", "STABLE")), int(first_priority.get("condition", 100))]
-	var advice: Dictionary = keep.recovery_advice()
-	var next_pressure: String = "%s · %s" % [String(advice.get("next_doctrine", "next doctrine")).replace("_", " ").capitalize(), String(advice.get("target", "Preserve the most important function."))] if bool(advice.get("ok", false)) else "No further authored pressure is forecast."
-	return {
-		"actions_remaining": keep.repair_actions_remaining,
-		"materials": keep.materials,
-		"changed": changed,
-		"matters": matters,
-		"next": next_pressure,
-		"priority": String(damaged_piece.get("name", "")) if not damaged_piece.is_empty() and not room_needs_attention else String(first_priority.get("name", advice.get("target", "Preserve the most important function."))),
-		"tradeoff": String(advice.get("tradeoff", "Every recovery action leaves another need unanswered."))
-	}
+	_refresh_recovery_presentation()
+	return recovery_presentation_snapshot.get("brief", {})
 
-func _refresh_recovery_brief() -> void:
+func _refresh_recovery_brief(rebuild_snapshot: bool = true) -> void:
 	if recovery_brief_panel == null:
 		return
 	var terminal_result: bool = _is_terminal_result()
 	recovery_brief_panel.visible = screen == "results" and keep.repair_interval_active and not terminal_result and not tutorial.active
 	if recovery_brief_panel.visible:
-		recovery_brief_panel.render(_recovery_brief_view_model())
+		if rebuild_snapshot:
+			_refresh_recovery_presentation()
+		recovery_brief_panel.render(recovery_presentation_snapshot.get("brief", {}))
 
-func _apply_recovery_action_card(title: Label, detail: Label, button: Button, action_name: String, preview: Dictionary) -> void:
-	var target_name: String = String(preview.get("target_name", "Select a target"))
-	var material_cost: int = int(preview.get("material_cost", 0))
-	var cost_text: String = "%d material%s + 1 action" % [material_cost, "" if material_cost == 1 else "s"] if material_cost > 0 else "1 recovery action"
-	var ready: bool = bool(preview.get("ok", false))
-	var status_text: String = "READY" if ready else "BLOCKED — %s" % String(preview.get("reason", "unavailable"))
-	title.text = "%s — %s" % [action_name, target_name]
-	detail.text = "COST — %s\nBENEFIT — %s\nTRADE-OFF — %s\n%s" % [cost_text, String(preview.get("benefit", "")), String(preview.get("tradeoff", "")), status_text]
+func _apply_recovery_action_card(title: Label, detail: Label, button: Button, view_model: Dictionary) -> void:
+	var ready: bool = bool(view_model.get("ready", false))
+	title.text = String(view_model.get("title", "Select a target"))
+	detail.text = String(view_model.get("detail", ""))
 	detail.add_theme_color_override("font_color", Color("#bfe8cf") if ready else Color("#c99a9a"))
 	button.disabled = not ready
-	button.tooltip_text = String(preview.get("benefit", "")) if ready else String(preview.get("reason", "unavailable"))
+	button.tooltip_text = String(view_model.get("tooltip", ""))
 
-func _refresh_recovery_action_cards() -> void:
+func _refresh_recovery_action_cards(rebuild_snapshot: bool = true) -> void:
 	if recovery_actions_panel == null:
 		return
 	recovery_actions_panel.visible = screen == "results" and keep.repair_interval_active
 	if not keep.repair_interval_active:
 		return
-	var action_number: int = 3 - keep.repair_actions_remaining
-	if keep.repair_actions_remaining > 0:
-		recovery_stage_label.text = "CHOICE %d OF 2 — exact costs and trade-offs are shown below." % action_number
-	else:
-		recovery_stage_label.text = "ACTIONS COMPLETE — continue explicitly when the keep is ready."
-	var instance_id: String = _selected_piece_instance()
-	var room_id: String = _selected_id(room_option)
-	_apply_recovery_action_card(recovery_room_card_title, recovery_room_card_detail, recovery_room_button, "REPAIR ROOM", keep.recovery_action_preview("repair_room", "", room_id))
-	_apply_recovery_action_card(recovery_piece_card_title, recovery_piece_card_detail, recovery_piece_button, "REPAIR PIECE", keep.recovery_action_preview("repair_piece", instance_id))
-	_apply_recovery_action_card(recovery_assign_card_title, recovery_assign_card_detail, recovery_assign_button, "ASSIGN SPECIALIST", keep.recovery_action_preview("assign_piece", instance_id, room_id))
-	_apply_recovery_action_card(recovery_clear_card_title, recovery_clear_card_detail, recovery_clear_button, "CLEAR ASSIGNMENT", keep.recovery_action_preview("clear_assignment", instance_id))
-	finish_interval_button.disabled = not keep.active_event_id.is_empty()
-	finish_interval_button.tooltip_text = "Resolve the active event before continuing." if finish_interval_button.disabled else "Close recovery explicitly; unused actions are recorded and never spent automatically."
-	if keep.has_next_wave():
-		finish_interval_button.text = "END LULL — RELEASE PHASE %d/%d" % [keep.wave_index + 1, keep.authored_wave_count()]
-	else:
-		finish_interval_button.text = "FINISH RECOVERY"
+	if rebuild_snapshot:
+		_refresh_recovery_presentation()
+	recovery_stage_label.text = String(recovery_presentation_snapshot.get("stage_text", ""))
+	var cards: Dictionary = recovery_presentation_snapshot.get("cards", {})
+	_apply_recovery_action_card(recovery_room_card_title, recovery_room_card_detail, recovery_room_button, cards.get("room", {}))
+	_apply_recovery_action_card(recovery_piece_card_title, recovery_piece_card_detail, recovery_piece_button, cards.get("piece", {}))
+	_apply_recovery_action_card(recovery_assign_card_title, recovery_assign_card_detail, recovery_assign_button, cards.get("assign", {}))
+	_apply_recovery_action_card(recovery_clear_card_title, recovery_clear_card_detail, recovery_clear_button, cards.get("clear", {}))
+	var finish: Dictionary = recovery_presentation_snapshot.get("finish", {})
+	finish_interval_button.disabled = bool(finish.get("disabled", false))
+	finish_interval_button.tooltip_text = String(finish.get("tooltip", ""))
+	finish_interval_button.text = String(finish.get("text", "FINISH RECOVERY"))
 
 func _on_remove_piece() -> void:
 	if not _tutorial_allows("remove_piece"):
@@ -3802,74 +3673,8 @@ func _refresh_result_explanation() -> void:
 	scorecard_label.text = "%s — %s | %s\n%s%s%s%s" % [report_heading, String(report.get("scenario_name", keep.scenario_id)), String(report.get("commander_name", keep.commander_id)), "\n".join(score_rows) if not score_rows.is_empty() else "No resolved assault phases yet.", event_report, _regional_report_text(true), diagnostic_replay]
 
 func _terminal_debrief_view_model() -> Dictionary:
-	var report: Dictionary = keep.scenario_report()
-	var final_state: Dictionary = report.get("final_state", {})
-	var damaged_rooms: Array[Dictionary] = []
-	for room_id_value in keep.rooms.keys():
-		var room_id: String = String(room_id_value)
-		var condition: int = keep.room_condition(room_id)
-		if condition < 100:
-			damaged_rooms.append({"id": room_id, "name": String(keep.room_definition(room_id).get("name", room_id)), "condition": condition, "state": keep.room_state(room_id)})
-	damaged_rooms.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
-		if int(left.condition) == int(right.condition):
-			return String(left.id) < String(right.id)
-		return int(left.condition) < int(right.condition)
-	)
-	var damaged_pieces: Array[Dictionary] = []
-	for instance_id_value in keep.pieces.keys():
-		var instance_id: String = String(instance_id_value)
-		var piece: Dictionary = keep.pieces[instance_id]
-		var health: int = int(piece.get("health", 0))
-		var max_health: int = int(piece.get("max_health", 0))
-		if health < max_health or bool(piece.get("disabled", false)):
-			damaged_pieces.append({"id": instance_id, "name": String(keep.piece_definition(String(piece.get("piece_id", ""))).get("name", instance_id)), "health": health, "max_health": max_health, "disabled": bool(piece.get("disabled", false))})
-	var consequence_rows: Array[String] = []
-	var event_snapshot: Dictionary = keep.event_ledger_snapshot(5)
-	for event_entry in event_snapshot.get("entries", []):
-		consequence_rows.append("%s — %s" % [_event_ledger_name(event_entry), String(event_entry.get("visible_result", ""))])
-	var regional_text: String = _regional_report_text(true).strip_edges()
-	if not regional_text.is_empty():
-		consequence_rows.append(regional_text)
-	var outcome: String = String(report.get("final_outcome", keep.last_outcome))
-	var outcome_title: String = "DEFENSE COMPLETE"
-	if outcome in ["held", "hold"]:
-		outcome_title = "%s HOLDS" % String(keep.keep_definition().get("name", "THE KEEP")).to_upper()
-	elif outcome == "partial_breach":
-		outcome_title = "THE KEEP ENDURES"
-	elif outcome == "collapse":
-		outcome_title = "THE FORTRESS FALLS"
-	var primary_label: String = "REVIEW SETUP — PLAY AGAIN"
-	var primary_tooltip: String = "Return to the War Council and change the next defense."
-	if tutorial.active and tutorial.failure_active:
-		primary_label = "RETRY PHASE"
-		primary_tooltip = "Restore the exact checkpoint at the start of this tutorial phase."
-	elif tutorial.active and tutorial.expected_action() == "finish_tutorial":
-		primary_label = "COMPLETE FIRST WATCH"
-		primary_tooltip = "Record First Watch as complete and return to the War Council."
-	return {
-		"eyebrow": "FINAL DEFENSE · %d PHASES RESOLVED" % int(report.get("wave_rows", []).size()),
-		"outcome": outcome,
-		"outcome_title": outcome_title,
-		"scenario_name": String(report.get("scenario_name", keep.scenario_id)),
-		"commander_name": String(report.get("commander_name", keep.commander_id)),
-		"morale": int(final_state.get("morale", 0)),
-		"materials": int(final_state.get("materials", 0)),
-		"surviving_pieces": int(final_state.get("surviving_pieces", 0)),
-		"disabled_pieces": int(final_state.get("disabled_pieces", 0)),
-		"breach_level": int(final_state.get("breach_level", 0)),
-		"waves": report.get("wave_rows", []).duplicate(true),
-		"what_worked": report.get("what_worked", []).duplicate(),
-		"what_failed": report.get("what_failed", []).duplicate(),
-		"damaged_rooms": damaged_rooms,
-		"damaged_pieces": damaged_pieces,
-		"consequence_text": "CONSEQUENCES\n%s" % "\n".join(consequence_rows) if not consequence_rows.is_empty() else "",
-		"replay_experiment": String(report.get("suggested_experiment", "Replay one changed decision.")),
-		"primary_label": primary_label,
-		"primary_tooltip": primary_tooltip,
-		"primary_enabled": true,
-		"show_save": not tutorial.active,
-		"show_menu": not tutorial.active
-	}
+	results_presentation_snapshot = ResultsPresentationSnapshotView.build(keep, tutorial.active, tutorial.failure_active, tutorial.expected_action())
+	return results_presentation_snapshot
 
 func _refresh_terminal_debrief() -> void:
 	if terminal_debrief_panel == null:
@@ -3950,53 +3755,14 @@ func _refresh_war_council_cards() -> void:
 	if war_council_choice_panel == null or commander_option == null or scenario_option == null:
 		return
 	var commander_id: String = _selected_id(commander_option)
-	var commander_definition: Dictionary = keep.commander_definition(commander_id)
-	var commander_ids: Array[String] = keep.commander_ids()
 	var scenario_id: String = _selected_id(scenario_option)
-	var scenario_definition: Dictionary = keep.scenario_definition(scenario_id)
-	var scenario_preview: Dictionary = keep.scenario_preview(scenario_id)
-	var modifier_name: String = "None"
-	if not keep.equipped_modifier_id.is_empty():
-		modifier_name = String(keep.modifier_definition(keep.equipped_modifier_id).get("name", keep.equipped_modifier_id))
-	var collapse_rule: bool = bool(scenario_preview.get("collapse_on_defender_wipe", false))
-	var end_state_summary: String = "defender wipe ends the run" if collapse_rule else "defender wipe is recoverable"
-	var setup_mode: String = "FIRST WATCH" if tutorial.active else "GUIDED DEFENSE" if guided_setup else "SKIRMISH"
-	war_council_choice_panel.render({
-		"mode": setup_mode,
-		"modifier": modifier_name,
-		"risk_summary": "RISK — %s · %s" % [String(scenario_preview.get("difficulty", "standard")).to_upper(), end_state_summary],
-		"commitment": "Entering fixes commander, keep, seeded variation, and the authored pressure order for this run.",
-		"locked": tutorial.active,
-		"commander": {
-			"index": commander_ids.find(commander_id) + 1,
-			"count": commander_ids.size(),
-			"name": String(commander_definition.get("name", commander_id)),
-			"identity": String(commander_definition.get("short_role", "Choose a strategic lens.")),
-			"strength": String(commander_definition.get("passive", "")),
-			"ability_name": String(commander_definition.get("ability_name", "Ability")),
-			"ability": String(commander_definition.get("ability_text", "")),
-			"limitation": String(commander_definition.get("limitation", "")),
-			"question": String(commander_definition.get("question", "")),
-		},
-		"scenario": {
-			"index": int(scenario_preview.get("catalog_index", 0)),
-			"count": int(scenario_preview.get("catalog_count", 0)),
-			"difficulty": String(scenario_preview.get("difficulty", "standard")),
-			"name": String(scenario_preview.get("name", scenario_id)),
-			"keep": String(scenario_preview.get("keep_name", "Keep")),
-			"identity": String(scenario_definition.get("short_role", "Authored pressure")),
-			"question": String(scenario_definition.get("question", "What must this defense preserve?")),
-			"objective": String(scenario_preview.get("objective", "")),
-			"arc": " → ".join(scenario_preview.get("doctrine_names", [])),
-			"risk": "%s; peak pressure %d; %s." % [String(scenario_preview.get("difficulty", "standard")).capitalize(), int(scenario_preview.get("peak_wave_size", 0)), end_state_summary],
-			"fixed": "%s, %d authored phases, variation %s." % [String(scenario_preview.get("keep_name", "Keep")), int(scenario_preview.get("wave_count", 0)), String(scenario_preview.get("variation_id", "standard_bell")).replace("_", " ")],
-		},
-	})
+	war_council_presentation_snapshot = WarCouncilPresentationSnapshotView.build(keep, commander_id, scenario_id, tutorial.active, guided_setup)
+	war_council_choice_panel.render(war_council_presentation_snapshot)
 
 func _refresh_ui() -> void:
 	_refresh_tutorial_panel()
 	_refresh_room_options()
-	_refresh_pack_preview()
+	_refresh_preparation_presentation()
 	_refresh_scenario_preview()
 	_refresh_authored_event()
 	_refresh_campaign_ledger()
@@ -4135,11 +3901,10 @@ func _refresh_ui() -> void:
 	local_metrics_status_label.text = "SESSION ONLY • LOCAL • NEVER UPLOADED\n%d screen(s) timed • %d pause(s) • %d threat focus action(s)" % [observation_snapshot.screen_durations_seconds.size(), int(observation_snapshot.pause_count), int(observation_snapshot.focus_count)]
 	_refresh_binding_controls()
 	_refresh_battle_presentation()
-	_refresh_layout_lens()
-	_refresh_preparation_brief()
-	_refresh_recovery_brief()
-	_refresh_recovery_priorities()
-	_refresh_recovery_action_cards()
+	_refresh_recovery_presentation()
+	_refresh_recovery_brief(false)
+	_refresh_recovery_priorities(false)
+	_refresh_recovery_action_cards(false)
 	_refresh_result_explanation()
 	_refresh_terminal_debrief()
 	_refresh_navigation()
