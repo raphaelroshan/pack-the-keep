@@ -1,6 +1,6 @@
 # Pack the Keep — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.27.0-battle-beat-readability` and later
+**Applies to:** `v0.27.1-recovery-results-distinction` and later
 
 **Purpose:** Turn the First Watch prototype into a readable, tactile, game-quality keep-defense vertical slice. Automated verification, deterministic simulation checks, scripted flow coverage, and screenshot review are the active gates. Human testing remains useful for later confidence and tuning, but it is not a prerequisite for execution.
 
@@ -18,7 +18,7 @@ The game is a spatial defensive puzzle, not a rarity treadmill or a command spre
 | **K2 — Complete** | Make the keep the primary decision surface | The board remains the visual anchor through placement, inspection, and commitment. Greywatch has authored material surfaces, and one selected room or defender has one clear identity, purpose, condition, and next action on the board. |
 | **K3 — Complete** | Extract presentation panels | War Council, Preparation, Battle, Recovery, and Results render from deterministic read-only snapshots without moving simulation ownership or changing command semantics. |
 | **K4 — Complete** | Finish the battle readability pass | Forecast, approach, target lock, wind-up, response, impact, consequence, and settle now form a coherent speed-scaled beat grammar over each authoritative tick. |
-| **K5** | Make recovery and Results distinct | Recovery answers what changed, why it matters, what can be repaired, and what trade-off remains. Terminal Results explains the causal story and offers a specific replay experiment. |
+| **K5 — Complete** | Make recovery and Results distinct | Recovery exposes the first priority and sacrificed alternative; terminal Results leads with the decisive pattern, remaining cost, and a specific replay experiment. |
 | **K6** | Add a controlled content slice | Add one commander lens, one keep identity, one teaching pack, or one enemy family—not all at once. Define its player question, counter, weakness, spatial rule, recovery consequence, data schema, and isolated tests. |
 | **K7** | Build composition and replay mastery | Add bounded variation, pack choices, recovery trade-offs, and scenario/report composition. Preserve at least two viable answers; do not add grind, rarity tiers, or forced builds. |
 | **K8** | Harden the private alpha | Verify accessibility, persistence, controller navigation, audio settings, clean install, migration, performance, package provenance, and known limitations. Human sessions may validate the result later but do not block this gate. |
@@ -31,7 +31,7 @@ A task is incomplete if it hides the fort behind a menu, adds a unit before its 
 
 ## Recommended next prompt
 
-> Read `docs/agent_handoff_roadmap.md`, `docs/game_quality_transformation_plan.md`, this document, and `docs/k4_battle_beat_readability_verification.md`. Implement **K5 Make Recovery and Results distinct** next. Strengthen the consequence-to-choice transition, one visible repair priority, the sacrificed alternative, the terminal causal story, and one specific replay experiment. Preserve the completed snapshots, `KeepState`, exact costs, save schemas, controller focus, tutorial retry, accessibility, and deterministic reports. Do not add content while refining these chapters.
+> Read `docs/agent_handoff_roadmap.md`, `docs/game_quality_transformation_plan.md`, this document, and `docs/k5_recovery_results_distinction_verification.md`. Implement **K6 Add a controlled content slice** next. Choose exactly one new commander lens, keep identity, teaching pack, or enemy family and define its question, counter, weakness, visual states, authored scenario fixture, and deterministic balance coverage. Preserve at least two viable answers and all existing save, accessibility, and presentation contracts. Do not bundle unrelated content.
 
 ## Definition of game-quality readiness
 

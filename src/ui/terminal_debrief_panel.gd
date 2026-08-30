@@ -53,14 +53,14 @@ func _init() -> void:
 	resource_label.add_theme_constant_override("outline_size", 0)
 	body.add_child(resource_label)
 
+	body.add_child(_section_heading("WHY THIS DEFENSE ENDED THIS WAY"))
+	causal_label = _label("", 13, Color("#ded4c4"))
+	body.add_child(causal_label)
+
 	body.add_child(_section_heading("ASSAULT TIMELINE"))
 	timeline_box = VBoxContainer.new()
 	timeline_box.add_theme_constant_override("separation", 5)
 	body.add_child(timeline_box)
-
-	body.add_child(_section_heading("KEY CAUSAL CHAIN"))
-	causal_label = _label("", 13, Color("#ded4c4"))
-	body.add_child(causal_label)
 
 	body.add_child(_section_heading("FORTRESS CONDITION"))
 	fortress_label = _label("", 13, Color("#d8c389"))
@@ -108,7 +108,7 @@ func render(view_model: Dictionary) -> void:
 	identity_label.text = "%s · %s" % [String(view_model.get("scenario_name", "Scenario")), String(view_model.get("commander_name", "Commander"))]
 	resource_label.text = "  %s  ·  MORALE %d  ·  MATERIALS %d\n  DEFENDERS %d ACTIVE / %d DISABLED  ·  BREACH %d  " % [outcome.replace("_", " ").to_upper(), int(view_model.get("morale", 0)), int(view_model.get("materials", 0)), int(view_model.get("surviving_pieces", 0)), int(view_model.get("disabled_pieces", 0)), int(view_model.get("breach_level", 0))]
 	_render_timeline(view_model.get("waves", []))
-	causal_label.text = _causal_text(view_model.get("what_worked", []), view_model.get("what_failed", []))
+	causal_label.text = "%s\n\n%s" % [String(view_model.get("causal_summary", "DECISIVE PATTERN — Review the phase evidence below.")), _causal_text(view_model.get("what_worked", []), view_model.get("what_failed", []))]
 	fortress_label.text = _fortress_text(view_model.get("damaged_rooms", []), view_model.get("damaged_pieces", []))
 	consequence_label.text = String(view_model.get("consequence_text", "")).strip_edges()
 	consequence_label.visible = not consequence_label.text.is_empty()

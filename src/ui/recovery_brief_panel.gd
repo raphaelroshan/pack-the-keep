@@ -56,4 +56,4 @@ func render(view_model: Dictionary) -> void:
 	changed_label.text = "WHAT CHANGED\n%s" % String(view_model.get("changed", "The assault ended."))
 	matters_label.text = "WHY IT MATTERS\n%s" % String(view_model.get("matters", "Choose what must remain functional."))
 	next_label.text = "NEXT PRESSURE\n%s" % String(view_model.get("next", "Read the next doctrine before committing."))
-	priority_label.text = "FIRST PRIORITY — %s · TRADE-OFF — %s" % [String(view_model.get("priority", "Preserve the most important function.")), String(view_model.get("tradeoff", "Every action leaves another need unanswered."))]
+	priority_label.text = "FIRST PRIORITY — %s\nSACRIFICE — %s\nTRADE-OFF — %s" % [String(view_model.get("priority", "Preserve the most important function.")), String(view_model.get("sacrifice", "Every action leaves another need unanswered.")), String(view_model.get("tradeoff", "Every action leaves another need unanswered."))]

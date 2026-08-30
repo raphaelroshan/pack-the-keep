@@ -48,6 +48,10 @@ static func build(keep: Object, tutorial_active: bool, tutorial_failure_active: 
 	elif tutorial_active and tutorial_expected_action == "finish_tutorial":
 		primary_label = "COMPLETE FIRST WATCH"
 		primary_tooltip = "Record First Watch as complete and return to the War Council."
+	var what_worked: Array = report.get("what_worked", []).duplicate()
+	var what_failed: Array = report.get("what_failed", []).duplicate()
+	var held_reason: String = String(what_worked[0]) if not what_worked.is_empty() else "No single defensive advantage dominated the result."
+	var failure_reason: String = String(what_failed[0]) if not what_failed.is_empty() else "No decisive structural failure was recorded."
 	return {
 		"eyebrow": "FINAL DEFENSE · %d PHASES RESOLVED" % int(report.get("wave_rows", []).size()),
 		"outcome": outcome,
@@ -60,8 +64,9 @@ static func build(keep: Object, tutorial_active: bool, tutorial_failure_active: 
 		"disabled_pieces": int(final_state.get("disabled_pieces", 0)),
 		"breach_level": int(final_state.get("breach_level", 0)),
 		"waves": report.get("wave_rows", []).duplicate(true),
-		"what_worked": report.get("what_worked", []).duplicate(),
-		"what_failed": report.get("what_failed", []).duplicate(),
+		"causal_summary": "DECISIVE PATTERN — %s\nREMAINING COST — %s" % [held_reason, failure_reason],
+		"what_worked": what_worked,
+		"what_failed": what_failed,
 		"damaged_rooms": damaged_rooms,
 		"damaged_pieces": damaged_pieces,
 		"consequence_text": "CONSEQUENCES\n%s" % "\n".join(consequence_rows) if not consequence_rows.is_empty() else "",
