@@ -52,6 +52,13 @@ static func build(keep: Object, tutorial_active: bool, tutorial_failure_active: 
 	var what_failed: Array = report.get("what_failed", []).duplicate()
 	var held_reason: String = String(what_worked[0]) if not what_worked.is_empty() else "No single defensive advantage dominated the result."
 	var failure_reason: String = String(what_failed[0]) if not what_failed.is_empty() else "No decisive structural failure was recorded."
+	var mastery: Dictionary = report.get("mastery", {})
+	var variation: Dictionary = mastery.get("variation", {})
+	var pack_names: Array = mastery.get("pack_names", [])
+	var packs_text: String = ", ".join(pack_names) if not pack_names.is_empty() else "starter defense only"
+	var uncovered_names: Array = mastery.get("uncovered_names", [])
+	var gap_text: String = "all authored pressure covered" if uncovered_names.is_empty() else "uncovered: %s" % ", ".join(uncovered_names)
+	var mastery_summary: String = "SEED PRESSURE — %s\nDOCTRINE FIT — %s (%s)\nRECOVERY COMMITMENT — %s\nPACK PLAN — %s" % [String(variation.get("summary", "Baseline pressure.")), String(mastery.get("coverage_text", "Coverage unavailable")), gap_text, String(mastery.get("recovery_text", "No recovery interval recorded")), packs_text]
 	return {
 		"eyebrow": "FINAL DEFENSE · %d PHASES RESOLVED" % int(report.get("wave_rows", []).size()),
 		"outcome": outcome,
@@ -65,6 +72,7 @@ static func build(keep: Object, tutorial_active: bool, tutorial_failure_active: 
 		"breach_level": int(final_state.get("breach_level", 0)),
 		"waves": report.get("wave_rows", []).duplicate(true),
 		"causal_summary": "DECISIVE PATTERN — %s\nREMAINING COST — %s" % [held_reason, failure_reason],
+		"mastery_summary": mastery_summary,
 		"what_worked": what_worked,
 		"what_failed": what_failed,
 		"damaged_rooms": damaged_rooms,

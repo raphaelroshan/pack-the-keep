@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.28.0",
+  "content_version": "0.29.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -614,6 +614,17 @@
     "recovery_consequence": "repair_the_disabled_specialist_or_accept_its_inactive_room_benefit",
     "evidence": ["design/k6_standard_cutter_enemy_family.md", "docs/k6_standard_cutter_verification.md", "tests/test_k6_standard_cutter.gd", "tests/test_k6_standard_cutter_ui.gd"],
     "next_slice": "k7_replay_mastery"
+  },
+  "k7_replay_mastery": {
+    "status": "implemented",
+    "variation_preview": "war_council_names_the_seeded_material_morale_and_applicable_room_pressure_before_entry",
+    "doctrine_fit": "terminal_results_compare_placed_or_opened_defense_families_with_each_encountered_doctrine",
+    "recovery_commitment": "terminal_results_report_used_actions_against_available_inter_wave_capacity",
+    "pack_plan": "opened_pack_names_remain_visible_beside_the_causal_replay_experiment",
+    "replay_experiment": "first_uncovered_doctrine_names_one_suitable_family_without_forcing_a_build",
+    "authority": "read_only_projection_over_existing_seed_variation_owned_packs_placed_categories_wave_history_and_scenario_report",
+    "evidence": ["design/k7_replay_mastery_summary.md", "docs/k7_replay_mastery_verification.md", "tests/test_k7_replay_mastery.gd", "tests/test_k7_replay_mastery_ui.gd"],
+    "next_slice": "k8_private_alpha_hardening"
   },
   "campaign": {
     "title": "The Bell at Dusk",

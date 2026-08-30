@@ -815,3 +815,11 @@
 **Reason:** Assignments previously offered benefits without an enemy that directly tested their exposure. This slice turns the command anchor into a readable risk while preserving the established rule that ordinary attackers clear defenders and only explicit demolition specialists target rooms.
 
 **Trade-off:** Assigned-first targeting adds one optional enemy data field and a narrow targeting branch. The Cutter does not introduce a stun, aura, or new persistent status; its recovery consequence remains ordinary defender damage and the existing two-action repair trade-off.
+
+## ADR-103: Replay mastery summarizes existing authority
+
+**Decision:** Preview the already-selected deterministic scenario variation in War Council, then derive a terminal mastery summary from that variation, placed or opened defense families, authored doctrine counter families, recovery history, and opened packs. When a doctrine remains uncovered, point the replay experiment at its first declared counter family.
+
+**Reason:** Variation, pack composition, and recovery investment already shape a run, but they were separated across setup, combat, and chronology. One read-only comparison makes replay intent concrete without adding rewards, rarity, permanent power, or another game-state subsystem.
+
+**Trade-off:** Doctrine fit is a declared-family comparison, not a claim that the build was optimal or that every placed piece contributed. The complete causal report remains available, and the summary never changes pack ownership, combat, persistence, or replay identity.

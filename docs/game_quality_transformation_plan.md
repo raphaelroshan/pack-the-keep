@@ -1,11 +1,11 @@
 # Pack the Keep — Game-Quality Transformation Plan
 
 **Audience:** GPT coding agents, art/UX agents, test agents, and the human owner
-**Current baseline:** `0.28.0-standard-cutter`
+**Current baseline:** `0.29.0-replay-mastery`
 **Current status:** Engineering-complete public-source pre-alpha candidate; human validation pending
 **Primary objective:** Turn the existing deterministic fortress-defense systems into a coherent, attractive, immediately understandable game-quality private alpha without rewriting the simulation core.
 
-**Implementation ledger:** P32 gives terminal Results a dedicated debrief. P33 adds Preparation question/answer/weakness hierarchy. P34 adds board visual grammar. P35 centralizes semantic battle audio. P36 adds tick-zero readiness. P37 gives inter-wave Recovery a compact what-changed/why/next/action-budget/priority hierarchy. P38 replaces raw-first War Council selection with commander and defense choice cards. P39 gives Preparation a complete pack doctrine offer card. P40 groups Preparation into three stages. P41 gives rooms, defenders, and threats one action-oriented inspection hierarchy without raw IDs. P42 centers Battle on live state, pause/resume, commander intervention, and focused-threat inspection while collapsing expert timing controls. P43 adds explicit local-only observation and a stable nine-screen capture harness. P44 introduces the first complete screen-level presentation snapshot boundary for Battle. P45 adds a debug-only layout/focus/clipping audit overlay. P46 adds consistent Back/Escape behavior with explicit unsaved-progress confirmation. P47 makes the tagged prerelease a durable, self-contained human-test cohort. P48 repairs the minimum-layout flow with display-aware window fitting, effective-width breakpoints, compact navigation, responsive War Council and Preparation cards, and primary-action focus. P49 reuses authored Greywatch material regions beneath unchanged tactical geometry and projects selected room/defender identity, condition, purpose, and next action directly onto the keep. K3 completes deterministic read-only snapshot boundaries for War Council, Preparation, Battle, Recovery, and terminal Results. K4 stages each assault as an eight-beat, speed-scaled combat sentence with a static reduced-motion form. K5 separates Recovery's constrained sacrifice from Results' causal explanation and replay prompt. K6 adds one controlled enemy-family slice: Standard Cutters prioritize assigned specialists, while The Cut Standard preserves precision and mobile-reserve solutions. Human validation remains pending.
+**Implementation ledger:** P32 gives terminal Results a dedicated debrief. P33 adds Preparation question/answer/weakness hierarchy. P34 adds board visual grammar. P35 centralizes semantic battle audio. P36 adds tick-zero readiness. P37 gives inter-wave Recovery a compact what-changed/why/next/action-budget/priority hierarchy. P38 replaces raw-first War Council selection with commander and defense choice cards. P39 gives Preparation a complete pack doctrine offer card. P40 groups Preparation into three stages. P41 gives rooms, defenders, and threats one action-oriented inspection hierarchy without raw IDs. P42 centers Battle on live state, pause/resume, commander intervention, and focused-threat inspection while collapsing expert timing controls. P43 adds explicit local-only observation and a stable nine-screen capture harness. P44 introduces the first complete screen-level presentation snapshot boundary for Battle. P45 adds a debug-only layout/focus/clipping audit overlay. P46 adds consistent Back/Escape behavior with explicit unsaved-progress confirmation. P47 makes the tagged prerelease a durable, self-contained human-test cohort. P48 repairs the minimum-layout flow with display-aware window fitting, effective-width breakpoints, compact navigation, responsive War Council and Preparation cards, and primary-action focus. P49 reuses authored Greywatch material regions beneath unchanged tactical geometry and projects selected room/defender identity, condition, purpose, and next action directly onto the keep. K3 completes deterministic read-only snapshot boundaries for War Council, Preparation, Battle, Recovery, and terminal Results. K4 stages each assault as an eight-beat, speed-scaled combat sentence with a static reduced-motion form. K5 separates Recovery's constrained sacrifice from Results' causal explanation and replay prompt. K6 adds one controlled enemy-family slice: Standard Cutters prioritize assigned specialists, while The Cut Standard preserves precision and mobile-reserve solutions. K7 surfaces fixed seeded pressure before commitment and turns Results into a doctrine-fit, recovery, pack-plan, and replay-mastery comparison. Human validation remains pending.
 
 > **Central diagnosis:** Pack the Keep has enough mechanics for a real game loop. Its largest gap is not feature count. Its largest gap is presentation: the player must feel that they are preparing a fortress, watching a defense, making urgent but comprehensible interventions, recovering from damage, and learning from the result—not operating a debug panel surrounded by a board.
 
@@ -847,11 +847,11 @@ Start from the current Pack the Keep remote main. Read AGENTS.md, README.md,
 design/design_prompt.md, docs/agent_handoff_roadmap.md, and the latest visual
 verification notes.
 
-Implement K7 next. Add bounded replay variation and scenario/report composition
-around the completed teaching slices. Preserve visible forecasts, at least two
-viable answers, pause-based solo fairness, deterministic seeds, and causal
-debriefs. Do not add grind, rarity tiers, forced builds, or permanent power
-escalation, and do not convert automated metrics into human evidence.
+Implement K8 next. Harden the private-alpha candidate across accessibility,
+persistence, controller navigation, audio settings, clean install, migration,
+performance budgets, package provenance, and known limitations. Preserve all
+deterministic and visual gates, keep human evidence explicitly pending, and do
+not claim public-alpha or storefront readiness.
 ```
 
 ---
