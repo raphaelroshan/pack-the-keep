@@ -43,6 +43,7 @@ The harness writes nine ordered PNGs plus `capture-manifest.json`. It is automat
 | `docs/agent_feeding_guide.md` | Staged prompts for building the game one risk slice at a time. |
 | `docs/agent_handoff_roadmap.md` | Detailed post-v0.10.0 roadmap, content schemas, UX plan, testing framework, and GPT-agent handoff contract. |
 | `docs/game_quality_transformation_plan.md` | Game-quality transformation plan for visual identity, screen flow, battle feedback, recovery/results UX, human playtesting, and staged AI execution. |
+| `docs/ai_game_quality_execution_plan.md` | Execution-first AI sequence based on latest automated and visual tests; human testing is optional, not blocking. |
 | `docs/visual_evidence_gallery.md` | Versioned internal screenshots from the `0.20.0-first-watch` capture set with Kickstarter archive guidance. |
 | `docs/kickstarter_bonus_content.md` | Standalone backer-facing archive concept, suggested copy, provenance, and release guardrails. |
 | `docs/latest_test_report_2026-08-30.md` | Latest main-branch automated and visual smoke-test results, screenshots, findings, and next roadmap steps. |
