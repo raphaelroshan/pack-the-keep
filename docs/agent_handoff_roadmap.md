@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
-**Document status:** Active planning contract for post-v0.26.0 game-quality development
-**Current release baseline:** `0.26.0-keep-first-visual-finish`; responsive composition and the Greywatch authored surface pass are implemented, while presentation extraction and human alpha evidence remain in progress
+**Document status:** Active planning contract for post-v0.26.1 game-quality development
+**Current release baseline:** `0.26.1-presentation-snapshots`; responsive composition, the Greywatch authored surface pass, and read-only presentation snapshots for all five major screens are implemented, while battle beat polish and human alpha evidence remain in progress
 **Release posture:** CI-verified public repository with owner-controlled merges; no public alpha release or storefront claim yet
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
@@ -122,6 +122,7 @@ Milestones must be completed in order. An agent may split a milestone into small
 | P47 | Implemented | Tagged prereleases publish executable, smoke report, provenance, observer brief, templates, manifest, and source archive. | Keep this as the internal release-evidence gate. |
 | P48 | Implemented | Windowed launch fits the active display; effective-width breakpoints stack War Council and Preparation, preserve primary actions, and retain controller focus at normal and large-text layouts. | Preserve as the minimum-layout regression gate. |
 | P49 | Implemented | Greywatch samples authored stone/timber material regions beneath unchanged tactical geometry, and selected rooms/defenders project identity, condition, purpose, and next action directly on the board. | Begin K3 presentation-panel extraction before adding more battle or content breadth. |
+| K3 | Implemented | War Council, Preparation, Battle, Recovery, and terminal Results render from deterministic read-only snapshots while commands, focus, simulation, and saves retain their existing ownership. | Use the boundary for K4 battle beat readability without changing authoritative timing. |
 | P50 | Next: battle and recovery pacing | Make forecast, approach, impact, consequence, recovery, and replay beats visually distinct and skippable. | Preserve deterministic timing and replay keys. |
 | P51 | Next: content breadth | Add one commander lens, one keep identity, two teaching packs, and two enemy families as complete question/counter/weakness slices. | Ship one isolated teaching scenario per slice before combinations. |
 | P52 | Next: replayable mastery | Add bounded scenario variation, pack choices, recovery trade-offs, and ending/report composition without grind or forced builds. | Preserve at least two viable answers per expanded teaching scenario. |

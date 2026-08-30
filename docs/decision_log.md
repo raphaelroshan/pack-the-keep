@@ -783,3 +783,11 @@
 **Reason:** Greywatch already had a strong authored reference asset, but the playable board reduced it to a menu banner and presented the fortress as mostly flat colored rectangles. Sampling the existing art as material preserves provenance and visual identity while avoiding a replacement image whose painted geometry could disagree with gameplay. The selection plate keeps the current decision tied to the fort instead of forcing the player to reconstruct it from the command rail.
 
 **Trade-off:** The material is intentionally subtle and does not make every painted architectural detail interactive. High contrast reduces its opacity further. Ash Ford keeps its existing river renderer until a dedicated authored source exists, and the hybrid renderer remains a vertical-slice treatment rather than a final production tileset.
+
+## ADR-099: Major screens consume deterministic read-only snapshots
+
+**Decision:** Give War Council, Preparation, Battle, Recovery, and terminal Results a stateless presentation snapshot builder. Each builder reads authoritative state and explicit presentation context, then returns plain dictionaries and player-facing strings. `main.gd` retains signals, commands, focus, visibility, navigation, and scrolling; panels remain render-only.
+
+**Reason:** Screen composition and wording had accumulated as direct state reads inside the main UI controller. The completed snapshot boundary makes each major chapter deterministic, independently testable, and safer to animate or restructure without weakening `PackKeepState` ownership.
+
+**Trade-off:** Some player-facing formatting is duplicated from older helpers, and `main.gd` remains responsible for applying view models to controls. This is intentionally narrower than a scene rewrite: no snapshot is serialized, no command path moves, and no simulation or replay behavior changes.
