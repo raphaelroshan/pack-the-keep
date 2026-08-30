@@ -4,8 +4,8 @@
 
 | Field | Result |
 |---|---|
-| Branch tested | `feat/k7-replay-mastery-summary` before merge to `main` |
-| Build | `v0.29.0-replay-mastery` |
+| Branch tested | `feat/k8-private-alpha-gate` before merge to `main` |
+| Build | `v0.30.0-private-alpha-gate` |
 | Engine | Godot 4.7.2 |
 | Visual test display | 1600×900 local graphical renderer |
 | Automated verification | PASS: complete `scripts/verify.sh` suite |
@@ -13,20 +13,20 @@
 | Scenario matrix | PASS: 60 viable cases and 120 uninterrupted/resumed simulations |
 | Human playtest gate | PENDING: no human observations inferred from automation |
 
-## K7 evidence
+## K8 evidence
 
-The existing seeded scenario variation is now visible before commitment. Terminal Results compares that pressure with placed or opened defense families, recovery investment, opened packs, and the first uncovered doctrine that offers a useful replay experiment.
+One version-bound manifest now consolidates accessibility, persistence, controller navigation, audio settings, clean install, migration, performance, package provenance, failure recovery, and known limitations. CI rejects missing evidence, weakened human boundaries, or any release/public-alpha/storefront claim.
 
-Focused verification covers deterministic seed projection, applicable room-pressure wording, doctrine-family coverage, recovery-action accounting, first-uncovered-doctrine guidance, save/load parity, normal-flow War Council entry, terminal Results, large text, high contrast, and reduced motion.
+Focused verification covers the K8 manifest and negative validator cases, forty deterministic three-phase scenario resolutions, 120 repeated 2560×1440 large-text refreshes, and the five-phase packaged Windows lifecycle. The complete local run finished those workloads in 2914 ms and 123 ms against separate 10000 ms budgets.
 
-The 1600×900 screenshots in `/tmp/pack-the-keep-k7` show Thin Command directly above **Enter Keep** and a terminal debrief where seed pressure, 2/3 doctrine fit, 1/4 recovery commitment, and Crossbow Watch remain readable beside the damaged keep.
+K8 changes no player-facing composition, so the reviewed K7 War Council and Results captures remain the current visual baseline. The new limitations document explicitly separates headless performance evidence from Windows GPU frame-pacing claims.
 
 ## Findings
 
-The replay summary explains why a successful defense is still worth revisiting without adding rarity, grind, permanent power, or a new save field. It reuses authored doctrine counter families and existing variation state instead of inventing a second authority.
+The automated K1–K8 roadmap is complete without changing simulation authority or save schemas. The build remains an internal, unsigned pre-alpha candidate: human comprehension, physical controllers, broad Windows GPUs, audio listening, forced-close recovery, signing, and storefront launch are still pending.
 
 No automated regression or deterministic divergence was found. The known release limitation remains unchanged: the build is an internal pre-alpha candidate and has no completed human-session evidence.
 
 ## Next roadmap step
 
-K8 should consolidate the existing accessibility, persistence, controller, audio, clean-install, migration, performance, provenance, rollback, and known-limitation evidence into one honest private-alpha gate. Human sessions and owner approval remain separate and pending.
+When the owner wants observational evidence, run the four-session P16 private-alpha cohort against one tagged artifact and record only direct human findings. No further automated roadmap item is currently open.

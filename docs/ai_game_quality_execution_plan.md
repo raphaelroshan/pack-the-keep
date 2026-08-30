@@ -1,6 +1,6 @@
 # Pack the Keep — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.29.0-replay-mastery` and later
+**Applies to:** `v0.30.0-private-alpha-gate` and later
 
 **Purpose:** Turn the First Watch prototype into a readable, tactile, game-quality keep-defense vertical slice. Automated verification, deterministic simulation checks, scripted flow coverage, and screenshot review are the active gates. Human testing remains useful for later confidence and tuning, but it is not a prerequisite for execution.
 
@@ -21,7 +21,7 @@ The game is a spatial defensive puzzle, not a rarity treadmill or a command spre
 | **K5 — Complete** | Make recovery and Results distinct | Recovery exposes the first priority and sacrificed alternative; terminal Results leads with the decisive pattern, remaining cost, and a specific replay experiment. |
 | **K6 — Complete** | Add a controlled content slice | Standard Cutters hunt assigned specialists first; The Cut Standard teaches precision interception and mobile reserve as two deterministic viable answers. |
 | **K7 — Complete** | Build composition and replay mastery | War Council previews fixed seeded pressure; Results compares doctrine fit, recovery commitment, pack plan, and the first useful uncovered-pressure experiment. |
-| **K8** | Harden the private alpha | Verify accessibility, persistence, controller navigation, audio settings, clean install, migration, performance, package provenance, and known limitations. Human sessions may validate the result later but do not block this gate. |
+| **K8 — Complete** | Harden the private alpha | Ten automated/documented areas, conservative performance budgets, five-phase packaged lifecycle evidence, exact provenance, and known limitations are enforced while all release claims and seven human gates remain pending. |
 
 ## Acceptance tests for every AI task
 
@@ -31,7 +31,7 @@ A task is incomplete if it hides the fort behind a menu, adds a unit before its 
 
 ## Recommended next prompt
 
-> Read `docs/agent_handoff_roadmap.md`, `docs/game_quality_transformation_plan.md`, this document, and `docs/k7_replay_mastery_verification.md`. Implement **K8 Harden the private alpha** next. Consolidate the automated accessibility, persistence, controller, audio, clean-install, migration, performance, provenance, and known-limitation gates into one honest readiness contract. Human evidence remains pending and public-alpha/storefront readiness must not be claimed.
+> The automated K1–K8 roadmap is complete at `0.30.0-private-alpha-gate`. Preserve the gate and known limitations. The next evidence task is a human P16 private-alpha cohort only when the owner schedules it; never fabricate observations or infer public-alpha/storefront approval.
 
 ## Definition of game-quality readiness
 

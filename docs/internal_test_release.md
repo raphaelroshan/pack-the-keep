@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.29.0-replay-mastery` — the tagged Windows candidate previews fixed seeded pressure before entry and compares doctrine fit, recovery commitment, pack plan, and the next replay experiment at terminal Results; human sessions and owner approval remain pending
+**Current build identity:** `0.30.0-private-alpha-gate` — the tagged Windows candidate enforces the complete automated K1–K8 game-quality roadmap, including performance and packaged lifecycle budgets, while human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of eleven authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, assigned-specialist priority, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.30.0 acceptance checks
+
+Run the K8 validator and confirm all ten automated/documented areas pass while `release_ready`, `public_alpha_ready`, and `storefront_ready` remain false and all seven human gates remain present. Run the performance workload at 2560×1440 and 150% UI scale. In the packaged artifact, confirm clean install, relocated reinstall, stale backup, missing profile, schema upgrade, offline launch, controller/remap/scaling, pause, and clean close all pass both P12 and K8 audits. Read the bundled limitations before testing.
 
 ## v0.29.0 acceptance checks
 

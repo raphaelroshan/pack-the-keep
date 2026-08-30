@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.29.0",
+  "content_version": "0.30.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -625,6 +625,16 @@
     "authority": "read_only_projection_over_existing_seed_variation_owned_packs_placed_categories_wave_history_and_scenario_report",
     "evidence": ["design/k7_replay_mastery_summary.md", "docs/k7_replay_mastery_verification.md", "tests/test_k7_replay_mastery.gd", "tests/test_k7_replay_mastery_ui.gd"],
     "next_slice": "k8_private_alpha_hardening"
+  },
+  "k8_private_alpha_hardening": {
+    "status": "implemented",
+    "gate": "content/k8_private_alpha_gate.json",
+    "areas": ["accessibility", "persistence", "controller_navigation", "audio_settings", "clean_install", "migration", "performance", "package_provenance", "failure_recovery", "known_limitations"],
+    "performance": "bounded_deterministic_scenario_resolution_and_2560x1440_large_text_refresh_workloads",
+    "release_boundary": "release_public_alpha_and_storefront_flags_remain_false_with_seven_human_gates_pending",
+    "packaged_validation": "clean_install_reinstall_stale_backup_missing_profile_and_upgrade_reports_are_rechecked_by_the_k8_gate",
+    "evidence": ["design/k8_private_alpha_gate.md", "docs/k8_private_alpha_gate_verification.md", "tests/test_k8_private_alpha_validator.py", "tests/test_k8_performance_budget.gd"],
+    "next_slice": "human_private_alpha_sessions_when_owner_schedules_them"
   },
   "campaign": {
     "title": "The Bell at Dusk",

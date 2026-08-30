@@ -823,3 +823,11 @@
 **Reason:** Variation, pack composition, and recovery investment already shape a run, but they were separated across setup, combat, and chronology. One read-only comparison makes replay intent concrete without adding rewards, rarity, permanent power, or another game-state subsystem.
 
 **Trade-off:** Doctrine fit is a declared-family comparison, not a claim that the build was optimal or that every placed piece contributed. The complete causal report remains available, and the summary never changes pack ownership, combat, persistence, or replay identity.
+
+## ADR-104: Private-alpha readiness is an enforceable non-release gate
+
+**Decision:** Add one version-bound K8 manifest covering ten automated or documented readiness areas, conservative simulation/UI budgets, packaged lifecycle requirements, known limitations, and the exact seven human gates that remain pending. CI and tagged release workflows validate it, but all release/public-alpha/storefront flags stay false.
+
+**Reason:** The underlying hardening existed across many tests and documents, making it difficult to tell whether the roadmap was complete or whether a future change silently weakened a required area. A single gate makes the evidence auditable without treating automation as human approval.
+
+**Trade-off:** The performance test proves bounded headless workloads, not universal frame pacing, and packaged automation cannot replace physical controllers, broad Windows GPU review, listening tests, forced-close observation, signing, or storefront checks. Those limitations are explicit and remain outside the automated completion claim.
