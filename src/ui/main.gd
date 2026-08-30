@@ -12,6 +12,7 @@ const PackOfferPanelView = preload("res://src/ui/pack_offer_panel.gd")
 const InspectionPanelView = preload("res://src/ui/inspection_panel.gd")
 const LocalPlaytestObserverView = preload("res://src/ui/local_playtest_observer.gd")
 const BattlePresentationSnapshotView = preload("res://src/ui/battle_presentation_snapshot.gd")
+const BattleBeatPresentationView = preload("res://src/ui/battle_beat_presentation.gd")
 const PreparationPresentationSnapshotView = preload("res://src/ui/preparation_presentation_snapshot.gd")
 const WarCouncilPresentationSnapshotView = preload("res://src/ui/war_council_presentation_snapshot.gd")
 const RecoveryPresentationSnapshotView = preload("res://src/ui/recovery_presentation_snapshot.gd")
@@ -331,7 +332,7 @@ func _process(delta: float) -> void:
 	if keep.battle_step > battle_step_before:
 		target_impacts = _resolved_target_impacts(target_snapshot)
 		if keep_canvas != null:
-			keep_canvas.call("show_combat_exchange", engagement_traces, target_impacts)
+			keep_canvas.call("show_combat_exchange", engagement_traces, target_impacts, _battle_speed())
 		_ensure_enemy_focus()
 	if bool(result.get("resolved", false)):
 		assault_ready_reason = ""
@@ -3054,7 +3055,7 @@ func _on_advance_wave() -> void:
 	var result: Dictionary = keep.advance_wave(1.0)
 	var target_impacts: Array = _resolved_target_impacts(target_snapshot) if bool(result.get("ok", false)) else []
 	if bool(result.get("ok", false)) and keep_canvas != null:
-		keep_canvas.call("show_combat_exchange", engagement_traces, target_impacts)
+		keep_canvas.call("show_combat_exchange", engagement_traces, target_impacts, _battle_speed())
 	if bool(result.get("ok", false)):
 		_ensure_enemy_focus()
 	if not bool(result.get("ok", false)):
@@ -3910,6 +3911,7 @@ func _refresh_ui() -> void:
 	_refresh_navigation()
 	keep_canvas.keep = keep
 	keep_canvas.call("set_focus", focused_enemy_index)
+	keep_canvas.call("set_battle_context", assault_ready_reason)
 	keep_canvas.call("set_inspected_subject", inspected_subject)
 	keep_canvas.call("set_accessibility", high_contrast)
 	keep_canvas.call("set_reduced_motion", reduced_motion)
@@ -3924,7 +3926,6 @@ class KeepCanvas extends Control:
 	const CELL_X := 28.0
 	const CELL_Y := 34.0
 	const BASE_CANVAS_SIZE := Vector2(800, 382)
-	const COMBAT_EFFECT_DURATION := 0.52
 	const ASSAULT_TICK_COUNT := 6
 	const ASSAULT_TIMELINE_TOP := 340.0
 	const MAP_ORIGIN := Vector2(12, 28)
@@ -3943,6 +3944,8 @@ class KeepCanvas extends Control:
 	var engagement_traces: Array[Dictionary] = []
 	var target_impacts: Array[Dictionary] = []
 	var engagement_ttl: float = 0.0
+	var engagement_duration: float = 0.82
+	var assault_ready_reason: String = ""
 	var placement_guides_visible: bool = false
 	var tutorial_target_floor: String = ""
 	var tutorial_target_cell: Vector2i = Vector2i(-1, -1)
@@ -3961,6 +3964,10 @@ class KeepCanvas extends Control:
 
 	func set_focus(index: int) -> void:
 		focused_enemy_index = index
+		queue_redraw()
+
+	func set_battle_context(reason: String) -> void:
+		assault_ready_reason = reason
 		queue_redraw()
 
 	func set_preview(active: bool, floor: String, origin: Vector2i, piece_id: String, valid: bool) -> void:
@@ -3984,7 +3991,8 @@ class KeepCanvas extends Control:
 		reduced_motion_mode = enabled
 		if enabled:
 			feedback_ttl = 0.0
-			engagement_ttl = minf(engagement_ttl, 0.22)
+			engagement_duration = BattleBeatPresentationView.scaled_exchange_duration(1.0, true)
+			engagement_ttl = minf(engagement_ttl, engagement_duration)
 		queue_redraw()
 
 	func set_placement_guides(visible: bool) -> void:
@@ -4006,12 +4014,13 @@ class KeepCanvas extends Control:
 
 	func show_engagements(traces: Array[Dictionary]) -> void:
 		var no_impacts: Array[Dictionary] = []
-		show_combat_exchange(traces, no_impacts)
+		show_combat_exchange(traces, no_impacts, 1.0)
 
-	func show_combat_exchange(traces: Array[Dictionary], impacts: Array[Dictionary]) -> void:
+	func show_combat_exchange(traces: Array[Dictionary], impacts: Array[Dictionary], battle_speed: float = 1.0) -> void:
 		engagement_traces = traces.duplicate(true)
 		target_impacts = impacts.duplicate(true)
-		engagement_ttl = 0.22 if reduced_motion_mode else COMBAT_EFFECT_DURATION
+		engagement_duration = BattleBeatPresentationView.scaled_exchange_duration(battle_speed, reduced_motion_mode)
+		engagement_ttl = engagement_duration
 		queue_redraw()
 
 	func _process(delta: float) -> void:
@@ -4086,8 +4095,12 @@ class KeepCanvas extends Control:
 	func _combat_effect_progress() -> float:
 		if engagement_ttl <= 0.0:
 			return 1.0
-		var duration: float = 0.22 if reduced_motion_mode else COMBAT_EFFECT_DURATION
-		return clampf(1.0 - engagement_ttl / duration, 0.0, 1.0)
+		return clampf(1.0 - engagement_ttl / maxf(0.01, engagement_duration), 0.0, 1.0)
+
+	func battle_beat_snapshot() -> Dictionary:
+		if engagement_ttl > 0.0:
+			return BattleBeatPresentationView.exchange_stage(_combat_effect_progress(), not engagement_traces.is_empty(), not target_impacts.is_empty(), reduced_motion_mode)
+		return BattleBeatPresentationView.ambient(keep, assault_ready_reason, focused_enemy_index)
 
 	func _enemy_impact_motion(attack_style: String) -> String:
 		return String({"melee": "lunge", "ranged": "projectile", "demolition": "heavy_strike"}.get(attack_style, "lunge"))
@@ -4170,11 +4183,10 @@ class KeepCanvas extends Control:
 				break
 		if not was_hit:
 			return Vector2.ZERO
-		var progress: float = _combat_effect_progress()
-		if progress < 0.45:
+		var progress: float = clampf((_combat_effect_progress() - 0.22) / 0.68, 0.0, 1.0)
+		if progress <= 0.0 or progress >= 1.0:
 			return Vector2.ZERO
-		var decay: float = 1.0 - progress
-		return Vector2(sin(progress * PI * 8.0) * 3.5 * decay, 0.0)
+		return Vector2(sin(progress * PI) * 4.0, 0.0)
 
 	func _target_board_origin(target_kind: String, target_id: String) -> Vector2:
 		if target_kind == "piece" and keep.pieces.has(target_id):
@@ -4518,12 +4530,14 @@ class KeepCanvas extends Control:
 		var enemy_index: int = int(feedback.get("enemy_index", -1))
 		if enemy_index < 0 or enemy_index >= keep.enemies.size():
 			return Vector2.ZERO
-		var hit_progress: float = clampf((_combat_effect_progress() - 0.38) / 0.62, 0.0, 1.0)
+		var hit_progress: float = clampf((_combat_effect_progress() - 0.48) / 0.36, 0.0, 1.0)
 		return _enemy_origin(enemy_index).direction_to(target_origin) * sin(hit_progress * PI) * 5.0
 
 	func _draw_recent_damage_feedback(rect: Rect2, target_kind: String, target_id: String, maximum: int) -> void:
 		var feedback: Dictionary = target_damage_feedback_snapshot(target_kind, target_id, maximum)
 		if not bool(feedback.get("active", false)):
+			return
+		if not reduced_motion_mode and String(battle_beat_snapshot().get("id", "")) not in ["hostile_impact", "consequence", "settle"]:
 			return
 		var inner_width: float = maxf(0.0, rect.size.x - 2.0)
 		var after_ratio: float = float(feedback.get("after_ratio", 0.0))
@@ -4538,6 +4552,8 @@ class KeepCanvas extends Control:
 	func _draw_target_damage_outline(rect: Rect2, target_kind: String, target_id: String, maximum: int) -> void:
 		var feedback: Dictionary = target_damage_feedback_snapshot(target_kind, target_id, maximum)
 		if not bool(feedback.get("active", false)):
+			return
+		if not reduced_motion_mode and String(battle_beat_snapshot().get("id", "")) not in ["hostile_impact", "consequence", "settle"]:
 			return
 		var color: Color = _enemy_impact_color(String(feedback.get("attack_style", "melee")))
 		var fade: float = 0.72 if reduced_motion_mode else clampf(1.0 - _combat_effect_progress() * 0.7, 0.2, 0.72)
@@ -5032,11 +5048,38 @@ class KeepCanvas extends Control:
 			draw_circle(origin, 14.0 + urgency * 5.0 + pulse, Color(color, 0.28 + urgency * 0.42), false, 2.0)
 			draw_string(ThemeDB.fallback_font, origin + Vector2(13, 3), "CONTACT", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, color)
 
+	func _battle_beat_color(beat_id: String) -> Color:
+		if beat_id in ["hostile_impact", "consequence"]:
+			return Color("#ff8d78") if high_contrast_mode else Color("#d26155")
+		if beat_id in ["defender_response", "settle"]:
+			return Color("#a9efc7") if high_contrast_mode else Color("#70c99a")
+		if beat_id == "wind_up":
+			return Color("#ffd166")
+		return Color("#fff4df") if high_contrast_mode else Color("#d7a35b")
+
+	func _draw_battle_beat_banner() -> void:
+		if keep == null or not keep.wave_active:
+			return
+		var beat: Dictionary = battle_beat_snapshot()
+		var color: Color = _battle_beat_color(String(beat.get("id", "settle")))
+		var banner: Rect2 = Rect2(Vector2(270, 3), Vector2(260, 20))
+		draw_rect(banner, Color("#201b26"), true)
+		draw_rect(banner, Color(color, 0.92), false, 1.5)
+		draw_string(ThemeDB.fallback_font, banner.position + Vector2(8, 14), "BEAT %d/%d · %s" % [int(beat.get("index", 0)), int(beat.get("count", 8)), String(beat.get("label", "SETTLE"))], HORIZONTAL_ALIGNMENT_CENTER, banner.size.x - 16.0, 10, color)
+
 	func _draw_engagement_traces() -> void:
 		if engagement_ttl <= 0.0 or (engagement_traces.is_empty() and target_impacts.is_empty()):
 			return
 		var progress: float = _combat_effect_progress()
+		var beat: Dictionary = battle_beat_snapshot()
+		var beat_id: String = String(beat.get("id", "settle"))
+		var show_response: bool = reduced_motion_mode or beat_id == "defender_response"
+		var show_hostile: bool = reduced_motion_mode or beat_id in ["hostile_impact", "consequence"]
+		var response_progress: float = 1.0 if reduced_motion_mode else clampf((progress - 0.10) / 0.38, 0.0, 1.0)
+		var hostile_progress: float = 1.0 if reduced_motion_mode else clampf((progress - 0.48) / 0.34, 0.0, 1.0)
 		for trace in engagement_traces:
+			if not show_response:
+				continue
 			var attacker_id: String = String(trace.get("attacker_id", ""))
 			var enemy_index: int = int(trace.get("enemy_index", -1))
 			if not keep.pieces.has(attacker_id) or enemy_index < 0 or enemy_index >= keep.enemies.size():
@@ -5048,7 +5091,7 @@ class KeepCanvas extends Control:
 			if reduced_motion_mode:
 				draw_circle(target, 10.0, Color(trace_color, 0.8), false, 2.5)
 			elif style == "ranged":
-				var travel: float = clampf(progress / 0.72, 0.0, 1.0)
+				var travel: float = clampf(response_progress / 0.82, 0.0, 1.0)
 				var projectile: Vector2 = start.lerp(target, travel)
 				var tail: Vector2 = start.lerp(target, maxf(0.0, travel - 0.16))
 				draw_line(start, target, Color(trace_color, 0.18), 1.0)
@@ -5056,14 +5099,16 @@ class KeepCanvas extends Control:
 				draw_circle(projectile, 3.5, trace_color)
 			else:
 				var direction: Vector2 = start.direction_to(target)
-				var lunge: float = sin(clampf(progress / 0.72, 0.0, 1.0) * PI) * minf(28.0, start.distance_to(target) * 0.28)
+				var lunge: float = sin(clampf(response_progress / 0.82, 0.0, 1.0) * PI) * minf(28.0, start.distance_to(target) * 0.28)
 				draw_line(start, start + direction * lunge, Color(trace_color, 0.9), 4.0)
 				draw_arc(start + direction * lunge, 7.0, -PI * 0.35, PI * 0.35, 8, trace_color, 2.0)
-			if reduced_motion_mode or progress >= 0.58:
-				var impact_strength: float = 1.0 if reduced_motion_mode else 1.0 - progress
+			if reduced_motion_mode or response_progress >= 0.70:
+				var impact_strength: float = 1.0 if reduced_motion_mode else 1.0 - response_progress
 				draw_circle(target, 7.0 + impact_strength * 7.0, Color(trace_color, 0.75), false, 2.5)
 				draw_string(ThemeDB.fallback_font, target + Vector2(10, -8), "-%d" % int(trace.get("damage", 0)), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#fff4df"))
 		for impact in target_impacts:
+			if not show_hostile:
+				continue
 			var target: Vector2 = _target_board_origin(String(impact.get("target_kind", "")), String(impact.get("target_id", "")))
 			if target == Vector2.ZERO:
 				continue
@@ -5073,26 +5118,26 @@ class KeepCanvas extends Control:
 			var pressure_color: Color = _enemy_impact_color(attack_style)
 			if not reduced_motion_mode:
 				if attack_style == "ranged":
-					var projectile_progress: float = clampf(progress / 0.72, 0.0, 1.0)
+					var projectile_progress: float = clampf(hostile_progress / 0.82, 0.0, 1.0)
 					var projectile: Vector2 = source.lerp(target, projectile_progress)
 					var tail: Vector2 = source.lerp(target, maxf(0.0, projectile_progress - 0.18))
 					draw_line(source, target, Color(pressure_color, 0.16), 1.0)
 					draw_line(tail, projectile, Color(pressure_color, 0.94), 3.5)
 					draw_circle(projectile, 4.0, pressure_color)
 				elif attack_style == "demolition":
-					var heavy_progress: float = clampf(progress / 0.68, 0.0, 1.0)
+					var heavy_progress: float = clampf(hostile_progress / 0.82, 0.0, 1.0)
 					var heavy_head: Vector2 = source.lerp(target, heavy_progress)
 					draw_line(source, heavy_head, Color(pressure_color, 0.88), 5.0)
 					draw_circle(heavy_head, 5.0, pressure_color)
 				else:
-					var lunge_progress: float = sin(clampf(progress / 0.68, 0.0, 1.0) * PI)
+					var lunge_progress: float = sin(clampf(hostile_progress / 0.82, 0.0, 1.0) * PI)
 					var direction: Vector2 = source.direction_to(target)
 					var lunge: float = lunge_progress * minf(34.0, source.distance_to(target) * 0.32)
 					draw_line(source, source + direction * lunge, Color(pressure_color, 0.92), 4.0)
 					var slash_center: Vector2 = target - direction * 4.0
 					draw_line(slash_center + direction.rotated(PI * 0.5) * 7.0, slash_center - direction.rotated(PI * 0.5) * 7.0, Color(pressure_color, 0.72), 2.0)
-			if reduced_motion_mode or progress >= 0.48:
-				_draw_enemy_impact_mark(target, attack_style, pressure_color, 1.0 if reduced_motion_mode else 1.0 - progress)
+			if reduced_motion_mode or hostile_progress >= 0.66:
+				_draw_enemy_impact_mark(target, attack_style, pressure_color, 1.0 if reduced_motion_mode else 1.0 - hostile_progress)
 				draw_string(ThemeDB.fallback_font, target + Vector2(10, 12), _impact_damage_label(impact), HORIZONTAL_ALIGNMENT_LEFT, -1, 9, pressure_color.lightened(0.28))
 
 	func _draw() -> void:
@@ -5122,6 +5167,7 @@ class KeepCanvas extends Control:
 		_draw_contact_telegraphs()
 		_draw_enemies()
 		_draw_engagement_traces()
+		_draw_battle_beat_banner()
 		_draw_assault_timeline()
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		if feedback_ttl > 0.0:

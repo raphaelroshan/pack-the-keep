@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.26.1",
+  "content_version": "0.27.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -585,6 +585,15 @@
     "authority": "main_ui_retains_commands_focus_visibility_and_navigation; keep_state_retains_simulation_and_serialization",
     "evidence": ["design/k3_screen_presentation_snapshots.md", "docs/k3_presentation_snapshots_verification.md", "tests/test_k3_preparation_presentation_snapshot.gd", "tests/test_k3_screen_presentation_snapshots.gd", "tests/test_p44_battle_presentation_snapshot.gd"],
     "next_slice": "k4_battle_readability"
+  },
+  "k4_battle_beat_readability": {
+    "status": "implemented",
+    "beats": ["forecast", "approach", "target_lock", "wind_up", "defender_response", "hostile_impact", "consequence", "settle"],
+    "timing": "presentation_duration_scales_inverse_to_selected_battle_speed",
+    "accessibility": "reduced_motion_uses_short_static_consequence_without_travel_or_recoil",
+    "authority": "presentation_only_over_already_resolved_deterministic_ticks",
+    "evidence": ["design/k4_battle_beat_readability.md", "docs/k4_battle_beat_readability_verification.md", "tests/test_k4_battle_beat_readability.gd", "tools/capture_vertical_slice.gd"],
+    "next_slice": "k5_recovery_results_distinction"
   },
   "campaign": {
     "title": "The Bell at Dusk",

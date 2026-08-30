@@ -791,3 +791,11 @@
 **Reason:** Screen composition and wording had accumulated as direct state reads inside the main UI controller. The completed snapshot boundary makes each major chapter deterministic, independently testable, and safer to animate or restructure without weakening `PackKeepState` ownership.
 
 **Trade-off:** Some player-facing formatting is duplicated from older helpers, and `main.gd` remains responsible for applying view models to controls. This is intentionally narrower than a scene rewrite: no snapshot is serialized, no command path moves, and no simulation or replay behavior changes.
+
+## ADR-100: Combat ticks play back as an eight-beat presentation sentence
+
+**Decision:** Derive Forecast, Approach, Target Lock, and Wind-up from the current authoritative battle state, then stage each already-resolved tick as Defender Response, Hostile Impact, Consequence, and Settle. Scale the presentation window inversely with battle speed and replace travel/recoil with a short static consequence under reduced motion.
+
+**Reason:** Real-time movement, target lines, projectiles, melee lunges, health trails, and damage labels existed, but simultaneous playback made cause and effect difficult to parse. A compact board badge and ordered effect windows make the same deterministic exchange legible without adding player commands or delaying simulation.
+
+**Trade-off:** The board presents a short visual replay immediately after an atomic tick, so the label describes presentation order rather than a second simulation phase. At high speed the window is intentionally compressed; at reduced motion it becomes static. No beat state is serialized or included in replay identity.

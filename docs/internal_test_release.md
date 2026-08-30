@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.26.1-presentation-snapshots` — the tagged Windows candidate includes its complete provenance-bound observer kit, minimum-layout repair, Greywatch keep-first surface pass, and deterministic read-only presentation boundaries; human sessions and owner approval remain pending
+**Current build identity:** `0.27.0-battle-beat-readability` — the tagged Windows candidate includes its complete provenance-bound observer kit, keep-first surface, screen snapshots, and eight-beat combat presentation; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan or Warden, select one of ten authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown or Rally, inspect health, armor, signal state, protection, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.27.0 acceptance checks
+
+Start an assault and confirm the board moves through Forecast, Approach, Target Lock, Wind-up, Defender Response, Hostile Impact, Consequence, and Settle without changing deterministic tick results. Compare melee, ranged, and demolition attacks; defender motion must resolve before hostile motion, then exact health loss and damage trails must remain visible. Repeat at 0.5x, 1x, and 2x and confirm each exchange finishes before the next tick. Enable reduced motion and confirm travel and recoil disappear while target, damage, and consequence remain readable.
 
 ## v0.26.1 acceptance checks
 

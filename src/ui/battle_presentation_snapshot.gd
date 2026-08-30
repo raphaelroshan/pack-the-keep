@@ -1,6 +1,8 @@
 class_name BattlePresentationSnapshot
 extends RefCounted
 
+const BattleBeatPresentationView = preload("res://src/ui/battle_beat_presentation.gd")
+
 static func build(keep: Object, battle_paused: bool, assault_ready_reason: String, focused_enemy_index: int, battle_speed: float) -> Dictionary:
 	if keep == null:
 		return {}
@@ -25,6 +27,8 @@ static func build(keep: Object, battle_paused: bool, assault_ready_reason: Strin
 		var focus_enemy_id: String = String(keep.enemies[focused_enemy_index].get("enemy_id", ""))
 		focus_name = String(keep.enemy_definition(focus_enemy_id).get("name", focus_enemy_id.replace("_", " ").capitalize()))
 
+	var beat: Dictionary = BattleBeatPresentationView.ambient(keep, assault_ready_reason, focused_enemy_index)
+	state_text += "\nPRESSURE READ — %s" % String(beat.get("label", "SETTLE"))
 	return {
 		"phase": keep.wave_index,
 		"phase_count": maxi(1, keep.authored_wave_count()),
@@ -33,6 +37,7 @@ static func build(keep: Object, battle_paused: bool, assault_ready_reason: Strin
 		"ready": not assault_ready_reason.is_empty(),
 		"speed": battle_speed,
 		"state_text": state_text,
+		"beat": beat,
 		"pause_text": "Sound the bell (Space)" if not assault_ready_reason.is_empty() else "Resume battle (Space)" if battle_paused else "Pause battle (Space)",
 		"manual_step_enabled": keep.wave_active and battle_paused and assault_ready_reason.is_empty(),
 		"speed_text": "Speed: %.1fx (1/2/3)" % battle_speed,
