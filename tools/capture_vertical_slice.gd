@@ -5,6 +5,8 @@ var captured_files: Array[String] = []
 var capture_size: Vector2i = Vector2i(1600, 900)
 var capture_scale_index: int = 1
 var capture_starting_defender: bool = false
+var capture_battle_exchange: bool = false
+var capture_battle_exchange_progress: float = 0.28
 
 func _initialize() -> void:
 	if DisplayServer.get_name() == "headless":
@@ -16,6 +18,9 @@ func _initialize() -> void:
 	capture_size.y = maxi(360, int(_argument_value("--height=").to_int())) if not _argument_value("--height=").is_empty() else 900
 	capture_scale_index = clampi(int(_argument_value("--ui-scale-index=").to_int()), 0, 4) if not _argument_value("--ui-scale-index=").is_empty() else 1
 	capture_starting_defender = OS.get_cmdline_user_args().has("--inspect-starting-defender")
+	capture_battle_exchange = OS.get_cmdline_user_args().has("--capture-battle-exchange")
+	if not _argument_value("--battle-exchange-progress=").is_empty():
+		capture_battle_exchange_progress = clampf(float(_argument_value("--battle-exchange-progress=")), 0.0, 0.99)
 	if output_dir.is_empty():
 		output_dir = ProjectSettings.globalize_path("user://visual-captures")
 	var directory_error: Error = DirAccess.make_dir_recursive_absolute(output_dir)
@@ -45,7 +50,17 @@ func _run_capture() -> void:
 		ui._on_map_clicked("ground", Vector2i(4, 5))
 	await _capture("03_preparation", ui)
 	ui._on_start_wave()
+	if capture_battle_exchange:
+		ui._toggle_battle_pause()
+		ui.battle_paused = true
+		ui._on_advance_wave()
+		ui.keep_canvas.engagement_ttl = ui.keep_canvas.engagement_duration * (1.0 - capture_battle_exchange_progress)
+		ui.keep_canvas.set_process(false)
+		ui.keep_canvas.queue_redraw()
 	await _capture("04_assault_phase_1", ui)
+	if capture_battle_exchange:
+		ui.keep_canvas.set_process(true)
+		ui.keep_canvas._process(ui.keep_canvas.engagement_duration)
 	await _resolve_phase(ui)
 	await _capture("05_recovery_phase_1", ui)
 	ui._on_finish_interval()
@@ -95,6 +110,8 @@ func _write_manifest() -> void:
 		"resolution": {"width": capture_size.x, "height": capture_size.y},
 		"ui_scale_percent": int(ui_scale_percent()),
 		"starting_defender_inspected": capture_starting_defender,
+		"battle_exchange_staged": capture_battle_exchange,
+		"battle_exchange_progress": capture_battle_exchange_progress if capture_battle_exchange else null,
 		"files": captured_files,
 		"debug_ui": OS.get_cmdline_user_args().has("--debug-ui"),
 		"human_evidence": false,
