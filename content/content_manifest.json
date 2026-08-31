@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.33.0",
+  "content_version": "0.34.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -180,10 +180,10 @@
   },
   "p12_alpha_scenario_matrix": {
     "status": "implemented",
-    "scenarios": 12,
+    "scenarios": 13,
     "commanders": 3,
     "seeds_per_pair": 3,
-    "simulation_executions": 216,
+    "simulation_executions": 234,
     "resume_boundaries": ["wave_one_pre_step", "first_recovery_before_event_resolution", "wave_two_pre_step"],
     "contract": "byte_identical_uninterrupted_and_resumed_three_wave_non_collapse_baselines_with_closed_terminal_recovery_and_event_state",
     "evidence": ["design/p12_alpha_scenario_matrix.md", "tests/test_p12_alpha_scenario_matrix.gd"],
@@ -347,7 +347,7 @@
   "p24_unit_first_combat_board": {
     "status": "implemented",
     "target_roles": ["unit_hunter", "room_destroyer"],
-    "unit_hunters": ["raider", "climber", "ash_slinger", "shield_guard", "shieldbreaker", "standard_cutter", "outrider"],
+    "unit_hunters": ["raider", "climber", "ash_slinger", "shield_guard", "shieldbreaker", "standard_cutter", "outrider", "gloam_knife"],
     "room_destroyers": ["sapper", "siege_beast"],
     "presentation": ["larger_gridless_keep", "preparation_only_placement_guides", "health_bars", "unit_target_lines", "room_hover_details", "idle_defender_facing", "melee_and_ranged_feedback"],
     "determinism": "role_selection_retargeting_damage_health_and_save_load_remain_authoritative_and_seed_replayable",
@@ -677,7 +677,19 @@
     "combat_rule": "a_living_stake_line_adjacent_to_an_authored_route_room_delays_breakthrough_contact_by_exactly_one_tick_at_wave_start",
     "viable_answers": ["road_wardens_prepared_delay", "crossbow_watch_precision_stop"],
     "evidence": ["design/p51_road_wardens_teaching_pair.md", "docs/p51_road_wardens_verification.md", "tests/test_p51_road_wardens.gd", "tests/test_p51_road_wardens_ui.gd"],
-    "next_slice": "p51_second_teaching_pack"
+    "next_slice": "p51_lantern_watch_teaching_pair"
+  },
+  "p51_lantern_watch_teaching_pair": {
+    "status": "implemented",
+    "pack": "lantern_watch",
+    "pieces": ["dusk_bow", "lantern_post"],
+    "enemy": "gloam_knife",
+    "doctrine": "veiled_entry",
+    "scenario": "the_unlit_stair",
+    "combat_rule": "a_living_lantern_post_adjacent_to_an_authored_route_room_reveals_concealed_attackers_at_wave_start_while_unrevealed_concealment_blocks_ranged_but_not_melee_response",
+    "viable_answers": ["lantern_watch_route_reveal", "road_wardens_melee_interception"],
+    "evidence": ["design/p51_lantern_watch_teaching_pair.md", "docs/p51_lantern_watch_verification.md", "tests/test_p51_lantern_watch.gd", "tests/test_p51_lantern_watch_ui.gd"],
+    "next_slice": "p51_combined_teaching_challenge"
   },
   "campaign": {
     "title": "The Bell at Dusk",
@@ -905,6 +917,15 @@
       "doctrine": "prepared_interception",
       "limitation": "Consumes two ground footprints and the obstacle deals no direct damage.",
       "choice_text": "Buy exactly one tick on one authored approach instead of adding broad damage."
+    },
+    {
+      "id": "lantern_watch",
+      "name": "Lantern Watch",
+      "purpose": "Reveal a concealed route for a disciplined upper firing line.",
+      "pieces": ["dusk_bow", "lantern_post"],
+      "doctrine": "lit_crossfire",
+      "limitation": "Consumes two upper-wall footprints and the lantern deals no direct damage.",
+      "choice_text": "Spend wall space on visibility instead of accepting close interception risk."
     }
   ],
   "pieces": [
@@ -1045,6 +1066,18 @@
       "name": "Stake Line",
       "role": "delays breakthrough momentum",
       "size": [2, 1]
+    },
+    {
+      "id": "dusk_bow",
+      "name": "Dusk Bow",
+      "role": "finishes revealed unit hunters",
+      "size": [2, 1]
+    },
+    {
+      "id": "lantern_post",
+      "name": "Lantern Post",
+      "role": "reveals veiled routes",
+      "size": [1, 1]
     }
   ],
   "rooms": [
@@ -1241,6 +1274,13 @@
       "role": "early breakthrough unit hunter",
       "teaching_question": "Can the player delay or destroy a fast contact before it reaches the specialist line?",
       "counter_options": ["road_wardens", "crossbow_watch", "runner_network", "commander_intervention"]
+    },
+    {
+      "id": "gloam_knife",
+      "name": "Gloam Knife",
+      "role": "concealed upper unit hunter",
+      "teaching_question": "Can the player reveal the route or preserve a close-interception answer?",
+      "counter_options": ["lantern_watch", "road_wardens", "runner_network", "commander_intervention"]
     }
   ],
   "events": [
@@ -1622,7 +1662,8 @@
       "crossbow_patrol",
       "bellkeepers",
       "shield_wardens",
-      "hook_guard"
+      "hook_guard",
+      "dusk_bow"
     ],
     "enemy_ids": [
       "raider",
@@ -1633,7 +1674,8 @@
       "ash_slinger",
       "shieldbreaker",
       "standard_cutter",
-      "outrider"
+      "outrider",
+      "gloam_knife"
     ],
     "scenario_ids": [
       "gatehouse_lock",
@@ -1648,6 +1690,7 @@
       "the_cut_standard",
       "the_divided_bell",
       "before_the_horn",
+      "the_unlit_stair",
       "last_stand"
     ],
     "event_ids": [
@@ -1755,13 +1798,15 @@
       "shieldbreaker_actor",
       "standard_cutter_actor",
       "outrider_actor",
+      "gloam_knife_actor",
       "declared_target_lines",
       "health_and_condition_bars",
       "siege_beast_area_radius",
       "shield_guard_armor_ring",
       "ash_slinger_smoke_ring",
       "shieldbreaker_break_marker",
-      "outrider_momentum_state"
+      "outrider_momentum_state",
+      "gloam_knife_visibility_state"
     ],
     "focus_response_contract": {
       "status": "implemented",

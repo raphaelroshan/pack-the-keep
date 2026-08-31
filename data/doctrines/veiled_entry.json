@@ -1,0 +1,9 @@
+{
+  "id": "veiled_entry", "content_version": 1, "status": "active", "name": "Veiled Entry",
+  "short_role": "Hide an upper unit hunter from ranged response until the route is lit.",
+  "question": "Will the keep spend space on visibility or accept close interception risk?",
+  "composition": ["gloam_knife", "climber"], "route_pattern": "unlit_stair_to_upper_specialist",
+  "target_priority": "lowest_condition_upper_precision_recon_morale_or_support_defender", "principal_pressure": "Visibility coverage and upper specialist survival",
+  "likely_target": "an exposed upper precision, recon, morale, or support defender", "uncertainty": "which eligible upper specialist is weakest at contact",
+  "counter_families": ["visibility", "interception", "mobile_response"]
+}

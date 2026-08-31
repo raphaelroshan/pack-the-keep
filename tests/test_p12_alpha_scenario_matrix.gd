@@ -15,6 +15,7 @@ const SCENARIOS: Array[String] = [
 	"the_cut_standard",
 	"the_divided_bell",
 	"before_the_horn",
+	"the_unlit_stair",
 ]
 const COMMANDERS: Array[String] = ["castellan", "warden", "quartermaster"]
 const SEEDS: Array[int] = [3307, 3308, 3309]
@@ -130,6 +131,12 @@ func _setup_baseline(state: RefCounted, scenario_id: String) -> bool:
 			if not _check_command(state.place_piece("stake_line", Vector2i(1, 2), "ground"), "Before the Horn Stake Line"):
 				return false
 			return _check_command(state.place_piece("hook_guard", Vector2i(4, 3), "ground"), "Before the Horn Hook Guard")
+		"the_unlit_stair":
+			if not _check_command(state.open_pack("lantern_watch"), "The Unlit Stair Lantern Watch"):
+				return false
+			if not _check_command(state.place_piece("dusk_bow", Vector2i(1, 1), "upper"), "The Unlit Stair Dusk Bow"):
+				return false
+			return _check_command(state.place_piece("lantern_post", Vector2i(7, 1), "upper"), "The Unlit Stair Lantern Post")
 	failures.append("unknown scenario fixture: %s" % scenario_id)
 	return false
 

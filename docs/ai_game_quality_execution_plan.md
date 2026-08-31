@@ -1,6 +1,6 @@
 # Pack the Keep — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.33.0-road-wardens` and later
+**Applies to:** `v0.34.0-lantern-watch` and later
 
 **Purpose:** Turn the First Watch prototype into a readable, tactile, game-quality keep-defense vertical slice. Automated verification, deterministic simulation checks, scripted flow coverage, and screenshot review are the active gates. Human testing remains useful for later confidence and tuning, but it is not a prerequisite for execution.
 
@@ -25,7 +25,8 @@ The game is a spatial defensive puzzle, not a rarity treadmill or a command spre
 | **P51.1 — Complete** | Add one commander lens | The Quartermaster makes reserve timing visible through discounted first-pack access, stronger surviving stores, and bounded Resupply without changing combat authority. |
 | **P51.2 — Complete** | Add one defensive identity | Twinwatch Bastion makes two staffed posts a visible spatial rule and preserves anchored and mobile answers in The Divided Bell. |
 | **P51.3 — Complete** | Add the first teaching pack | Road Wardens and Outriders create a visible prepared-delay versus concentrated-damage tempo question with two proven full-run answers. |
-| **P51.4 — Next** | Add the second teaching pack | Introduce the remaining pack and enemy family as another isolated question before authoring any combined challenge. |
+| **P51.4 — Complete** | Add the second teaching pack | Lantern Watch reveals Gloam Knives for ranged response while Road Wardens preserve a distinct melee answer across deterministic full runs. |
+| **P51.5 — Next** | Combine the proven questions | Author one bounded challenge using Outrider tempo and Gloam Knife visibility with at least two viable answers and no new combat subsystem. |
 
 ## Acceptance tests for every AI task
 
@@ -35,7 +36,7 @@ A task is incomplete if it hides the fort behind a menu, adds a unit before its 
 
 ## Recommended next prompt
 
-> P51.1–P51.3 are complete at `0.33.0-road-wardens`. Implement P51.4 as the second teaching pack paired with one isolated enemy question. Preserve the K1–K8 and P54 gates, keep at least two viable answers, and do not compose the new P51 enemies into a combined challenge until both isolated pairs pass.
+> P51.1–P51.4 are complete at `0.34.0-lantern-watch`. Implement one bounded combined challenge using Outriders and Gloam Knives. Preserve the K1–K8 and P54 gates and prove at least two viable answers before expanding further.
 
 ## Definition of game-quality readiness
 

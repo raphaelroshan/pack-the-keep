@@ -1,0 +1,12 @@
+{
+  "id": "dusk_bow", "content_version": 1, "status": "active", "name": "Dusk Bow",
+  "short_role": "Stop revealed infiltrators with heavy upper-wall shots.", "role": "finishes revealed unit hunters",
+  "question": "Which revealed threat deserves the limited dusk arrows?", "kind": "unit", "category": "precision",
+  "footprint": [2, 1], "allowed_floors": ["upper"], "allowed_zones": ["wall"],
+  "cost": 8, "max_health": 9, "placement_question": "Which upper firing line can exploit a lit approach?",
+  "skill": "Lantern Shot: commits four ranged damage to Gloam Knives and light wall threats, but concealment blocks every shot until the route is revealed.",
+  "strength_tags": ["visibility", "high_ground", "concealed_interception"], "weakness_tags": ["finite_ammunition", "requires_reveal", "upper_only"],
+  "attack_profile": {"style": "ranged", "range": 3, "cooldown_steps": 1, "damage": 4, "defense": 0, "ammo_capacity": 5, "targets": ["gloam_knife", "climber", "ash_slinger"]},
+  "support_profile": null, "assignment_rule": null, "availability": "lantern_watch",
+  "presentation": {"icon": "", "marker_color_role": "visibility", "radius_scale": 1.0}
+}

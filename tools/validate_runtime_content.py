@@ -79,7 +79,7 @@ SUPPORTED_ZONES = {"wall", "courtyard", "keep"}
 SUPPORTED_ATTACK_STYLES = {"melee", "ranged", "support", "fortification"}
 SUPPORTED_ENEMY_ATTACK_STYLES = {"melee", "ranged", "demolition"}
 SUPPORTED_SCENARIO_DIFFICULTIES = {"guided", "standard", "advanced", "overwhelming"}
-SUPPORTED_DOCTRINES = {"gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach", "shielded_advance", "smoke_and_signal", "break_the_line", "cut_the_chain", "rapid_breakthrough"}
+SUPPORTED_DOCTRINES = {"gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach", "shielded_advance", "smoke_and_signal", "break_the_line", "cut_the_chain", "rapid_breakthrough", "veiled_entry"}
 SUPPORTED_NON_ENEMY_TARGETS = {"all"} | SUPPORTED_DOCTRINES
 SUPPORTED_EVENT_TYPES = {"forecast", "recovery", "scenario_conclusion"}
 SUPPORTED_EVENT_PHASES = {"preparation", "recovery", "results"}
@@ -634,6 +634,24 @@ def validate_enemy(
             modifier = momentum.get("counter_modifier")
             if isinstance(modifier, str) and modifier and modifier not in support_modifiers:
                 errors.append(f"{path}: momentum_profile references unknown support modifier: {modifier}")
+    if "concealment_profile" in enemy:
+        concealment = enemy.get("concealment_profile")
+        if not isinstance(concealment, dict):
+            errors.append(f"{path}: concealment_profile must be an object")
+        else:
+            for field in ("kind", "counter_modifier"):
+                if not isinstance(concealment.get(field), str) or not concealment[field].strip():
+                    errors.append(f"{path}: concealment_profile {field} must be non-empty text")
+            if concealment.get("kind") != "veiled_approach":
+                errors.append(f"{path}: concealment_profile kind is unsupported")
+            modifier = concealment.get("counter_modifier")
+            if isinstance(modifier, str) and modifier and modifier not in support_modifiers:
+                errors.append(f"{path}: concealment_profile references unknown support modifier: {modifier}")
+            blocked_styles = concealment.get("blocked_attack_styles")
+            if not isinstance(blocked_styles, list) or not blocked_styles:
+                errors.append(f"{path}: concealment_profile blocked_attack_styles must be a non-empty array")
+            elif any(not isinstance(style, str) or style not in {"melee", "ranged"} for style in blocked_styles):
+                errors.append(f"{path}: concealment_profile has an unsupported blocked attack style")
     target_mode = enemy.get("target_mode")
     if target_mode not in {"unit_hunter", "room_destroyer"}:
         errors.append(f"{path}: target_mode must be unit_hunter or room_destroyer")

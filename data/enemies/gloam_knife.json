@@ -1,0 +1,14 @@
+{
+  "id": "gloam_knife", "content_version": 1, "status": "active", "name": "Gloam Knife",
+  "short_role": "Cross an unlit upper route beyond ranged response.",
+  "question": "Can the keep reveal the infiltrator or meet it safely at close range?",
+  "health": 8, "damage": 3, "arrival_step": 3, "attack_interval": 2, "attack_style": "melee", "target_mode": "unit_hunter",
+  "target_piece_categories": ["precision", "recon", "morale", "support"], "target_piece_floors": ["upper"], "target_piece_preference": "lowest_condition",
+  "route": "unlit_stair", "target_rooms": ["north_tower", "old_chapel", "outer_wall"], "doctrine": "veiled_entry",
+  "counter": "lantern_post", "telegraph": "A shuttered lamp and moving knife-mark show a concealed upper approach.",
+  "counter_families": ["visibility", "interception", "mobile_response"],
+  "concealment_profile": {"kind": "veiled_approach", "counter_modifier": "route_reveal", "blocked_attack_styles": ["ranged"]},
+  "failure_mode": "The infiltrator reaches an upper specialist before the firing line can legally respond.",
+  "report_phrase": "The Gloam Knife crossed an unlit approach.",
+  "presentation": {"icon": "", "marker_color_role": "concealment", "radius_scale": 0.92}
+}
