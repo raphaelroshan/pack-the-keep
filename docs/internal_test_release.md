@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.36.0-twilight-crossroads` — the development candidate begins P52 replayable mastery with a one-action choice between final-wave road delay and stair visibility in The Twilight Road; automated K8 and forced-close gates remain complete, while human sessions and owner approval remain pending
+**Current build identity:** `0.36.1-route-debrief` — the development candidate carries The Twilight Road's one-action route choice into terminal mastery, including selected and forgone preparation, build fit, and opposite-branch replay guidance; automated K8 and forced-close gates remain complete, while human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch, Ash Ford, and Twinwatch support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan, Warden, or Quartermaster, select one of fifteen authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown, Rally, or Resupply, inspect health, armor, signal state, breakthrough momentum, concealment visibility, protection, assigned-specialist priority, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.36.1 acceptance checks
+
+Complete The Twilight Road after either Twilight Crossroads choice. Confirm terminal Results adds **Recovery Branch** and **Forgone Preparation** beneath the existing seed, doctrine, recovery, and pack comparison. A Road Wardens plus Crossbow Watch lamp run and a Lantern Watch plus Runner Network stakes run should read as complementary; Road Wardens plus Lantern Watch should identify duplicated coverage as redundant. On a held result, **Try Next** must propose the opposite recovery branch. Other scenarios must retain their prior debrief wording.
 
 ## v0.36.0 acceptance checks
 

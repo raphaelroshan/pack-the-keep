@@ -85,6 +85,7 @@ func _run(seed: int, commander_id: String, choice_id: String, resume: bool = fal
 		"enemies": final_enemies,
 		"flags": state.event_flags.duplicate(true),
 		"history": state.event_history.duplicate(true),
+		"report": state.scenario_report(),
 	}
 
 func _initialize() -> void:
@@ -110,9 +111,21 @@ func _initialize() -> void:
 				var spent_flag: String = "twilight_lamps_ready" if choice_id == "carry_lamp_oil" else "twilight_stakes_ready"
 				_check(not bool(uninterrupted.flags.get(spent_flag, true)), "selected route preparation should be spent at final-wave start for %s" % label)
 				_check(uninterrupted.history.size() == 1 and String(uninterrupted.history[0].get("choice_id", "")) == choice_id, "event history should preserve the recovery branch for %s" % label)
+				var report: Dictionary = uninterrupted.get("report", {})
+				var recovery_branch: Dictionary = report.get("mastery", {}).get("recovery_branch", {})
+				_check(String(recovery_branch.get("choice_id", "")) == choice_id and String(recovery_branch.get("fit_text", "")).contains("COMPLEMENTARY"), "terminal mastery should identify the mixed recovery branch for %s" % label)
+				var opposite_route: String = "road stakes" if choice_id == "carry_lamp_oil" else "stair lamps"
+				_check(String(report.get("suggested_experiment", "")).contains(opposite_route), "terminal replay guidance should propose the opposite branch for %s" % label)
+
+	var redundant: RefCounted = PackKeepState.new(5601)
+	redundant.select_scenario("the_twilight_road")
+	redundant.open_pack("road_wardens")
+	redundant.open_pack("lantern_watch")
+	redundant.event_history.append({"event_id": "twilight_crossroads", "choice_id": "carry_lamp_oil", "wave": 2, "phase": "recovery", "visible_result": "", "state_changes": []})
+	_check(String(redundant.replay_mastery_summary().get("recovery_branch", {}).get("fit_text", "")).contains("REDUNDANT"), "mastery should identify duplicated route preparation without granting a stacking bonus")
 
 	if failures.is_empty():
-		print("P52 Twilight Crossroads: PASS (18 mixed-plan recovery runs plus save-resume parity)")
+		print("P52 Twilight Crossroads: PASS (18 mixed-plan recovery runs, save parity, and branch-aware debrief)")
 		quit(0)
 	else:
 		for failure in failures:

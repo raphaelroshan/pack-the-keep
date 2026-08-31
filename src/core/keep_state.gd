@@ -2482,6 +2482,37 @@ func scenario_scorecard() -> Dictionary:
 		total_recovery_actions += int(row.get("recovery_actions_used", 0))
 	return {"keep_id": keep_id, "keep_name": String(_keep_definitions.get(keep_id, {}).get("name", keep_id)), "scenario_id": scenario_id, "scenario_name": String(_scenario_definitions.get(scenario_id, {}).get("name", scenario_id)), "completed_waves": wave_history.size(), "wave_count": authored_wave_count(), "outcomes": outcomes, "total_defeated": total_defeated, "total_room_damage": total_room_damage, "total_piece_damage": total_piece_damage, "recovery_actions_used": total_recovery_actions, "final_outcome": last_outcome, "replay_key": "%s/%s/%d" % [scenario_id, commander_id, seed]}
 
+func _twilight_recovery_mastery(pack_names: Array[String]) -> Dictionary:
+	if scenario_id != "the_twilight_road":
+		return {}
+	var choice_id: String = ""
+	for history_entry in event_history:
+		if String(history_entry.get("event_id", "")) == "twilight_crossroads":
+			choice_id = String(history_entry.get("choice_id", ""))
+	if choice_id.is_empty():
+		return {}
+	var has_road_wardens: bool = pack_names.has("Road Wardens")
+	var has_lantern_watch: bool = pack_names.has("Lantern Watch")
+	if choice_id == "carry_lamp_oil":
+		var fit_text: String = "COMPLEMENTARY — Road Wardens covered tempo while recovery covered visibility." if has_road_wardens and not has_lantern_watch else "REDUNDANT — Lantern Watch and recovery both covered visibility; that safety cost a recovery action." if has_lantern_watch else "ADAPTIVE — recovery covered visibility while the build accepted live Outrider tempo."
+		return {
+			"choice_id": choice_id,
+			"selected_text": "Stair lamps revealed every final Gloam Knife.",
+			"forgone_text": "Road stakes were not reinforced; final Outrider tempo stayed with the built defense.",
+			"fit_text": fit_text,
+			"replay_experiment": "Replay the same seed with road stakes, and make the build solve the unlit stair."
+		}
+	if choice_id == "replant_road_stakes":
+		var fit_text: String = "COMPLEMENTARY — Lantern Watch covered visibility while recovery covered tempo." if has_lantern_watch and not has_road_wardens else "REDUNDANT — Road Wardens and recovery both covered tempo; that safety cost a recovery action." if has_road_wardens else "ADAPTIVE — recovery covered tempo while the build accepted a veiled stair."
+		return {
+			"choice_id": choice_id,
+			"selected_text": "Road stakes delayed every final Outrider.",
+			"forgone_text": "Lamp oil was not moved to the stair; final Gloam visibility stayed with the built defense.",
+			"fit_text": fit_text,
+			"replay_experiment": "Replay the same seed with stair lamps, and make the build solve the fast road."
+		}
+	return {}
+
 func replay_mastery_summary() -> Dictionary:
 	var pack_families: Array[String] = []
 	var pack_names: Array[String] = []
@@ -2494,6 +2525,7 @@ func replay_mastery_summary() -> Dictionary:
 		pack_names.append(String(pack.get("name", pack_id.replace("_", " ").capitalize())))
 	pack_families.sort()
 	pack_names.sort()
+	var recovery_branch: Dictionary = _twilight_recovery_mastery(pack_names)
 	var answer_families: Array[String] = pack_families.duplicate()
 	for instance in pieces.values():
 		var piece: Dictionary = _piece_definitions.get(String(instance.get("piece_id", "")), {})
@@ -2543,6 +2575,7 @@ func replay_mastery_summary() -> Dictionary:
 		"recovery_actions_used": recovery_used,
 		"recovery_capacity": recovery_capacity,
 		"recovery_text": "%d/%d available recovery actions committed" % [recovery_used, recovery_capacity],
+		"recovery_branch": recovery_branch,
 	}
 
 func scenario_report() -> Dictionary:
@@ -2633,6 +2666,9 @@ func scenario_report() -> Dictionary:
 				suggested_family = family.replace("_", " ")
 				break
 		suggested_experiment = "Replay the same %s variation with a %s defense answer for %s." % [scenario_variation_id.replace("_", " "), suggested_family, String(uncovered.get("name", uncovered_id.replace("_", " ").capitalize()))]
+	var recovery_branch: Dictionary = mastery.get("recovery_branch", {})
+	if last_outcome == "held" and not recovery_branch.is_empty():
+		suggested_experiment = String(recovery_branch.get("replay_experiment", suggested_experiment))
 	return {
 		"scenario_id": scenario_id,
 		"scenario_name": String(scorecard.get("scenario_name", scenario_id)),
