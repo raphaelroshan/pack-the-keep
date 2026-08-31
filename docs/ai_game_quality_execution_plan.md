@@ -1,6 +1,6 @@
 # Pack the Keep — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.40.0-actor-readability` and later
+**Applies to:** `v0.41.0-tactile-audio` and later
 
 **Purpose:** Turn the First Watch prototype into a readable, tactile, game-quality keep-defense vertical slice. Automated verification, deterministic simulation checks, scripted flow coverage, and screenshot review are the active gates. Human testing remains useful for later confidence and tuning, but it is not a prerequisite for execution.
 
@@ -32,6 +32,7 @@ The game is a spatial defensive puzzle, not a rarity treadmill or a command spre
 | **P52.3 — Complete** | Add meaningful seeded adaptation | Three fixed seed variants disclose balanced, visibility-heavy, or tempo-heavy final pressure and retain the same preparation emphasis at Results. |
 | **P53.1 — Complete** | Audit the completed alpha flow | One end-to-end UI journey composes accessibility, controller focus, two file-backed save boundaries, semantic audio state, seeded pressure, and responsive terminal Results; the existing package and performance gates remain green. |
 | **P55 — Complete** | Replace abstract actor interiors with temporary licensed sprites | Active defenders and enemies read as melee, ranged, heavy, or siege actors while role silhouettes, color, health, cadence, targets, focus, and specialist overlays remain authoritative and visible. |
+| **P56 — Complete** | Give semantic battle beats tactile temporary foley | A bounded four-player sample pool differentiates warning, contact, response, impact, breach, recovery, control, and terminal cues while preserving mute, volume, visible labels, and synthesized fallback. |
 
 ## Acceptance tests for every AI task
 
@@ -41,7 +42,7 @@ A task is incomplete if it hides the fort behind a menu, adds a unit before its 
 
 ## Recommended next prompt
 
-> The automated roadmap is complete at `0.40.0-actor-readability`. Preserve every K1–K8, P51–P55, P54, responsive-decision, and temporary-actor gate. Treat the licensed Tiny Battle sprites as temporary testing art, not final Greywatch production assets. Do not invent human findings; the next evidence step is P16 observation only when the owner schedules real testers.
+> The automated roadmap is complete at `0.41.0-tactile-audio`. Preserve every K1–K8, P51–P56, P54, responsive-decision, temporary-actor, and semantic-audio gate. Treat the licensed Tiny Battle sprites and Kenney foley as temporary testing assets, not final Greywatch production work. Do not invent human findings; the next evidence step is P16 observation only when the owner schedules real testers.
 
 ## Definition of game-quality readiness
 
@@ -73,3 +74,7 @@ No further autonomous implementation milestone is selected. P16 human observatio
 ## Temporary actor readability update — 2026-08-31
 
 `0.40.0-actor-readability` uses a bounded CC0 Tiny Battle subset to replace the abstract centers of active defender and enemy markers. Formation and ranged defenders now have distinct allied actors; hostile melee, ranged, demolition, fast, concealed, and siege roles resolve appropriate temporary sprites. The existing shape/color backing, health and cadence bars, target lines, focus rings, armor, smoke, breach, and command-hunter labels remain unchanged, and compact timeline markers keep the procedural grammar. Missing assets fall back to the prior glyphs. This is a presentation-only test layer and not a final-art claim.
+
+## Tactile audio update — 2026-08-31
+
+`0.41.0-tactile-audio` maps the established semantic cue vocabulary to a restrained CC0 Interface Sounds/RPG Audio subset. Playback uses four reusable players, follows mute and effects-volume settings, keeps visible cue labels, and falls back to the existing generated tones when a sample is missing. Audio remains presentation-only and does not enter save state, combat resolution, or replay keys.
