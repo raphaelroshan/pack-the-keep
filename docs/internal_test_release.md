@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.43.0-room-feedback` — the development candidate adds state-driven damaged-room atmosphere and localized repair confirmation to the existing licensed actors, semantic foley, and combat effects, while retaining responsive decisions, deterministic tactical overlays, accessibility, save/resume, terminal-results, packaged K8, and forced-close gates; human sessions and owner approval remain pending
+**Current build identity:** `0.44.0-room-accents` — the development candidate adds restrained Greywatch room-function accents to the existing licensed actors, semantic foley, combat effects, damaged-room atmosphere, and localized repair confirmation, while retaining responsive decisions, deterministic tactical overlays, accessibility, save/resume, terminal-results, packaged K8, and forced-close gates; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch, Ash Ford, and Twinwatch support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan, Warden, or Quartermaster, select one of fifteen authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown, Rally, or Resupply, inspect health, armor, signal state, breakthrough momentum, concealment visibility, protection, assigned-specialist priority, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.44.0 acceptance checks
+
+Enter Greywatch Preparation and identify the gate, armory, workshop, barracks, supply room, north tower, and old chapel by their small prop silhouettes. Confirm the inner yard and outer wall remain visually quiet, and that labels, room health, placed pieces, damage atmosphere, selection, target lines, and combat feedback remain dominant. Toggle high contrast and verify the props recede further. Ash Ford and Twinwatch must retain their existing board identities without Tiny Dungeon accents.
 
 ## v0.43.0 acceptance checks
 

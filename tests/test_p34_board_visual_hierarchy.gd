@@ -38,6 +38,18 @@ func _initialize() -> void:
 	_check(String(ranged.piece.get("sprite_path", "")).ends_with("tile_0124.png") and bool(ranged.get("piece_texture_loaded", false)), "ranged defenders should resolve a distinct temporary actor sprite")
 	_check(String(ranged.enemy.get("sprite_path", "")).ends_with("tile_0160.png") and bool(ranged.get("enemy_texture_loaded", false)), "ranged enemies should resolve the temporary hostile ranged sprite")
 	_check(String(board.get("temporary_actor_source", "")).contains("CC0"), "the board snapshot should identify temporary actor provenance")
+	var accented_rooms: Array[String] = ["gate", "armory", "workshop", "barracks", "supply_room", "north_tower", "old_chapel"]
+	var accent_paths: Dictionary = {}
+	for room_id in accented_rooms:
+		var accent: Dictionary = ui.keep_canvas.room_function_accent_snapshot(room_id)
+		_check(bool(accent.get("active", false)) and bool(accent.get("texture_loaded", false)), "%s should resolve a loadable temporary room-function accent" % room_id)
+		_check(String(accent.get("asset_status", "")) == "temporary_cc0" and String(accent.get("source", "")).contains("Tiny Dungeon"), "%s should expose temporary Tiny Dungeon provenance" % room_id)
+		accent_paths[String(accent.get("texture_path", ""))] = true
+	_check(accent_paths.size() >= 6, "Greywatch room accents should preserve distinct functional silhouettes")
+	_check(not bool(ui.keep_canvas.room_function_accent_snapshot("inner_yard").get("active", true)), "the open response yard should remain free of decorative room accents")
+	_check(not bool(ui.keep_canvas.room_function_accent_snapshot("outer_wall").get("active", true)), "the structural outer wall should remain free of decorative room accents")
+	_check(not bool(BoardVisualRegistry.room_function_accent_profile("ash_ford", "workshop").get("active", true)), "temporary room accents should remain scoped to Greywatch")
+	_check(bool(board.get("temporary_room_accents", false)) and String(board.get("temporary_room_accent_source", "")).contains("CC0"), "the board snapshot should identify temporary room-accent provenance")
 	var stable_effect: Dictionary = BoardVisualRegistry.room_damage_effect_profile("stable")
 	var damaged_effect: Dictionary = BoardVisualRegistry.room_damage_effect_profile("damaged")
 	var breached_effect: Dictionary = BoardVisualRegistry.room_damage_effect_profile("breached")
@@ -63,6 +75,9 @@ func _initialize() -> void:
 	var contrast_board: Dictionary = ui.keep_canvas.board_presentation_snapshot()
 	_check(contrast_board.get("ground", {}).get("frame", Color.BLACK) != board.get("ground", {}).get("frame", Color.BLACK), "high contrast should strengthen the board frame without changing geometry")
 	_check(contrast_board.get("cell_size", Vector2.ZERO) == board.get("cell_size", Vector2.ONE), "accessibility treatment should preserve board geometry")
+	var contrast_accent: Dictionary = ui.keep_canvas.room_function_accent_snapshot("workshop")
+	_check(bool(contrast_accent.get("high_contrast", false)) and float(contrast_accent.get("opacity", 1.0)) < 0.30, "high contrast should subordinate temporary room accents to tactical information")
+	_check(JSON.stringify(ui.keep.serialize()) == before, "accessibility-only room accent changes should not mutate authoritative state")
 
 	ui.queue_free()
 	await process_frame
