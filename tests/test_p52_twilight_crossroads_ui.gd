@@ -31,6 +31,10 @@ func _initialize() -> void:
 	ui.display_application_enabled = false
 	ui._select_option_metadata(ui.scenario_option, "the_twilight_road")
 	ui._on_select_scenario()
+	ui._refresh_ui()
+	await process_frame
+	var council_variation_text: String = String(ui.war_council_choice_panel.summary_label.text)
+	_check(council_variation_text.contains("final pressure") and council_variation_text.contains("preparation focus"), "War Council should disclose the seeded final composition and its preparation emphasis")
 	ui._on_confirm_setup()
 	ui.keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
 	for pack_id in ["road_wardens", "crossbow_watch"]:
@@ -88,9 +92,19 @@ func _initialize() -> void:
 	await process_frame
 	await process_frame
 	var terminal_mastery: String = String(ui.terminal_debrief_panel.causal_label.text)
+	_check(terminal_mastery.contains("final pressure") and terminal_mastery.contains("preparation focus"), "terminal Results should retain the seeded composition and preparation emphasis")
 	_check(ui.terminal_debrief_panel.visible and terminal_mastery.contains("RECOVERY BRANCH") and terminal_mastery.contains("Stair lamps revealed") and terminal_mastery.contains("COMPLEMENTARY"), "terminal Results should explain the selected route and its build fit")
 	_check(terminal_mastery.contains("FORGONE PREPARATION") and terminal_mastery.contains("Road stakes were not reinforced"), "terminal Results should name the route preparation that was declined")
 	_check(String(ui.terminal_debrief_panel.replay_label.text).contains("road stakes"), "terminal replay guidance should propose the opposite recovery branch")
+	await _apply_layout(ui, Vector2i(2560, 1440), 3)
+	ui._refresh_terminal_debrief()
+	await process_frame
+	await process_frame
+	_check(ui.gameplay_columns.vertical and _inside_horizontal_viewport(ui.terminal_debrief_panel), "2560x1440 at 150 percent should stack terminal Results before the debrief clips beyond the right edge")
+	_check(ui.terminal_debrief_panel.primary_button.is_visible_in_tree(), "large-text 1440p Results should keep its primary replay action reachable")
+	var page_rect: Rect2 = ui.page_scroll.get_global_rect()
+	var replay_rect: Rect2 = ui.terminal_debrief_panel.primary_button.get_global_rect()
+	_check(replay_rect.position.y >= page_rect.position.y and replay_rect.end.y <= page_rect.end.y, "large-text 1440p Results should scroll the focused replay action into the visible page")
 
 	root.content_scale_factor = 1.0
 	ui.queue_free()

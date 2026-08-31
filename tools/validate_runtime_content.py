@@ -823,6 +823,18 @@ def validate_scenario(
         target_room = variation.get("target_room")
         if not isinstance(target_room, str) or (target_room and target_room not in room_ids):
             errors.append(f"{path}: variation target_room is unknown")
+        if "final_wave_plan" in variation:
+            final_wave_plan = variation.get("final_wave_plan")
+            if not isinstance(final_wave_plan, list) or not 1 <= len(final_wave_plan) <= 8:
+                errors.append(f"{path}: variation final_wave_plan must contain one to eight enemies")
+            else:
+                for enemy_id in final_wave_plan:
+                    if not isinstance(enemy_id, str) or enemy_id not in enemy_ids:
+                        errors.append(f"{path}: variation final_wave_plan references unknown enemy: {enemy_id}")
+        if "preparation_focus" in variation:
+            preparation_focus = variation.get("preparation_focus")
+            if not isinstance(preparation_focus, str) or not preparation_focus.strip() or len(preparation_focus) > 160:
+                errors.append(f"{path}: variation preparation_focus must be one to 160 characters")
     if "standard_bell" not in variation_ids:
         errors.append(f"{path}: standard_bell variation is required")
     return scenario_id

@@ -1,6 +1,6 @@
 # Pack the Keep — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.36.1-route-debrief` and later
+**Applies to:** `v0.37.0-seeded-pressure` and later
 
 **Purpose:** Turn the First Watch prototype into a readable, tactile, game-quality keep-defense vertical slice. Automated verification, deterministic simulation checks, scripted flow coverage, and screenshot review are the active gates. Human testing remains useful for later confidence and tuning, but it is not a prerequisite for execution.
 
@@ -29,7 +29,8 @@ The game is a spatial defensive puzzle, not a rarity treadmill or a command spre
 | **P51.5 — Complete** | Combine the proven questions | The Twilight Road teaches tempo and visibility separately, then combines them with prepared-route and flexible-response plans and no new combat subsystem. |
 | **P52.1 — Complete** | Add bounded replay variation | Twilight Crossroads trades one recovery action for final-wave road delay or stair visibility and supports two mixed-pack answers. |
 | **P52.2 — Complete** | Make the branch legible at Results | Terminal mastery names the selected route, forgone preparation, complementary/redundant build fit, and opposite-branch replay experiment. |
-| **P52.3 — Next** | Add meaningful seeded adaptation | Make one bounded seed variation alter a visible preparation choice rather than only changing resource totals. |
+| **P52.3 — Complete** | Add meaningful seeded adaptation | Three fixed seed variants disclose balanced, visibility-heavy, or tempo-heavy final pressure and retain the same preparation emphasis at Results. |
+| **P53.1 — Next** | Audit the completed alpha flow | Re-run accessibility, persistence, controller, performance, audio, package, and recovery gates as one consolidated hardening review and fix only demonstrated gaps. |
 
 ## Acceptance tests for every AI task
 
@@ -39,7 +40,7 @@ A task is incomplete if it hides the fort behind a menu, adds a unit before its 
 
 ## Recommended next prompt
 
-> P52.2 is complete at `0.36.1-route-debrief`. Continue with P52.3 by making one bounded seeded variation alter a visible preparation choice. Preserve the K1–K8, P51, P52.1–P52.2, and P54 gates.
+> P52 is complete at `0.37.0-seeded-pressure`. Continue with P53.1 by auditing the complete choose → build → hold → recover → debrief flow across accessibility, persistence, controller, performance, audio, packaging, and failure recovery. Preserve every K1–K8, P51–P52, and P54 gate.
 
 ## Definition of game-quality readiness
 

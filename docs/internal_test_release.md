@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.36.1-route-debrief` — the development candidate carries The Twilight Road's one-action route choice into terminal mastery, including selected and forgone preparation, build fit, and opposite-branch replay guidance; automated K8 and forced-close gates remain complete, while human sessions and owner approval remain pending
+**Current build identity:** `0.37.0-seeded-pressure` — the development candidate adds disclosed balanced, Gloam-heavy, and Outrider-heavy final Twilight pressure with explicit preparation emphasis, while retaining the one-action route choice, terminal branch mastery, automated K8 gate, and forced-close evidence; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch, Ash Ford, and Twinwatch support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan, Warden, or Quartermaster, select one of fifteen authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown, Rally, or Resupply, inspect health, armor, signal state, breakthrough momentum, concealment visibility, protection, assigned-specialist priority, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.37.0 acceptance checks
+
+Select The Twilight Road across seeds that produce Standard Bell, Fading Light, and Long Twilight. Before entering the keep, confirm War Council names the exact balanced, Gloam-heavy, or Outrider-heavy final composition and translates it into a preparation focus. Complete each route with either mixed defense and its complementary recovery choice; phase three must spawn the disclosed roster, save/resume must remain identical, and Results must repeat the same seed pressure beside the selected and forgone recovery branches.
 
 ## v0.36.1 acceptance checks
 

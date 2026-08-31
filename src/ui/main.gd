@@ -728,7 +728,8 @@ func _apply_responsive_layout() -> void:
 		return
 	var ui_factor: float = maxf(0.01, float(get_window().content_scale_factor))
 	var effective_width: float = maxf(float(get_window().size.x), size.x) / ui_factor
-	var stacked: bool = effective_width < TWO_COLUMN_EFFECTIVE_WIDTH
+	var terminal_large_text: bool = terminal_debrief_panel != null and terminal_debrief_panel.visible and ui_factor >= 1.5
+	var stacked: bool = effective_width < TWO_COLUMN_EFFECTIVE_WIDTH or terminal_large_text
 	var compact_cards: bool = effective_width < COMPACT_CARD_EFFECTIVE_WIDTH
 	var stacked_width: float = maxf(520.0, size.x - PAGE_HORIZONTAL_MARGIN)
 	var main_width: float = minf(810.0, stacked_width) if stacked else 810.0
@@ -2144,7 +2145,7 @@ func _focus_screen_control() -> void:
 	elif screen == "results" and not keep.active_event_id.is_empty():
 		target = _first_legal_event_control()
 	elif screen == "results" and terminal_debrief_panel.visible:
-		terminal_debrief_panel.focus_primary()
+		_focus_terminal_debrief()
 		return
 	elif screen == "results" and recovery_actions_panel.visible:
 		target = _first_legal_recovery_control()
@@ -3721,6 +3722,7 @@ func _refresh_terminal_debrief() -> void:
 	if not terminal_result:
 		return
 	terminal_debrief_panel.render(_terminal_debrief_view_model())
+	_apply_responsive_layout()
 	if tutorial.active and tutorial.expected_action() in ["finish_tutorial", "retry_phase"]:
 		tutorial_continue_button.visible = false
 	if main_title_label != null:
@@ -3737,6 +3739,8 @@ func _refresh_terminal_debrief() -> void:
 func _focus_terminal_debrief() -> void:
 	if terminal_debrief_panel != null:
 		terminal_debrief_panel.focus_primary()
+		if terminal_debrief_panel.primary_button != null:
+			_scroll_page_to_control(terminal_debrief_panel.primary_button)
 
 func _refresh_inspection_card() -> void:
 	if inspection_panel == null:

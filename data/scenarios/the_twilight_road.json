@@ -11,8 +11,8 @@
   "wave_plans": [["outrider"], ["gloam_knife"], ["outrider", "gloam_knife", "outrider", "gloam_knife"]],
   "event_chain": ["twilight_crossroads"],
   "variations": [
-    {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
-    {"id": "fading_light", "materials": -2, "morale": 1, "target_room": "north_tower"},
-    {"id": "long_twilight", "materials": 2, "morale": -1, "target_room": "gate"}
+    {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": "", "final_wave_plan": ["outrider", "outrider", "gloam_knife", "gloam_knife"], "preparation_focus": "Split readiness across fast-road control and unlit-stair visibility."},
+    {"id": "fading_light", "materials": -2, "morale": 1, "target_room": "north_tower", "final_wave_plan": ["outrider", "gloam_knife", "gloam_knife", "gloam_knife"], "preparation_focus": "Prioritize stair visibility; lamp oil or Lantern Watch can cover the larger Gloam contingent."},
+    {"id": "long_twilight", "materials": 2, "morale": -1, "target_room": "gate", "final_wave_plan": ["outrider", "outrider", "outrider", "gloam_knife"], "preparation_focus": "Prioritize fast-road control; road stakes or Road Wardens can blunt the larger Outrider contingent."}
   ]
 }

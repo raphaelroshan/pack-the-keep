@@ -263,6 +263,19 @@ func _variation_for_scenario(id: String) -> Dictionary:
 	var index: int = absi(seed + stable_id_value) % options.size()
 	return options[index].duplicate(true)
 
+func _variation_definition(id: String, variation_id: String) -> Dictionary:
+	for variation_value in _scenario_definitions.get(id, {}).get("variations", []):
+		if variation_value is Dictionary and String(variation_value.get("id", "")) == variation_id:
+			return variation_value.duplicate(true)
+	return {}
+
+func _scenario_wave_plans(id: String, variation: Dictionary) -> Array:
+	var plans: Array = _scenario_definitions.get(id, {}).get("wave_plans", []).duplicate(true)
+	var final_wave_plan: Variant = variation.get("final_wave_plan", [])
+	if final_wave_plan is Array and not final_wave_plan.is_empty() and not plans.is_empty():
+		plans[plans.size() - 1] = final_wave_plan.duplicate()
+	return plans
+
 func select_scenario(id: String) -> Dictionary:
 	if not _scenario_definitions.has(id):
 		return {"ok": false, "reason": "unknown defensive scenario"}
@@ -303,9 +316,11 @@ func scenario_preview(id: String = "") -> Dictionary:
 		return {"ok": false, "reason": "unknown defensive scenario"}
 	var scenario: Dictionary = _scenario_definitions[selected_id]
 	var scenario_keep_id: String = String(scenario.get("keep_id", "greywatch_keep"))
+	var variation: Dictionary = scenario_variation_preview(selected_id)
+	var preview_wave_plans: Array = _scenario_wave_plans(selected_id, variation)
 	var peak_wave_size: int = 0
 	var enemy_roster: Array[String] = []
-	for wave_plan in scenario.get("wave_plans", []):
+	for wave_plan in preview_wave_plans:
 		if not wave_plan is Array:
 			continue
 		peak_wave_size = maxi(peak_wave_size, wave_plan.size())
@@ -324,7 +339,6 @@ func scenario_preview(id: String = "") -> Dictionary:
 	if difficulty.is_empty():
 		difficulty = "guided" if peak_wave_size <= 2 else "standard" if peak_wave_size <= 3 else "advanced"
 	var ordered_ids: Array[String] = scenario_ids()
-	var variation: Dictionary = scenario_variation_preview(selected_id)
 	return {
 		"ok": true,
 		"scenario_id": selected_id,
@@ -338,7 +352,7 @@ func scenario_preview(id: String = "") -> Dictionary:
 		"recommended_packs": scenario.get("recommended_packs", []).duplicate(),
 		"starting_doctrine": String(scenario.starting_doctrine),
 		"doctrine_names": doctrine_names,
-		"wave_count": scenario.wave_plans.size(),
+		"wave_count": preview_wave_plans.size(),
 		"peak_wave_size": peak_wave_size,
 		"enemy_roster": enemy_roster,
 		"difficulty": difficulty,
@@ -353,12 +367,11 @@ func scenario_variation_preview(id: String = "") -> Dictionary:
 		return {"ok": false, "reason": "unknown defensive scenario"}
 	var variation: Dictionary = _variation_for_scenario(selected_id)
 	if selected_id == scenario_id and scenario_active:
-		variation = {
-			"id": scenario_variation_id,
-			"materials": variation_materials,
-			"morale": variation_morale,
-			"target_room": variation_target_room,
-		}
+		variation = _variation_definition(selected_id, scenario_variation_id)
+		variation.id = scenario_variation_id
+		variation.materials = variation_materials
+		variation.morale = variation_morale
+		variation.target_room = variation_target_room
 	var variation_id: String = String(variation.get("id", "standard_bell"))
 	var material_delta: int = int(variation.get("materials", 0))
 	var morale_delta: int = int(variation.get("morale", 0))
@@ -380,6 +393,23 @@ func scenario_variation_preview(id: String = "") -> Dictionary:
 				break
 	if target_applies:
 		effects.append("room pressure favors %s" % String(_room_definitions_for_scenario(selected_id).get(target_room, {}).get("name", target_room.replace("_", " ").capitalize())))
+	var final_wave_plan: Array = variation.get("final_wave_plan", [])
+	if not final_wave_plan.is_empty():
+		var counts: Dictionary = {}
+		var order: Array[String] = []
+		for enemy_id_value in final_wave_plan:
+			var enemy_id: String = String(enemy_id_value)
+			if not counts.has(enemy_id):
+				counts[enemy_id] = 0
+				order.append(enemy_id)
+			counts[enemy_id] = int(counts[enemy_id]) + 1
+		var composition_parts: Array[String] = []
+		for enemy_id in order:
+			composition_parts.append("%d %s" % [int(counts[enemy_id]), String(_enemy_definitions.get(enemy_id, {}).get("name", enemy_id))])
+		effects.append("final pressure: %s" % " + ".join(composition_parts))
+	var preparation_focus: String = String(variation.get("preparation_focus", "")).strip_edges()
+	if not preparation_focus.is_empty():
+		effects.append("preparation focus: %s" % preparation_focus)
 	if effects.is_empty():
 		effects.append("baseline stores and morale; target priorities remain adaptive")
 	return {
@@ -390,6 +420,8 @@ func scenario_variation_preview(id: String = "") -> Dictionary:
 		"morale": morale_delta,
 		"target_room": target_room,
 		"target_applies": target_applies,
+		"final_wave_plan": final_wave_plan.duplicate(),
+		"preparation_focus": preparation_focus,
 		"effects": effects,
 		"summary": "%s — %s." % [variation_id.replace("_", " ").capitalize(), "; ".join(effects)],
 	}
@@ -2292,7 +2324,8 @@ func start_wave(doctrine: String) -> Dictionary:
 	battle_report.clear()
 	var composition: Array = _doctrine_definitions[doctrine].get("composition", []).duplicate()
 	if scenario_active and _scenario_definitions.has(scenario_id):
-		var wave_plan: Array = _scenario_definitions[scenario_id].wave_plans[mini(wave_index - 1, _scenario_definitions[scenario_id].wave_plans.size() - 1)]
+		var wave_plans: Array = _scenario_wave_plans(scenario_id, _variation_definition(scenario_id, scenario_variation_id))
+		var wave_plan: Array = wave_plans[mini(wave_index - 1, wave_plans.size() - 1)]
 		composition = wave_plan.duplicate()
 	var twilight_stakes_prepared: bool = scenario_id == "the_twilight_road" and wave_index == 3 and bool(event_flags.get("twilight_stakes_ready", false))
 	var twilight_lamps_prepared: bool = scenario_id == "the_twilight_road" and wave_index == 3 and bool(event_flags.get("twilight_lamps_ready", false))
@@ -2702,7 +2735,7 @@ func forecast() -> Dictionary:
 		for enemy in enemies:
 			forecast_enemy_ids.append(String(enemy.get("enemy_id", "")))
 	elif scenario_active and _scenario_definitions.has(scenario_id):
-		var scenario_plans: Array = _scenario_definitions[scenario_id].get("wave_plans", [])
+		var scenario_plans: Array = _scenario_wave_plans(scenario_id, _variation_definition(scenario_id, scenario_variation_id))
 		if wave_index < scenario_plans.size():
 			for enemy_id in scenario_plans[wave_index]:
 				forecast_enemy_ids.append(String(enemy_id))

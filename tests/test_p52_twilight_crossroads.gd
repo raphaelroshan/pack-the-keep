@@ -86,6 +86,7 @@ func _run(seed: int, commander_id: String, choice_id: String, resume: bool = fal
 		"flags": state.event_flags.duplicate(true),
 		"history": state.event_history.duplicate(true),
 		"report": state.scenario_report(),
+		"variation_id": state.scenario_variation_id,
 	}
 
 func _initialize() -> void:
@@ -102,11 +103,17 @@ func _initialize() -> void:
 				var forecast: Dictionary = uninterrupted.get("forecast", {})
 				var final_enemies: Array = uninterrupted.get("enemies", [])
 				_check(final_enemies.size() == 4, "final combined wave should retain four threats for %s" % label)
+				var enemy_counts: Dictionary = {"outrider": 0, "gloam_knife": 0}
 				for enemy in final_enemies:
+					var enemy_id: String = String(enemy.get("enemy_id", ""))
+					enemy_counts[enemy_id] = int(enemy_counts.get(enemy_id, 0)) + 1
 					if String(enemy.get("enemy_id", "")) == "outrider":
 						_check(bool(enemy.get("momentum_delayed", false)), "mixed answer should delay final Outriders for %s" % label)
 					if String(enemy.get("enemy_id", "")) == "gloam_knife":
 						_check(bool(enemy.get("concealment_revealed", false)), "mixed answer should reveal final Gloam Knives for %s" % label)
+				var variation_id: String = String(uninterrupted.get("variation_id", ""))
+				var expected_counts: Dictionary = {"outrider": 2, "gloam_knife": 2} if variation_id == "standard_bell" else {"outrider": 1, "gloam_knife": 3} if variation_id == "fading_light" else {"outrider": 3, "gloam_knife": 1}
+				_check(enemy_counts == expected_counts, "final composition should match disclosed %s pressure for %s" % [variation_id, label])
 				_check(bool(forecast.get("momentum_delayed", false)) and bool(forecast.get("concealment_revealed", false)), "selected recovery branch should complete the mixed answer for %s" % label)
 				var spent_flag: String = "twilight_lamps_ready" if choice_id == "carry_lamp_oil" else "twilight_stakes_ready"
 				_check(not bool(uninterrupted.flags.get(spent_flag, true)), "selected route preparation should be spent at final-wave start for %s" % label)
@@ -123,6 +130,22 @@ func _initialize() -> void:
 	redundant.open_pack("lantern_watch")
 	redundant.event_history.append({"event_id": "twilight_crossroads", "choice_id": "carry_lamp_oil", "wave": 2, "phase": "recovery", "visible_result": "", "state_changes": []})
 	_check(String(redundant.replay_mastery_summary().get("recovery_branch", {}).get("fit_text", "")).contains("REDUNDANT"), "mastery should identify duplicated route preparation without granting a stacking bonus")
+
+	var expected_variations: Dictionary = {
+		5601: ["standard_bell", ["outrider", "outrider", "gloam_knife", "gloam_knife"]],
+		5602: ["fading_light", ["outrider", "gloam_knife", "gloam_knife", "gloam_knife"]],
+		5603: ["long_twilight", ["outrider", "outrider", "outrider", "gloam_knife"]],
+	}
+	for variation_seed in expected_variations.keys():
+		var preview_state: RefCounted = PackKeepState.new(int(variation_seed))
+		preview_state.select_scenario("the_twilight_road")
+		var before_preview: String = JSON.stringify(preview_state.serialize())
+		var preview: Dictionary = preview_state.scenario_variation_preview()
+		_check(String(preview.get("id", "")) == expected_variations[variation_seed][0], "seed %d should select its stable Twilight variation" % variation_seed)
+		_check(preview.get("final_wave_plan", []) == expected_variations[variation_seed][1], "seed %d should disclose its final-wave override" % variation_seed)
+		_check(String(preview.get("summary", "")).contains("final pressure"), "every variation should disclose final pressure before entry")
+		_check(String(preview.get("summary", "")).contains("preparation focus"), "every variation should translate pressure into a preparation emphasis")
+		_check(JSON.stringify(preview_state.serialize()) == before_preview, "variation preview must not mutate authoritative state")
 
 	if failures.is_empty():
 		print("P52 Twilight Crossroads: PASS (18 mixed-plan recovery runs, save parity, and branch-aware debrief)")

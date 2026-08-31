@@ -1,6 +1,6 @@
 # Pack the Keep — Latest Visual Review
 
-**Build:** `0.36.1-route-debrief`
+**Build:** `0.37.0-seeded-pressure`
 
 **Engine:** Godot 4.7.2
 
@@ -8,17 +8,17 @@
 
 ## Evidence
 
-- [1280×720 Route Debrief sequence](visual_evidence/v0.36.1-route-debrief-review-2026-08-31/)
-- [2560×1440 Route Debrief sequence](visual_evidence/v0.36.1-route-debrief-2560x1440-review-2026-08-31/)
+- [1280×720 Seeded Pressure sequence](visual_evidence/v0.37.0-seeded-pressure-review-2026-08-31/)
+- [2560×1440 Seeded Pressure sequence](visual_evidence/v0.37.0-seeded-pressure-2560x1440-review-2026-08-31/)
 
-Each directory contains an eleven-screen flow plus a machine-readable manifest. `03c_mixed_routes_ready.png` records Road Wardens plus Crossbow Watch before commitment; `07_recovery_phase_2.png` records the blocking route decision; and `07b_lamp_route_prepared.png` records ordinary recovery returning with one action after selection.
+Each directory contains an eleven-screen flow plus a machine-readable manifest. `02_war_council.png` records the Fading Light seed's exact one-Outrider/three-Gloam final pressure and stair-visibility preparation focus; `03c_mixed_routes_ready.png` records Road Wardens plus Crossbow Watch before commitment; `07_recovery_phase_2.png` records the blocking route decision; and `09_terminal_results.png` retains the same seed pressure beside the selected and forgone recovery branches.
 
 ## Findings
 
-The War Council still introduces The Twilight Road as an advanced two-question defense. The mixed Preparation layout keeps Hook Guard and Stake Line on the ground while Crossbow Patrol and Watch Banner hold the upper wall. After phase two, **Make the Recovery Choice** leads the command rail, both downstream consequences fit in the first command-panel viewport, and ordinary repair/assignment cards stay hidden until the blocking choice resolves. Choosing lamp oil returns the normal Recovery hierarchy with exactly one action, and the final Battle exposes delayed charge plus revealed visibility together. Terminal Results now keeps the selected branch, complementary build fit, and forgone road preparation visible in its first 1280×720 viewport.
+The War Council now makes the deterministic seed actionable before commitment: Fading Light names one Outrider plus three Gloam Knives and advises prioritizing stair visibility while preserving lamp oil and Lantern Watch as alternatives. The mixed Preparation layout keeps Hook Guard and Stake Line on the ground while Crossbow Patrol and Watch Banner hold the upper wall. After phase two, **Make the Recovery Choice** leads the command rail, both downstream consequences fit in the first command-panel viewport, and ordinary repair/assignment cards stay hidden until the blocking choice resolves. Choosing lamp oil returns the normal Recovery hierarchy with exactly one action, and the final Battle visibly spawns the disclosed one-plus-three roster with delayed charge plus revealed visibility. Terminal Results retains seed pressure, preparation focus, selected branch, complementary build fit, and forgone road preparation.
 
-At 1280×720 and 125%, the recovery decision heading, setup, both consequences, and both action buttons are visible together without horizontal clipping. At 2560×1440 / 150%, the two-column keep/command composition remains readable and the combined four-threat board retains separated approach and timeline markers. The event panel no longer exposes the prototype-facing phrase `AUTHORED EVENT`, and controller focus no longer scrolls its heading out of view. Procedural actor art remains placeholder-level.
+At 1280×720 and 125%, War Council and terminal Results keep the new seed guidance visible before their primary actions, while the recovery decision heading, setup, both consequences, and both action buttons remain reachable without horizontal clipping. At 2560×1440 / 150%, War Council and live Battle retain the wide composition and separated four-threat markers; terminal Results deliberately stacks below the keep, then scrolls its focused replay action into view so the full mastery paragraph and button remain horizontally contained. The review caught and fixed the prior large-text terminal rail extending beyond the right edge. Procedural actor art remains placeholder-level.
 
 ## Next visual target
 
-The next bounded visual target is P52.3 seeded adaptation: show a seed-specific preparation change in War Council and Results without adding another permanent HUD layer. Procedural actor silhouettes remain the largest presentation-quality gap after the P52 mastery sequence.
+The next bounded visual target is P53.1 alpha-flow hardening: audit all major screens at supported scale/resolution combinations and repair only observed reachability or hierarchy regressions. Procedural actor silhouettes remain the largest presentation-quality gap after the P52 mastery sequence.

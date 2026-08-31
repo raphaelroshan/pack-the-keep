@@ -214,6 +214,23 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         for expected in ("exactly three", "variation id", "materials", "target_room", "standard_bell"):
             self.assertIn(expected, joined)
 
+    def test_scenario_rejects_invalid_final_wave_variation(self) -> None:
+        scenario = copy.deepcopy(load("data/scenarios/the_twilight_road.json"))
+        scenario["variations"][1]["final_wave_plan"] = ["missing_enemy"]
+        errors: list[str] = []
+        validator.validate_scenario(
+            Path("the_twilight_road.json"), scenario, {"gate", "north_tower"}, {"outrider", "gloam_knife"}, {"rapid_breakthrough", "veiled_entry", "twilight_crossing"}, {"greywatch_keep"}, {"road_wardens", "lantern_watch"}, set(), errors
+        )
+        self.assertIn("final_wave_plan references unknown enemy", "\n".join(errors))
+
+        scenario = copy.deepcopy(load("data/scenarios/the_twilight_road.json"))
+        scenario["variations"][1]["preparation_focus"] = ""
+        errors = []
+        validator.validate_scenario(
+            Path("the_twilight_road.json"), scenario, {"gate", "north_tower"}, {"outrider", "gloam_knife"}, {"rapid_breakthrough", "veiled_entry", "twilight_crossing"}, {"greywatch_keep"}, {"road_wardens", "lantern_watch"}, set(), errors
+        )
+        self.assertIn("preparation_focus must be one to 160 characters", "\n".join(errors))
+
     def test_scenario_rejects_invalid_difficulty_and_terminal_rule(self) -> None:
         scenario = copy.deepcopy(load("data/scenarios/last_stand.json"))
         scenario["difficulty"] = "impossible"

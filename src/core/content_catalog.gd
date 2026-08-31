@@ -919,6 +919,18 @@ func validate_scenario_definition(scenario: Dictionary, expected_id: String, kno
 			var target_room: String = String(variation.get("target_room", ""))
 			if not target_room.is_empty() and not known_room_ids.has(target_room):
 				validation_errors.append("scenario %s variation %s references unknown room: %s" % [scenario_id, variation_id, target_room])
+			if variation.has("final_wave_plan"):
+				var final_wave_plan: Variant = variation.get("final_wave_plan")
+				if not final_wave_plan is Array or final_wave_plan.is_empty() or final_wave_plan.size() > 8:
+					validation_errors.append("scenario %s variation %s final_wave_plan must contain one to eight enemies" % [scenario_id, variation_id])
+				else:
+					for enemy_id in final_wave_plan:
+						if not enemy_id is String or not enemy_ids().has(String(enemy_id)):
+							validation_errors.append("scenario %s variation %s final_wave_plan references unknown enemy: %s" % [scenario_id, variation_id, String(enemy_id)])
+			if variation.has("preparation_focus"):
+				var preparation_focus: Variant = variation.get("preparation_focus")
+				if not preparation_focus is String or String(preparation_focus).strip_edges().is_empty() or String(preparation_focus).length() > 160:
+					validation_errors.append("scenario %s variation %s preparation_focus must be one to 160 characters" % [scenario_id, variation_id])
 	if not has_standard:
 		validation_errors.append("scenario %s must include standard_bell variation" % scenario_id)
 	return validation_errors

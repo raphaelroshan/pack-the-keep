@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.36.1-route-debrief",
+  "build_version": "0.37.0-seeded-pressure",
   "status": "ready_for_human_sessions",
   "release_ready": false,
   "minimum_completed_sessions": 4,
