@@ -18,14 +18,14 @@ REQUIRED_HUMAN_GATES = {
     "forced_close_recovery", "signed_installer", "storefront_launch", "human_playtest",
 }
 EXPECTED_CONTENT_COUNTS = {
-    "keep_count": 2,
+    "keep_count": 3,
     "region_count": 1,
     "commander_count": 3,
     "piece_count": 17,
     "pack_count": 9,
     "enemy_count": 8,
     "doctrine_count": 9,
-    "scenario_count": 11,
+    "scenario_count": 12,
     "event_count": 9,
     "modifier_count": 2,
 }

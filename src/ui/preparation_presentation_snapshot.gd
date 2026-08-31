@@ -115,7 +115,8 @@ static func _layout_lens_text(keep: Object) -> String:
 	for warning in summary.get("duplicate_role_warnings", []):
 		warnings.append(String(warning))
 	var spatial_rule: Dictionary = summary.get("spatial_rule", {})
-	var spatial_state: String = "ACTIVE" if bool(spatial_rule.get("active", false)) else "INACTIVE" if String(spatial_rule.get("id", "")) == "clear_causeway" else "BASELINE"
+	var rule_id: String = String(spatial_rule.get("id", ""))
+	var spatial_state: String = "ACTIVE" if bool(spatial_rule.get("active", false)) else "INACTIVE" if rule_id in ["clear_causeway", "paired_bastions"] else "BASELINE"
 	var lines: Array[String] = [
 		"LAYOUT SUMMARY — %s | Ground %d | Upper %d | Wall %d | Courtyard %d | Keep %d" % [String(summary.get("keep_name", keep.keep_id)), int(counts.get("ground", 0)), int(counts.get("upper", 0)), int(counts.get("wall", 0)), int(counts.get("courtyard", 0)), int(counts.get("keep", 0))],
 		"Spatial rule [%s] — %s" % [spatial_state, String(spatial_rule.get("label", "No special spatial rule."))],

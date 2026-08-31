@@ -14,6 +14,14 @@ const LAYER_ORDER: Array[String] = [
 ]
 
 static func floor_profile(floor_name: String, terrain: String = "fort", high_contrast: bool = false) -> Dictionary:
+	if terrain == "ridge" and floor_name == "ground":
+		return {
+			"surface": Color("#302d3f") if not high_contrast else Color("#24213d"),
+			"frame": Color("#9ea9c7") if not high_contrast else Color("#d9e2ff"),
+			"inset": Color("#4a475d"),
+			"header": Color("#d8d5ed"),
+			"pattern": "ridge_stone"
+		}
 	if terrain == "river" and floor_name == "ground":
 		return {
 			"surface": Color("#203b49") if not high_contrast else Color("#163f55"),

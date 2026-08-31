@@ -1,0 +1,18 @@
+{
+  "id": "the_divided_bell", "content_version": 1, "status": "active", "name": "The Divided Bell",
+  "short_role": "Teach a split defense whose protection depends on staffing both exposed posts.",
+  "question": "Can the keep answer the west gate without abandoning the east arsenal?",
+  "objective": "Keep living combat defenders beside both bastions while pressure shifts across the ridge.",
+  "lesson": "Twinwatch protects every room only while both posts remain staffed; concentration on one side gives up the shared warning chain.",
+  "keep_id": "twinwatch_bastion",
+  "recommended_packs": ["shieldwall", "runner_network"],
+  "starting_doctrine": "gate_assault",
+  "doctrines": ["gate_assault", "feint_and_flank", "area_pressure"],
+  "wave_plans": [["raider", "raider"], ["climber", "sapper"], ["siege_beast", "raider"]],
+  "event_chain": [],
+  "variations": [
+    {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
+    {"id": "west_squall", "materials": -2, "morale": 1, "target_room": "gate"},
+    {"id": "east_stores", "materials": 2, "morale": -1, "target_room": "armory"}
+  ]
+}

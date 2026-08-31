@@ -2,7 +2,8 @@ extends RefCounted
 
 const KEEP_PATHS: Array[String] = [
 	"res://data/keeps/greywatch_keep.json",
-	"res://data/keeps/ash_ford_redoubt.json"
+	"res://data/keeps/ash_ford_redoubt.json",
+	"res://data/keeps/twinwatch_bastion.json"
 ]
 
 const REGION_PATHS: Array[String] = [
@@ -81,6 +82,7 @@ const SCENARIO_PATHS: Array[String] = [
 	"res://data/scenarios/three_bells_at_dusk.json",
 	"res://data/scenarios/ash_ford_crossing.json",
 	"res://data/scenarios/the_cut_standard.json",
+	"res://data/scenarios/the_divided_bell.json",
 	"res://data/scenarios/last_stand.json"
 ]
 
@@ -706,7 +708,7 @@ func validate_keep_definition(keep: Dictionary, expected_id: String) -> Array[St
 			else:
 				connection_keys.append(key)
 	var spatial_rule: Variant = keep.get("spatial_rule")
-	if not spatial_rule is Dictionary or not ["compact_adjacency", "clear_causeway"].has(String(spatial_rule.get("id", ""))) or not spatial_rule.get("lane_cells") is Array or not _is_integer_number(spatial_rule.get("room_damage_reduction")) or int(spatial_rule.get("room_damage_reduction", -1)) < 0 or int(spatial_rule.get("room_damage_reduction", -1)) > 3 or not spatial_rule.get("label") is String or String(spatial_rule.get("label", "")).strip_edges().is_empty():
+	if not spatial_rule is Dictionary or not ["compact_adjacency", "clear_causeway", "paired_bastions"].has(String(spatial_rule.get("id", ""))) or not spatial_rule.get("lane_cells") is Array or not _is_integer_number(spatial_rule.get("room_damage_reduction")) or int(spatial_rule.get("room_damage_reduction", -1)) < 0 or int(spatial_rule.get("room_damage_reduction", -1)) > 3 or not spatial_rule.get("label") is String or String(spatial_rule.get("label", "")).strip_edges().is_empty():
 		validation_errors.append("keep %s has an invalid spatial_rule" % keep_id)
 	elif String(spatial_rule.get("id", "")) == "clear_causeway":
 		if spatial_rule.get("lane_cells", []).is_empty() or int(spatial_rule.get("room_damage_reduction", 0)) < 1:
@@ -714,11 +716,15 @@ func validate_keep_definition(keep: Dictionary, expected_id: String) -> Array[St
 		for cell in spatial_rule.get("lane_cells", []):
 			if not cell is Array or cell.size() != 2 or not _is_integer_number(cell[0]) or not _is_integer_number(cell[1]) or int(cell[0]) < 0 or int(cell[0]) >= 12 or int(cell[1]) < 0 or int(cell[1]) >= 8:
 				validation_errors.append("keep %s clear_causeway contains an invalid cell" % keep_id)
+	elif String(spatial_rule.get("id", "")) == "paired_bastions":
+		var anchors: Variant = spatial_rule.get("anchor_rooms")
+		if not anchors is Array or anchors.size() != 2 or String(anchors[0]) == String(anchors[1]) or not rooms.has(String(anchors[0])) or not rooms.has(String(anchors[1])) or int(spatial_rule.get("room_damage_reduction", 0)) < 1:
+			validation_errors.append("keep %s paired_bastions needs two distinct known anchor rooms and positive room damage reduction" % keep_id)
 	var recovery: Variant = keep.get("recovery_profile")
 	if not recovery is Dictionary or not _is_integer_number(recovery.get("room_repair_materials")) or int(recovery.get("room_repair_materials", 0)) < 1 or not _is_integer_number(recovery.get("room_repair_condition")) or int(recovery.get("room_repair_condition", 0)) < 1 or int(recovery.get("room_repair_condition", 0)) > 100 or not recovery.get("question") is String or String(recovery.get("question", "")).strip_edges().is_empty():
 		validation_errors.append("keep %s has an invalid recovery_profile" % keep_id)
 	var visual: Variant = keep.get("visual")
-	if not visual is Dictionary or not ["fort", "river"].has(String(visual.get("terrain", ""))):
+	if not visual is Dictionary or not ["fort", "river", "ridge"].has(String(visual.get("terrain", ""))):
 		validation_errors.append("keep %s has an invalid visual profile" % keep_id)
 	else:
 		for field in ["ground_label", "upper_label", "board_label"]:

@@ -1,0 +1,24 @@
+{
+  "id": "twinwatch_bastion",
+  "content_version": 1,
+  "status": "active",
+  "name": "Twinwatch Bastion",
+  "short_role": "A cold ridge fort split between two exposed defensive posts.",
+  "question": "Can both posts stay staffed without making either one disposable?",
+  "grid_size": [12, 8],
+  "rooms": {
+    "gate": {"name": "West Gatehouse", "floor": "ground", "origin": [0, 3], "size": [2, 2], "critical": true, "role": "western approach and first alarm"},
+    "outer_wall": {"name": "West Battlement", "floor": "upper", "origin": [0, 1], "size": [4, 1], "critical": false, "role": "western overwatch"},
+    "inner_yard": {"name": "Bell Court", "floor": "ground", "origin": [5, 3], "size": [2, 2], "critical": false, "role": "narrow transfer point between posts"},
+    "armory": {"name": "East Arsenal", "floor": "ground", "origin": [10, 3], "size": [2, 2], "critical": true, "role": "eastern approach and weapon reserve"},
+    "workshop": {"name": "West Forge", "floor": "ground", "origin": [2, 6], "size": [2, 2], "critical": true, "role": "western repair support"},
+    "barracks": {"name": "East Quarters", "floor": "ground", "origin": [8, 6], "size": [2, 2], "critical": false, "role": "eastern defender assignment"},
+    "supply_room": {"name": "Central Magazine", "floor": "ground", "origin": [5, 6], "size": [2, 2], "critical": true, "role": "shared reserve between both posts"},
+    "north_tower": {"name": "East Watch", "floor": "upper", "origin": [8, 1], "size": [4, 1], "critical": false, "role": "eastern overwatch"},
+    "old_chapel": {"name": "Ridge Chapel", "floor": "upper", "origin": [5, 0], "size": [2, 2], "critical": false, "role": "central refuge and signal relay"}
+  },
+  "connections": [["gate", "inner_yard"], ["armory", "inner_yard"], ["gate", "workshop"], ["armory", "barracks"], ["workshop", "supply_room"], ["barracks", "supply_room"], ["outer_wall", "old_chapel"], ["north_tower", "old_chapel"]],
+  "spatial_rule": {"id": "paired_bastions", "lane_cells": [], "anchor_rooms": ["gate", "armory"], "room_damage_reduction": 1, "label": "Staff both marked bastions with living combat defenders to reduce room damage by 1."},
+  "recovery_profile": {"room_repair_materials": 7, "room_repair_condition": 25, "question": "Which post can be restored without abandoning the other?"},
+  "visual": {"terrain": "ridge", "ground_label": "TWIN BASTIONS", "upper_label": "RIDGE WATCH", "board_label": "TWINWATCH / SPLIT DEFENSE"}
+}
