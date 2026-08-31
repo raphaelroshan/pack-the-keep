@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.42.0-combat-vfx` — the development candidate adds restrained temporary CC0 response and impact textures to the existing licensed actors and semantic foley, while retaining responsive decisions, deterministic tactical overlays, accessibility, save/resume, terminal-results, packaged K8, and forced-close gates; human sessions and owner approval remain pending
+**Current build identity:** `0.43.0-room-feedback` — the development candidate adds state-driven damaged-room atmosphere and localized repair confirmation to the existing licensed actors, semantic foley, and combat effects, while retaining responsive decisions, deterministic tactical overlays, accessibility, save/resume, terminal-results, packaged K8, and forced-close gates; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch, Ash Ford, and Twinwatch support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan, Warden, or Quartermaster, select one of fifteen authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown, Rally, or Resupply, inspect health, armor, signal state, breakthrough momentum, concealment visibility, protection, assigned-specialist priority, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.43.0 acceptance checks
+
+Enter Recovery with a damaged or breached room. Confirm the room carries restrained smoke/scorch beneath its name, state, health bar, selection, and target cues. Repair that room and a damaged defender; each successful action must produce one localized green spark and exact restored-value label. Blocked repairs must not create success feedback. Verify reduced motion shortens the pulse and that save/replay state contains no presentation feedback.
 
 ## v0.42.0 acceptance checks
 

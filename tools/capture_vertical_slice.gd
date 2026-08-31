@@ -15,6 +15,7 @@ var capture_twilight_choice: bool = false
 var capture_starting_defender: bool = false
 var capture_battle_exchange: bool = false
 var capture_battle_exchange_progress: float = 0.28
+var capture_repair_feedback: bool = false
 
 func _initialize() -> void:
 	if DisplayServer.get_name() == "headless":
@@ -35,6 +36,7 @@ func _initialize() -> void:
 	capture_twilight_choice = OS.get_cmdline_user_args().has("--capture-twilight-choice")
 	capture_starting_defender = OS.get_cmdline_user_args().has("--inspect-starting-defender")
 	capture_battle_exchange = OS.get_cmdline_user_args().has("--capture-battle-exchange")
+	capture_repair_feedback = OS.get_cmdline_user_args().has("--capture-repair-feedback")
 	if not _argument_value("--battle-exchange-progress=").is_empty():
 		capture_battle_exchange_progress = clampf(float(_argument_value("--battle-exchange-progress=")), 0.0, 0.99)
 	if output_dir.is_empty():
@@ -141,6 +143,18 @@ func _run_capture() -> void:
 	await _capture("06_assault_phase_2", ui)
 	await _resolve_phase(ui)
 	await _capture("07_recovery_phase_2", ui)
+	if capture_repair_feedback and ui.keep.repair_interval_active and ui.keep.active_event_id.is_empty():
+		for room_id_value in ui.keep.room_definitions().keys():
+			var room_id: String = String(room_id_value)
+			if ui.keep.room_condition(room_id) >= 100:
+				continue
+			ui._select_option_metadata(ui.room_option, room_id)
+			ui._on_repair_room()
+			ui.keep_canvas.set_process(false)
+			ui.keep_canvas.queue_redraw()
+			await _capture("07c_room_repair_feedback", ui)
+			ui.keep_canvas.set_process(true)
+			break
 	if ui.keep.active_event_id == "twilight_crossroads":
 		ui._on_authored_event_choice_id("carry_lamp_oil")
 		await _capture("07b_lamp_route_prepared", ui)
@@ -197,6 +211,7 @@ func _write_manifest() -> void:
 		"starting_defender_inspected": capture_starting_defender,
 		"battle_exchange_staged": capture_battle_exchange,
 		"battle_exchange_progress": capture_battle_exchange_progress if capture_battle_exchange else null,
+		"repair_feedback_captured": capture_repair_feedback,
 		"files": captured_files,
 		"debug_ui": OS.get_cmdline_user_args().has("--debug-ui"),
 		"human_evidence": false,

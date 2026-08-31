@@ -38,6 +38,14 @@ func _initialize() -> void:
 	_check(String(ranged.piece.get("sprite_path", "")).ends_with("tile_0124.png") and bool(ranged.get("piece_texture_loaded", false)), "ranged defenders should resolve a distinct temporary actor sprite")
 	_check(String(ranged.enemy.get("sprite_path", "")).ends_with("tile_0160.png") and bool(ranged.get("enemy_texture_loaded", false)), "ranged enemies should resolve the temporary hostile ranged sprite")
 	_check(String(board.get("temporary_actor_source", "")).contains("CC0"), "the board snapshot should identify temporary actor provenance")
+	var stable_effect: Dictionary = BoardVisualRegistry.room_damage_effect_profile("stable")
+	var damaged_effect: Dictionary = BoardVisualRegistry.room_damage_effect_profile("damaged")
+	var breached_effect: Dictionary = BoardVisualRegistry.room_damage_effect_profile("breached")
+	_check(not bool(stable_effect.get("active", true)) and String(stable_effect.get("texture_path", "")).is_empty(), "stable rooms should remain visually quiet")
+	_check(bool(damaged_effect.get("active", false)) and ResourceLoader.exists(String(damaged_effect.get("texture_path", ""))), "damaged rooms should resolve a loadable temporary atmosphere texture")
+	_check(bool(breached_effect.get("active", false)) and ResourceLoader.exists(String(breached_effect.get("texture_path", ""))) and damaged_effect.get("texture_path") != breached_effect.get("texture_path"), "breached rooms should resolve a distinct stronger atmosphere texture")
+	var repair_effect: Dictionary = BoardVisualRegistry.repair_effect_profile()
+	_check(ResourceLoader.exists(String(repair_effect.get("texture_path", ""))) and String(repair_effect.get("asset_status", "")) == "temporary_cc0", "repair feedback should resolve a loadable temporary CC0 effect")
 
 	var enemy_shapes: Dictionary = board.get("enemy_shapes", {})
 	var unique_shapes: Dictionary = {}

@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "build_version": "0.43.0-room-feedback",
+  "captured_at": "2026-08-31",
+  "resolution": {
+    "width": 1600,
+    "height": 900
+  },
+  "ui_scale_percent": 100,
+  "scenario": "gatehouse_lock",
+  "capture_method": "Godot 4.7.2 local graphical renderer through tools/capture_vertical_slice.gd",
+  "temporary_asset_source": "Kenney Particle Pack · CC0",
+  "files": [
+    {
+      "path": "01_damaged_room.png",
+      "state": "phase_2_recovery_before_repair",
+      "subject": "damaged_armory"
+    },
+    {
+      "path": "02_room_repair.png",
+      "state": "phase_2_recovery_after_repair",
+      "subject": "armory_plus_30_structure"
+    }
+  ],
+  "human_evidence": false
+}
