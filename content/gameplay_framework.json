@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.40.0-actor-readability",
+  "framework_version": "0.41.0-tactile-audio",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -26,9 +26,9 @@
     "named_input_actions": ["battle_pause", "battle_advance", "battle_speed_half", "battle_speed_normal", "battle_speed_double", "battle_manual_step", "placement_arm", "placement_cancel", "report_focus", "feedback_mute", "contrast_toggle"],
     "feedback_cues": ["room_condition_bars", "piece_health_bars", "explicit_state_labels", "declared_target_lines", "siege_beast_area_radius", "transient_defender_engagement_traces", "transient_impact_recovery_frame"],
     "accessibility": ["high_contrast_cues", "keyboard_mouse_path", "focusable_controls", "scrollable_command_panel", "mute_feedback_tones"],
-    "audio": "optional_code_generated_feedback_tones_only",
+    "audio": "pooled_temporary_cc0_semantic_samples_with_generated_tone_fallback",
     "determinism_rule": "pause_speed_input_and_presentation_feedback_do_not mutate authoritative keep outcomes",
-    "deferred": ["controller_remapping", "final_animation_sheets", "authored_soundscape", "dedicated_warden_and_siege_beast_art"]
+    "deferred": ["final_animation_sheets", "authored_greywatch_soundscape", "dedicated_warden_and_siege_beast_art"]
   },
   "p3_focus_and_response": {
     "status": "implemented",
