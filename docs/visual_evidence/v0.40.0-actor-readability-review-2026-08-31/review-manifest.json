@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "build_version": "0.40.0-actor-readability",
+  "engine": "Godot 4.7.2",
+  "capture_method": "tools/capture_vertical_slice.gd with the local OpenGL compatibility renderer",
+  "human_evidence": false,
+  "viewport": {"width": 1600, "height": 900, "ui_scale_percent": 100},
+  "asset_source": "Kenney Tiny Battle",
+  "asset_license": "CC0",
+  "states": ["preparation", "defender_response", "four_threat_assault", "siege_assault"],
+  "files": [
+    "01_preparation_actor_mix.png",
+    "02_defender_response.png",
+    "03_four_threat_assault.png",
+    "04_siege_actor.png"
+  ]
+}

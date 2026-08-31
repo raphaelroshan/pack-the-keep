@@ -3994,6 +3994,7 @@ class KeepCanvas extends Control:
 	var tutorial_target_label: String = ""
 	var authored_fort_texture: Texture2D
 	var inspected_subject: Dictionary = {}
+	var actor_texture_cache: Dictionary = {}
 
 	func set_authored_fort_texture(texture: Texture2D) -> void:
 		authored_fort_texture = texture
@@ -4377,10 +4378,35 @@ class KeepCanvas extends Control:
 	func actor_visual_snapshot(piece_id: String, enemy_id: String) -> Dictionary:
 		var piece: Dictionary = keep.piece_definition(piece_id) if keep != null else {}
 		var enemy: Dictionary = keep.enemy_definition(enemy_id) if keep != null else {}
+		var piece_profile: Dictionary = BoardVisuals.piece_profile(piece_id, String(piece.get("combat_style", "support")))
+		var enemy_profile: Dictionary = BoardVisuals.enemy_profile(enemy_id, String(enemy.get("attack_style", "melee")))
 		return {
-			"piece": BoardVisuals.piece_profile(piece_id, String(piece.get("combat_style", "support"))),
-			"enemy": BoardVisuals.enemy_profile(enemy_id, String(enemy.get("attack_style", "melee")))
+			"piece": piece_profile,
+			"enemy": enemy_profile,
+			"piece_texture_loaded": _actor_texture(String(piece_profile.get("sprite_path", ""))) != null,
+			"enemy_texture_loaded": _actor_texture(String(enemy_profile.get("sprite_path", ""))) != null,
 		}
+
+	func _actor_texture(path: String) -> Texture2D:
+		if path.is_empty():
+			return null
+		if actor_texture_cache.has(path):
+			return actor_texture_cache[path]
+		var texture: Texture2D = load(path) as Texture2D if ResourceLoader.exists(path) else null
+		actor_texture_cache[path] = texture
+		return texture
+
+	func _draw_actor_sprite(origin: Vector2, diameter: float, profile: Dictionary) -> bool:
+		var texture: Texture2D = _actor_texture(String(profile.get("sprite_path", "")))
+		if texture == null:
+			return false
+		var sprite_size: Vector2 = Vector2(diameter, diameter)
+		var sprite_rect: Rect2 = Rect2(origin - sprite_size * 0.5, sprite_size)
+		draw_circle(origin + Vector2(0.0, diameter * 0.34), diameter * 0.34, Color(0.03, 0.025, 0.04, 0.48))
+		draw_texture_rect(texture, sprite_rect, false)
+		if high_contrast_mode:
+			draw_rect(sprite_rect.grow(1.0), Color("#fff4df"), false, 1.0)
+		return true
 
 	func _timeline_marker_origin(tick_number: int, marker_index: int, marker_count: int) -> Vector2:
 		var layout: Dictionary = _timeline_layout()
@@ -4844,7 +4870,9 @@ class KeepCanvas extends Control:
 			draw_rect(Rect2(piece_card.position, Vector2(4.0, piece_card.size.y)), color, true)
 			draw_rect(piece_rect.grow(-3), Color("#f1dfb8"), false, 1.5)
 			_draw_piece_role_badge(piece_rect, String(piece_profile.shape), color)
-			_draw_piece_glyph(piece_rect, piece_id, color)
+			var piece_actor_origin: Vector2 = piece_rect.position + Vector2(piece_rect.size.x - 9.0, piece_rect.size.y * 0.5 + 2.0)
+			if not _draw_actor_sprite(piece_actor_origin, minf(20.0, piece_rect.size.y - 8.0), piece_profile):
+				_draw_piece_glyph(piece_rect, piece_id, color)
 			draw_string(ThemeDB.fallback_font, piece_rect.position + Vector2(7, 14), _compact_board_label(String(piece.name), piece_rect.size.x - 24.0, 9), HORIZONTAL_ALIGNMENT_LEFT, piece_rect.size.x - 24, 9, Color("#f4e6ce"))
 			var piece_health: int = int(instance.get("health", 0))
 			var piece_health_rect: Rect2 = Rect2(piece_rect.position + Vector2(4, piece_rect.size.y - 10), Vector2(piece_rect.size.x - 8.0, 6.0))
@@ -5010,9 +5038,9 @@ class KeepCanvas extends Control:
 			var enemy_def: Dictionary = keep.enemy_definition(enemy_id)
 			var enemy_origin: Vector2 = _enemy_origin(index) + _enemy_reaction_offset(index)
 			var enemy_profile: Dictionary = BoardVisuals.enemy_profile(enemy_id, String(enemy_def.get("attack_style", "melee")))
-			var enemy_color: Color = enemy_profile.color
-			var marker_radius: float = 8.0 * float(enemy_profile.scale)
+			var marker_radius: float = 10.0 * float(enemy_profile.scale)
 			_draw_enemy_silhouette(enemy_origin, marker_radius, enemy_profile)
+			var enemy_actor_drawn: bool = _draw_actor_sprite(enemy_origin, marker_radius * 1.65, enemy_profile)
 			var enemy_health: int = int(enemy.get("hp", 0))
 			var enemy_max_health: int = int(enemy.get("max_health", enemy_def.get("health", 1)))
 			var enemy_bar_width: float = 34.0 if enemy_id == "siege_beast" else 28.0
@@ -5066,7 +5094,8 @@ class KeepCanvas extends Control:
 				draw_circle(target_rect.get_center(), 8.0, Color("#fff4df") if index == focused_enemy_index else Color("#ffb0a6"), false, 2.0)
 				_draw_enemy_windup(index, enemy_origin, target_rect.get_center(), marker_radius)
 			var doctrine_initial: String = _enemy_marker_initial(enemy_id)
-			draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(-3, 4), doctrine_initial, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#271b22"))
+			if not enemy_actor_drawn:
+				draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(-3, 4), doctrine_initial, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#271b22"))
 
 	func _draw_assault_timeline() -> void:
 		if keep == null or not keep.wave_active:
