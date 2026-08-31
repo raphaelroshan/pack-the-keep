@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "build_version": "0.42.0-combat-vfx",
+  "captured_at": "2026-08-31",
+  "resolution": {
+    "width": 1600,
+    "height": 900
+  },
+  "ui_scale_percent": 100,
+  "scenario": "gatehouse_lock",
+  "capture_method": "Godot 4.7.2 local graphical renderer through tools/capture_vertical_slice.gd",
+  "temporary_asset_source": "Kenney Particle Pack · CC0",
+  "files": [
+    {
+      "path": "01_defender_response.png",
+      "battle_exchange_step": 1,
+      "battle_exchange_progress": 0.28,
+      "beat": "defender_response"
+    },
+    {
+      "path": "02_hostile_impact.png",
+      "battle_exchange_step": 1,
+      "battle_exchange_progress": 0.64,
+      "beat": "hostile_impact"
+    }
+  ],
+  "human_evidence": false
+}

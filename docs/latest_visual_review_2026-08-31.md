@@ -1,18 +1,19 @@
 # Pack the Keep — Latest Visual Review
 
-**Visual baseline:** `0.40.0-actor-readability` (unchanged by `0.41.0-tactile-audio`)
+**Build:** `0.42.0-combat-vfx`
 
 **Engine:** Godot 4.7.2
 
-**Capture:** Real local renderer at 1600×900 / 100% for Preparation, a paused defender-response exchange, the four-threat final assault, and a Siege Beast assault; prior responsive evidence remains at 1280×720 and Large Text.
+**Capture:** Real local renderer at 1600×900 / 100% for defender-response and hostile-impact beats; prior actor, full-flow, responsive, and Large Text evidence remains active.
 
 ## Evidence
 
+- [Combat VFX review](visual_evidence/v0.42.0-combat-vfx-review-2026-08-31/)
 - [Temporary actor-readability review](visual_evidence/v0.40.0-actor-readability-review-2026-08-31/)
 - [Responsive decision-surface review](visual_evidence/v0.39.0-responsive-decisions-review-2026-08-31/)
 - [Earlier complete seeded-pressure sequence](visual_evidence/v0.37.0-seeded-pressure-review-2026-08-31/)
 
-The actor-readability review contains four normal-distance checkpoints plus a machine-readable manifest recording build, viewport, state, asset source, and capture method. The responsive review remains the narrow/Large Text regression reference, and the earlier complete sequence remains the broader Battle, Recovery, and Results reference.
+The combat-VFX review contains two normal-distance beat checkpoints plus a machine-readable manifest recording build, viewport, state, asset source, and capture method. The actor review remains the unit-recognition reference, the responsive review remains the narrow/Large Text regression reference, and the earlier complete sequence remains the broader Battle, Recovery, and Results reference.
 
 ## Findings
 
@@ -20,7 +21,7 @@ Temporary Tiny Battle actors now occupy the center of active defender and hostil
 
 Preparation retains piece names, role colors, health bars, room edges, and floor separation around the new actors. During Battle, focus rings, target lines, cadence, health, defender-response traces, and specialist labels remain more prominent than the sprite detail. Timeline markers deliberately remain procedural because the source sprites are unreadable at that scale. The borrowed art is visibly temporary and toy-like, but it materially improves actor recognition without claiming final Greywatch production quality.
 
-`0.41.0-tactile-audio` changes audio presentation only, so these visual findings and captures remain the current visual baseline.
+The P57 response and impact textures add a restrained material flash inside the existing projectile, slash, ring, recoil, health-trail, and damage-number grammar. They remain localized to the resolved target and do not obscure room names, health bars, focus rings, timeline markers, or the command rail. The borrowed effects are intentionally low-opacity and remain temporary; the procedural marks still carry the readable fallback and high-contrast structure.
 
 ## Next visual target
 

@@ -1,14 +1,18 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.41.0-tactile-audio` — the development candidate adds pooled temporary CC0 foley to the existing semantic battle cues and licensed actor sprites, while retaining responsive decisions, deterministic tactical overlays, accessibility, save/resume, terminal-results, packaged K8, and forced-close gates; human sessions and owner approval remain pending
+**Current build identity:** `0.42.0-combat-vfx` — the development candidate adds restrained temporary CC0 response and impact textures to the existing licensed actors and semantic foley, while retaining responsive decisions, deterministic tactical overlays, accessibility, save/resume, terminal-results, packaged K8, and forced-close gates; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch, Ash Ford, and Twinwatch support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan, Warden, or Quartermaster, select one of fifteen authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown, Rally, or Resupply, inspect health, armor, signal state, breakthrough momentum, concealment visibility, protection, assigned-specialist priority, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
 
+## v0.42.0 acceptance checks
+
+Prepare melee and ranged defenders, then enter Battle against melee, ranged, and demolition threats. Confirm response and impact textures remain brief and subordinate to health trails, damage labels, target lines, focus rings, and room state. Toggle reduced motion, pause, manual-step, and each speed. Confirm missing effect textures leave procedural projectile, slash, ring, and damage feedback intact. Verify the `0.41.0` foley acceptance checks as a regression. All borrowed actors, effects, and sounds remain temporary CC0 testing material rather than final Greywatch production work.
+
 ## v0.41.0 acceptance checks
 
-Prepare one melee and one ranged defender, then enter Battle against melee, ranged, demolition, fast, concealed, and siege threats. Confirm the board shows readable temporary actors while the original tactical overlays remain legible. With feedback audio enabled, confirm warning, contact, response, impact, breach, recovery, and terminal cues are distinct and restrained; then verify mute and each effects-volume preset. Missing samples must retain generated-tone fallback, and all Tiny Battle, Interface Sounds, and RPG Audio content remains temporary CC0 testing material rather than final Greywatch production work.
+With feedback audio enabled, confirm warning, contact, response, impact, breach, recovery, and terminal cues are distinct and restrained; then verify mute and each effects-volume preset. Missing samples must retain generated-tone fallback.
 
 ## v0.39.0 acceptance checks
 

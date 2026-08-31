@@ -7,6 +7,11 @@ const TEMP_ENEMY_RANGED := "res://assets/temporary/kenney/tiny-battle/Tiles/tile
 const TEMP_ENEMY_MELEE := "res://assets/temporary/kenney/tiny-battle/Tiles/tile_0161.png"
 const TEMP_ENEMY_HEAVY := "res://assets/temporary/kenney/tiny-battle/Tiles/tile_0179.png"
 const TEMP_SIEGE_ACTOR := "res://assets/temporary/kenney/tiny-battle/Tiles/tile_0170.png"
+const TEMP_DEFENDER_RANGED_EFFECT := "res://assets/temporary/kenney/particle-pack/spark_01.png"
+const TEMP_DEFENDER_MELEE_EFFECT := "res://assets/temporary/kenney/particle-pack/slash_01.png"
+const TEMP_HOSTILE_RANGED_EFFECT := "res://assets/temporary/kenney/particle-pack/spark_02.png"
+const TEMP_HOSTILE_MELEE_EFFECT := "res://assets/temporary/kenney/particle-pack/slash_02.png"
+const TEMP_DEMOLITION_EFFECT := "res://assets/temporary/kenney/particle-pack/scorch_01.png"
 
 const ACTOR_PIECES: Array[String] = [
 	"pike_squad", "fire_team", "runner_pair", "rear_guard", "crossbow_patrol",
@@ -160,6 +165,28 @@ static func _enemy_sprite_path(enemy_id: String, attack_style: String) -> String
 		return TEMP_ENEMY_RANGED
 	return TEMP_ENEMY_MELEE
 
+static func combat_effect_profile(source_side: String, attack_style: String) -> Dictionary:
+	var defender: bool = source_side == "defender"
+	var effect_path: String
+	var size: float
+	if attack_style == "ranged":
+		effect_path = TEMP_DEFENDER_RANGED_EFFECT if defender else TEMP_HOSTILE_RANGED_EFFECT
+		size = 34.0
+	elif attack_style == "demolition":
+		effect_path = TEMP_DEMOLITION_EFFECT
+		size = 48.0
+	else:
+		effect_path = TEMP_DEFENDER_MELEE_EFFECT if defender else TEMP_HOSTILE_MELEE_EFFECT
+		size = 40.0
+	return {
+		"source_side": source_side,
+		"attack_style": attack_style,
+		"texture_path": effect_path,
+		"size": size,
+		"asset_status": "temporary_cc0",
+		"source": "Kenney Particle Pack · CC0",
+	}
+
 static func presentation_snapshot() -> Dictionary:
 	return {
 		"layers": LAYER_ORDER.duplicate(),
@@ -180,4 +207,6 @@ static func presentation_snapshot() -> Dictionary:
 		},
 		"temporary_actor_assets": true,
 		"temporary_actor_source": "Kenney Tiny Battle · CC0",
+		"temporary_combat_effects": true,
+		"temporary_combat_effect_source": "Kenney Particle Pack · CC0",
 	}

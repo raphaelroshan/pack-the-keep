@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.41.0-tactile-audio",
+  "build_version": "0.42.0-combat-vfx",
   "status": "ready_for_human_sessions",
   "release_ready": false,
   "minimum_completed_sessions": 4,
