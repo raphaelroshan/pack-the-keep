@@ -59,7 +59,7 @@ func render(view_model: Dictionary) -> void:
 	status_label.text = "PACK %d / %d  •  %d OPENING(S)  •  %d MATERIALS  •  %s" % [int(view_model.get("index", 0)), int(view_model.get("count", 0)), int(view_model.get("openings", 0)), int(view_model.get("materials", 0)), String(view_model.get("state", "AVAILABLE"))]
 	name_label.text = String(view_model.get("name", "Pack"))
 	role_label.text = "%s\nQUESTION — %s" % [String(view_model.get("role", "Choose a defensive doctrine.")), String(view_model.get("question", "What does this pack ask of the keep?"))]
-	detail_label.text = "PACK PREVIEW — %s\nDOCTRINE — %s  •  OPEN COST — %d\nADDS — %s\nSOLVES — %s\nLIMITATION — %s\nSPACE — %s\nTRADE-OFF — %s" % [String(view_model.get("name", "Pack")), String(view_model.get("doctrine", "")), int(view_model.get("cost", 0)), String(view_model.get("pieces", "")), String(view_model.get("strength", "")), String(view_model.get("weakness", "")), String(view_model.get("space", "")), String(view_model.get("choice", ""))]
+	detail_label.text = "PACK PREVIEW — %s\nDOCTRINE — %s  •  OPEN COST — %s\nADDS — %s\nSOLVES — %s\nLIMITATION — %s\nSPACE — %s\nTRADE-OFF — %s" % [String(view_model.get("name", "Pack")), String(view_model.get("doctrine", "")), String(view_model.get("cost_text", view_model.get("cost", 0))), String(view_model.get("pieces", "")), String(view_model.get("strength", "")), String(view_model.get("weakness", "")), String(view_model.get("space", "")), String(view_model.get("choice", ""))]
 	previous_button.disabled = bool(view_model.get("selection_locked", false))
 	next_button.disabled = previous_button.disabled
 	open_button.disabled = not bool(view_model.get("can_open", false))

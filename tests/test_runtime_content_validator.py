@@ -20,6 +20,20 @@ def load(relative_path: str) -> dict:
 
 
 class RuntimeContentValidatorTests(unittest.TestCase):
+    def test_quartermaster_profiles_require_bounded_matching_values(self) -> None:
+        commander = copy.deepcopy(load("data/commanders/quartermaster.json"))
+        commander["passive_profile"]["first_pack_discount"] = -1
+        commander["ability_profile"]["kind"] = "lockdown"
+        errors: list[str] = []
+        validator.validate_commander(
+            Path("quartermaster.json"), commander, {"support", "mobile_response"},
+            {"quartermaster": {"name": "The Quartermaster", "ability": "resupply", "favored_packs": ["field_engineers", "fallback_convoy"]}},
+            {"field_engineers": "support", "fallback_convoy": "mobile_response"}, set(), errors,
+        )
+        joined = "\n".join(errors)
+        self.assertIn("first_pack_discount", joined)
+        self.assertIn("ability_profile kind", joined)
+
     def test_keep_rejects_overlaps_and_unbounded_profiles(self) -> None:
         keep = copy.deepcopy(load("data/keeps/ash_ford_redoubt.json"))
         keep["rooms"]["gate"]["origin"] = [3, 3]
@@ -348,7 +362,7 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         errors: list[str] = []
         validator.validate_event(
             Path("mara_second_door.json"), event, {"gatehouse_lock"}, set(), set(), errors,
-            {"workshop"}, {"repair_station"},
+            {"workshop"}, {"repair_station"}, {"castellan", "warden", "quartermaster"},
         )
         joined = "\n".join(errors)
         self.assertIn("any_flag eligibility contains an invalid flag", joined)

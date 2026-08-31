@@ -839,3 +839,11 @@
 **Reason:** In-process malformed-file tests and clean shutdown do not prove that recovery survives an abrupt executable termination. Coordinating the kill outside Godot tests the persistence boundary while keeping the fixture deterministic and auditable.
 
 **Trade-off:** The fixture deliberately chooses the interrupted-file shape and termination moment. It does not emulate every antivirus, filesystem, power-loss, or physical-device condition, so the broader human forced-close checklist remains pending.
+
+## ADR-106: The Quartermaster prices and restores reserves through commander profiles
+
+**Decision:** Add the Quartermaster as the first P51 commander lens. Their authored passive profile discounts only the first pack opened in each Preparation and increases the first surviving Supply Cache payout. Their authored Resupply profile restores bounded health and ammunition to living defenders once per assault. `PackKeepState` remains the sole authority for cost, recovery, mutation, command-point spending, and save state.
+
+**Reason:** The design framework already identifies reserve and repair economics as the next distinct commander question. Existing pack-opening, Supply Cache, finite-ammunition, health, recovery, and commander-ability rules can express that question without adding another progression track or combat exception.
+
+**Trade-off:** The Quartermaster deliberately has a weaker immediate reserve and gains value over multiple decisions, so very short scenarios may make the lens feel less forgiving. The first P51 slice therefore extends deterministic coverage before adding any new keep, pack, or enemy family, and the existing P16 human cohort remains scoped to its original two commanders until a new cohort is scheduled.

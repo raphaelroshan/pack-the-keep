@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.30.1",
+  "content_version": "0.31.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -181,9 +181,9 @@
   "p12_alpha_scenario_matrix": {
     "status": "implemented",
     "scenarios": 10,
-    "commanders": 2,
+    "commanders": 3,
     "seeds_per_pair": 3,
-    "simulation_executions": 120,
+    "simulation_executions": 180,
     "resume_boundaries": ["wave_one_pre_step", "first_recovery_before_event_resolution", "wave_two_pre_step"],
     "contract": "byte_identical_uninterrupted_and_resumed_three_wave_non_collapse_baselines_with_closed_terminal_recovery_and_event_state",
     "evidence": ["design/p12_alpha_scenario_matrix.md", "tests/test_p12_alpha_scenario_matrix.gd"],
@@ -646,6 +646,16 @@
     "evidence": ["design/p54_packaged_forced_close_recovery.md", "docs/p54_forced_close_recovery_verification.md", "src/platform/packaged_smoke.gd", "tools/run_packaged_smoke.py", "tests/test_packaged_smoke_runner.py"],
     "next_slice": "human_private_alpha_sessions_when_owner_schedules_them"
   },
+  "p51_quartermaster_commander_lens": {
+    "status": "implemented",
+    "commander": "quartermaster",
+    "question": "which_reserve_must_still_exist_after_first_contact",
+    "passive": "first_pack_each_preparation_costs_two_fewer_materials_and_surviving_supply_cache_grants_two_extra_materials",
+    "ability": "once_per_assault_resupply_restores_bounded_health_and_ammunition_to_living_defenders",
+    "limitation": "lowest_starting_materials_and_morale_with_delayed_value_that_depends_on_surviving_reserves",
+    "evidence": ["design/p51_quartermaster_commander_lens.md", "docs/p51_quartermaster_verification.md", "tests/test_p51_quartermaster.gd", "tests/test_p51_quartermaster_ui.gd"],
+    "next_slice": "p51_new_keep_identity"
+  },
   "campaign": {
     "title": "The Bell at Dusk",
     "premise": "A small keep is granted one season to become a refuge before a coalition of raiders, sappers, climbers, and siege beasts tests every defensive doctrine at once.",
@@ -748,6 +758,25 @@
       "favored_packs": [
         "scouts",
         "firekeepers"
+      ]
+    },
+    {
+      "id": "quartermaster",
+      "name": "The Quartermaster",
+      "public_doctrine": "A reserve is useful only if it survives until the moment it is needed.",
+      "passive": "The first pack each Preparation costs two fewer materials and a surviving Supply Cache releases two extra materials.",
+      "ability": "resupply",
+      "strength": "Stretches pack, ammunition, health, and recovery reserves across a multi-wave defense.",
+      "drawback": "Starts with the lowest materials and morale, so reserves that are exposed or unused never repay their cost.",
+      "character_voice": "Exacting, practical, and always aware that every stored resource has already been promised.",
+      "story_arc": [
+        "treats_every_resource_as_a_ledger_entry",
+        "learns_that_a_reserve_without_a_safe_route_is_already_lost",
+        "chooses_which_promise_the_keep_can_still_honor"
+      ],
+      "favored_packs": [
+        "field_engineers",
+        "fallback_convoy"
       ]
     }
   ],
@@ -1528,7 +1557,8 @@
     ],
     "commander_ids": [
       "castellan",
-      "warden"
+      "warden",
+      "quartermaster"
     ],
     "unit_ids": [
       "pike_squad",

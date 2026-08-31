@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.30.1-forced-close-recovery",
+  "framework_version": "0.31.0-quartermaster",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -46,7 +46,7 @@
     "enemy_behavior": ["authored_named_routes", "behavior_targets", "approach_then_contact", "causal_contact_reports"],
     "defender_behavior": ["one_target_commitment_per_step", "stable_piece_order", "contact_and_arrival_priority", "automatic_counter_fire", "melee_and_ranged_styles", "floor_and_assignment_modifiers", "cooldown_health_and_ammo_gates"],
     "ammunition": "finite_rounds_for_ranged_pieces; reload at recovery transition; melee uses none",
-    "skills": ["piece_role_skills", "castellan_lockdown", "warden_rally"],
+    "skills": ["piece_role_skills", "castellan_lockdown", "warden_rally", "quartermaster_resupply"],
     "metrics": ["ammo_spent", "unit_attacks", "damage_dealt", "enemy_attacks", "room_damage", "piece_damage"],
     "determinism_rule": "presentation_clock_and_focus_do_not alter authoritative step outcomes",
     "deferred": ["projectile_physics", "ammo_resupply_buildings", "direct_target_commands", "controller_remapping"]
@@ -483,7 +483,8 @@
   "vertical_slice": {
     "commanders": [
       "castellan",
-      "warden"
+      "warden",
+      "quartermaster"
     ],
     "packs": [
       "pike_line",

@@ -138,7 +138,7 @@ def validate_report(report_path: Path, profile_root: Path, expected_version: str
         errors.append("packaged runtime content catalog did not load")
     else:
         expected_counts = {
-            "commander_count": 2,
+            "commander_count": 3,
             "piece_count": 17,
             "pack_count": 9,
             "enemy_count": 8,

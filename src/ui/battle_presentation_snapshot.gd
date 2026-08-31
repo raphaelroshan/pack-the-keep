@@ -18,8 +18,9 @@ static func build(keep: Object, battle_paused: bool, assault_ready_reason: Strin
 		state_text = "BATTLE STATE — %s  •  LIVE %.1fx\nWatch health, projectiles, and target lines; pause whenever the answer is unclear." % [phase_text, battle_speed]
 
 	var commander: Dictionary = keep.commander_definition(keep.commander_id)
-	var ability_spent: bool = bool(keep.lockdown_used) if keep.commander_id == "castellan" else bool(keep.rally_used)
-	var ability_ready: bool = keep.wave_active and keep.command_points > 0 and not ability_spent
+	var ability_spent: bool = bool(keep.commander_ability_used())
+	var ability_preview: Dictionary = keep.commander_ability_preview()
+	var ability_ready: bool = bool(ability_preview.get("ok", false))
 	var ability_status: String = "READY" if ability_ready else "SPENT" if ability_spent else "UNAVAILABLE"
 	var active_focus: bool = focused_enemy_index >= 0 and focused_enemy_index < keep.enemies.size() and not bool(keep.enemies[focused_enemy_index].get("defeated", false))
 	var focus_name: String = ""
@@ -44,9 +45,10 @@ static func build(keep: Object, battle_paused: bool, assault_ready_reason: Strin
 		"ability": {
 			"name": String(commander.get("ability_name", "Ability")),
 			"commander": String(commander.get("name", keep.commander_id)).replace("The ", ""),
-			"tooltip": String(commander.get("ability_text", "Use once per assault phase.")),
+			"tooltip": String(commander.get("ability_text", "Use once per assault phase.")) if ability_ready else "%s %s" % [String(commander.get("ability_text", "Use once per assault phase.")), String(ability_preview.get("reason", ""))],
 			"ready": ability_ready,
 			"status": ability_status,
+			"reason": String(ability_preview.get("reason", "")),
 		},
 		"focus": {
 			"active": active_focus,
@@ -62,7 +64,7 @@ static func _response_text(keep: Object, focused_enemy_index: int, battle_paused
 		return "RESPONSE — Select an active enemy on the map or press Tab. Tactical controls contain the fallback list."
 	var inspection: Dictionary = keep.inspect_enemy(focused_enemy_index)
 	var ability_name: String = String(keep.commander_definition(keep.commander_id).get("ability_name", "Ability"))
-	var ability_state: String = "available" if keep.command_points > 0 and not bool(keep.lockdown_used if keep.commander_id == "castellan" else keep.rally_used) else "spent or unavailable"
+	var ability_state: String = "available" if bool(keep.commander_ability_preview().get("ok", false)) else "spent or unavailable"
 	var timing_text: String = "PAUSED PREVIEW — commit when ready" if battle_paused else "RUNNING — pause to inspect before committing"
 	var target_text: String = String(keep.enemy_target_readout(focused_enemy_index).get("summary", "Approaching"))
 	var counter_id: String = String(inspection.get("counter", ""))

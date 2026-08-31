@@ -35,6 +35,10 @@ static func _pack_offer(keep: Object, pack_id: String, pack_index: int, pack_cou
 	var tutorial_open: bool = not tutorial_active or (tutorial_expected_action in ["open_pack", "open_pack:pike_line"] and pack_id == "pike_line")
 	var can_open: bool = not owned and openings > 0 and enough_materials and not keep.wave_active and not keep.repair_interval_active and tutorial_open
 	var state: String = "OPENED" if owned else "RESERVED" if reserved else "NO OPENINGS" if openings <= 0 else "NEEDS MATERIALS" if not enough_materials else "AVAILABLE"
+	var discount: int = int(preview.get("discount", 0))
+	var cost_text: String = "%d" % int(preview.get("cost", 0))
+	if discount > 0:
+		cost_text = "%d (Measured Stores −%d from %d)" % [int(preview.get("cost", 0)), discount, int(preview.get("base_cost", preview.get("cost", 0)))]
 	var open_reason: String = "Open this doctrine and grant its pieces."
 	if owned:
 		open_reason = "This pack is already part of the keep."
@@ -56,6 +60,8 @@ static func _pack_offer(keep: Object, pack_id: String, pack_index: int, pack_cou
 		"question": String(preview.get("question", "")),
 		"doctrine": String(preview.get("doctrine", "")).replace("_", " ").capitalize(),
 		"cost": int(preview.get("cost", 0)),
+		"cost_text": cost_text,
+		"discount": discount,
 		"pieces": ", ".join(pieces),
 		"strength": String(preview.get("solves", "")),
 		"weakness": String(preview.get("asks", "")),
@@ -90,7 +96,12 @@ static func _brief(keep: Object) -> Dictionary:
 			coverage.append("%d support" % int(summary.get("support_piece_count", 0)))
 		if int(summary.get("assigned_specialist_count", 0)) > 0:
 			coverage.append("%d assigned" % int(summary.get("assigned_specialist_count", 0)))
-		var commander_answer: String = "%d room-edge connection(s)" % int(summary.get("room_edge_count", 0)) if keep.commander_id == "castellan" else "%d open response lane(s)" % int(summary.get("open_lane_count", 0))
+		var commander_answer: String
+		match keep.commander_id:
+			"castellan": commander_answer = "%d room-edge connection(s)" % int(summary.get("room_edge_count", 0))
+			"warden": commander_answer = "%d open response lane(s)" % int(summary.get("open_lane_count", 0))
+			"quartermaster": commander_answer = "%d reserve/support piece(s), %d assignment(s)" % [int(summary.get("support_piece_count", 0)), int(summary.get("assigned_specialist_count", 0))]
+			_: commander_answer = "a declared commander lens"
 		answer = "%s; %s. This is visible coverage, not a guaranteed hold." % [", ".join(coverage), commander_answer]
 	var warnings: Array = summary.get("duplicate_role_warnings", [])
 	var weakness: String = String(warnings[0]) if not warnings.is_empty() else "No immediate coverage warning; compare the layout against the forecast."
@@ -100,13 +111,19 @@ static func _layout_lens_text(keep: Object) -> String:
 	var summary: Dictionary = keep.layout_summary()
 	var counts: Dictionary = summary.get("counts", {})
 	var comparison: Dictionary = summary.get("commander_comparison", {})
-	var castellan: Dictionary = comparison.get("castellan", {})
-	var warden: Dictionary = comparison.get("warden", {})
 	var warnings: Array[String] = []
 	for warning in summary.get("duplicate_role_warnings", []):
 		warnings.append(String(warning))
-	var castellan_marker: String = "CURRENT" if keep.commander_id == "castellan" else "COMPARE"
-	var warden_marker: String = "CURRENT" if keep.commander_id == "warden" else "COMPARE"
 	var spatial_rule: Dictionary = summary.get("spatial_rule", {})
 	var spatial_state: String = "ACTIVE" if bool(spatial_rule.get("active", false)) else "INACTIVE" if String(spatial_rule.get("id", "")) == "clear_causeway" else "BASELINE"
-	return "LAYOUT SUMMARY — %s | Ground %d | Upper %d | Wall %d | Courtyard %d | Keep %d\nSpatial rule [%s] — %s\nCoverage — room edge %d | open lane %d | support %d | assigned %d\nCASTELLAN [%s] — %s Risk: %s\nWARDEN [%s] — %s Risk: %s\nWARNINGS — %s" % [String(summary.get("keep_name", keep.keep_id)), int(counts.get("ground", 0)), int(counts.get("upper", 0)), int(counts.get("wall", 0)), int(counts.get("courtyard", 0)), int(counts.get("keep", 0)), spatial_state, String(spatial_rule.get("label", "No special spatial rule.")), int(summary.get("room_edge_count", 0)), int(summary.get("open_lane_count", 0)), int(summary.get("support_piece_count", 0)), int(summary.get("assigned_specialist_count", 0)), castellan_marker, String(castellan.get("summary", "")), String(castellan.get("risk", "")), warden_marker, String(warden.get("summary", "")), String(warden.get("risk", "")), " | ".join(warnings)]
+	var lines: Array[String] = [
+		"LAYOUT SUMMARY — %s | Ground %d | Upper %d | Wall %d | Courtyard %d | Keep %d" % [String(summary.get("keep_name", keep.keep_id)), int(counts.get("ground", 0)), int(counts.get("upper", 0)), int(counts.get("wall", 0)), int(counts.get("courtyard", 0)), int(counts.get("keep", 0))],
+		"Spatial rule [%s] — %s" % [spatial_state, String(spatial_rule.get("label", "No special spatial rule."))],
+		"Coverage — room edge %d | open lane %d | support %d | assigned %d" % [int(summary.get("room_edge_count", 0)), int(summary.get("open_lane_count", 0)), int(summary.get("support_piece_count", 0)), int(summary.get("assigned_specialist_count", 0))],
+	]
+	for commander_id in keep.commander_ids():
+		var lens: Dictionary = comparison.get(commander_id, {})
+		var marker: String = "CURRENT" if keep.commander_id == commander_id else "COMPARE"
+		lines.append("%s [%s] — %s Risk: %s" % [String(lens.get("name", commander_id)).replace("The ", "").to_upper(), marker, String(lens.get("summary", "")), String(lens.get("risk", ""))])
+	lines.append("WARNINGS — %s" % " | ".join(warnings))
+	return "\n".join(lines)

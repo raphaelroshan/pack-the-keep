@@ -57,6 +57,7 @@ var lockdown_pending: bool = false
 var lockdown_used: bool = false
 var rally_pending: bool = false
 var rally_used: bool = false
+var resupply_used: bool = false
 var last_outcome: String = ""
 var repair_interval_active: bool = false
 var repair_actions_remaining: int = 0
@@ -175,6 +176,7 @@ func reset_run(new_seed: int = 3307) -> void:
 	lockdown_used = false
 	rally_pending = false
 	rally_used = false
+	resupply_used = false
 	last_outcome = ""
 	repair_interval_active = false
 	repair_actions_remaining = 0
@@ -693,6 +695,40 @@ func commander_definition(id: String) -> Dictionary:
 		return {}
 	return _commander_definitions[id].duplicate(true)
 
+func commander_ability_used() -> bool:
+	match String(_commander_definitions.get(commander_id, {}).get("ability", "")):
+		"lockdown": return lockdown_used
+		"rally": return rally_used
+		"resupply": return resupply_used
+	return true
+
+func commander_ability_preview() -> Dictionary:
+	if not wave_active:
+		return {"ok": false, "reason": "commander abilities are only meaningful during an active invasion"}
+	if command_points <= 0:
+		return {"ok": false, "reason": "not enough command points"}
+	if commander_ability_used():
+		return {"ok": false, "reason": "%s has already been used this wave" % String(_commander_definitions.get(commander_id, {}).get("ability_name", "Commander ability"))}
+	if commander_id == "quartermaster":
+		for instance in pieces.values():
+			if bool(instance.get("disabled", false)) or float(instance.get("condition", 0.0)) <= 0.0:
+				continue
+			var piece: Dictionary = _piece_definitions.get(String(instance.get("piece_id", "")), {})
+			var max_health: int = int(instance.get("max_health", piece.get("max_health", 0)))
+			var max_ammo: int = int(piece.get("max_ammo", 0))
+			if int(instance.get("health", max_health)) < max_health or (max_ammo > 0 and int(instance.get("ammo", max_ammo)) < max_ammo):
+				return {"ok": true, "reason": ""}
+		return {"ok": false, "reason": "Resupply needs a living defender with missing health or ammunition"}
+	return {"ok": true, "reason": ""}
+
+func _commander_passive_profile() -> Dictionary:
+	var profile: Variant = _commander_definitions.get(commander_id, {}).get("passive_profile")
+	return profile if profile is Dictionary else {}
+
+func _commander_ability_profile() -> Dictionary:
+	var profile: Variant = _commander_definitions.get(commander_id, {}).get("ability_profile")
+	return profile if profile is Dictionary else {}
+
 func piece_ids() -> Array[String]:
 	return content_catalog.piece_ids()
 
@@ -847,6 +883,14 @@ func pack_definition(pack_id: String) -> Dictionary:
 func content_catalog_status() -> Dictionary:
 	return {"ok": content_catalog_errors.is_empty(), "keep_count": _keep_definitions.size(), "region_count": _region_definitions.size(), "commander_count": _commander_definitions.size(), "piece_count": _piece_definitions.size(), "pack_count": _pack_definitions.size(), "enemy_count": _enemy_definitions.size(), "doctrine_count": _doctrine_definitions.size(), "scenario_count": _scenario_definitions.size(), "event_count": _event_definitions.size(), "modifier_count": _modifier_definitions.size(), "errors": content_catalog_errors.duplicate()}
 
+func _effective_pack_cost(pack_id: String) -> Dictionary:
+	var base_cost: int = int(_pack_definitions.get(pack_id, {}).get("cost", 0))
+	var discount: int = 0
+	var passive: Dictionary = _commander_passive_profile()
+	if String(passive.get("kind", "")) == "reserve_economy" and pack_openings_this_preparation == 0:
+		discount = mini(base_cost, int(passive.get("first_pack_discount", 0)))
+	return {"base_cost": base_cost, "discount": discount, "cost": base_cost - discount}
+
 func pack_preview(pack_id: String) -> Dictionary:
 	if not _pack_definitions.has(pack_id):
 		return {"ok": false, "reason": "unknown pack"}
@@ -855,7 +899,8 @@ func pack_preview(pack_id: String) -> Dictionary:
 	for piece_id in pack.contents:
 		var piece: Dictionary = _piece_definitions[String(piece_id)]
 		piece_previews.append({"id": String(piece_id), "name": String(piece.name), "cost": int(piece.cost), "size": piece.size, "role": String(piece.role), "availability": String(piece.availability)})
-	return {"ok": true, "pack_id": pack_id, "name": String(pack.name), "doctrine": String(pack.doctrine), "cost": int(pack.cost), "pieces": piece_previews, "solves": String(pack.get("strength", "")), "asks": String(pack.get("weakness", "")), "preview": String(pack.get("choice", "")), "question": String(pack.get("question", "")), "owned": owned_packs.has(pack_id), "reserved": reserved_pack_id == pack_id, "openings_remaining": _preparation_pack_limit() - pack_openings_this_preparation, "materials": materials}
+	var pricing: Dictionary = _effective_pack_cost(pack_id)
+	return {"ok": true, "pack_id": pack_id, "name": String(pack.name), "doctrine": String(pack.doctrine), "cost": int(pricing.cost), "base_cost": int(pricing.base_cost), "discount": int(pricing.discount), "pieces": piece_previews, "solves": String(pack.get("strength", "")), "asks": String(pack.get("weakness", "")), "preview": String(pack.get("choice", "")), "question": String(pack.get("question", "")), "owned": owned_packs.has(pack_id), "reserved": reserved_pack_id == pack_id, "openings_remaining": _preparation_pack_limit() - pack_openings_this_preparation, "materials": materials}
 
 func reserve_pack(pack_id: String) -> Dictionary:
 	if not _pack_definitions.has(pack_id):
@@ -879,7 +924,8 @@ func open_pack(pack_id: String) -> Dictionary:
 		return {"ok": false, "reason": "pack already opened"}
 	if pack_openings_this_preparation >= _preparation_pack_limit():
 		return {"ok": false, "reason": "this Preparation has no pack openings remaining"}
-	var pack_cost: int = int(_pack_definitions[pack_id].get("cost", 0))
+	var pricing: Dictionary = _effective_pack_cost(pack_id)
+	var pack_cost: int = int(pricing.cost)
 	if materials < pack_cost:
 		return {"ok": false, "reason": "not enough materials to open this pack"}
 	materials -= pack_cost
@@ -890,7 +936,8 @@ func open_pack(pack_id: String) -> Dictionary:
 	for piece_id in _pack_definitions[pack_id].contents:
 		if not available_pieces.has(piece_id):
 			available_pieces.append(piece_id)
-	return {"ok": true, "message": "Opened %s for %d materials: %s. Available units updated." % [_pack_definitions[pack_id].name, pack_cost, _pack_definitions[pack_id].doctrine.replace("_", " ")], "available_pieces": available_pieces.duplicate(), "openings_remaining": _preparation_pack_limit() - pack_openings_this_preparation, "materials": materials}
+	var discount_text: String = " The Quartermaster preserved %d materials from the first-pack reserve." % int(pricing.discount) if int(pricing.discount) > 0 else ""
+	return {"ok": true, "message": "Opened %s for %d materials: %s. Available units updated.%s" % [_pack_definitions[pack_id].name, pack_cost, _pack_definitions[pack_id].doctrine.replace("_", " "), discount_text], "available_pieces": available_pieces.duplicate(), "openings_remaining": _preparation_pack_limit() - pack_openings_this_preparation, "materials": materials, "cost": pack_cost, "discount": int(pricing.discount)}
 
 func piece_fits(piece_id: String, origin: Vector2i, floor: String = "ground") -> bool:
 	if not _piece_definitions.has(piece_id) or not FLOORS.has(floor):
@@ -1410,6 +1457,10 @@ func layout_summary() -> Dictionary:
 	var warden_risk: String = "Blocked lanes or single-floor coverage reduce mobile response."
 	if total > 0 and open_lane_count == total and int(counts.ground) > 0 and int(counts.upper) > 0:
 		warden_risk = "Movement is preserved; verify that the lighter formation can absorb direct pressure."
+	var quartermaster_summary: String = "%d reserve/support piece(s); %d specialist assignment(s); first pack discount %s." % [support_piece_count, assigned_specialist_count, "available" if pack_openings_this_preparation == 0 else "spent"]
+	var quartermaster_risk: String = "An exposed reserve creates less immediate stopping power and may never repay its footprint."
+	if support_piece_count > 0 and assigned_specialist_count > 0:
+		quartermaster_risk = "The supply chain is staffed; verify that a unit hunter cannot remove its only command anchor."
 	return {
 		"keep_id": keep_id,
 		"keep_name": String(_keep_definitions.get(keep_id, {}).get("name", keep_id)),
@@ -1424,7 +1475,8 @@ func layout_summary() -> Dictionary:
 		"active_commander": commander_id,
 		"commander_comparison": {
 			"castellan": {"name": String(_commander_definitions.castellan.name), "summary": castellan_summary, "risk": castellan_risk},
-			"warden": {"name": String(_commander_definitions.warden.name), "summary": warden_summary, "risk": warden_risk}
+			"warden": {"name": String(_commander_definitions.warden.name), "summary": warden_summary, "risk": warden_risk},
+			"quartermaster": {"name": String(_commander_definitions.quartermaster.name), "summary": quartermaster_summary, "risk": quartermaster_risk}
 		}
 	}
 
@@ -2021,8 +2073,12 @@ func _open_repair_interval(outcome: String) -> void:
 		var instance: Dictionary = pieces[instance_id]
 		if String(instance.get("piece_id", "")) == "supply_cache" and not bool(instance.get("disabled", false)) and not bool(instance.get("supply_spent", false)):
 			instance.supply_spent = true
-			materials += 5
-			_log("Supply Cache released its field reserve: +5 materials. The cache is now spent.")
+			var reserve_amount: int = 5
+			var passive: Dictionary = _commander_passive_profile()
+			if String(passive.get("kind", "")) == "reserve_economy":
+				reserve_amount += int(passive.get("supply_cache_recovery_bonus", 0))
+			materials += reserve_amount
+			_log("Supply Cache released its field reserve: +%d materials. The cache is now spent." % reserve_amount)
 			break
 	_append_wave_history()
 
@@ -2156,6 +2212,7 @@ func start_wave(doctrine: String) -> Dictionary:
 	lockdown_pending = false
 	rally_used = false
 	rally_pending = false
+	resupply_used = false
 	last_outcome = ""
 	enemies.clear()
 	battle_report.clear()
@@ -2184,7 +2241,7 @@ func start_wave(doctrine: String) -> Dictionary:
 			_battle_log("%s smoke broke the warning chain; contact advances from step %d to step %d." % [_enemy_definitions[enemy_id].name, int(_enemy_definitions[enemy_id].arrival_step), int(enemy.get("arrival_step", 1))])
 		else:
 			_battle_log("Bell Guard relayed through %s smoke; forecast detail and contact timing hold." % _enemy_definitions[enemy_id].name)
-	return {"ok": true, "message": "Wave %d begins. Pause between steps and read the target before using Lockdown." % wave_index, "forecast": forecast(), "composition": composition.duplicate()}
+	return {"ok": true, "message": "Wave %d begins. Pause between steps and read the target before using %s." % [wave_index, String(_commander_definitions.get(commander_id, {}).get("ability_name", "the commander intervention"))], "forecast": forecast(), "composition": composition.duplicate()}
 
 func advance_wave(delta: float) -> Dictionary:
 	if not wave_active:
@@ -2197,10 +2254,9 @@ func advance_wave(delta: float) -> Dictionary:
 	return latest
 
 func use_commander_ability() -> Dictionary:
-	if not wave_active:
-		return {"ok": false, "reason": "commander abilities are only meaningful during an active invasion"}
-	if command_points <= 0:
-		return {"ok": false, "reason": "not enough command points"}
+	var preview: Dictionary = commander_ability_preview()
+	if not bool(preview.get("ok", false)):
+		return preview
 	if commander_id == "castellan":
 		if lockdown_used:
 			return {"ok": false, "reason": "Lockdown has already been used this wave"}
@@ -2218,6 +2274,41 @@ func use_commander_ability() -> Dictionary:
 		morale = mini(10, morale + 1)
 		_battle_log("The Warden called Rally. Open lanes answer the bell; the next response will be coordinated.")
 		return {"ok": true, "message": "Rally is armed for the next battle step and restored 1 morale.", "command_points": command_points}
+	if commander_id == "quartermaster":
+		var profile: Dictionary = _commander_ability_profile()
+		var health_restore: int = int(profile.get("health_restore", 0))
+		var ammo_restore: int = int(profile.get("ammo_restore", 0))
+		var restored_health: int = 0
+		var restored_ammo: int = 0
+		var affected: int = 0
+		var instance_ids: Array = pieces.keys()
+		instance_ids.sort()
+		for instance_id_value in instance_ids:
+			var instance_id: String = String(instance_id_value)
+			var instance: Dictionary = pieces[instance_id]
+			if bool(instance.get("disabled", false)) or float(instance.get("condition", 0.0)) <= 0.0:
+				continue
+			var piece: Dictionary = _piece_definitions.get(String(instance.get("piece_id", "")), {})
+			var max_health: int = int(instance.get("max_health", piece.get("max_health", 0)))
+			var health_before: int = int(instance.get("health", max_health))
+			var max_ammo: int = int(piece.get("max_ammo", 0))
+			var ammo_before: int = int(instance.get("ammo", max_ammo))
+			if health_before < max_health:
+				_set_piece_health(instance_id, health_before + health_restore)
+			if max_ammo > 0 and ammo_before < max_ammo:
+				instance.ammo = mini(max_ammo, ammo_before + ammo_restore)
+			var health_gain: int = int(instance.get("health", health_before)) - health_before
+			var ammo_gain: int = int(instance.get("ammo", ammo_before)) - ammo_before
+			if health_gain > 0 or ammo_gain > 0:
+				restored_health += health_gain
+				restored_ammo += ammo_gain
+				affected += 1
+		if affected == 0:
+			return {"ok": false, "reason": "Resupply needs a living defender with missing health or ammunition"}
+		command_points -= 1
+		resupply_used = true
+		_battle_log("The Quartermaster ordered Resupply: %d defender%s recovered %d health and %d ammunition." % [affected, "" if affected == 1 else "s", restored_health, restored_ammo])
+		return {"ok": true, "message": "Resupply restored %d health and %d ammunition across %d defender%s." % [restored_health, restored_ammo, affected, "" if affected == 1 else "s"], "command_points": command_points, "state_changes": [{"op": "resupply", "affected": affected, "health": restored_health, "ammo": restored_ammo}]}
 	return {"ok": false, "reason": "unknown active commander"}
 
 func repair_piece(instance_id: String) -> Dictionary:
@@ -2591,6 +2682,7 @@ func serialize() -> Dictionary:
 		"lockdown_used": lockdown_used,
 		"rally_pending": rally_pending,
 		"rally_used": rally_used,
+		"resupply_used": resupply_used,
 		"scenario_id": scenario_id,
 		"scenario_active": scenario_active,
 		"scenario_variation_id": scenario_variation_id,
@@ -2722,7 +2814,7 @@ func _validate_serialized_payload(data: Dictionary) -> String:
 	for field_name in ["seed", "materials", "command_points", "morale", "variation_materials", "variation_morale", "wave_index", "wave_progress", "battle_step", "battle_clock", "breach_level", "pack_openings_this_preparation", "repair_actions_remaining"]:
 		if data.has(field_name) and not _is_saved_number(data.get(field_name)):
 			return "save %s value is malformed" % String(field_name).replace("_", " ")
-	for field_name in ["scenario_active", "wave_active", "lockdown_pending", "lockdown_used", "rally_pending", "rally_used", "repair_interval_active"]:
+	for field_name in ["scenario_active", "wave_active", "lockdown_pending", "lockdown_used", "rally_pending", "rally_used", "resupply_used", "repair_interval_active"]:
 		if data.has(field_name) and not data.get(field_name) is bool:
 			return "save %s value is malformed" % String(field_name).replace("_", " ")
 	for field_name in ["commander_id", "keep_id", "scenario_id", "scenario_variation_id", "variation_target_room", "enemy_doctrine", "last_outcome", "repair_interval_reason", "reserved_pack_id"]:
@@ -2996,6 +3088,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	lockdown_used = bool(data.get("lockdown_used", lockdown_used))
 	rally_pending = bool(data.get("rally_pending", rally_pending))
 	rally_used = bool(data.get("rally_used", rally_used))
+	resupply_used = bool(data.get("resupply_used", resupply_used))
 	last_outcome = String(data.get("last_outcome", last_outcome))
 	combat_metrics = data.get("combat_metrics", combat_metrics).duplicate()
 	wave_history.clear()

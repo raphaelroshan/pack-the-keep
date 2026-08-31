@@ -345,7 +345,7 @@ func _test_layout_summary_and_commander_comparison() -> void:
 	var empty_before: String = JSON.stringify(keep.serialize())
 	var empty_summary: Dictionary = keep.layout_summary()
 	_expect(JSON.stringify(keep.serialize()) == empty_before, "layout comparison must not mutate authoritative state")
-	_expect(empty_summary.get("commander_comparison", {}).has("castellan") and empty_summary.get("commander_comparison", {}).has("warden"), "layout summary should compare both commanders")
+	_expect(empty_summary.get("commander_comparison", {}).has("castellan") and empty_summary.get("commander_comparison", {}).has("warden") and empty_summary.get("commander_comparison", {}).has("quartermaster"), "layout summary should compare all active commanders")
 	_expect(String(" | ".join(empty_summary.get("duplicate_role_warnings", []))).contains("No ground-floor"), "empty layout should expose missing ground coverage")
 	keep.place_piece("pike_squad", Vector2i(3, 3), "ground")
 	keep.place_piece("pike_squad", Vector2i(5, 3), "ground")

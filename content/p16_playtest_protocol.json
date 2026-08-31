@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.30.1-forced-close-recovery",
+  "build_version": "0.31.0-quartermaster",
   "status": "ready_for_human_sessions",
   "release_ready": false,
   "minimum_completed_sessions": 4,
