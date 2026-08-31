@@ -1,24 +1,24 @@
 # Pack the Keep — Latest Visual Review
 
-**Build:** `0.38.0-alpha-hardened` (presentation unchanged from the versioned `0.37.0-seeded-pressure` capture baseline)
+**Build:** `0.39.0-responsive-decisions`
 
 **Engine:** Godot 4.7.2
 
-**Capture:** Real local renderer at 1280×720 / 125% UI scale and 2560×1440 / 150% UI scale.
+**Capture:** Real local renderer at 1280×720 / 125%, 1600×900 / 100%, and 1280×720 / 150% Large Text.
 
 ## Evidence
 
-- [1280×720 Seeded Pressure sequence](visual_evidence/v0.37.0-seeded-pressure-review-2026-08-31/)
-- [2560×1440 Seeded Pressure sequence](visual_evidence/v0.37.0-seeded-pressure-2560x1440-review-2026-08-31/)
+- [Responsive decision-surface review](visual_evidence/v0.39.0-responsive-decisions-review-2026-08-31/)
+- [Earlier complete seeded-pressure sequence](visual_evidence/v0.37.0-seeded-pressure-review-2026-08-31/)
 
-Each directory contains an eleven-screen flow plus a machine-readable manifest. `02_war_council.png` records the Fading Light seed's exact one-Outrider/three-Gloam final pressure and stair-visibility preparation focus; `03c_mixed_routes_ready.png` records Road Wardens plus Crossbow Watch before commitment; `07_recovery_phase_2.png` records the blocking route decision; and `09_terminal_results.png` retains the same seed pressure beside the selected and forgone recovery branches.
+The responsive review contains War Council and Preparation captures for all three target layouts plus a machine-readable manifest recording build, viewport, scale, state, and capture method. The earlier complete sequence remains the regression reference for Battle, Recovery, and Results.
 
 ## Findings
 
-The War Council now makes the deterministic seed actionable before commitment: Fading Light names one Outrider plus three Gloam Knives and advises prioritizing stair visibility while preserving lamp oil and Lantern Watch as alternatives. The mixed Preparation layout keeps Hook Guard and Stake Line on the ground while Crossbow Patrol and Watch Banner hold the upper wall. After phase two, **Make the Recovery Choice** leads the command rail, both downstream consequences fit in the first command-panel viewport, and ordinary repair/assignment cards stay hidden until the blocking choice resolves. Choosing lamp oil returns the normal Recovery hierarchy with exactly one action, and the final Battle visibly spawns the disclosed one-plus-three roster with delayed charge plus revealed visibility. Terminal Results retains seed pressure, preparation focus, selected branch, complementary build fit, and forgone road preparation.
+At 1280×720 / 125%, War Council now removes the repeated defense brief and presents four compact facts—run frame, selected pairing, seed pressure, and preparation focus—before the primary action. Enter Keep and both next-choice controls remain visible together, while the first substantive commander and defense details begin immediately below them. Preparation carries **The Castellan leads The Twilight Road at Greywatch Keep** into the status line, uses the authored strategic question instead of the longer lesson paragraph, keeps Ready Defense visible, and exposes more of both fort floors in the first viewport.
 
-At 1280×720 and 125%, War Council and terminal Results keep the new seed guidance visible before their primary actions, while the recovery decision heading, setup, both consequences, and both action buttons remain reachable without horizontal clipping. At 2560×1440 / 150%, War Council and live Battle retain the wide composition and separated four-threat markers; terminal Results deliberately stacks below the keep, then scrolls its focused replay action into view so the full mastery paragraph and button remain horizontally contained. The review caught and fixed the prior large-text terminal rail extending beyond the right edge. Procedural actor art remains placeholder-level.
+At 1600×900 / 100%, the full authored overview and two-column command rail remain available, so the wider layout loses no context. At 1280×720 / 150%, War Council deliberately stacks the cards and scrolls the focused primary action into view with the complete first commander card; Preparation converts its three-part brief to one readable column while retaining the focused primary action and the top of the fort. No horizontal clipping was observed in any reviewed state. Procedural actor art remains placeholder-level.
 
 ## Next visual target
 
-The automated P53 flow now protects the large-text terminal layout and focus path found during this review. No further roadmap visual slice remains; procedural actor silhouettes are still the largest art-quality limitation for a later owner-directed production pass.
+The responsive layout gate now protects the priority-path visibility, relationship copy, wide-layout preservation, Large Text fallback, controller focus, and serialized-state invariance found during this review. No further autonomous roadmap visual slice remains; procedural actor silhouettes are still the largest art-quality limitation for a later owner-directed production pass.

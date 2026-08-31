@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "build_version": "0.39.0-responsive-decisions",
+  "engine": "Godot 4.7.2",
+  "capture_method": "tools/capture_vertical_slice.gd with the local OpenGL compatibility renderer",
+  "human_evidence": false,
+  "commander": "castellan",
+  "scenario": "the_twilight_road",
+  "states": ["war_council", "preparation"],
+  "viewports": [
+    {"width": 1280, "height": 720, "ui_scale_percent": 125},
+    {"width": 1600, "height": 900, "ui_scale_percent": 100},
+    {"width": 1280, "height": 720, "ui_scale_percent": 150}
+  ],
+  "files": [
+    "1280x720_125_war_council.png",
+    "1280x720_125_preparation.png",
+    "1600x900_100_war_council.png",
+    "1600x900_100_preparation.png",
+    "1280x720_150_war_council.png",
+    "1280x720_150_preparation.png"
+  ]
+}

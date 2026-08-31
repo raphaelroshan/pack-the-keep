@@ -29,7 +29,7 @@ func _initialize() -> void:
 		failures.append("New Game did not open the briefing screen after tutorial completion")
 	if not ui.keep.scenario_active:
 		failures.append("quick-playtest preset did not activate Gatehouse Lock")
-	if not ui.setup_overview_panel.visible or ui.keep_canvas.visible:
+	if not ui.war_council_choice_panel.visible or ui.keep_canvas.visible:
 		failures.append("briefing did not separate setup choices from the keep board")
 	if ui.keep.pieces.size() != 0:
 		failures.append("briefing placed pieces before setup confirmation")

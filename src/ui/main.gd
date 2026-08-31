@@ -734,6 +734,7 @@ func _apply_responsive_layout() -> void:
 	var stacked_width: float = maxf(520.0, size.x - PAGE_HORIZONTAL_MARGIN)
 	var main_width: float = minf(810.0, stacked_width) if stacked else 810.0
 	var large_text_compact: bool = ui_factor >= 1.5 and effective_width < TWO_COLUMN_EFFECTIVE_WIDTH
+	var prioritized_decision_flow: bool = stacked and screen in ["setup", "preparation"]
 	if screen_hint != null:
 		screen_hint.visible = screen == "title" or effective_width >= 1800.0
 	gameplay_columns.vertical = stacked
@@ -746,7 +747,9 @@ func _apply_responsive_layout() -> void:
 	if preparation_brief_panel != null:
 		preparation_brief_panel.set_responsive_layout(compact_cards, main_width)
 	if setup_overview_panel != null:
-		setup_overview_panel.visible = screen == "setup" and not large_text_compact
+		setup_overview_panel.visible = screen == "setup" and not prioritized_decision_flow
+	if main_subtitle_label != null:
+		main_subtitle_label.visible = screen != "title" and not (screen == "preparation" and prioritized_decision_flow)
 	if art_banner != null and art_banner.visible:
 		art_banner.custom_minimum_size.y = 72.0 if large_text_compact else 100.0 if screen == "setup" else 150.0
 	for control: Control in [status_label, guidance_label, playtest_button, playtest_status_label, forecast_label, enemy_label, metrics_label, result_explain_label, scorecard_label, combat_explain_label, placement_label, event_label, log_label]:
@@ -3380,7 +3383,8 @@ func _refresh_tutorial_panel() -> void:
 	if main_title_label != null:
 		main_title_label.visible = screen != "title" and not (tutorial.active and gameplay_screen)
 	if main_subtitle_label != null:
-		main_subtitle_label.visible = screen != "title" and not (tutorial.active and gameplay_screen)
+		var prioritized_preparation: bool = screen == "preparation" and gameplay_columns != null and gameplay_columns.vertical
+		main_subtitle_label.visible = screen != "title" and not (tutorial.active and gameplay_screen) and not prioritized_preparation
 	if guidance_label != null:
 		guidance_label.visible = gameplay_screen and screen != "preparation" and not tutorial.active
 	var tutorial_primary_action: bool = tutorial.active and tutorial.expected_action() in ["start_wave", "resume_battle", "observe_wave", "finish_interval", "finish_tutorial", "retry_phase"]
@@ -3808,7 +3812,10 @@ func _refresh_ui() -> void:
 	var interval_text: String = "closed"
 	if keep.repair_interval_active:
 		interval_text = "%d action(s): %s" % [keep.repair_actions_remaining, keep.repair_interval_reason]
-	status_label.text = "%s — %s\nMaterials %d  •  Morale %d  •  Command %d  •  Defenders %d  •  Phase %d/%d  •  Tick %d  •  %s" % [String(keep.keep_definition().get("name", keep.keep_id)), String(keep.scenario_preview().get("name", "Defense")), keep.materials, keep.morale, keep.command_points, keep.pieces.size(), keep.wave_index, maxi(1, keep.authored_wave_count()), keep.battle_step, "PAUSED" if battle_paused else "LIVE %.1fx" % _battle_speed()]
+	var defense_context: String = "%s — %s" % [String(keep.keep_definition().get("name", keep.keep_id)), String(keep.scenario_preview().get("name", "Defense"))]
+	if screen == "preparation":
+		defense_context = "%s leads %s at %s" % [String(keep.commander_definition(keep.commander_id).get("name", keep.commander_id)), String(keep.scenario_preview().get("name", "Defense")), String(keep.keep_definition().get("name", keep.keep_id))]
+	status_label.text = "%s\nMaterials %d  •  Morale %d  •  Command %d  •  Defenders %d  •  Phase %d/%d  •  Tick %d  •  %s" % [defense_context, keep.materials, keep.morale, keep.command_points, keep.pieces.size(), keep.wave_index, maxi(1, keep.authored_wave_count()), keep.battle_step, "PAUSED" if battle_paused else "LIVE %.1fx" % _battle_speed()]
 	var commander: Dictionary = keep.commander_definition(keep.commander_id)
 	commander_profile_label.text = "%s\nPassive: %s\nAbility: %s — %s\nLimitation: %s" % [String(commander.get("name", keep.commander_id)), String(commander.get("passive", "")), String(commander.get("ability_name", "")), String(commander.get("ability_text", "")), String(commander.get("limitation", ""))]
 	match keep.commander_id:

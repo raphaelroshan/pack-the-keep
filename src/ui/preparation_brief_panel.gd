@@ -38,6 +38,7 @@ func set_responsive_layout(compact: bool, available_width: float) -> void:
 	var column_width: float = 0.0 if compact else minf(245.0, maxf(180.0, (available_width - 48.0) / 3.0))
 	for label in [question_label, answer_label, weakness_label]:
 		label.custom_minimum_size.x = column_width
+		label.custom_minimum_size.y = 0.0 if compact else 76.0
 
 func _column(row: BoxContainer, heading: String, color: Color) -> Label:
 	var label: Label = Label.new()

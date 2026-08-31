@@ -69,7 +69,7 @@ func _initialize() -> void:
 	ui._refresh_ui()
 	await process_frame
 	_check(ui.screen == "setup" and root.gui_get_focus_owner() == ui.setup_confirm_button, "War Council should expose its controller-first commit action")
-	_check(String(ui.war_council_choice_panel.summary_label.text).contains("final pressure") and String(ui.war_council_choice_panel.summary_label.text).contains("preparation focus"), "War Council should disclose the seeded adaptation")
+	_check(String(ui.war_council_choice_panel.summary_label.text).contains("final pressure") and String(ui.war_council_choice_panel.summary_label.text).contains("FOCUS —"), "War Council should disclose the seeded adaptation")
 
 	ui._on_confirm_setup()
 	ui.keep.place_piece("pike_squad", Vector2i(0, 3), "ground")

@@ -1,6 +1,6 @@
 # Pack the Keep — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.38.0-alpha-hardened` and later
+**Applies to:** `v0.39.0-responsive-decisions` and later
 
 **Purpose:** Turn the First Watch prototype into a readable, tactile, game-quality keep-defense vertical slice. Automated verification, deterministic simulation checks, scripted flow coverage, and screenshot review are the active gates. Human testing remains useful for later confidence and tuning, but it is not a prerequisite for execution.
 
@@ -40,7 +40,7 @@ A task is incomplete if it hides the fort behind a menu, adds a unit before its 
 
 ## Recommended next prompt
 
-> The automated roadmap is complete at `0.38.0-alpha-hardened`. Preserve every K1–K8, P51–P53, and P54 gate. Do not invent human findings; the next evidence step is P16 observation only when the owner schedules real testers.
+> The automated roadmap is complete at `0.39.0-responsive-decisions`. Preserve every K1–K8, P51–P53, P54, and post-verification responsive-decision gate. Do not invent human findings; the next evidence step is P16 observation only when the owner schedules real testers.
 
 ## Definition of game-quality readiness
 
@@ -62,3 +62,9 @@ The latest baseline is recorded in [`latest_visual_review_2026-08-31.md`](latest
 The current `main` build `0.38.0-alpha-hardened` passes `scripts/verify.sh`, including P52 Twilight Crossroads, P53 accessibility and persistence hardening, controller focus, muted audio, save boundaries, and real-time auto-battle coverage. A fresh 1280×720 launch shows a strong authored title screen, while the War Council remains vertically dense: the defense brief, commit summary, primary action, commander card, and defense card compete within the first viewport.
 
 **Next mandatory task: K1 — Responsive War Council and Preparation layout.** Preserve the visible primary action, condense the decision summary, make the selected commander/defense relationship explicit, and keep the next useful context reachable at 1280×720, 1600×900, Large Text, keyboard, and controller focus. Do not add another commander or broad content slice until this preparation decision surface passes layout and screenshot gates. Human testing remains optional and non-blocking.
+
+## Responsive decision update — 2026-08-31
+
+`0.39.0-responsive-decisions` completes the mandatory K1 follow-up. Stacked War Council layouts remove the repeated defense brief and lead with a compact run frame, explicit commander/defense/keep pairing, deterministic seed pressure, preparation focus, and visible Enter Keep action. Both choice navigation rows remain in the 1280×720 / 125% first viewport; 1600×900 / 100% retains the full overview and two-column rail; 1280×720 / 150% uses the deliberate single-column fallback with focused-primary visibility. Preparation carries the pairing forward, replaces the repeated lesson paragraph with the authored strategic question, compacts the Large Text brief, and keeps Ready Defense plus the fort reachable. Focused tests, complete verification, and renderer captures cover the update without simulation mutation.
+
+No further autonomous implementation milestone is selected. P16 human observation remains the next evidence layer and must begin only when the owner schedules real testers.

@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
-**Document status:** Automated game-quality roadmap implemented through P53
-**Current development baseline:** `0.38.0-alpha-hardened`; P52 completes replayable Twilight mastery, while P53 proves the full menu-to-results journey under combined accessibility, controller-focus, save/resume, audio, responsive-layout, performance, packaging, and failure-recovery gates; optional human private-alpha evidence and owner distribution approval remain pending
+**Document status:** Automated game-quality roadmap implemented through the K1 responsive-decision follow-up
+**Current development baseline:** `0.39.0-responsive-decisions`; the post-P53 K1 review now keeps War Council and Preparation decision hierarchy readable at 1280×720, 1600×900, and Large Text while preserving every simulation, accessibility, packaging, and recovery gate; optional human private-alpha evidence and owner distribution approval remain pending
 **Release posture:** CI-verified public repository with owner-controlled merges; no public alpha release or storefront claim yet
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
@@ -22,7 +22,7 @@ The current slice supports three commanders, twenty-one active defender pieces/e
 
 P11 content breadth is complete. Three original teaching pairs are implemented: Crossbow Watch versus Shielded Advance, Bell Guard versus Smoke and Signal, and Shieldwall versus Break the Line. Three Bells at Dusk composes those questions across two viable two-pack baselines. K6 adds Standard Cutters as assigned-specialist hunters. P51.3 adds Road Wardens versus Outriders as an isolated tempo question; P51.4 adds Lantern Watch versus Gloam Knives as an isolated visibility question; P51.5 combines them in The Twilight Road after teaching each alone. K7 exposes fixed seeded variation and replay comparisons, while K8 binds automated private-alpha evidence and limitations into one non-release gate. The Campaign Ledger, Ash Ford, Twinwatch, authored events, accessibility, real-time battle presentation, tutorial, recovery, Results, and packaged lifecycle gates remain active regression contracts. A local all-scenario matrix now runs all fourteen non-overwhelming scenarios for all three commanders across three seeds both uninterrupted and through save checkpoints, proving 126 viable cases and 252 deterministic simulations without treating automation as a human playtest. No human session has been fabricated or inferred; automated status remains a candidate pending human alpha approval.
 
-P5–P53, K3–K8, and P54 are implemented contracts and should be treated as regression requirements. No further autonomous implementation milestone remains in this roadmap. The next evidence step is P16 human observation when the owner schedules it; those sessions and public distribution approval must not be inferred from automation.
+P5–P53, K3–K8, P54, and the post-verification K1 responsive-decision follow-up are implemented contracts and should be treated as regression requirements. No further autonomous implementation milestone remains in this roadmap. The next evidence step is P16 human observation when the owner schedules it; those sessions and public distribution approval must not be inferred from automation.
 
 ### P4 completion means the following is now the reference behavior
 
