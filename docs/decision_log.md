@@ -863,3 +863,11 @@
 **Reason:** P51 needs a new isolated question that is neither armor, signal redundancy, static protection, nor assigned-specialist hunting. A one-tick preparation check creates a legible tempo choice: buy space for delay plus modest repeated damage, or concentrate enough precision/mobile response to stop the charge on its original timing.
 
 **Trade-off:** The Stake Line checks authored target-room adjacency rather than simulating a moving trap collision, and it does not update after the wave begins. This keeps timing deterministic and understandable, avoids mid-wave placement exceptions, and leaves freeform movement, stun stacking, and pathfinding outside the vertical slice.
+
+## ADR-109: Concealment gates attack styles, not target existence
+
+**Decision:** Add Lantern Watch and the Gloam Knife family. At wave creation, a living Lantern Post adjacent to one of the enemy's authored route rooms records that concealed threats are revealed. When unrevealed, the enemy remains targetable but its data-driven concealment profile blocks ranged defender damage; melee response remains unchanged. The resulting `concealment_revealed` state is inspected and saved with the enemy instance.
+
+**Reason:** P51 needs a second isolated question distinct from armor, timing, static protection, and assignment exposure. Making the threat targetable but invalid for one attack style keeps the rule visible in response previews and gives the player a clear choice between spending upper-wall space on route light or accepting close-contact risk.
+
+**Trade-off:** Reveal is fixed at wave start and checks authored room adjacency rather than dynamic sight cones or fog of war. This preserves deterministic replays and avoids accuracy rolls, stealth movement, or mid-wave detection state while still creating a new spatial doctrine.

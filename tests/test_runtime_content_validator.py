@@ -141,6 +141,22 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         self.assertIn("delay_steps", joined)
         self.assertIn("unknown support modifier", joined)
 
+    def test_concealment_profile_requires_supported_styles_and_known_counter(self) -> None:
+        enemy = copy.deepcopy(load("data/enemies/gloam_knife.json"))
+        enemy["concealment_profile"]["kind"] = "invisible_forever"
+        enemy["concealment_profile"]["counter_modifier"] = "missing_light"
+        enemy["concealment_profile"]["blocked_attack_styles"] = ["magic"]
+        errors: list[str] = []
+        validator.validate_enemy(
+            Path("gloam_knife.json"), enemy,
+            {"north_tower", "old_chapel", "outer_wall"}, {"lantern_post"},
+            {"veiled_entry"}, {"route_reveal"}, {}, set(), errors,
+        )
+        joined = "\n".join(errors)
+        self.assertIn("kind is unsupported", joined)
+        self.assertIn("unknown support modifier", joined)
+        self.assertIn("unsupported blocked attack style", joined)
+
     def test_protection_fields_and_breaker_profile_are_typed(self) -> None:
         piece = copy.deepcopy(load("data/pieces/emergency_shutters.json"))
         piece["support_profile"]["room_damage_reduction"] = -1

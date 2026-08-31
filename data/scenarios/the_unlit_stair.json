@@ -1,0 +1,17 @@
+{
+  "id": "the_unlit_stair", "content_version": 1, "status": "active", "name": "The Unlit Stair",
+  "short_role": "Teach route reveal or close interception against concealed unit hunters.",
+  "question": "Can the upper keep expose the Gloam Knife before it reaches a specialist?",
+  "objective": "Preserve the upper response line while concealed infiltrators test the dark stair.",
+  "lesson": "A Lantern Post opens ranged response; melee interception remains viable without revealing the route.",
+  "keep_id": "greywatch_keep",
+  "recommended_packs": ["lantern_watch", "road_wardens"],
+  "starting_doctrine": "veiled_entry",
+  "doctrines": ["veiled_entry", "feint_and_flank", "veiled_entry"],
+  "wave_plans": [["gloam_knife"], ["gloam_knife", "climber"], ["gloam_knife", "gloam_knife", "raider"]],
+  "variations": [
+    {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
+    {"id": "shuttered_lamps", "materials": -2, "morale": 1, "target_room": "north_tower"},
+    {"id": "stored_oil", "materials": 2, "morale": -1, "target_room": "outer_wall"}
+  ]
+}

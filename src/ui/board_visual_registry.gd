@@ -86,15 +86,15 @@ static func piece_profile(piece_id: String, combat_style: String = "support") ->
 	if piece_id in ["pike_squad", "rear_guard", "shield_wardens", "hook_guard"]:
 		family = "formation"
 		accent = Color("#7cb0a0") if piece_id == "hook_guard" else Color("#6fa1b8")
-	elif piece_id in ["fire_team", "crossbow_patrol"]:
+	elif piece_id in ["fire_team", "crossbow_patrol", "dusk_bow"]:
 		family = "ranged"
-		accent = Color("#c87b5d") if piece_id == "fire_team" else Color("#9a7bc3")
+		accent = Color("#c87b5d") if piece_id == "fire_team" else Color("#d9b65f") if piece_id == "dusk_bow" else Color("#9a7bc3")
 	elif piece_id in ["narrow_gate", "breakaway_barricade", "emergency_shutters", "stake_line"]:
 		family = "fortification"
 		accent = Color("#9eb36b") if piece_id == "stake_line" else Color("#c69358")
-	elif piece_id in ["scout_post", "watch_banner", "bellkeepers", "signal_beacon"]:
+	elif piece_id in ["scout_post", "watch_banner", "bellkeepers", "signal_beacon", "lantern_post"]:
 		family = "signal"
-		accent = Color("#d2b95f")
+		accent = Color("#efc968") if piece_id == "lantern_post" else Color("#d2b95f")
 	elif piece_id in ["runner_pair", "supply_cache"]:
 		family = "mobile_support"
 		accent = Color("#5fb4bb")
@@ -118,6 +118,7 @@ static func enemy_profile(enemy_id: String, attack_style: String = "melee") -> D
 		"shieldbreaker": {"shape": "axe", "color": Color("#78453c"), "initial": "X", "scale": 1.05},
 		"standard_cutter": {"shape": "standard", "color": Color("#a84f67"), "initial": "T", "scale": 1.08},
 		"outrider": {"shape": "chevron", "color": Color("#d9904f"), "initial": "O", "scale": 0.96},
+		"gloam_knife": {"shape": "claw", "color": Color("#75649b"), "initial": "K", "scale": 0.92},
 		"siege_beast": {"shape": "hex", "color": Color("#b36c45"), "initial": "B", "scale": 1.5}
 	}
 	if profiles.has(enemy_id):
@@ -144,6 +145,7 @@ static func presentation_snapshot() -> Dictionary:
 			"climber": enemy_profile("climber").shape,
 			"siege_beast": enemy_profile("siege_beast", "demolition").shape,
 			"standard_cutter": enemy_profile("standard_cutter").shape,
-			"outrider": enemy_profile("outrider").shape
+			"outrider": enemy_profile("outrider").shape,
+			"gloam_knife": enemy_profile("gloam_knife").shape
 		}
 	}

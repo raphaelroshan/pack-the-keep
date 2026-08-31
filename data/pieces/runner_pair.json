@@ -4,9 +4,9 @@
   "question": "Where must a reserve be able to arrive before the next failure?", "kind": "unit", "category": "mobile_response",
   "footprint": [1, 1], "allowed_floors": ["ground", "upper"], "allowed_zones": ["wall", "courtyard", "keep"],
   "cost": 7, "max_health": 9, "placement_question": "Which open lane connects the threatened functions?",
-  "skill": "Rapid Relay: gains +2 response against Sappers, Climbers, and Outriders while an adjacent cell remains open.",
+  "skill": "Rapid Relay: gains +2 response against Sappers, Climbers, Outriders, and Gloam Knives while an adjacent cell remains open.",
   "strength_tags": ["repositioning", "repair_delivery", "open_lanes"], "weakness_tags": ["blocked_lanes", "area_pressure"],
-  "attack_profile": {"style": "melee", "range": 2, "cooldown_steps": 1, "damage": 2, "defense": 0, "ammo_capacity": 0, "targets": ["sapper", "climber", "outrider"]},
+  "attack_profile": {"style": "melee", "range": 2, "cooldown_steps": 1, "damage": 2, "defense": 0, "ammo_capacity": 0, "targets": ["sapper", "climber", "outrider", "gloam_knife"]},
   "support_profile": {"kind": "mobile_response", "target_rooms": ["workshop", "north_tower"], "condition_restore": 0, "response_modifier": "open_lane_bonus"},
   "assignment_rule": null, "availability": "runner_network",
   "presentation": {"icon": "", "marker_color_role": "mobile_response", "radius_scale": 1.0}
