@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
-**Document status:** Implemented automated game-quality roadmap through K8, completed P51, and completed P52 replayable mastery
-**Current development baseline:** `0.37.0-seeded-pressure`; P52.1 adds a one-action final-route recovery choice, P52.2 carries its selected and forgone routes into terminal mastery, and P52.3 makes deterministic seed pressure change the disclosed final composition and preparation emphasis; optional human private-alpha evidence and owner distribution approval remain pending
+**Document status:** Automated game-quality roadmap implemented through P53
+**Current development baseline:** `0.38.0-alpha-hardened`; P52 completes replayable Twilight mastery, while P53 proves the full menu-to-results journey under combined accessibility, controller-focus, save/resume, audio, responsive-layout, performance, packaging, and failure-recovery gates; optional human private-alpha evidence and owner distribution approval remain pending
 **Release posture:** CI-verified public repository with owner-controlled merges; no public alpha release or storefront claim yet
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
@@ -22,7 +22,7 @@ The current slice supports three commanders, twenty-one active defender pieces/e
 
 P11 content breadth is complete. Three original teaching pairs are implemented: Crossbow Watch versus Shielded Advance, Bell Guard versus Smoke and Signal, and Shieldwall versus Break the Line. Three Bells at Dusk composes those questions across two viable two-pack baselines. K6 adds Standard Cutters as assigned-specialist hunters. P51.3 adds Road Wardens versus Outriders as an isolated tempo question; P51.4 adds Lantern Watch versus Gloam Knives as an isolated visibility question; P51.5 combines them in The Twilight Road after teaching each alone. K7 exposes fixed seeded variation and replay comparisons, while K8 binds automated private-alpha evidence and limitations into one non-release gate. The Campaign Ledger, Ash Ford, Twinwatch, authored events, accessibility, real-time battle presentation, tutorial, recovery, Results, and packaged lifecycle gates remain active regression contracts. A local all-scenario matrix now runs all fourteen non-overwhelming scenarios for all three commanders across three seeds both uninterrupted and through save checkpoints, proving 126 viable cases and 252 deterministic simulations without treating automation as a human playtest. No human session has been fabricated or inferred; automated status remains a candidate pending human alpha approval.
 
-P5–P52, K3–K8, and P54 are implemented contracts and should be treated as regression requirements. The immediate objective is P53.1: perform a consolidated accessibility, persistence, controller, performance, audio, packaging, and failure-recovery audit against the completed quality flow. Human sessions remain useful validation but do not block implementation.
+P5–P53, K3–K8, and P54 are implemented contracts and should be treated as regression requirements. No further autonomous implementation milestone remains in this roadmap. The next evidence step is P16 human observation when the owner schedules it; those sessions and public distribution approval must not be inferred from automation.
 
 ### P4 completion means the following is now the reference behavior
 
@@ -131,7 +131,7 @@ Milestones must be completed in order. An agent may split a milestone into small
 | P54 | Implemented | The Windows lifecycle now kills a prepared process with malformed primaries, relaunches the same profile, restores run/settings backups, and rewrites current schemas. | Preserve the manual forced-close timing check as human validation. |
 | P51 | Implemented | Quartermaster, Twinwatch, Road Wardens/Outriders, Lantern Watch/Gloam Knives, and The Twilight Road form one ordered content expansion with two viable combined plans. | Preserve these questions as P52 adds replay variation. |
 | P52 | Implemented | Twilight Crossroads trades one recovery action for final-wave Outrider delay or Gloam Knife reveal; terminal mastery names the branch and build fit; three deterministic variations disclose balanced, Gloam-heavy, or Outrider-heavy final pressure plus a preparation emphasis. | Preserve exact preview/spawn/save parity and both viable mixed answers. |
-| P53 | Next: alpha hardening | Complete accessibility, persistence, performance, audio, controller, packaging, and failure-recovery review across the quality flow. | Begin with one consolidated automated regression audit, then repair only observed gaps. |
+| P53 | Implemented | One full UI journey now composes large text, high contrast, reduced motion, muted semantic cues, controller-first focus, two file-backed save boundaries, responsive terminal Results, and the existing performance/package/failure-recovery gates. | Preserve as the final automated roadmap gate; collect P16 human evidence only when scheduled. |
 
 P13 onward are planning identifiers, not permission to release automatically. Every milestone still requires local validation, CI, visual review, and explicit human approval before external distribution. The existing P5–P12 sections below remain useful as acceptance contracts, but agents must not re-implement them unless a regression or refactor explicitly requires it.
 

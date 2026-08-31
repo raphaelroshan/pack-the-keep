@@ -119,6 +119,7 @@ if command -v godot >/dev/null 2>&1; then
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p51_twilight_road_ui.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p52_twilight_crossroads.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p52_twilight_crossroads_ui.gd
+  godot --headless --audio-driver Dummy --path . --script res://tests/test_p53_alpha_flow_hardening.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_initial_combat.gd
 elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --import
@@ -218,6 +219,7 @@ elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p51_twilight_road_ui.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p52_twilight_crossroads.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p52_twilight_crossroads_ui.gd
+  godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p53_alpha_flow_hardening.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_initial_combat.gd
 else
   echo "Godot 4.x is not installed or not on PATH."

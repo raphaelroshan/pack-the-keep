@@ -1,6 +1,6 @@
 # Pack the Keep — Latest Visual Review
 
-**Build:** `0.37.0-seeded-pressure`
+**Build:** `0.38.0-alpha-hardened` (presentation unchanged from the versioned `0.37.0-seeded-pressure` capture baseline)
 
 **Engine:** Godot 4.7.2
 
@@ -21,4 +21,4 @@ At 1280×720 and 125%, War Council and terminal Results keep the new seed guidan
 
 ## Next visual target
 
-The next bounded visual target is P53.1 alpha-flow hardening: audit all major screens at supported scale/resolution combinations and repair only observed reachability or hierarchy regressions. Procedural actor silhouettes remain the largest presentation-quality gap after the P52 mastery sequence.
+The automated P53 flow now protects the large-text terminal layout and focus path found during this review. No further roadmap visual slice remains; procedural actor silhouettes are still the largest art-quality limitation for a later owner-directed production pass.

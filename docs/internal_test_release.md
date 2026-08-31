@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.37.0-seeded-pressure` — the development candidate adds disclosed balanced, Gloam-heavy, and Outrider-heavy final Twilight pressure with explicit preparation emphasis, while retaining the one-action route choice, terminal branch mastery, automated K8 gate, and forced-close evidence; human sessions and owner approval remain pending
+**Current build identity:** `0.38.0-alpha-hardened` — the development candidate completes the automated roadmap with one integrated large-text accessibility, controller-focus, muted-audio, save/resume, and terminal-results journey on top of the existing packaged K8 and forced-close gates; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch, Ash Ford, and Twinwatch support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan, Warden, or Quartermaster, select one of fifteen authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown, Rally, or Resupply, inspect health, armor, signal state, breakthrough momentum, concealment visibility, protection, assigned-specialist priority, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.38.0 acceptance checks
+
+Run the complete Twilight Road flow at 2560×1440 and 150% UI scale with high contrast, reduced motion, and muted effects. Confirm controller focus reaches Enter Keep, Sound the Bell, the first Twilight Crossroads option, and Review Setup. Save and reload once during ordinary Recovery and again while the route decision is open. Visible semantic cues, the exact seeded composition, branch mastery, and the terminal replay action must survive without horizontal clipping or simulation drift.
 
 ## v0.37.0 acceptance checks
 

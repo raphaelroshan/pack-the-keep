@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.37.0",
+  "content_version": "0.38.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -733,6 +733,15 @@
     "viability": "both_mixed_recovery_answers_hold_across_all_three_commanders_and_all_three_variations",
     "evidence": ["design/p52_twilight_seeded_pressure.md", "docs/p52_seeded_pressure_verification.md", "tests/test_p52_twilight_crossroads.gd", "tests/test_p52_twilight_crossroads_ui.gd"],
     "next_slice": "p53_alpha_hardening_review"
+  },
+  "p53_alpha_hardening_review": {
+    "status": "implemented",
+    "journey": ["main_menu", "war_council", "preparation", "battle", "recovery", "authored_decision", "terminal_results"],
+    "integrated_areas": ["large_text", "high_contrast", "reduced_motion", "muted_semantic_audio", "controller_focus", "save_resume", "responsive_terminal_results"],
+    "packaged_areas": ["offline_launch", "clean_install", "migration", "forced_close_recovery", "provenance", "known_limitations"],
+    "authority": "integration_gate_only_no_new_simulation_or_save_state",
+    "evidence": ["design/p53_alpha_flow_hardening.md", "docs/p53_alpha_flow_hardening_verification.md", "tests/test_p53_alpha_flow_hardening.gd", "content/k8_private_alpha_gate.json"],
+    "next_slice": "p16_human_observation_when_owner_schedules"
   },
   "campaign": {
     "title": "The Bell at Dusk",
