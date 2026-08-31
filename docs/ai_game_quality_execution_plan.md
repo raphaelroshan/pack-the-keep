@@ -55,3 +55,10 @@ The latest baseline is recorded in [`latest_visual_review_2026-08-31.md`](latest
 [1]: agent_handoff_roadmap.md "Pack the Keep Agent Handoff Roadmap"
 [2]: game_quality_transformation_plan.md "Pack the Keep Game-Quality Transformation Plan"
 [3]: latest_test_report_2026-08-30.md "Pack the Keep Latest Main Test Report"
+
+
+## Latest verification update — 2026-08-31
+
+The current `main` build `0.38.0-alpha-hardened` passes `scripts/verify.sh`, including P52 Twilight Crossroads, P53 accessibility and persistence hardening, controller focus, muted audio, save boundaries, and real-time auto-battle coverage. A fresh 1280×720 launch shows a strong authored title screen, while the War Council remains vertically dense: the defense brief, commit summary, primary action, commander card, and defense card compete within the first viewport.
+
+**Next mandatory task: K1 — Responsive War Council and Preparation layout.** Preserve the visible primary action, condense the decision summary, make the selected commander/defense relationship explicit, and keep the next useful context reachable at 1280×720, 1600×900, Large Text, keyboard, and controller focus. Do not add another commander or broad content slice until this preparation decision surface passes layout and screenshot gates. Human testing remains optional and non-blocking.
