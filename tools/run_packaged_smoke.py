@@ -139,13 +139,13 @@ def validate_report(report_path: Path, profile_root: Path, expected_version: str
     else:
         expected_counts = {
             "commander_count": 3,
-            "piece_count": 17,
-            "pack_count": 9,
-            "enemy_count": 8,
-            "doctrine_count": 9,
+            "piece_count": 19,
+            "pack_count": 10,
+            "enemy_count": 9,
+            "doctrine_count": 10,
             "keep_count": 3,
             "region_count": 1,
-            "scenario_count": 12,
+            "scenario_count": 13,
             "event_count": 9,
             "modifier_count": 2,
         }

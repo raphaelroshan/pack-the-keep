@@ -34,7 +34,7 @@ func _initialize() -> void:
 	var catalog_state = PackKeepState.new(5507)
 	var status: Dictionary = catalog_state.content_catalog_status()
 	_check(bool(status.get("ok", false)), "P11 Shieldwall catalog should validate")
-	_check(int(status.get("pack_count", 0)) == 9 and int(status.get("piece_count", 0)) == 17 and int(status.get("enemy_count", 0)) == 8 and int(status.get("doctrine_count", 0)) == 9 and int(status.get("scenario_count", 0)) >= 11, "catalog counts should retain all teaching pairs, the challenge, and K6")
+	_check(int(status.get("pack_count", 0)) >= 9 and int(status.get("piece_count", 0)) >= 17 and int(status.get("enemy_count", 0)) >= 8 and int(status.get("doctrine_count", 0)) >= 9 and int(status.get("scenario_count", 0)) >= 11, "catalog counts should retain all teaching pairs, the challenge, and K6")
 	var catalog = ContentCatalog.new()
 	catalog.load_default(PackKeepState.ROOMS.keys())
 	var malformed_breaker: Dictionary = catalog.enemy_definition("shieldbreaker")

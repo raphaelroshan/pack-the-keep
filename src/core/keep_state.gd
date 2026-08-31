@@ -1056,7 +1056,7 @@ func inspect_enemy(index: int) -> Dictionary:
 	if not _enemy_definitions.has(enemy_id):
 		return {"ok": false, "reason": "enemy definition is unavailable"}
 	var definition: Dictionary = _enemy_definitions[enemy_id]
-	return {"ok": true, "kind": "enemy", "id": enemy_id, "index": index, "name": String(definition.name), "doctrine": String(definition.doctrine), "route": String(definition.route), "counter": String(definition.counter), "target_mode": String(definition.get("target_mode", "room_destroyer")), "attack_style": String(definition.get("attack_style", "melee")), "health": int(enemy.get("hp", 0)), "max_health": int(enemy.get("max_health", definition.health)), "damage": int(definition.damage), "attack_interval": int(definition.get("attack_interval", 1)), "armor": int(definition.get("armor", 0)), "armor_counter_tag": String(definition.get("armor_counter_tag", "")), "arrival_step": int(enemy.get("arrival_step", definition.arrival_step)), "base_arrival_step": int(definition.arrival_step), "has_signal_disruption": definition.get("disruption_profile") is Dictionary, "signal_disrupted": bool(enemy.get("signal_disrupted", false)), "ignores_protection": bool(definition.get("ignores_protection", false)), "targets_assigned_first": bool(definition.get("targets_assigned_first", false)), "target_piece_categories": definition.get("target_piece_categories", []).duplicate(), "target": String(enemy.get("target", "")), "defeated": bool(enemy.get("defeated", false))}
+	return {"ok": true, "kind": "enemy", "id": enemy_id, "index": index, "name": String(definition.name), "doctrine": String(definition.doctrine), "route": String(definition.route), "counter": String(definition.counter), "target_mode": String(definition.get("target_mode", "room_destroyer")), "attack_style": String(definition.get("attack_style", "melee")), "health": int(enemy.get("hp", 0)), "max_health": int(enemy.get("max_health", definition.health)), "damage": int(definition.damage), "attack_interval": int(definition.get("attack_interval", 1)), "armor": int(definition.get("armor", 0)), "armor_counter_tag": String(definition.get("armor_counter_tag", "")), "arrival_step": int(enemy.get("arrival_step", definition.arrival_step)), "base_arrival_step": int(definition.arrival_step), "has_signal_disruption": definition.get("disruption_profile") is Dictionary, "signal_disrupted": bool(enemy.get("signal_disrupted", false)), "has_momentum": definition.get("momentum_profile") is Dictionary, "momentum_delayed": bool(enemy.get("momentum_delayed", false)), "ignores_protection": bool(definition.get("ignores_protection", false)), "targets_assigned_first": bool(definition.get("targets_assigned_first", false)), "target_piece_categories": definition.get("target_piece_categories", []).duplicate(), "target": String(enemy.get("target", "")), "defeated": bool(enemy.get("defeated", false))}
 
 func enemy_attack_timing(index: int) -> Dictionary:
 	if index < 0 or index >= enemies.size():
@@ -1565,13 +1565,34 @@ func _enemy_disruption_countered(enemy_id: String) -> bool:
 		return true
 	return _has_linked_support(String(disruption.get("counter_modifier", "")), String(disruption.get("relay_modifier", "")))
 
+func _enemy_momentum_countered(enemy_id: String) -> bool:
+	var definition: Dictionary = _enemy_definitions.get(enemy_id, {})
+	var momentum: Variant = definition.get("momentum_profile")
+	if not momentum is Dictionary:
+		return false
+	var counter_modifier: String = String(momentum.get("counter_modifier", ""))
+	for instance in pieces.values():
+		if bool(instance.get("disabled", false)) or float(instance.get("condition", 0.0)) <= 0.0:
+			continue
+		var piece: Dictionary = _piece_definitions.get(String(instance.get("piece_id", "")), {})
+		var support_profile: Variant = piece.get("support_profile")
+		if not support_profile is Dictionary or String(support_profile.get("response_modifier", "")) != counter_modifier:
+			continue
+		for room_id_value in definition.get("target_rooms", []):
+			if _piece_is_adjacent_to_room(instance, String(room_id_value)):
+				return true
+	return false
+
 func _enemy_arrival_state(enemy_id: String) -> Dictionary:
 	var definition: Dictionary = _enemy_definitions.get(enemy_id, {})
 	var base_arrival: int = int(definition.get("arrival_step", 1))
 	var disruption: Variant = definition.get("disruption_profile")
 	var disrupted: bool = disruption is Dictionary and not _enemy_disruption_countered(enemy_id)
-	var delta: int = int(disruption.get("arrival_step_delta", 0)) if disrupted else 0
-	return {"arrival_step": maxi(1, base_arrival + delta), "base_arrival_step": base_arrival, "signal_disrupted": disrupted}
+	var signal_delta: int = int(disruption.get("arrival_step_delta", 0)) if disrupted else 0
+	var momentum: Variant = definition.get("momentum_profile")
+	var momentum_delayed: bool = momentum is Dictionary and _enemy_momentum_countered(enemy_id)
+	var momentum_delta: int = int(momentum.get("delay_steps", 0)) if momentum_delayed else 0
+	return {"arrival_step": maxi(1, base_arrival + signal_delta + momentum_delta), "base_arrival_step": base_arrival, "signal_disrupted": disrupted, "momentum_delayed": momentum_delayed}
 
 func _has_assignment(piece_id: String, room_id: String) -> bool:
 	if not assigned_rooms.has(room_id):
@@ -1619,7 +1640,7 @@ func _defender_attack_projection(instance_id: String, enemy_id: String) -> Dicti
 	if piece_id == "fire_brazier" and String(instance.get("floor", "ground")) != "upper":
 		contribution = 0
 	if piece_id == "runner_pair":
-		contribution = 4 if _piece_has_open_lane(instance) and ["sapper", "climber"].has(enemy_id) else 0
+		contribution = 4 if _piece_has_open_lane(instance) and ["sapper", "climber", "outrider"].has(enemy_id) else 0
 	if piece_id == "rear_guard" and _fallback_is_active():
 		contribution += 2
 		if String(instance.get("assignment", "")) == "barracks":
@@ -2251,7 +2272,7 @@ func start_wave(doctrine: String) -> Dictionary:
 		var enemy_id: String = String(composition[index])
 		var enemy_health: int = int(_enemy_definitions[enemy_id].get("health", 1)) + enemy_health_bonus
 		var arrival_state: Dictionary = _enemy_arrival_state(enemy_id)
-		enemies.append({"enemy_id": enemy_id, "max_health": enemy_health, "hp": enemy_health, "damage": int(_enemy_definitions[enemy_id].get("damage", 0)), "arrival_step": int(arrival_state.arrival_step), "signal_disrupted": bool(arrival_state.signal_disrupted), "target": "", "defeated": false, "slot": index, "attacks_received": 0, "damage_taken": 0})
+		enemies.append({"enemy_id": enemy_id, "max_health": enemy_health, "hp": enemy_health, "damage": int(_enemy_definitions[enemy_id].get("damage", 0)), "arrival_step": int(arrival_state.arrival_step), "signal_disrupted": bool(arrival_state.signal_disrupted), "momentum_delayed": bool(arrival_state.momentum_delayed), "target": "", "defeated": false, "slot": index, "attacks_received": 0, "damage_taken": 0})
 	_battle_log("Forecast: %s. Question: %s" % [doctrine.replace("_", " "), _doctrine_definitions[doctrine].question])
 	if enemy_health_bonus > 0:
 		_battle_log("%s hardens the vanguard; every enemy begins with +%d health." % [String(_modifier_definitions[equipped_modifier_id].name), enemy_health_bonus])
@@ -2266,6 +2287,17 @@ func start_wave(doctrine: String) -> Dictionary:
 			_battle_log("%s smoke broke the warning chain; contact advances from step %d to step %d." % [_enemy_definitions[enemy_id].name, int(_enemy_definitions[enemy_id].arrival_step), int(enemy.get("arrival_step", 1))])
 		else:
 			_battle_log("Bell Guard relayed through %s smoke; forecast detail and contact timing hold." % _enemy_definitions[enemy_id].name)
+	var logged_momentum: Array[String] = []
+	for enemy in enemies:
+		var enemy_id: String = String(enemy.get("enemy_id", ""))
+		var momentum: Variant = _enemy_definitions.get(enemy_id, {}).get("momentum_profile")
+		if logged_momentum.has(enemy_id) or not momentum is Dictionary:
+			continue
+		logged_momentum.append(enemy_id)
+		if bool(enemy.get("momentum_delayed", false)):
+			_battle_log("Stake Line controlled the %s route; %s contact is delayed from step %d to step %d." % [String(_enemy_definitions[enemy_id].route).replace("_", " "), String(_enemy_definitions[enemy_id].name), int(_enemy_definitions[enemy_id].arrival_step), int(enemy.get("arrival_step", 1))])
+		else:
+			_battle_log("%s kept breakthrough momentum; contact remains at step %d." % [String(_enemy_definitions[enemy_id].name), int(enemy.get("arrival_step", 1))])
 	return {"ok": true, "message": "Wave %d begins. Pause between steps and read the target before using %s." % [wave_index, String(_commander_definitions.get(commander_id, {}).get("ability_name", "the commander intervention"))], "forecast": forecast(), "composition": composition.duplicate()}
 
 func advance_wave(delta: float) -> Dictionary:
@@ -2594,6 +2626,8 @@ func forecast() -> Dictionary:
 			forecast_enemy_ids.append(String(enemy_id))
 	var signal_disrupted: bool = false
 	var signal_network_active: bool = false
+	var momentum_threat: bool = false
+	var momentum_delayed: bool = false
 	if wave_active:
 		for enemy in enemies:
 			var enemy_id: String = String(enemy.get("enemy_id", ""))
@@ -2622,13 +2656,42 @@ func forecast() -> Dictionary:
 		scout_bonus = false
 	elif _has_assignment("scout_post", "north_tower"):
 		uncertainty = "none: North Tower assignment reveals the landing room"
+	if wave_active:
+		for enemy in enemies:
+			var enemy_id: String = String(enemy.get("enemy_id", ""))
+			var momentum: Variant = _enemy_definitions.get(enemy_id, {}).get("momentum_profile")
+			if not momentum is Dictionary:
+				continue
+			if not momentum_threat:
+				momentum_delayed = true
+			momentum_threat = true
+			if bool(enemy.get("momentum_delayed", false)):
+				uncertainty = "prepared stakes delay breakthrough contact by one tick"
+			else:
+				momentum_delayed = false
+				uncertainty = "breakthrough momentum reaches contact on tick %d" % int(enemy.get("arrival_step", _enemy_definitions[enemy_id].get("arrival_step", 1)))
+				break
+	else:
+		for enemy_id in forecast_enemy_ids:
+			var momentum: Variant = _enemy_definitions.get(enemy_id, {}).get("momentum_profile")
+			if not momentum is Dictionary:
+				continue
+			if not momentum_threat:
+				momentum_delayed = true
+			momentum_threat = true
+			if _enemy_momentum_countered(enemy_id):
+				uncertainty = "prepared stakes delay breakthrough contact by one tick"
+			else:
+				momentum_delayed = false
+				uncertainty = "breakthrough momentum reaches contact on tick %d" % int(_enemy_definitions[enemy_id].get("arrival_step", 1))
+				break
 	var composition_revealed: bool = not equipped_modifier_id.is_empty() and String(_modifier_definitions.get(equipped_modifier_id, {}).get("effect", "")) == "reveal_wave_composition"
 	var composition: Array[String] = []
 	if composition_revealed:
 		composition = forecast_enemy_ids.duplicate()
 		if not signal_disrupted:
 			uncertainty = "composition revealed by Roadside Intelligence; targets still respond to keep condition"
-	return {"doctrine": enemy_doctrine, "question": doctrine.get("question", ""), "likely_target": likely_target, "uncertainty": uncertainty, "scout_bonus": scout_bonus, "exact_target_revealed": not signal_disrupted and _has_assignment("scout_post", "north_tower"), "signal_disrupted": signal_disrupted, "signal_network_active": signal_network_active, "composition_revealed": composition_revealed, "composition": composition}
+	return {"doctrine": enemy_doctrine, "question": doctrine.get("question", ""), "likely_target": likely_target, "uncertainty": uncertainty, "scout_bonus": scout_bonus, "exact_target_revealed": not signal_disrupted and _has_assignment("scout_post", "north_tower"), "signal_disrupted": signal_disrupted, "signal_network_active": signal_network_active, "momentum_threat": momentum_threat, "momentum_delayed": momentum_delayed, "composition_revealed": composition_revealed, "composition": composition}
 
 func summary() -> Dictionary:
 	return {
@@ -2943,7 +3006,7 @@ func _validate_serialized_payload(data: Dictionary) -> String:
 			for field_name in ["max_health", "hp", "damage", "arrival_step", "slot", "attacks_received", "damage_taken"]:
 				if enemy.has(field_name) and not _is_saved_number(enemy.get(field_name)):
 					return "save enemy %s is malformed" % String(field_name).replace("_", " ")
-			for field_name in ["signal_disrupted", "defeated"]:
+			for field_name in ["signal_disrupted", "momentum_delayed", "defeated"]:
 				if enemy.has(field_name) and not enemy.get(field_name) is bool:
 					return "save enemy %s is malformed" % String(field_name).replace("_", " ")
 			if enemy.has("target"):

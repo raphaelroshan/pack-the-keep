@@ -855,3 +855,11 @@
 **Reason:** P51 requires a third defensive identity whose layout question is not another compact core or empty lane. Two separated staffed anchors create a visible split-defense problem while preserving stable room IDs, deterministic targeting, existing placement legality, and the current damage pipeline.
 
 **Trade-off:** The benefit applies to all room damage while both posts are staffed rather than simulating per-route communication. That bounded abstraction stays readable on the compact board and turns off immediately when either post is lost; route-specific logistics remain out of scope.
+
+## ADR-108: Breakthrough momentum is fixed when an assault starts
+
+**Decision:** Add the Road Wardens teaching pack and the Outrider unit-hunter family. An Outrider normally contacts on its authored early tick; at wave creation, a living Stake Line adjacent to one of the enemy's authored route rooms delays that contact by exactly one tick. The resulting effective arrival and `momentum_delayed` state are stored on the enemy instance, inspected and saved like existing signal timing.
+
+**Reason:** P51 needs a new isolated question that is neither armor, signal redundancy, static protection, nor assigned-specialist hunting. A one-tick preparation check creates a legible tempo choice: buy space for delay plus modest repeated damage, or concentrate enough precision/mobile response to stop the charge on its original timing.
+
+**Trade-off:** The Stake Line checks authored target-room adjacency rather than simulating a moving trap collision, and it does not update after the wave begins. This keeps timing deterministic and understandable, avoids mid-wave placement exceptions, and leaves freeform movement, stun stacking, and pathfinding outside the vertical slice.

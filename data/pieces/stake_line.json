@@ -1,0 +1,13 @@
+{
+  "id": "stake_line", "content_version": 1, "status": "active", "name": "Stake Line",
+  "short_role": "Turn one authored approach into slower ground.", "role": "delays breakthrough momentum",
+  "question": "Which route is worth a footprint that buys time but deals no damage?", "kind": "equipment", "category": "control",
+  "footprint": [2, 1], "allowed_floors": ["ground"], "allowed_zones": ["wall", "courtyard"],
+  "cost": 5, "max_health": 10, "placement_question": "Which threatened room edge should slow an Outrider charge?",
+  "skill": "Prepared Stakes: while living beside an authored approach room, delays Outrider contact by exactly one tick when the assault begins.",
+  "strength_tags": ["route_delay", "prepared_ground", "breakthrough_control"], "weakness_tags": ["no_direct_stop", "ground_only", "route_specific"],
+  "attack_profile": {"style": "fortification", "range": 1, "cooldown_steps": 1, "damage": 0, "defense": 2, "ammo_capacity": 0, "targets": ["all"]},
+  "support_profile": {"kind": "route_control", "target_rooms": [], "condition_restore": 0, "response_modifier": "route_delay"},
+  "assignment_rule": null, "availability": "road_wardens",
+  "presentation": {"icon": "", "marker_color_role": "interception", "radius_scale": 1.0}
+}

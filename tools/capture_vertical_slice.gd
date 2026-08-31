@@ -8,6 +8,7 @@ var capture_commander_id: String = "castellan"
 var capture_scenario_id: String = "gatehouse_lock"
 var capture_pack_offer: bool = false
 var capture_spatial_transition: bool = false
+var capture_route_delay: bool = false
 var capture_starting_defender: bool = false
 var capture_battle_exchange: bool = false
 var capture_battle_exchange_progress: float = 0.28
@@ -25,6 +26,7 @@ func _initialize() -> void:
 	capture_scenario_id = _argument_value("--scenario=") if not _argument_value("--scenario=").is_empty() else "gatehouse_lock"
 	capture_pack_offer = OS.get_cmdline_user_args().has("--capture-pack-offer")
 	capture_spatial_transition = OS.get_cmdline_user_args().has("--capture-spatial-transition")
+	capture_route_delay = OS.get_cmdline_user_args().has("--capture-route-delay")
 	capture_starting_defender = OS.get_cmdline_user_args().has("--inspect-starting-defender")
 	capture_battle_exchange = OS.get_cmdline_user_args().has("--capture-battle-exchange")
 	if not _argument_value("--battle-exchange-progress=").is_empty():
@@ -58,13 +60,17 @@ func _run_capture() -> void:
 	if ui.keep.scenario_ids().has(capture_scenario_id):
 		ui._select_option_metadata(ui.scenario_option, capture_scenario_id)
 		ui.keep.select_scenario(capture_scenario_id)
-	if capture_spatial_transition:
+	if capture_spatial_transition or capture_route_delay:
 		ui.guided_setup = false
 	ui._refresh_ui()
 	await _capture("02_war_council", ui)
 	ui._on_confirm_setup()
 	if capture_spatial_transition and capture_scenario_id == "the_divided_bell":
 		ui.keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
+		ui._refresh_ui()
+	elif capture_route_delay and capture_scenario_id == "before_the_horn":
+		ui.keep.open_pack("road_wardens")
+		ui.keep.place_piece("hook_guard", Vector2i(4, 3), "ground")
 		ui._refresh_ui()
 	elif capture_starting_defender:
 		ui._on_map_clicked("ground", Vector2i(4, 5))
@@ -74,6 +80,10 @@ func _run_capture() -> void:
 		ui.keep.place_piece("runner_pair", Vector2i(9, 3), "ground")
 		ui._refresh_ui()
 		await _capture("03c_spatial_rule_active", ui)
+	if capture_route_delay and capture_scenario_id == "before_the_horn":
+		ui.keep.place_piece("stake_line", Vector2i(1, 2), "ground")
+		ui._refresh_ui()
+		await _capture("03c_route_delay_ready", ui)
 	if capture_pack_offer:
 		ui._scroll_page_to_control(ui.preparation_pack_offer_panel)
 		await _capture("03b_pack_offer", ui)
@@ -141,6 +151,7 @@ func _write_manifest() -> void:
 		"scenario": capture_scenario_id,
 		"pack_offer_captured": capture_pack_offer,
 		"spatial_transition_captured": capture_spatial_transition,
+		"route_delay_captured": capture_route_delay,
 		"starting_defender_inspected": capture_starting_defender,
 		"battle_exchange_staged": capture_battle_exchange,
 		"battle_exchange_progress": capture_battle_exchange_progress if capture_battle_exchange else null,

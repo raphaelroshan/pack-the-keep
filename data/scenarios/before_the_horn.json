@@ -1,0 +1,17 @@
+{
+  "id": "before_the_horn", "content_version": 1, "status": "active", "name": "Before the Horn",
+  "short_role": "Teach prepared delay or concentrated damage against an early unit hunter.",
+  "question": "Can one approach gain enough time to stop the Outrider before second-tick contact?",
+  "objective": "Preserve the specialist line while Outriders arrive ahead of the main assault.",
+  "lesson": "Prepared stakes buy one exact tick; concentrated precision can remove the same threat without delaying it.",
+  "keep_id": "greywatch_keep",
+  "recommended_packs": ["road_wardens", "crossbow_watch"],
+  "starting_doctrine": "rapid_breakthrough",
+  "doctrines": ["rapid_breakthrough", "gate_assault", "rapid_breakthrough"],
+  "wave_plans": [["outrider"], ["outrider", "raider"], ["outrider", "outrider", "sapper"]],
+  "variations": [
+    {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
+    {"id": "short_road", "materials": -2, "morale": 1, "target_room": ""},
+    {"id": "stored_stakes", "materials": 2, "morale": -1, "target_room": ""}
+  ]
+}
