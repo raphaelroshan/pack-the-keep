@@ -187,3 +187,8 @@ See [`design/p1_content_and_replayability.md`](design/p1_content_and_replayabili
 ## Internal base-game test release
 
 The repository includes a small internal test-release presentation for Greywatch. It uses a generated first-pass visual kit—Greywatch background, Castellan portrait, defender and enemy icons—while leaving the deterministic simulation and battle rules as the source of truth. The Warden currently uses a clearly labeled tinted shared portrait treatment and Siege Beast uses an enlarged procedural threat marker until a later image-generation window. P2 adds code-generated feedback tones only; it does not claim authored sound effects or final animation sheets. The test checklist, asset manifest, and deliberate production boundaries are documented in [`docs/internal_test_release.md`](docs/internal_test_release.md).
+
+
+## Temporary asset kit
+
+The testing-only art, audio, VFX, and animation kit is documented in [`docs/temporary_asset_kit.md`](docs/temporary_asset_kit.md). Curated CC0 files are under [`assets/temporary/`](assets/temporary/), with machine-readable provenance in [`assets/temporary/manifest.json`](assets/temporary/manifest.json). These assets support breadth, combat timing, and feel testing; they are not the final Greywatch, commander, or enemy art direction.

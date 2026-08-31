@@ -32,3 +32,8 @@ The Greywatch kit is an original, first-pass 2D illustrated asset set generated 
 ## Asset handling
 
 The art is stored as regular repository source content because it is part of the playable prototype and each file remains below the repository’s policy size limit. Godot import metadata and runtime output remain ignored by `.gitignore`. No API keys, private saves, generated Godot metadata, or unreviewed third-party assets are part of this kit. The files should be treated as original generated project content with no third-party attribution currently required; that statement is a provenance note, not a legal license guarantee. The visual-fort and P11 teaching-pair treatments intentionally record the procedural renderer as a functional fallback rather than misrepresenting it as generated pixel art.
+
+
+## Temporary testing kit
+
+The temporary CC0 breadth kit is documented in [`docs/temporary_asset_kit.md`](../docs/temporary_asset_kit.md) and inventoried in [`assets/temporary/manifest.json`](temporary/manifest.json). It includes Kenney Tiny Dungeon, Tiny Battle, Interface Sounds, RPG Audio, and a curated Particle Pack subset. These files support layout, targeting, placement, animation timing, and audio-feedback tests; they are explicitly not the final Greywatch, commander, enemy, or fortress art direction.

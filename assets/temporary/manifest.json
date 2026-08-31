@@ -1,0 +1,51 @@
+{
+  "status": "temporary-testing-kit",
+  "game": "pack-the-keep",
+  "sources": [
+    {
+      "id": "kenney-tiny-dungeon",
+      "source_url": "https://kenney.nl/assets/tiny-dungeon",
+      "license": "CC0",
+      "license_file": "assets/temporary/kenney/LICENSE-tiny-dungeon.txt",
+      "local_path": "assets/temporary/kenney/tiny-dungeon",
+      "uses": ["room filler", "corridor geometry", "door and approach testing"],
+      "deficiency": "Generic warm dungeon style; not final Greywatch fortress material language."
+    },
+    {
+      "id": "kenney-tiny-battle",
+      "source_url": "https://kenney.nl/assets/tiny-battle",
+      "license": "CC0",
+      "license_file": "assets/temporary/kenney/LICENSE-tiny-battle.txt",
+      "local_path": "assets/temporary/kenney/tiny-battle",
+      "uses": ["defender silhouettes", "enemy placeholders", "flags and combat markers"],
+      "deficiency": "Toy-like units; not final commander, pack, or enemy identity."
+    },
+    {
+      "id": "kenney-interface-sounds",
+      "source_url": "https://kenney.nl/assets/interface-sounds",
+      "license": "CC0",
+      "license_file": "assets/temporary/kenney/LICENSE-interface-sounds.txt",
+      "local_path": "assets/temporary/kenney/interface-sounds",
+      "uses": ["placement", "selection", "wave start", "invalid action", "results feedback"],
+      "deficiency": "Generic clicks; not Greywatch wood, stone, metal, or command identity."
+    },
+    {
+      "id": "kenney-rpg-audio",
+      "source_url": "https://kenney.nl/assets/rpg-audio",
+      "license": "CC0",
+      "license_file": "assets/temporary/kenney/LICENSE-rpg-audio.txt",
+      "local_path": "assets/temporary/kenney/rpg-audio",
+      "uses": ["footsteps", "doors", "cloth", "weapon and material foley"],
+      "deficiency": "Fantasy-RPG foley; not a finished keep-defense soundscape."
+    },
+    {
+      "id": "kenney-particle-pack",
+      "source_url": "https://kenney.nl/assets/particle-pack",
+      "license": "CC0",
+      "license_file": "assets/temporary/kenney/LICENSE-particle-pack.txt",
+      "local_path": "assets/temporary/kenney/particle-pack",
+      "uses": ["attack impact", "repair sparks", "dust", "smoke", "warning accents"],
+      "deficiency": "Generic white effects; require palette tinting and authored timing."
+    }
+  ]
+}
