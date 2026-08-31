@@ -33,6 +33,11 @@ func _initialize() -> void:
 	_check(String(pike.piece.get("shape", "")) == "shield", "formation defenders should use a shield silhouette family")
 	_check(String(repair.piece.get("shape", "")) == "cross", "support defenders should use a support-cross silhouette family")
 	_check(String(gate.piece.get("shape", "")) == "barrier", "fortification pieces should use a barrier silhouette family")
+	_check(String(pike.piece.get("sprite_path", "")).ends_with("tile_0125.png") and bool(pike.get("piece_texture_loaded", false)), "formation defenders should resolve the temporary melee actor sprite")
+	var ranged: Dictionary = ui.keep_canvas.actor_visual_snapshot("fire_team", "ash_slinger")
+	_check(String(ranged.piece.get("sprite_path", "")).ends_with("tile_0124.png") and bool(ranged.get("piece_texture_loaded", false)), "ranged defenders should resolve a distinct temporary actor sprite")
+	_check(String(ranged.enemy.get("sprite_path", "")).ends_with("tile_0160.png") and bool(ranged.get("enemy_texture_loaded", false)), "ranged enemies should resolve the temporary hostile ranged sprite")
+	_check(String(board.get("temporary_actor_source", "")).contains("CC0"), "the board snapshot should identify temporary actor provenance")
 
 	var enemy_shapes: Dictionary = board.get("enemy_shapes", {})
 	var unique_shapes: Dictionary = {}
@@ -41,6 +46,7 @@ func _initialize() -> void:
 	_check(unique_shapes.size() == 5, "Raider, Sapper, Climber, Siege Beast, and Standard Cutter should have distinct silhouettes")
 	var beast: Dictionary = ui.keep_canvas.actor_visual_snapshot("pike_squad", "siege_beast")
 	_check(String(beast.enemy.get("shape", "")) == "hex" and float(beast.enemy.get("scale", 1.0)) > 1.0, "Siege Beast should reserve the largest heavy silhouette")
+	_check(String(beast.enemy.get("sprite_path", "")).ends_with("tile_0170.png") and bool(beast.get("enemy_texture_loaded", false)), "Siege Beast should resolve a distinct temporary siege actor")
 
 	ui.keep_canvas.queue_redraw()
 	await process_frame

@@ -4,6 +4,8 @@
 **Build target:** Current private alpha branch  
 **Purpose:** Give AI agents usable temporary defenders, enemies, rooms, VFX, audio, and animation ingredients while Greywatch’s final authored art is developed.
 
+**Current integration:** `0.40.0-actor-readability` uses the Tiny Battle melee, ranged, heavy, and siege sprites on the board beneath existing role silhouettes and tactical overlays. Dungeon tiles, particles, and authored audio replacement remain available but are not yet part of the runtime presentation.
+
 ## Included sources
 
 | Source | Repository path | License | Intended use | Deficiency note |

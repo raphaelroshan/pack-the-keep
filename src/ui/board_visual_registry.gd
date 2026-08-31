@@ -1,6 +1,18 @@
 class_name BoardVisualRegistry
 extends RefCounted
 
+const TEMP_ALLY_RANGED := "res://assets/temporary/kenney/tiny-battle/Tiles/tile_0124.png"
+const TEMP_ALLY_MELEE := "res://assets/temporary/kenney/tiny-battle/Tiles/tile_0125.png"
+const TEMP_ENEMY_RANGED := "res://assets/temporary/kenney/tiny-battle/Tiles/tile_0160.png"
+const TEMP_ENEMY_MELEE := "res://assets/temporary/kenney/tiny-battle/Tiles/tile_0161.png"
+const TEMP_ENEMY_HEAVY := "res://assets/temporary/kenney/tiny-battle/Tiles/tile_0179.png"
+const TEMP_SIEGE_ACTOR := "res://assets/temporary/kenney/tiny-battle/Tiles/tile_0170.png"
+
+const ACTOR_PIECES: Array[String] = [
+	"pike_squad", "fire_team", "runner_pair", "rear_guard", "crossbow_patrol",
+	"bellkeepers", "shield_wardens", "hook_guard", "dusk_bow"
+]
+
 const LAYER_ORDER: Array[String] = [
 	"background_atmosphere",
 	"structural_board",
@@ -101,12 +113,16 @@ static func piece_profile(piece_id: String, combat_style: String = "support") ->
 	elif combat_style == "melee":
 		family = "formation"
 		accent = Color("#6fa1b8")
-	return {
+	var profile: Dictionary = {
 		"family": family,
 		"shape": {"formation": "shield", "ranged": "crosshair", "fortification": "barrier", "signal": "beacon", "mobile_support": "linked", "support": "cross"}.get(family, "cross"),
 		"accent": accent,
 		"card": Color("#202a31")
 	}
+	if piece_id in ACTOR_PIECES:
+		profile["sprite_path"] = TEMP_ALLY_RANGED if family in ["ranged", "mobile_support"] else TEMP_ALLY_MELEE
+		profile["asset_status"] = "temporary_cc0"
+	return profile
 
 static func enemy_profile(enemy_id: String, attack_style: String = "melee") -> Dictionary:
 	var profiles: Dictionary = {
@@ -121,14 +137,28 @@ static func enemy_profile(enemy_id: String, attack_style: String = "melee") -> D
 		"gloam_knife": {"shape": "claw", "color": Color("#75649b"), "initial": "K", "scale": 0.92},
 		"siege_beast": {"shape": "hex", "color": Color("#b36c45"), "initial": "B", "scale": 1.5}
 	}
+	var profile: Dictionary
 	if profiles.has(enemy_id):
-		return profiles[enemy_id].duplicate(true)
-	return {
+		profile = profiles[enemy_id].duplicate(true)
+	else:
+		profile = {
 		"shape": "diamond" if attack_style == "demolition" else "ring" if attack_style == "ranged" else "chevron",
 		"color": Color("#d26155"),
 		"initial": "?",
 		"scale": 1.0
-	}
+		}
+	profile["sprite_path"] = _enemy_sprite_path(enemy_id, attack_style)
+	profile["asset_status"] = "temporary_cc0"
+	return profile
+
+static func _enemy_sprite_path(enemy_id: String, attack_style: String) -> String:
+	if enemy_id == "siege_beast":
+		return TEMP_SIEGE_ACTOR
+	if attack_style == "demolition" or enemy_id == "outrider":
+		return TEMP_ENEMY_HEAVY
+	if attack_style == "ranged":
+		return TEMP_ENEMY_RANGED
+	return TEMP_ENEMY_MELEE
 
 static func presentation_snapshot() -> Dictionary:
 	return {
@@ -147,5 +177,7 @@ static func presentation_snapshot() -> Dictionary:
 			"standard_cutter": enemy_profile("standard_cutter").shape,
 			"outrider": enemy_profile("outrider").shape,
 			"gloam_knife": enemy_profile("gloam_knife").shape
-		}
+		},
+		"temporary_actor_assets": true,
+		"temporary_actor_source": "Kenney Tiny Battle · CC0",
 	}

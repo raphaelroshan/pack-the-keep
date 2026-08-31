@@ -1,24 +1,25 @@
 # Pack the Keep — Latest Visual Review
 
-**Build:** `0.39.0-responsive-decisions`
+**Build:** `0.40.0-actor-readability`
 
 **Engine:** Godot 4.7.2
 
-**Capture:** Real local renderer at 1280×720 / 125%, 1600×900 / 100%, and 1280×720 / 150% Large Text.
+**Capture:** Real local renderer at 1600×900 / 100% for Preparation, a paused defender-response exchange, the four-threat final assault, and a Siege Beast assault; prior responsive evidence remains at 1280×720 and Large Text.
 
 ## Evidence
 
+- [Temporary actor-readability review](visual_evidence/v0.40.0-actor-readability-review-2026-08-31/)
 - [Responsive decision-surface review](visual_evidence/v0.39.0-responsive-decisions-review-2026-08-31/)
 - [Earlier complete seeded-pressure sequence](visual_evidence/v0.37.0-seeded-pressure-review-2026-08-31/)
 
-The responsive review contains War Council and Preparation captures for all three target layouts plus a machine-readable manifest recording build, viewport, scale, state, and capture method. The earlier complete sequence remains the regression reference for Battle, Recovery, and Results.
+The actor-readability review contains four normal-distance checkpoints plus a machine-readable manifest recording build, viewport, state, asset source, and capture method. The responsive review remains the narrow/Large Text regression reference, and the earlier complete sequence remains the broader Battle, Recovery, and Results reference.
 
 ## Findings
 
-At 1280×720 / 125%, War Council now removes the repeated defense brief and presents four compact facts—run frame, selected pairing, seed pressure, and preparation focus—before the primary action. Enter Keep and both next-choice controls remain visible together, while the first substantive commander and defense details begin immediately below them. Preparation carries **The Castellan leads The Twilight Road at Greywatch Keep** into the status line, uses the authored strategic question instead of the longer lesson paragraph, keeps Ready Defense visible, and exposes more of both fort floors in the first viewport.
+Temporary Tiny Battle actors now occupy the center of active defender and hostile markers. Melee formations and ranged defenders are distinguishable before reading their labels; Outriders and Gloam Knives read as advancing hostile actors in the four-threat final phase; the Siege Beast reserves a separate heavy vehicle silhouette. The sprites sit inside the existing color/shape grammar, so doctrine identity is not reduced to the borrowed art.
 
-At 1600×900 / 100%, the full authored overview and two-column command rail remain available, so the wider layout loses no context. At 1280×720 / 150%, War Council deliberately stacks the cards and scrolls the focused primary action into view with the complete first commander card; Preparation converts its three-part brief to one readable column while retaining the focused primary action and the top of the fort. No horizontal clipping was observed in any reviewed state. Procedural actor art remains placeholder-level.
+Preparation retains piece names, role colors, health bars, room edges, and floor separation around the new actors. During Battle, focus rings, target lines, cadence, health, defender-response traces, and specialist labels remain more prominent than the sprite detail. Timeline markers deliberately remain procedural because the source sprites are unreadable at that scale. The borrowed art is visibly temporary and toy-like, but it materially improves actor recognition without claiming final Greywatch production quality.
 
 ## Next visual target
 
-The responsive layout gate now protects the priority-path visibility, relationship copy, wide-layout preservation, Large Text fallback, controller focus, and serialized-state invariance found during this review. No further autonomous roadmap visual slice remains; procedural actor silhouettes are still the largest art-quality limitation for a later owner-directed production pass.
+The next visual production target is replacement of the temporary Tiny Battle actors with authored Greywatch silhouettes, beginning with the core defender line and the first signature enemy family. Until then, the temporary sprites are suitable for combat-timing and recognition tests but not final marketing screenshots.
