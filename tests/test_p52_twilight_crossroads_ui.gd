@@ -83,6 +83,14 @@ func _initialize() -> void:
 	_check(ui.screen == "battle" and ui.keep.wave_index == 3, "closing recovery should enter the combined final assault")
 	_check(String(ui.forecast_label.text).contains("Charge: DELAYED") and String(ui.forecast_label.text).contains("Visibility: REVEALED"), "Battle should retain the selected recovery consequence in the forecast")
 	_check(String(ui.enemy_label.text).contains("visibility REVEALED"), "the battle roster should expose the lamp-oil result on Gloam Knives")
+	_resolve_wave(ui)
+	ui._set_screen("results")
+	await process_frame
+	await process_frame
+	var terminal_mastery: String = String(ui.terminal_debrief_panel.causal_label.text)
+	_check(ui.terminal_debrief_panel.visible and terminal_mastery.contains("RECOVERY BRANCH") and terminal_mastery.contains("Stair lamps revealed") and terminal_mastery.contains("COMPLEMENTARY"), "terminal Results should explain the selected route and its build fit")
+	_check(terminal_mastery.contains("FORGONE PREPARATION") and terminal_mastery.contains("Road stakes were not reinforced"), "terminal Results should name the route preparation that was declined")
+	_check(String(ui.terminal_debrief_panel.replay_label.text).contains("road stakes"), "terminal replay guidance should propose the opposite recovery branch")
 
 	root.content_scale_factor = 1.0
 	ui.queue_free()

@@ -887,3 +887,11 @@
 **Reason:** P52 needs replay variation that changes a concrete build and recovery decision without permanent power or hidden randomness. A player can now pair Road Wardens with Crossbow Watch and use lamp oil, or pair Lantern Watch with Runner Network and use road stakes, while the earlier complete plans remain valid.
 
 **Trade-off:** A fully prepared Road Wardens plus Lantern Watch layout can make either event effect redundant, though the action cost remains real. This is acceptable as a deliberate over-preparation option; terminal mastery should make the redundancy legible in the next P52 slice rather than adding a stronger stacking bonus.
+
+## ADR-112: Route-choice mastery is derived from event history
+
+**Decision:** Derive an optional Twilight recovery-branch summary from the persisted event-history choice and opened pack names. Terminal Results names the selected preparation, forgone route, complementary/redundant/adaptive fit, and opposite-branch replay experiment inside the existing mastery composition.
+
+**Reason:** The recovery choice changes combat, but a terminal player needs the game to connect that action to the build that covered the other route. Reusing event history makes the causal link durable and replayable without another campaign flag or reward system.
+
+**Trade-off:** Build-fit language compares authored pack identities, not every individual placement or attack contribution. It therefore describes the strategic plan rather than claiming optimal execution; the detailed timeline and damage report remain available below it.

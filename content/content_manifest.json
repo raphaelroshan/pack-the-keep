@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.36.0",
+  "content_version": "0.36.1",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -713,6 +713,15 @@
     "presentation": "blocking_recovery_decision_leads_command_rail_and_controller_focus_without_permanent_hud",
     "evidence": ["design/p52_twilight_crossroads_recovery.md", "docs/p52_twilight_crossroads_verification.md", "tests/test_p52_twilight_crossroads.gd", "tests/test_p52_twilight_crossroads_ui.gd"],
     "next_slice": "p52_recovery_branch_debrief"
+  },
+  "p52_recovery_branch_debrief": {
+    "status": "implemented",
+    "source": "persisted_twilight_crossroads_event_history",
+    "presentation": ["recovery_branch", "forgone_preparation", "build_fit", "opposite_branch_replay_experiment"],
+    "fit_states": ["complementary", "redundant", "adaptive"],
+    "authority": "derived_read_model_only_no_new_serialized_state",
+    "evidence": ["design/p52_twilight_route_debrief.md", "tests/test_p52_twilight_crossroads.gd", "tests/test_p52_twilight_crossroads_ui.gd"],
+    "next_slice": "p52_meaningful_seeded_variation"
   },
   "campaign": {
     "title": "The Bell at Dusk",

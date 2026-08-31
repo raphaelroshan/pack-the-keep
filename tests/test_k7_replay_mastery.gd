@@ -59,6 +59,7 @@ func _initialize() -> void:
 	_check(String(mastery.get("variation", {}).get("summary", "")).contains(String(first.scenario_variation_id).replace("_", " ").capitalize()), "terminal report should retain the selected variation")
 	_check(int(mastery.get("phase_count", 0)) == 3 and int(mastery.get("covered_phases", 0)) == 2, "terminal report should compare chosen defense families with all three phases")
 	_check(int(mastery.get("recovery_capacity", 0)) == 4 and int(mastery.get("recovery_actions_used", 0)) > 0, "terminal report should compare recovery commitment with the four-action opportunity")
+	_check(mastery.get("recovery_branch", {}).is_empty(), "non-Twilight scenarios should not invent a route-choice mastery branch")
 	_check(String(report.get("suggested_experiment", "")).contains("Gate Assault") and String(report.get("suggested_experiment", "")).contains("frontline"), "replay experiment should point at the first uncovered pressure and a viable family")
 
 	var view: Dictionary = ResultsPresentationSnapshot.build(first, false, false, "")
