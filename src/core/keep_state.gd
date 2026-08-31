@@ -1141,9 +1141,31 @@ func recovery_profile() -> Dictionary:
 
 func spatial_rule_state() -> Dictionary:
 	var rule: Dictionary = _keep_definitions.get(keep_id, {}).get("spatial_rule", {}).duplicate(true)
-	var active: bool = String(rule.get("id", "")) == "clear_causeway" and _is_causeway_clear(rule.get("lane_cells", []))
+	var active: bool = false
+	match String(rule.get("id", "")):
+		"clear_causeway": active = _is_causeway_clear(rule.get("lane_cells", []))
+		"paired_bastions": active = _paired_bastions_staffed(rule.get("anchor_rooms", []))
 	rule.active = active
 	return rule
+
+func _paired_bastions_staffed(anchor_rooms: Array) -> bool:
+	if anchor_rooms.size() != 2:
+		return false
+	for anchor_room_value in anchor_rooms:
+		var anchor_room: String = String(anchor_room_value)
+		var staffed: bool = false
+		for instance in pieces.values():
+			if bool(instance.get("disabled", false)) or float(instance.get("condition", 0.0)) <= 0.0:
+				continue
+			var piece: Dictionary = _piece_definitions.get(String(instance.get("piece_id", "")), {})
+			if int(piece.get("attack", 0)) <= 0 or not ["melee", "ranged"].has(String(piece.get("combat_style", "support"))):
+				continue
+			if _piece_is_adjacent_to_room(instance, anchor_room):
+				staffed = true
+				break
+		if not staffed:
+			return false
+	return true
 
 func _is_causeway_clear(lane_cells: Array) -> bool:
 	for instance in pieces.values():
@@ -1440,6 +1462,8 @@ func layout_summary() -> Dictionary:
 		warnings.append("No placed piece has an open adjacent response cell.")
 	if String(active_spatial_rule.get("id", "")) == "clear_causeway" and not bool(active_spatial_rule.get("active", false)):
 		warnings.append("A placed piece blocks the causeway, so its room-damage reduction is inactive.")
+	if String(active_spatial_rule.get("id", "")) == "paired_bastions" and not bool(active_spatial_rule.get("active", false)):
+		warnings.append("Both marked bastions need a living combat defender before their shared protection is active.")
 	var role_ids: Array = role_counts.keys()
 	role_ids.sort()
 	for role_id in role_ids:
@@ -1871,7 +1895,8 @@ func _apply_room_damage(enemy_id: String, room_id: String, damage: int, reduced:
 		var causeway_reduction: int = int(spatial_rule.get("room_damage_reduction", 0))
 		if causeway_reduction > 0:
 			damage = maxi(0, damage - causeway_reduction)
-			_battle_log("The clear causeway dispersed the response and reduced room damage by %d." % causeway_reduction)
+			var rule_name: String = "The paired bastions relayed the response" if String(spatial_rule.get("id", "")) == "paired_bastions" else "The clear causeway dispersed the response"
+			_battle_log("%s and reduced room damage by %d." % [rule_name, causeway_reduction])
 	var ignores_protection: bool = bool(_enemy_definitions[enemy_id].get("ignores_protection", false))
 	var room_protection: int = _room_protection(room_id)
 	if room_protection > 0:

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.31.0",
+  "content_version": "0.32.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -180,10 +180,10 @@
   },
   "p12_alpha_scenario_matrix": {
     "status": "implemented",
-    "scenarios": 10,
+    "scenarios": 11,
     "commanders": 3,
     "seeds_per_pair": 3,
-    "simulation_executions": 180,
+    "simulation_executions": 198,
     "resume_boundaries": ["wave_one_pre_step", "first_recovery_before_event_resolution", "wave_two_pre_step"],
     "contract": "byte_identical_uninterrupted_and_resumed_three_wave_non_collapse_baselines_with_closed_terminal_recovery_and_event_state",
     "evidence": ["design/p12_alpha_scenario_matrix.md", "tests/test_p12_alpha_scenario_matrix.gd"],
@@ -654,7 +654,18 @@
     "ability": "once_per_assault_resupply_restores_bounded_health_and_ammunition_to_living_defenders",
     "limitation": "lowest_starting_materials_and_morale_with_delayed_value_that_depends_on_surviving_reserves",
     "evidence": ["design/p51_quartermaster_commander_lens.md", "docs/p51_quartermaster_verification.md", "tests/test_p51_quartermaster.gd", "tests/test_p51_quartermaster_ui.gd"],
-    "next_slice": "p51_new_keep_identity"
+    "next_slice": "p51_twinwatch_defensive_identity"
+  },
+  "p51_twinwatch_defensive_identity": {
+    "status": "implemented",
+    "keep": "twinwatch_bastion",
+    "scenario": "the_divided_bell",
+    "question": "staff_two_exposed_posts_without_making_either_disposable",
+    "spatial_rule": "paired_bastions_requires_living_combat_defender_beside_gate_and_armory_for_one_room_damage_reduction",
+    "viable_answers": ["pike_line_plus_shieldwall", "pike_line_plus_runner_network"],
+    "recovery_problem": "seven_material_twenty_five_condition_repairs_force_a_choice_between_posts",
+    "evidence": ["design/p51_twinwatch_defensive_identity.md", "docs/p51_twinwatch_verification.md", "tests/test_p51_twinwatch_identity.gd", "tests/test_p51_twinwatch_ui.gd"],
+    "next_slice": "p51_first_teaching_pack"
   },
   "campaign": {
     "title": "The Bell at Dusk",
@@ -1550,7 +1561,8 @@
     "keep_id": "greywatch_keep",
     "keep_ids": [
       "greywatch_keep",
-      "ash_ford_redoubt"
+      "ash_ford_redoubt",
+      "twinwatch_bastion"
     ],
     "region_ids": [
       "low_mill"
@@ -1592,6 +1604,7 @@
       "three_bells_at_dusk",
       "ash_ford_crossing",
       "the_cut_standard",
+      "the_divided_bell",
       "last_stand"
     ],
     "event_ids": [

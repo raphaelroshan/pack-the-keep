@@ -46,6 +46,13 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         self.assertIn("room_damage_reduction", joined)
         self.assertIn("room_repair_condition", joined)
 
+    def test_paired_bastions_require_two_known_distinct_anchors(self) -> None:
+        keep = copy.deepcopy(load("data/keeps/twinwatch_bastion.json"))
+        keep["spatial_rule"]["anchor_rooms"] = ["gate", "missing_room"]
+        errors: list[str] = []
+        validator.validate_keep(Path("twinwatch_bastion.json"), keep, set(), errors)
+        self.assertIn("paired_bastions", "\n".join(errors))
+
     def test_region_rejects_unknown_route_anchors_and_unbounded_support(self) -> None:
         region = copy.deepcopy(load("data/regions/low_mill.json"))
         region["route"]["anchor_rooms"] = ["gate", "missing_room"]

@@ -10,7 +10,7 @@ func _check(condition: bool, message: String) -> void:
 
 func _initialize() -> void:
 	var ash = PackKeepState.new(7401)
-	_check(ash.keep_ids() == ["greywatch_keep", "ash_ford_redoubt"], "P15 should expose two stable defensive identities")
+	_check(ash.keep_ids() == ["greywatch_keep", "ash_ford_redoubt", "twinwatch_bastion"], "the keep catalog should preserve Ash Ford and expose the later Twinwatch identity")
 	_check(bool(ash.select_scenario("ash_ford_crossing").get("ok", false)), "Ash Ford scenario should be selectable")
 	_check(ash.keep_id == "ash_ford_redoubt", "Ash Ford scenario should activate its own keep")
 	_check(String(ash.room_definition("gate").get("name", "")) == "West Bridgehead", "Ash Ford should rename the gate function")

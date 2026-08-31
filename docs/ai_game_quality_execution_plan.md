@@ -1,6 +1,6 @@
 # Pack the Keep — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.31.0-quartermaster` and later
+**Applies to:** `v0.32.0-twinwatch` and later
 
 **Purpose:** Turn the First Watch prototype into a readable, tactile, game-quality keep-defense vertical slice. Automated verification, deterministic simulation checks, scripted flow coverage, and screenshot review are the active gates. Human testing remains useful for later confidence and tuning, but it is not a prerequisite for execution.
 
@@ -23,7 +23,8 @@ The game is a spatial defensive puzzle, not a rarity treadmill or a command spre
 | **K7 — Complete** | Build composition and replay mastery | War Council previews fixed seeded pressure; Results compares doctrine fit, recovery commitment, pack plan, and the first useful uncovered-pressure experiment. |
 | **K8 — Complete** | Harden the private alpha | Ten automated/documented areas, conservative performance budgets, packaged lifecycle and forced-close recovery evidence, exact provenance, and known limitations are enforced while all release claims and seven human gates remain pending. |
 | **P51.1 — Complete** | Add one commander lens | The Quartermaster makes reserve timing visible through discounted first-pack access, stronger surviving stores, and bounded Resupply without changing combat authority. |
-| **P51.2 — Next** | Add one defensive identity | Introduce one keep with a new spatial question, isolated scenario, authored room graph, readable visual identity, and at least two viable answers. |
+| **P51.2 — Complete** | Add one defensive identity | Twinwatch Bastion makes two staffed posts a visible spatial rule and preserves anchored and mobile answers in The Divided Bell. |
+| **P51.3 — Next** | Add the first teaching pack | Introduce one pack and enemy family as a complete question/counter/weakness slice before combining it with later content. |
 
 ## Acceptance tests for every AI task
 
@@ -33,7 +34,7 @@ A task is incomplete if it hides the fort behind a menu, adds a unit before its 
 
 ## Recommended next prompt
 
-> P51.1 is complete at `0.31.0-quartermaster`. Implement P51.2 as one isolated defensive identity with a distinct spatial rule and teaching scenario. Preserve the K1–K8 and P54 gates, keep at least two viable answers, and never fabricate human observations or infer public-alpha/storefront approval.
+> P51.1–P51.2 are complete at `0.32.0-twinwatch`. Implement P51.3 as one teaching pack paired with one isolated enemy question. Preserve the K1–K8 and P54 gates, keep at least two viable answers, and never fabricate human observations or infer public-alpha/storefront approval.
 
 ## Definition of game-quality readiness
 

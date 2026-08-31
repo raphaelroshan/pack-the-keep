@@ -1,12 +1,12 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.31.0-quartermaster` — the development candidate adds the Quartermaster reserve-economy lens to the completed automated K8 and forced-close gates; human sessions and owner approval remain pending
+**Current build identity:** `0.32.0-twinwatch` — the development candidate adds the Quartermaster reserve-economy lens and Twinwatch split-defense identity to the completed automated K8 and forced-close gates; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch and Ash Ford support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan, Warden, or Quartermaster, select one of eleven authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown, Rally, or Resupply, inspect health, armor, signal state, protection, assigned-specialist priority, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
 
-## v0.31.0 acceptance checks
+## v0.32.0 acceptance checks
 
 Inspect packaged smoke schema 3 and confirm it records a non-zero forced process exit after the readiness sentinel. The following recovery phase must restore the active battle at step one, 125% UI scale, 2560×1440 preset, and controller remap from valid backups, then rewrite schema-4 run and schema-5 settings primaries. Both P12 and K8 packaged audits must pass.
 
@@ -214,7 +214,7 @@ Presentation settings now use the same validated primary/backup candidate discip
 
 ## v0.12.7 Alpha scenario matrix
 
-Local headless verification now runs a documented viable baseline for every combination of ten non-overwhelming authored scenarios, all three commanders, and three seeds. Each of the 90 cases runs twice, producing 180 simulations that must serialize identically, resolve all three waves without collapse, close final recovery and event state, and retain the canonical replay key. This is deterministic viability evidence only; human playtest and presentation approval remain pending.
+Local headless verification now runs a documented viable baseline for every combination of eleven non-overwhelming authored scenarios, all three commanders, and three seeds. Each of the 99 cases runs twice, producing 198 simulations that must serialize identically, resolve all three waves without collapse, close final recovery and event state, and retain the canonical replay key. This is deterministic viability evidence only; human playtest and presentation approval remain pending.
 
 ## v0.12.8 Scenario resume matrix
 

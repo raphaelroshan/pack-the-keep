@@ -5,7 +5,9 @@ var captured_files: Array[String] = []
 var capture_size: Vector2i = Vector2i(1600, 900)
 var capture_scale_index: int = 1
 var capture_commander_id: String = "castellan"
+var capture_scenario_id: String = "gatehouse_lock"
 var capture_pack_offer: bool = false
+var capture_spatial_transition: bool = false
 var capture_starting_defender: bool = false
 var capture_battle_exchange: bool = false
 var capture_battle_exchange_progress: float = 0.28
@@ -20,7 +22,9 @@ func _initialize() -> void:
 	capture_size.y = maxi(360, int(_argument_value("--height=").to_int())) if not _argument_value("--height=").is_empty() else 900
 	capture_scale_index = clampi(int(_argument_value("--ui-scale-index=").to_int()), 0, 4) if not _argument_value("--ui-scale-index=").is_empty() else 1
 	capture_commander_id = _argument_value("--commander=") if not _argument_value("--commander=").is_empty() else "castellan"
+	capture_scenario_id = _argument_value("--scenario=") if not _argument_value("--scenario=").is_empty() else "gatehouse_lock"
 	capture_pack_offer = OS.get_cmdline_user_args().has("--capture-pack-offer")
+	capture_spatial_transition = OS.get_cmdline_user_args().has("--capture-spatial-transition")
 	capture_starting_defender = OS.get_cmdline_user_args().has("--inspect-starting-defender")
 	capture_battle_exchange = OS.get_cmdline_user_args().has("--capture-battle-exchange")
 	if not _argument_value("--battle-exchange-progress=").is_empty():
@@ -51,12 +55,25 @@ func _run_capture() -> void:
 	if ui.keep.commander_ids().has(capture_commander_id):
 		ui._select_option_metadata(ui.commander_option, capture_commander_id)
 		ui.keep.select_commander(capture_commander_id)
-		ui._refresh_ui()
+	if ui.keep.scenario_ids().has(capture_scenario_id):
+		ui._select_option_metadata(ui.scenario_option, capture_scenario_id)
+		ui.keep.select_scenario(capture_scenario_id)
+	if capture_spatial_transition:
+		ui.guided_setup = false
+	ui._refresh_ui()
 	await _capture("02_war_council", ui)
 	ui._on_confirm_setup()
-	if capture_starting_defender:
+	if capture_spatial_transition and capture_scenario_id == "the_divided_bell":
+		ui.keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
+		ui._refresh_ui()
+	elif capture_starting_defender:
 		ui._on_map_clicked("ground", Vector2i(4, 5))
 	await _capture("03_preparation", ui)
+	if capture_spatial_transition and capture_scenario_id == "the_divided_bell":
+		ui.keep.open_pack("runner_network")
+		ui.keep.place_piece("runner_pair", Vector2i(9, 3), "ground")
+		ui._refresh_ui()
+		await _capture("03c_spatial_rule_active", ui)
 	if capture_pack_offer:
 		ui._scroll_page_to_control(ui.preparation_pack_offer_panel)
 		await _capture("03b_pack_offer", ui)
@@ -121,7 +138,9 @@ func _write_manifest() -> void:
 		"resolution": {"width": capture_size.x, "height": capture_size.y},
 		"ui_scale_percent": int(ui_scale_percent()),
 		"commander": capture_commander_id,
+		"scenario": capture_scenario_id,
 		"pack_offer_captured": capture_pack_offer,
+		"spatial_transition_captured": capture_spatial_transition,
 		"starting_defender_inspected": capture_starting_defender,
 		"battle_exchange_staged": capture_battle_exchange,
 		"battle_exchange_progress": capture_battle_exchange_progress if capture_battle_exchange else null,

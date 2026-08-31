@@ -847,3 +847,11 @@
 **Reason:** The design framework already identifies reserve and repair economics as the next distinct commander question. Existing pack-opening, Supply Cache, finite-ammunition, health, recovery, and commander-ability rules can express that question without adding another progression track or combat exception.
 
 **Trade-off:** The Quartermaster deliberately has a weaker immediate reserve and gains value over multiple decisions, so very short scenarios may make the lens feel less forgiving. The first P51 slice therefore extends deterministic coverage before adding any new keep, pack, or enemy family, and the existing P16 human cohort remains scoped to its original two commanders until a new cohort is scheduled.
+
+## ADR-107: Twinwatch makes two staffed posts a keep-owned spatial rule
+
+**Decision:** Add Twinwatch Bastion with the `paired_bastions` spatial rule. The rule becomes active only while both authored anchor rooms have an adjacent living combat defender, and it reuses the established keep-level one-point room-damage reduction boundary.
+
+**Reason:** P51 requires a third defensive identity whose layout question is not another compact core or empty lane. Two separated staffed anchors create a visible split-defense problem while preserving stable room IDs, deterministic targeting, existing placement legality, and the current damage pipeline.
+
+**Trade-off:** The benefit applies to all room damage while both posts are staffed rather than simulating per-route communication. That bounded abstraction stays readable on the compact board and turns off immediately when either post is lost; route-specific logistics remain out of scope.

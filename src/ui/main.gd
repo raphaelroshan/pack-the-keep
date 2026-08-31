@@ -4635,6 +4635,9 @@ class KeepCanvas extends Control:
 		if String(visual.get("terrain", "fort")) == "river":
 			_draw_river_backdrop(origin, visual)
 			return
+		if String(visual.get("terrain", "fort")) == "ridge":
+			_draw_ridge_backdrop(origin, visual)
+			return
 		var authored: bool = bool(_surface_finish("ground").get("authored", false))
 		var outer: Rect2 = Rect2(origin + Vector2(CELL_X, CELL_Y), MAP_SIZE - Vector2(CELL_X * 2.0, CELL_Y * 2.0))
 		var courtyard: Rect2 = Rect2(origin + Vector2(CELL_X * 3.0, CELL_Y * 2.0), Vector2(CELL_X * 6.0, CELL_Y * 4.0))
@@ -4672,6 +4675,19 @@ class KeepCanvas extends Control:
 			draw_line(origin + Vector2(0, wave_y - origin.y), origin + Vector2(MAP_SIZE.x, wave_y - origin.y), Color(0.36, 0.63, 0.69, 0.18), 1.0)
 		draw_string(ThemeDB.fallback_font, origin + Vector2(8, 16), String(visual.get("board_label", "ASH FORD / CROSSING DEFENSE")), HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("#bcdbe0"))
 
+	func _draw_ridge_backdrop(origin: Vector2, visual: Dictionary) -> void:
+		var profile: Dictionary = BoardVisuals.floor_profile("ground", "ridge", high_contrast_mode)
+		draw_rect(Rect2(origin, MAP_SIZE), profile.surface, true)
+		var west: Rect2 = Rect2(origin + Vector2(CELL_X * 0.5, CELL_Y * 1.5), Vector2(CELL_X * 3.5, CELL_Y * 5.0))
+		var east: Rect2 = Rect2(origin + Vector2(CELL_X * 8.0, CELL_Y * 1.5), Vector2(CELL_X * 3.5, CELL_Y * 5.0))
+		for bastion in [west, east]:
+			draw_rect(bastion, profile.inset, true)
+			draw_rect(bastion, profile.frame, false, 3.0)
+		var bridge_y: float = origin.y + CELL_Y * 3.5
+		draw_line(Vector2(west.end.x, bridge_y), Vector2(east.position.x, bridge_y), Color("#8b829c"), 6.0)
+		draw_line(Vector2(west.end.x, bridge_y), Vector2(east.position.x, bridge_y), Color("#d4c6a4"), 1.0)
+		draw_string(ThemeDB.fallback_font, origin + Vector2(8, 16), String(visual.get("board_label", "TWINWATCH / SPLIT DEFENSE")), HORIZONTAL_ALIGNMENT_LEFT, -1, 8, profile.header)
+
 	func _draw_upper_backdrop(origin: Vector2, profile: Dictionary) -> void:
 		var inset: Rect2 = Rect2(origin + Vector2(CELL_X, CELL_Y), MAP_SIZE - Vector2(CELL_X * 2.0, CELL_Y * 2.0))
 		draw_rect(inset, profile.inset, true)
@@ -4701,13 +4717,26 @@ class KeepCanvas extends Control:
 		if floor_name != "ground":
 			return
 		var rule: Dictionary = keep.spatial_rule_state()
-		if String(rule.get("id", "")) != "clear_causeway":
-			return
-		for lane_cell in rule.get("lane_cells", []):
-			var lane_rect: Rect2 = Rect2(origin + Vector2(lane_cell.x * CELL_X, lane_cell.y * CELL_Y), Vector2(CELL_X, CELL_Y)).grow(-2)
-			draw_rect(lane_rect, Color(0.71, 0.49, 0.25, 0.38) if bool(rule.get("active", false)) else Color(0.61, 0.25, 0.28, 0.46), true)
-			draw_rect(lane_rect, Color("#e6c98b"), false, 1.0)
-		draw_string(ThemeDB.fallback_font, origin + Vector2(58, 108), "CLEAR CAUSEWAY" if bool(rule.get("active", false)) else "CAUSEWAY BLOCKED", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#f3d39c"))
+		if String(rule.get("id", "")) == "clear_causeway":
+			for lane_cell in rule.get("lane_cells", []):
+				var lane_rect: Rect2 = Rect2(origin + Vector2(lane_cell.x * CELL_X, lane_cell.y * CELL_Y), Vector2(CELL_X, CELL_Y)).grow(-2)
+				draw_rect(lane_rect, Color(0.71, 0.49, 0.25, 0.38) if bool(rule.get("active", false)) else Color(0.61, 0.25, 0.28, 0.46), true)
+				draw_rect(lane_rect, Color("#e6c98b"), false, 1.0)
+			draw_string(ThemeDB.fallback_font, origin + Vector2(58, 108), "CLEAR CAUSEWAY" if bool(rule.get("active", false)) else "CAUSEWAY BLOCKED", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#f3d39c"))
+		elif String(rule.get("id", "")) == "paired_bastions":
+			var active: bool = bool(rule.get("active", false))
+			for room_id_value in rule.get("anchor_rooms", []):
+				var anchor_rect: Rect2 = _room_rect(String(room_id_value), origin).grow(3.0)
+				draw_rect(anchor_rect, Color("#9be1c1") if active else Color("#f0a06f"), false, 3.0)
+			var status_text: String = "BOTH POSTS STAFFED" if active else "STAFF BOTH POSTS"
+			var status_size: Vector2 = ThemeDB.fallback_font.get_string_size(status_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 10)
+			var status_plate: Rect2 = Rect2(
+				origin + Vector2((MAP_SIZE.x - status_size.x) * 0.5 - 7.0, 54.0),
+				status_size + Vector2(14.0, 10.0)
+			)
+			draw_rect(status_plate, Color(0.08, 0.07, 0.1, 0.88), true)
+			draw_rect(status_plate, Color("#9be1c1") if active else Color("#f0a06f"), false, 1.0)
+			draw_string(ThemeDB.fallback_font, status_plate.position + Vector2(7.0, status_size.y + 3.0), status_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#bdebd6") if active else Color("#ffd19d"))
 
 	func _draw_floor(label_text: String, floor_name: String, origin: Vector2) -> void:
 		var terrain: String = String(keep.keep_definition().get("visual", {}).get("terrain", "fort"))

@@ -335,7 +335,7 @@ def validate_keep(
                 errors.append(f"{path}: duplicate room connection: {'|'.join(key)}")
             seen_connections.add(key)
     spatial = keep.get("spatial_rule")
-    if not isinstance(spatial, dict) or spatial.get("id") not in {"compact_adjacency", "clear_causeway"}:
+    if not isinstance(spatial, dict) or spatial.get("id") not in {"compact_adjacency", "clear_causeway", "paired_bastions"}:
         errors.append(f"{path}: invalid spatial_rule")
     else:
         lane_cells = spatial.get("lane_cells")
@@ -348,6 +348,12 @@ def validate_keep(
             errors.append(f"{path}: spatial_rule room_damage_reduction must be from 0 to 3")
         if spatial.get("id") == "clear_causeway" and (not lane_cells or not is_integer(reduction) or reduction < 1):
             errors.append(f"{path}: clear_causeway needs lane cells and positive room damage reduction")
+        if spatial.get("id") == "paired_bastions":
+            anchors = spatial.get("anchor_rooms")
+            if not isinstance(anchors, list) or len(anchors) != 2 or len(set(anchors)) != 2 or any(not isinstance(room_id, str) or room_id not in room_ids for room_id in anchors):
+                errors.append(f"{path}: paired_bastions needs two distinct known anchor rooms")
+            if not is_integer(reduction) or reduction < 1:
+                errors.append(f"{path}: paired_bastions needs positive room damage reduction")
     recovery = keep.get("recovery_profile")
     if not isinstance(recovery, dict):
         errors.append(f"{path}: recovery_profile must be an object")
@@ -359,7 +365,7 @@ def validate_keep(
         if not isinstance(recovery.get("question"), str) or not recovery["question"].strip():
             errors.append(f"{path}: recovery question must be non-empty text")
     visual = keep.get("visual")
-    if not isinstance(visual, dict) or visual.get("terrain") not in {"fort", "river"}:
+    if not isinstance(visual, dict) or visual.get("terrain") not in {"fort", "river", "ridge"}:
         errors.append(f"{path}: invalid visual profile")
     elif any(not isinstance(visual.get(field), str) or not visual[field].strip() for field in ("ground_label", "upper_label", "board_label")):
         errors.append(f"{path}: visual labels must be non-empty text")

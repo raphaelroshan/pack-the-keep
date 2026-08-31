@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.31.0-quartermaster",
+  "framework_version": "0.32.0-twinwatch",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -288,6 +288,15 @@
     "ash_ford_spatial_rule": "clear_marked_causeway_reduces_room_damage_by_one",
     "recovery_profiles": ["greywatch_deep_repair", "ash_ford_shallow_distributed_repair"],
     "non_goals": ["new_unit_roster", "scenario_only_ui_authority", "regional_map"]
+  },
+  "p51_twinwatch_defensive_identity": {
+    "status": "implemented",
+    "keep": "twinwatch_bastion",
+    "scenario": "the_divided_bell",
+    "spatial_rule": "paired_living_combat_defenders_at_gate_and_armory_reduce_room_damage_by_one",
+    "visual_identity": "cold_ridge_two_bastions_and_narrow_central_court",
+    "viable_answers": ["anchored_shieldwall", "mobile_runner_network"],
+    "non_goals": ["new_enemy_family", "new_pack_family", "route_pathfinding", "campaign_map"]
   },
   "p15_minimal_regional_consequence": {
     "status": "implemented",
