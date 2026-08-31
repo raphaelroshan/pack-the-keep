@@ -14,7 +14,7 @@ func _initialize() -> void:
 	var loaded: Dictionary = catalog.load_default(PackKeepState.ROOMS.keys())
 	_check(bool(loaded.get("ok", false)), "active runtime catalog did not load cleanly: %s" % "; ".join(loaded.get("errors", [])))
 	var known_doctrines: Array = catalog.doctrine_ids()
-	_check(known_doctrines == ["gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach", "shielded_advance", "smoke_and_signal", "break_the_line", "cut_the_chain", "rapid_breakthrough", "veiled_entry"], "doctrine catalog order or active IDs changed")
+	_check(known_doctrines == ["gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach", "shielded_advance", "smoke_and_signal", "break_the_line", "cut_the_chain", "rapid_breakthrough", "veiled_entry", "twilight_crossing"], "doctrine catalog order or active IDs changed")
 	var expected_doctrines: Dictionary = {
 		"gate_assault": {"composition": ["raider", "raider"], "target": "gate", "pressure": "Gate concentration"},
 		"distributed_sabotage": {"composition": ["raider", "sapper"], "target": "workshop or supply_room", "pressure": "Workshop and Supply Room support chain"},
@@ -26,7 +26,8 @@ func _initialize() -> void:
 		"break_the_line": {"composition": ["shieldbreaker"], "target": "strongest frontline or fortification", "pressure": "Frontline concentration and protected room edges"},
 		"cut_the_chain": {"composition": ["standard_cutter", "standard_cutter"], "target": "an assigned specialist or exposed precision/support unit", "pressure": "Assigned specialists and the room benefits they enable"},
 		"rapid_breakthrough": {"composition": ["outrider", "raider"], "target": "an exposed precision, recon, or support defender", "pressure": "Preparation tempo and exposed specialist survival"},
-		"veiled_entry": {"composition": ["gloam_knife", "climber"], "target": "an exposed upper precision, recon, morale, or support defender", "pressure": "Visibility coverage and upper specialist survival"}
+		"veiled_entry": {"composition": ["gloam_knife", "climber"], "target": "an exposed upper precision, recon, morale, or support defender", "pressure": "Visibility coverage and upper specialist survival"},
+		"twilight_crossing": {"composition": ["outrider", "gloam_knife"], "target": "exposed precision, recon, morale, or support defenders across both approaches", "pressure": "Route tempo, visibility coverage, and divided unit protection"}
 	}
 	for doctrine_id in expected_doctrines.keys():
 		var doctrine: Dictionary = catalog.doctrine_definition(String(doctrine_id))
@@ -44,7 +45,7 @@ func _initialize() -> void:
 	_check(doctrine_errors.size() >= 4, "catalog validator did not reject missing fields, ID mismatch, enemy references, and incomplete counters")
 	_check(catalog.keep_ids() == ["greywatch_keep", "ash_ford_redoubt", "twinwatch_bastion"], "keep catalog order or active IDs changed")
 	_check(catalog.region_ids() == ["low_mill"], "regional catalog order or active IDs changed")
-	_check(catalog.scenario_ids() == ["gatehouse_lock", "wrong_wall", "open_yard_net", "relief_road", "red_banner_road", "ash_at_the_bell", "the_splintered_gate", "three_bells_at_dusk", "ash_ford_crossing", "the_cut_standard", "the_divided_bell", "before_the_horn", "the_unlit_stair", "last_stand"], "scenario catalog order or active IDs changed")
+	_check(catalog.scenario_ids() == ["gatehouse_lock", "wrong_wall", "open_yard_net", "relief_road", "red_banner_road", "ash_at_the_bell", "the_splintered_gate", "three_bells_at_dusk", "ash_ford_crossing", "the_cut_standard", "the_divided_bell", "before_the_horn", "the_unlit_stair", "the_twilight_road", "last_stand"], "scenario catalog order or active IDs changed")
 	_check(catalog.event_ids() == ["relief_road_warning", "relief_road_recovery", "relief_road_report", "workshop_can_wait", "mara_second_door", "old_drain_opens", "the_bell_has_a_pattern", "the_gate_is_not_the_keep", "wrong_wall_report"], "event catalog order or active IDs changed")
 	_check(catalog.modifier_ids() == ["roadside_intelligence", "hardened_vanguard"], "modifier catalog order or active IDs changed")
 	var intelligence: Dictionary = catalog.modifier_definition("roadside_intelligence")
@@ -216,7 +217,7 @@ func _initialize() -> void:
 
 	var first: PackKeepState = PackKeepState.new(3307)
 	var second: PackKeepState = PackKeepState.new(3307)
-	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("keep_count", 0)) == 3 and int(first.content_catalog_status().get("region_count", 0)) == 1 and int(first.content_catalog_status().get("pack_count", 0)) == 11 and int(first.content_catalog_status().get("commander_count", 0)) == 3 and int(first.content_catalog_status().get("piece_count", 0)) == 21 and int(first.content_catalog_status().get("enemy_count", 0)) == 10 and int(first.content_catalog_status().get("doctrine_count", 0)) == 11 and int(first.content_catalog_status().get("scenario_count", 0)) == 14 and int(first.content_catalog_status().get("event_count", 0)) == 9 and int(first.content_catalog_status().get("modifier_count", 0)) == 2, "KeepState did not expose the complete P51 runtime catalog")
+	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("keep_count", 0)) == 3 and int(first.content_catalog_status().get("region_count", 0)) == 1 and int(first.content_catalog_status().get("pack_count", 0)) == 11 and int(first.content_catalog_status().get("commander_count", 0)) == 3 and int(first.content_catalog_status().get("piece_count", 0)) == 21 and int(first.content_catalog_status().get("enemy_count", 0)) == 10 and int(first.content_catalog_status().get("doctrine_count", 0)) == 12 and int(first.content_catalog_status().get("scenario_count", 0)) == 15 and int(first.content_catalog_status().get("event_count", 0)) == 9 and int(first.content_catalog_status().get("modifier_count", 0)) == 2, "KeepState did not expose the complete P51 runtime catalog")
 	_check(first.piece_ids() == catalog.piece_ids(), "KeepState did not preserve stable piece order")
 	_check(first.enemy_ids() == catalog.enemy_ids(), "KeepState did not preserve stable enemy order")
 	_check(first.doctrine_ids() == catalog.doctrine_ids(), "KeepState did not preserve stable doctrine order")

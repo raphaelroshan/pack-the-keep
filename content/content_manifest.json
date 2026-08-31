@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.34.0",
+  "content_version": "0.35.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -180,10 +180,10 @@
   },
   "p12_alpha_scenario_matrix": {
     "status": "implemented",
-    "scenarios": 13,
+    "scenarios": 14,
     "commanders": 3,
     "seeds_per_pair": 3,
-    "simulation_executions": 234,
+    "simulation_executions": 252,
     "resume_boundaries": ["wave_one_pre_step", "first_recovery_before_event_resolution", "wave_two_pre_step"],
     "contract": "byte_identical_uninterrupted_and_resumed_three_wave_non_collapse_baselines_with_closed_terminal_recovery_and_event_state",
     "evidence": ["design/p12_alpha_scenario_matrix.md", "tests/test_p12_alpha_scenario_matrix.gd"],
@@ -689,7 +689,17 @@
     "combat_rule": "a_living_lantern_post_adjacent_to_an_authored_route_room_reveals_concealed_attackers_at_wave_start_while_unrevealed_concealment_blocks_ranged_but_not_melee_response",
     "viable_answers": ["lantern_watch_route_reveal", "road_wardens_melee_interception"],
     "evidence": ["design/p51_lantern_watch_teaching_pair.md", "docs/p51_lantern_watch_verification.md", "tests/test_p51_lantern_watch.gd", "tests/test_p51_lantern_watch_ui.gd"],
-    "next_slice": "p51_combined_teaching_challenge"
+    "next_slice": "p51_twilight_road_combined_challenge"
+  },
+  "p51_twilight_road_combined_challenge": {
+    "status": "implemented",
+    "doctrine": "twilight_crossing",
+    "scenario": "the_twilight_road",
+    "questions": ["outrider_breakthrough_tempo", "gloam_knife_route_visibility"],
+    "wave_order": ["isolated_outrider", "isolated_gloam_knife", "combined_twilight_crossing"],
+    "viable_answers": ["road_wardens_plus_lantern_watch", "crossbow_watch_plus_runner_network"],
+    "evidence": ["design/p51_twilight_road_combined_challenge.md", "docs/p51_twilight_road_verification.md", "tests/test_p51_twilight_road.gd", "tests/test_p51_twilight_road_ui.gd"],
+    "next_slice": "p52_bounded_scenario_variation"
   },
   "campaign": {
     "title": "The Bell at Dusk",
@@ -1691,6 +1701,7 @@
       "the_divided_bell",
       "before_the_horn",
       "the_unlit_stair",
+      "the_twilight_road",
       "last_stand"
     ],
     "event_ids": [

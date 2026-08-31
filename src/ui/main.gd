@@ -4088,7 +4088,7 @@ class KeepCanvas extends Control:
 	func _enemy_origin(index: int) -> Vector2:
 		var enemy: Dictionary = keep.enemies[index]
 		var enemy_id: String = String(enemy.get("enemy_id", ""))
-		var entry_offset: Vector2 = Vector2(-16.0 + float(index % 2) * 32.0, float(index) * 5.0)
+		var entry_offset: Vector2 = Vector2(-42.0 + float(index % 2) * 84.0, floor(float(index) / 2.0) * 24.0)
 		var gate_start: Vector2 = MAP_ORIGIN + Vector2(MAP_SIZE.x * 0.5, MAP_SIZE.y - 10) + entry_offset
 		var fallback_target: Vector2 = MAP_ORIGIN + Vector2(MAP_SIZE.x * 0.5, MAP_SIZE.y * 0.55) + entry_offset * 0.35
 		var start: Vector2 = gate_start
@@ -4358,7 +4358,7 @@ class KeepCanvas extends Control:
 		var layout: Dictionary = _timeline_layout()
 		var segment_width: float = float(layout.segment_width)
 		var segment_left: float = float(layout.left) + float(tick_number - 1) * (segment_width + float(layout.gap))
-		return Vector2(segment_left + segment_width * 0.5 + (float(marker_index) - float(marker_count - 1) * 0.5) * 10.0, float(layout.top) - 5.0)
+		return Vector2(segment_left + segment_width * 0.5 + (float(marker_index) - float(marker_count - 1) * 0.5) * 18.0, float(layout.top) - 5.0)
 
 	func _timeline_enemy_hit(position: Vector2) -> int:
 		if keep == null or not keep.wave_active:
@@ -5222,4 +5222,3 @@ class KeepCanvas extends Control:
 		if feedback_ttl > 0.0:
 			var feedback_alpha: float = minf(0.32, feedback_ttl * 0.9)
 			draw_rect(Rect2(Vector2.ZERO, size), Color(feedback_color, feedback_alpha), false, 5.0)
-			draw_string(ThemeDB.fallback_font, Vector2(14, size.y - 12), "IMPACT / RECOVERY CUE", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(feedback_color, minf(0.95, feedback_alpha + 0.45)))

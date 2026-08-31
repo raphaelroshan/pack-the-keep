@@ -871,3 +871,11 @@
 **Reason:** P51 needs a second isolated question distinct from armor, timing, static protection, and assignment exposure. Making the threat targetable but invalid for one attack style keeps the rule visible in response previews and gives the player a clear choice between spending upper-wall space on route light or accepting close-contact risk.
 
 **Trade-off:** Reveal is fixed at wave start and checks authored room adjacency rather than dynamic sight cones or fog of war. This preserves deterministic replays and avoids accuracy rolls, stealth movement, or mid-wave detection state while still creating a new spatial doctrine.
+
+## ADR-110: Combined challenges compose proven rules before adding systems
+
+**Decision:** Complete P51 with The Twilight Road, a three-phase scenario that presents Outrider momentum alone, Gloam Knife concealment alone, and both together in the final phase. Preserve two full-run plans: Road Wardens plus Lantern Watch and Crossbow Watch plus Runner Network.
+
+**Reason:** Each new question now has an isolated teaching scenario and deterministic alternatives. Combining them tests whether the player can maintain two forms of readiness without hiding a new rule inside the escalation.
+
+**Trade-off:** The scenario adds one doctrine label and authored composition but no new enemy, pack, state field, reward, or recovery mechanic. Broader replay variation remains deferred to P52 so this milestone can prove composition quality cleanly.

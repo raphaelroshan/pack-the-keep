@@ -78,7 +78,8 @@ const DOCTRINE_PATHS: Array[String] = [
 	"res://data/doctrines/break_the_line.json",
 	"res://data/doctrines/cut_the_chain.json",
 	"res://data/doctrines/rapid_breakthrough.json",
-	"res://data/doctrines/veiled_entry.json"
+	"res://data/doctrines/veiled_entry.json",
+	"res://data/doctrines/twilight_crossing.json"
 ]
 
 const SCENARIO_PATHS: Array[String] = [
@@ -95,6 +96,7 @@ const SCENARIO_PATHS: Array[String] = [
 	"res://data/scenarios/the_divided_bell.json",
 	"res://data/scenarios/before_the_horn.json",
 	"res://data/scenarios/the_unlit_stair.json",
+	"res://data/scenarios/the_twilight_road.json",
 	"res://data/scenarios/last_stand.json"
 ]
 
