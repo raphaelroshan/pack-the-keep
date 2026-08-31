@@ -12,6 +12,9 @@ const TEMP_DEFENDER_MELEE_EFFECT := "res://assets/temporary/kenney/particle-pack
 const TEMP_HOSTILE_RANGED_EFFECT := "res://assets/temporary/kenney/particle-pack/spark_02.png"
 const TEMP_HOSTILE_MELEE_EFFECT := "res://assets/temporary/kenney/particle-pack/slash_02.png"
 const TEMP_DEMOLITION_EFFECT := "res://assets/temporary/kenney/particle-pack/scorch_01.png"
+const TEMP_DAMAGED_ROOM_EFFECT := "res://assets/temporary/kenney/particle-pack/smoke_01.png"
+const TEMP_BREACHED_ROOM_EFFECT := "res://assets/temporary/kenney/particle-pack/smoke_04.png"
+const TEMP_REPAIR_EFFECT := "res://assets/temporary/kenney/particle-pack/spark_04.png"
 
 const ACTOR_PIECES: Array[String] = [
 	"pike_squad", "fire_team", "runner_pair", "rear_guard", "crossbow_patrol",
@@ -187,6 +190,27 @@ static func combat_effect_profile(source_side: String, attack_style: String) -> 
 		"source": "Kenney Particle Pack · CC0",
 	}
 
+static func room_damage_effect_profile(state: String) -> Dictionary:
+	if state not in ["damaged", "breached"]:
+		return {"active": false, "state": state, "texture_path": ""}
+	return {
+		"active": true,
+		"state": state,
+		"texture_path": TEMP_BREACHED_ROOM_EFFECT if state == "breached" else TEMP_DAMAGED_ROOM_EFFECT,
+		"size": 38.0 if state == "breached" else 28.0,
+		"opacity": 0.24 if state == "breached" else 0.16,
+		"asset_status": "temporary_cc0",
+		"source": "Kenney Particle Pack · CC0",
+	}
+
+static func repair_effect_profile() -> Dictionary:
+	return {
+		"texture_path": TEMP_REPAIR_EFFECT,
+		"size": 42.0,
+		"asset_status": "temporary_cc0",
+		"source": "Kenney Particle Pack · CC0",
+	}
+
 static func presentation_snapshot() -> Dictionary:
 	return {
 		"layers": LAYER_ORDER.duplicate(),
@@ -209,4 +233,5 @@ static func presentation_snapshot() -> Dictionary:
 		"temporary_actor_source": "Kenney Tiny Battle · CC0",
 		"temporary_combat_effects": true,
 		"temporary_combat_effect_source": "Kenney Particle Pack · CC0",
+		"temporary_room_state_effects": true,
 	}

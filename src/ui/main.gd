@@ -3029,18 +3029,25 @@ func _on_repair_room() -> void:
 	var room_id: String = _selected_id(room_option)
 	if not _tutorial_allows("repair_room", room_id):
 		return
+	var condition_before: int = keep.room_condition(room_id)
 	var result: Dictionary = keep.repair_room(room_id)
 	_run_result(result, "Repair")
 	if bool(result.get("ok", false)):
+		if keep_canvas != null:
+			keep_canvas.call("show_repair_effect", "room", room_id, keep.room_condition(room_id) - condition_before)
 		local_playtest_observer.record_action("recovery_choice", {"recovery_choice": "repair_room"})
 		_tutorial_advance("repair_room", room_id)
 
 func _on_repair_piece() -> void:
 	if not _tutorial_allows("repair_piece"):
 		return
-	var result: Dictionary = keep.repair_piece(_selected_piece_instance())
+	var instance_id: String = _selected_piece_instance()
+	var health_before: int = int(keep.pieces.get(instance_id, {}).get("health", 0))
+	var result: Dictionary = keep.repair_piece(instance_id)
 	_run_result(result, "Repair")
 	if bool(result.get("ok", false)):
+		if keep_canvas != null:
+			keep_canvas.call("show_repair_effect", "piece", instance_id, int(keep.pieces.get(instance_id, {}).get("health", health_before)) - health_before)
 		local_playtest_observer.record_action("recovery_choice", {"recovery_choice": "repair_piece"})
 		_tutorial_advance("repair_piece")
 
@@ -3986,6 +3993,9 @@ class KeepCanvas extends Control:
 	var target_impacts: Array[Dictionary] = []
 	var engagement_ttl: float = 0.0
 	var engagement_duration: float = 0.82
+	var repair_feedback: Dictionary = {}
+	var repair_feedback_ttl: float = 0.0
+	var repair_feedback_duration: float = 0.72
 	var assault_ready_reason: String = ""
 	var placement_guides_visible: bool = false
 	var tutorial_target_floor: String = ""
@@ -4036,6 +4046,8 @@ class KeepCanvas extends Control:
 			feedback_ttl = 0.0
 			engagement_duration = BattleBeatPresentationView.scaled_exchange_duration(1.0, true)
 			engagement_ttl = minf(engagement_ttl, engagement_duration)
+			repair_feedback_duration = 0.18
+			repair_feedback_ttl = minf(repair_feedback_ttl, repair_feedback_duration)
 		queue_redraw()
 
 	func set_placement_guides(visible: bool) -> void:
@@ -4066,6 +4078,12 @@ class KeepCanvas extends Control:
 		engagement_ttl = engagement_duration
 		queue_redraw()
 
+	func show_repair_effect(target_kind: String, target_id: String, amount: int) -> void:
+		repair_feedback = {"target_kind": target_kind, "target_id": target_id, "amount": maxi(0, amount)}
+		repair_feedback_duration = 0.18 if reduced_motion_mode else 0.72
+		repair_feedback_ttl = repair_feedback_duration
+		queue_redraw()
+
 	func _process(delta: float) -> void:
 		if feedback_ttl > 0.0:
 			feedback_ttl = maxf(0.0, feedback_ttl - delta)
@@ -4075,6 +4093,11 @@ class KeepCanvas extends Control:
 			if engagement_ttl <= 0.0:
 				engagement_traces.clear()
 				target_impacts.clear()
+			queue_redraw()
+		if repair_feedback_ttl > 0.0:
+			repair_feedback_ttl = maxf(0.0, repair_feedback_ttl - delta)
+			if repair_feedback_ttl <= 0.0:
+				repair_feedback.clear()
 			queue_redraw()
 		if keep != null and keep.wave_active:
 			queue_redraw()
@@ -4231,6 +4254,24 @@ class KeepCanvas extends Control:
 		profile["reduced_motion"] = reduced_motion_mode
 		return profile
 
+	func room_damage_effect_snapshot(room_id: String) -> Dictionary:
+		var state: String = keep.room_state(room_id) if keep != null else "stable"
+		var profile: Dictionary = BoardVisuals.room_damage_effect_profile(state)
+		var texture_path: String = String(profile.get("texture_path", ""))
+		profile["room_id"] = room_id
+		profile["texture_loaded"] = not texture_path.is_empty() and _effect_texture(texture_path) != null
+		return profile
+
+	func repair_effect_snapshot() -> Dictionary:
+		if repair_feedback_ttl <= 0.0 or repair_feedback.is_empty():
+			return {"active": false}
+		var profile: Dictionary = BoardVisuals.repair_effect_profile()
+		profile.merge(repair_feedback, true)
+		profile["active"] = true
+		profile["remaining"] = repair_feedback_ttl
+		profile["texture_loaded"] = _effect_texture(String(profile.get("texture_path", ""))) != null
+		return profile
+
 	func _draw_combat_effect(center: Vector2, source_side: String, attack_style: String, color: Color, strength: float) -> void:
 		var profile: Dictionary = combat_effect_snapshot(source_side, attack_style)
 		var texture: Texture2D = _effect_texture(String(profile.get("texture_path", "")))
@@ -4241,6 +4282,36 @@ class KeepCanvas extends Control:
 		var alpha: float = 0.66 if high_contrast_mode else 0.48 + clampf(strength, 0.0, 1.0) * 0.14
 		var rect := Rect2(center - Vector2.ONE * effect_size * 0.5, Vector2.ONE * effect_size)
 		draw_texture_rect(texture, rect, false, Color(color, alpha))
+
+	func _draw_room_damage_effect(room_id: String, rect: Rect2) -> void:
+		var profile: Dictionary = room_damage_effect_snapshot(room_id)
+		if not bool(profile.get("active", false)):
+			return
+		var texture: Texture2D = _effect_texture(String(profile.get("texture_path", "")))
+		if texture == null:
+			return
+		var effect_size: float = minf(float(profile.get("size", 28.0)), minf(rect.size.x, rect.size.y) * 0.72)
+		var center: Vector2 = rect.position + Vector2(rect.size.x - effect_size * 0.42, effect_size * 0.48)
+		var color: Color = Color("#ffb15c") if String(profile.get("state", "")) == "breached" else Color("#c8b6a0")
+		var opacity: float = float(profile.get("opacity", 0.16)) * (1.2 if high_contrast_mode else 1.0)
+		draw_texture_rect(texture, Rect2(center - Vector2.ONE * effect_size * 0.5, Vector2.ONE * effect_size), false, Color(color, opacity))
+
+	func _draw_repair_feedback() -> void:
+		var snapshot: Dictionary = repair_effect_snapshot()
+		if not bool(snapshot.get("active", false)):
+			return
+		var center: Vector2 = _target_board_origin(String(snapshot.get("target_kind", "")), String(snapshot.get("target_id", "")))
+		if center == Vector2.ZERO:
+			return
+		var texture: Texture2D = _effect_texture(String(snapshot.get("texture_path", "")))
+		var progress: float = 1.0 - repair_feedback_ttl / maxf(0.01, repair_feedback_duration)
+		var pulse: float = 1.0 if reduced_motion_mode else sin(progress * PI)
+		var size: float = float(snapshot.get("size", 42.0)) * (0.78 + pulse * 0.28)
+		var color: Color = Color("#d8ffd9") if high_contrast_mode else Color("#78d6a3")
+		if texture != null:
+			draw_texture_rect(texture, Rect2(center - Vector2.ONE * size * 0.5, Vector2.ONE * size), false, Color(color, 0.58))
+		draw_circle(center, 11.0 + pulse * 5.0, Color(color, 0.88), false, 2.5)
+		draw_string(ThemeDB.fallback_font, center + Vector2(12, -10), "+%d %s" % [int(snapshot.get("amount", 0)), "HP" if String(snapshot.get("target_kind", "")) == "piece" else "STRUCTURE"], HORIZONTAL_ALIGNMENT_LEFT, -1, 9, color)
 
 	func _enemy_reaction_offset(index: int) -> Vector2:
 		if reduced_motion_mode or engagement_ttl <= 0.0:
@@ -4862,6 +4933,7 @@ class KeepCanvas extends Control:
 			draw_rect(rect, Color("#c8b6a0"), false, 1.0)
 			draw_rect(Rect2(rect.position + Vector2(1, 1), Vector2(rect.size.x - 2.0, 3.0)), room_profile.edge, true)
 			draw_line(rect.position + Vector2(3, rect.size.y - 3), rect.end - Vector2(3, 3), Color(0.08, 0.07, 0.09, 0.42), 1.0)
+			_draw_room_damage_effect(String(room_id), rect)
 			if bool(room.get("critical", false)):
 				var marker: Vector2 = rect.position + Vector2(rect.size.x - 8.0, 9.0)
 				draw_colored_polygon(PackedVector2Array([marker + Vector2(0, -4), marker + Vector2(4, 0), marker + Vector2(0, 4), marker + Vector2(-4, 0)]), room_profile.edge)
@@ -5302,6 +5374,7 @@ class KeepCanvas extends Control:
 		_draw_contact_telegraphs()
 		_draw_enemies()
 		_draw_engagement_traces()
+		_draw_repair_feedback()
 		_draw_battle_beat_banner()
 		_draw_assault_timeline()
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

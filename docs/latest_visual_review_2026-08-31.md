@@ -1,19 +1,20 @@
 # Pack the Keep — Latest Visual Review
 
-**Build:** `0.42.0-combat-vfx`
+**Build:** `0.43.0-room-feedback`
 
 **Engine:** Godot 4.7.2
 
-**Capture:** Real local renderer at 1600×900 / 100% for defender-response and hostile-impact beats; prior actor, full-flow, responsive, and Large Text evidence remains active.
+**Capture:** Real local renderer at 1600×900 / 100% for damaged-room and localized repair states; prior combat-effect, actor, full-flow, responsive, and Large Text evidence remains active.
 
 ## Evidence
 
+- [Room damage and repair review](visual_evidence/v0.43.0-room-feedback-review-2026-08-31/)
 - [Combat VFX review](visual_evidence/v0.42.0-combat-vfx-review-2026-08-31/)
 - [Temporary actor-readability review](visual_evidence/v0.40.0-actor-readability-review-2026-08-31/)
 - [Responsive decision-surface review](visual_evidence/v0.39.0-responsive-decisions-review-2026-08-31/)
 - [Earlier complete seeded-pressure sequence](visual_evidence/v0.37.0-seeded-pressure-review-2026-08-31/)
 
-The combat-VFX review contains two normal-distance beat checkpoints plus a machine-readable manifest recording build, viewport, state, asset source, and capture method. The actor review remains the unit-recognition reference, the responsive review remains the narrow/Large Text regression reference, and the earlier complete sequence remains the broader Battle, Recovery, and Results reference.
+The room-feedback review contains before/after Recovery checkpoints plus a machine-readable manifest recording build, viewport, state, asset source, and capture method. The combat-VFX review remains the exchange-beat reference, the actor review remains the unit-recognition reference, and the responsive and complete-sequence sets remain active regression evidence.
 
 ## Findings
 
@@ -22,6 +23,8 @@ Temporary Tiny Battle actors now occupy the center of active defender and hostil
 Preparation retains piece names, role colors, health bars, room edges, and floor separation around the new actors. During Battle, focus rings, target lines, cadence, health, defender-response traces, and specialist labels remain more prominent than the sprite detail. Timeline markers deliberately remain procedural because the source sprites are unreadable at that scale. The borrowed art is visibly temporary and toy-like, but it materially improves actor recognition without claiming final Greywatch production quality.
 
 The P57 response and impact textures add a restrained material flash inside the existing projectile, slash, ring, recoil, health-trail, and damage-number grammar. They remain localized to the resolved target and do not obscure room names, health bars, focus rings, timeline markers, or the command rail. The borrowed effects are intentionally low-opacity and remain temporary; the procedural marks still carry the readable fallback and high-contrast structure.
+
+P58 makes the Armory's damaged state visible as a low-opacity atmosphere layer while its `DAMAGED` label and condition bar remain dominant. A successful repair anchors a green spark, ring, and `+30 STRUCTURE` label directly to the Armory; the recovery budget and action card update in the same frame. The effect is clear without turning the board into a particle field.
 
 ## Next visual target
 
