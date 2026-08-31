@@ -24,7 +24,7 @@ def packaged_report(phase: str, profile: str, executable: str) -> dict[str, obje
         "content_status": {
             "ok": True, "commander_count": 3, "piece_count": 21, "pack_count": 11,
             "keep_count": 3, "region_count": 1, "enemy_count": 10, "doctrine_count": 12, "scenario_count": 15,
-            "event_count": 9, "modifier_count": 2,
+            "event_count": 10, "modifier_count": 2,
         },
         "user_data_dir": profile, "save_path": f"{profile}\\run.save",
         "settings_path": f"{profile}\\settings.json", "executable_path": executable,

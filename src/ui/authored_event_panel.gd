@@ -34,7 +34,13 @@ func render(event: Dictionary) -> void:
 	visible = bool(event.get("ok", false))
 	if not visible:
 		return
-	title_label.text = "AUTHORED EVENT — %s | %s" % [String(event.get("title", "")), String(event.get("phase", "")).to_upper()]
+	var event_type: String = String(event.get("type", event.get("phase", "")))
+	var event_heading: String = {
+		"forecast": "SCOUT REPORT",
+		"recovery": "RECOVERY DECISION",
+		"scenario_conclusion": "AFTER-ACTION DECISION",
+	}.get(event_type, "KEEP DECISION")
+	title_label.text = "%s — %s" % [event_heading, String(event.get("title", ""))]
 	setup_label.text = String(event.get("setup", ""))
 	var choices: Array = event.get("choices", [])
 	for index in range(choice_buttons.size()):
@@ -51,7 +57,7 @@ func render(event: Dictionary) -> void:
 		button.disabled = not bool(choice.get("available", false))
 		button.set_meta("choice_id", String(choice.get("id", "")))
 		var reason: String = String(choice.get("reason", ""))
-		detail.text = "%s%s" % [String(choice.get("visible_result", "")), "\nBLOCKED — %s" % reason.replace("_", " ") if not reason.is_empty() else ""]
+		detail.text = "RESULT — %s%s" % [String(choice.get("visible_result", "")), "\nBLOCKED — %s" % reason.replace("_", " ") if not reason.is_empty() else ""]
 
 func _emit_choice(index: int) -> void:
 	if index < 0 or index >= choice_buttons.size():

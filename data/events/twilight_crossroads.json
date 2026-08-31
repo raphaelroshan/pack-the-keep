@@ -1,0 +1,35 @@
+{
+  "id": "twilight_crossroads",
+  "content_version": 1,
+  "status": "active",
+  "title": "One Road Before Nightfall",
+  "short_role": "Spend one recovery action to prepare either the fast road or the unlit stair for the combined assault.",
+  "type": "recovery",
+  "scenario": "the_twilight_road",
+  "trigger": {"phase": "recovery", "wave": 2},
+  "selection": {"stream": "twilight_crossroads", "repeat_policy": "once_per_run", "cooldown_waves": 0, "max_occurrences": 1},
+  "setup": "The scouts confirm both routes will break at once. The road crews can replant the stakes or carry lamp oil to the stair before nightfall, but there is time for only one preparation.",
+  "choices": [
+    {
+      "id": "replant_road_stakes",
+      "label": "Replant road stakes (1 action)",
+      "requirements": {"recovery_actions": {"gte": 1}},
+      "effects": [
+        {"op": "spend_recovery_action", "amount": 1},
+        {"op": "set_flag", "flag": "twilight_stakes_ready", "value": true}
+      ],
+      "visible_result": "The road crews prepare the fast approach. Every Outrider in the final assault will arrive delayed; the unlit stair receives no extra visibility."
+    },
+    {
+      "id": "carry_lamp_oil",
+      "label": "Carry lamp oil to the stair (1 action)",
+      "requirements": {"recovery_actions": {"gte": 1}},
+      "effects": [
+        {"op": "spend_recovery_action", "amount": 1},
+        {"op": "set_flag", "flag": "twilight_lamps_ready", "value": true}
+      ],
+      "visible_result": "The stair crew prepares a one-night light line. Every Gloam Knife in the final assault will be revealed; the fast road receives no extra delay."
+    }
+  ],
+  "follow_up": ""
+}

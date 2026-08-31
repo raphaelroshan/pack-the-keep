@@ -109,7 +109,8 @@ const EVENT_PATHS: Array[String] = [
 	"res://data/events/old_drain_opens.json",
 	"res://data/events/the_bell_has_a_pattern.json",
 	"res://data/events/the_gate_is_not_the_keep.json",
-	"res://data/events/wrong_wall_report.json"
+	"res://data/events/wrong_wall_report.json",
+	"res://data/events/twilight_crossroads.json"
 ]
 
 const MODIFIER_PATHS: Array[String] = [

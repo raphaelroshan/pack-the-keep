@@ -171,6 +171,8 @@ func _resolve_event(state: RefCounted, label: String) -> bool:
 			return _check_command(state.choose_event_option("keep_single_entry"), "%s Mara second door" % label)
 		"old_drain_opens":
 			return _check_command(state.choose_event_option("seal_old_drain"), "%s Old Drain" % label)
+		"twilight_crossroads":
+			return _check_command(state.choose_event_option("carry_lamp_oil"), "%s Twilight Crossroads" % label)
 	failures.append("%s reached unhandled event %s" % [label, state.active_event_id])
 	return false
 

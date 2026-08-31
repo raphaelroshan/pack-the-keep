@@ -37,6 +37,8 @@ func _initialize() -> void:
 	await _resolve_active_wave(ui)
 	ui.keep.finish_repair_interval()
 	await _resolve_active_wave(ui)
+	_check(ui.keep.active_event_id == "twilight_crossroads", "phase two should open the Twilight Crossroads recovery choice")
+	ui.keep.choose_event_option("carry_lamp_oil")
 	ui.keep.finish_repair_interval()
 	ui._set_screen("battle")
 	ui._refresh_ui()

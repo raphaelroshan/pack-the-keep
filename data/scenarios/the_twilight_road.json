@@ -9,6 +9,7 @@
   "starting_doctrine": "rapid_breakthrough",
   "doctrines": ["rapid_breakthrough", "veiled_entry", "twilight_crossing"],
   "wave_plans": [["outrider"], ["gloam_knife"], ["outrider", "gloam_knife", "outrider", "gloam_knife"]],
+  "event_chain": ["twilight_crossroads"],
   "variations": [
     {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
     {"id": "fading_light", "materials": -2, "morale": 1, "target_room": "north_tower"},

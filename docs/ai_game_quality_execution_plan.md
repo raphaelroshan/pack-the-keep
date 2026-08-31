@@ -1,6 +1,6 @@
 # Pack the Keep — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.35.0-twilight-road` and later
+**Applies to:** `v0.36.0-twilight-crossroads` and later
 
 **Purpose:** Turn the First Watch prototype into a readable, tactile, game-quality keep-defense vertical slice. Automated verification, deterministic simulation checks, scripted flow coverage, and screenshot review are the active gates. Human testing remains useful for later confidence and tuning, but it is not a prerequisite for execution.
 
@@ -27,7 +27,8 @@ The game is a spatial defensive puzzle, not a rarity treadmill or a command spre
 | **P51.3 — Complete** | Add the first teaching pack | Road Wardens and Outriders create a visible prepared-delay versus concentrated-damage tempo question with two proven full-run answers. |
 | **P51.4 — Complete** | Add the second teaching pack | Lantern Watch reveals Gloam Knives for ranged response while Road Wardens preserve a distinct melee answer across deterministic full runs. |
 | **P51.5 — Complete** | Combine the proven questions | The Twilight Road teaches tempo and visibility separately, then combines them with prepared-route and flexible-response plans and no new combat subsystem. |
-| **P52.1 — Next** | Add bounded replay variation | Add one authored variation or recovery trade-off that changes a replay decision without grind or a forced build. |
+| **P52.1 — Complete** | Add bounded replay variation | Twilight Crossroads trades one recovery action for final-wave road delay or stair visibility and supports two mixed-pack answers. |
+| **P52.2 — Next** | Make the branch legible at Results | Carry the chosen route preparation into mastery/debrief composition and propose the opposite branch as a concrete replay experiment where relevant. |
 
 ## Acceptance tests for every AI task
 
@@ -37,7 +38,7 @@ A task is incomplete if it hides the fort behind a menu, adds a unit before its 
 
 ## Recommended next prompt
 
-> P51 is complete at `0.35.0-twilight-road`. Begin P52 with one bounded replay variation or recovery trade-off. Preserve the K1–K8, P51, and P54 gates and keep at least two viable answers.
+> P52.1 is complete at `0.36.0-twilight-crossroads`. Continue with P52.2 by making the selected recovery branch explicit in terminal mastery and replay guidance. Preserve the K1–K8, P51, P52.1, and P54 gates.
 
 ## Definition of game-quality readiness
 
