@@ -895,3 +895,11 @@
 **Reason:** The recovery choice changes combat, but a terminal player needs the game to connect that action to the build that covered the other route. Reusing event history makes the causal link durable and replayable without another campaign flag or reward system.
 
 **Trade-off:** Build-fit language compares authored pack identities, not every individual placement or attack contribution. It therefore describes the strategic plan rather than claiming optimal execution; the detailed timeline and damage report remain available below it.
+
+## ADR-113: Seeded Twilight pressure changes disclosed composition
+
+**Decision:** Let each stable The Twilight Road variation author the exact final-wave enemy list and a short preparation focus. Standard Bell stays balanced, Fading Light becomes Gloam-heavy, and Long Twilight becomes Outrider-heavy. War Council and Results derive the same player-facing summary, while wave creation rederives the roster from the persisted variation ID.
+
+**Reason:** Earlier variation changed resources and room pressure but did not materially change what the player prepared for. A disclosed 2/2, 1/3, or 3/1 composition makes the seed alter the visible route emphasis while preserving the existing packs, recovery branches, deterministic combat, and two viable mixed answers.
+
+**Trade-off:** The variation changes only the final authored phase and remains bounded to four existing enemies. It does not add hidden stats, procedural wave generation, stronger event bonuses, or a forced counter; the preparation focus is advisory and the exact roster remains the authoritative evidence.

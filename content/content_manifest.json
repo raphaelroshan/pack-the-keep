@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.36.1",
+  "content_version": "0.37.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -722,6 +722,17 @@
     "authority": "derived_read_model_only_no_new_serialized_state",
     "evidence": ["design/p52_twilight_route_debrief.md", "tests/test_p52_twilight_crossroads.gd", "tests/test_p52_twilight_crossroads_ui.gd"],
     "next_slice": "p52_meaningful_seeded_variation"
+  },
+  "p52_meaningful_seeded_variation": {
+    "status": "implemented",
+    "scenario": "the_twilight_road",
+    "variations": ["standard_bell", "fading_light", "long_twilight"],
+    "final_pressure": ["balanced_two_and_two", "three_gloam_knives", "three_outriders"],
+    "presentation": "war_council_and_results_disclose_exact_final_composition_and_preparation_focus",
+    "persistence": "stable_variation_id_rederives_the_same_authored_final_wave_after_save_load",
+    "viability": "both_mixed_recovery_answers_hold_across_all_three_commanders_and_all_three_variations",
+    "evidence": ["design/p52_twilight_seeded_pressure.md", "docs/p52_seeded_pressure_verification.md", "tests/test_p52_twilight_crossroads.gd", "tests/test_p52_twilight_crossroads_ui.gd"],
+    "next_slice": "p53_alpha_hardening_review"
   },
   "campaign": {
     "title": "The Bell at Dusk",
