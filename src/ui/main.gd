@@ -2090,13 +2090,13 @@ func _set_screen(next_screen: String) -> void:
 			main_title_label.text = "%s — %s" % [String(keep.keep_definition().get("name", "The Keep")).to_upper(), {"preparation": "FORTRESS", "battle": "ASSAULT", "results": "AFTERMATH"}.get(screen, screen.to_upper())]
 			main_subtitle_label.text = "Build a visible answer, read the pressure, and preserve a way to recover."
 	if command_panel_title:
-		command_panel_title.text = {
+		command_panel_title.text = "MAKE THE RECOVERY CHOICE" if screen == "results" and keep != null and not keep.active_event_id.is_empty() else {
 			"setup": "WAR COUNCIL", "preparation": "BUILD & ASSIGN",
 			"battle": "COMMAND THE DEFENSE", "results": "RECOVERY & OUTCOME",
 			"settings": "SETTINGS"
 		}.get(screen, "COMMAND TABLE")
 	if input_help_label:
-		input_help_label.text = {
+		input_help_label.text = "Choose one visible route preparation. The remaining recovery action stays available afterward." if screen == "results" and keep != null and not keep.active_event_id.is_empty() else {
 			"setup": "Choose the strategic context here. The board stays out of the way until the briefing is confirmed.",
 			"preparation": "Open a pack, select a piece, then arm placement and click the fort. The main action starts the assault in real time.",
 			"battle": "The assault runs continuously. Sound the bell, pause when needed, and inspect threats before spending command.",
@@ -2141,6 +2141,8 @@ func _focus_screen_control() -> void:
 		target = playtest_button if not playtest_button.disabled else pack_button
 	elif screen == "battle":
 		target = pause_button
+	elif screen == "results" and not keep.active_event_id.is_empty():
+		target = _first_legal_event_control()
 	elif screen == "results" and terminal_debrief_panel.visible:
 		terminal_debrief_panel.focus_primary()
 		return
@@ -2156,7 +2158,7 @@ func _focus_screen_control() -> void:
 		return
 	target.grab_focus()
 	if command_scroll != null and command_panel.is_ancestor_of(target):
-		if screen == "battle" and target == pause_button:
+		if (screen == "battle" and target == pause_button) or (screen == "results" and not keep.active_event_id.is_empty()):
 			command_scroll.scroll_vertical = 0
 		else:
 			command_scroll.ensure_control_visible(target)
@@ -2187,7 +2189,20 @@ func _first_legal_recovery_control() -> Control:
 			return candidate
 	return finish_interval_button
 
+func _first_legal_event_control() -> Control:
+	for button in authored_event_choice_buttons:
+		if button != null and button.visible and not button.disabled:
+			return button
+	return null
+
 func _focus_recovery_controls() -> void:
+	if keep != null and not keep.active_event_id.is_empty():
+		var event_target: Control = _first_legal_event_control()
+		if event_target != null:
+			event_target.grab_focus()
+			if command_scroll != null:
+				command_scroll.scroll_vertical = 0
+		return
 	if command_scroll and recovery_actions_panel and recovery_actions_panel.visible and recovery_stage_label != null:
 		command_scroll.scroll_vertical = 0
 
@@ -2849,7 +2864,7 @@ func _refresh_recovery_brief(rebuild_snapshot: bool = true) -> void:
 	if recovery_brief_panel == null:
 		return
 	var terminal_result: bool = _is_terminal_result()
-	recovery_brief_panel.visible = screen == "results" and keep.repair_interval_active and not terminal_result and not tutorial.active
+	recovery_brief_panel.visible = screen == "results" and keep.repair_interval_active and keep.active_event_id.is_empty() and not terminal_result and not tutorial.active
 	if recovery_brief_panel.visible:
 		if rebuild_snapshot:
 			_refresh_recovery_presentation()
@@ -2866,7 +2881,7 @@ func _apply_recovery_action_card(title: Label, detail: Label, button: Button, vi
 func _refresh_recovery_action_cards(rebuild_snapshot: bool = true) -> void:
 	if recovery_actions_panel == null:
 		return
-	recovery_actions_panel.visible = screen == "results" and keep.repair_interval_active
+	recovery_actions_panel.visible = screen == "results" and keep.repair_interval_active and keep.active_event_id.is_empty()
 	if not keep.repair_interval_active:
 		return
 	if rebuild_snapshot:
@@ -3633,6 +3648,8 @@ func _first_battle_guidance() -> String:
 			return "ASSAULT READY — Read the doctrine, arriving threats, routes, and likely target. Sound the bell when the defense is understood."
 		return "ASSAULT ORDERS — The fort stays visible while threats advance. Watch routes and targets; pause when needed to read the next committed response."
 	if screen == "results":
+		if not keep.active_event_id.is_empty():
+			return "RECOVERY DECISION — Choose which route receives the crews before spending the remaining recovery action."
 		if keep.repair_interval_active and keep.has_next_wave():
 			return "RECOVERY LULL — Read the causal result, spend up to two repair or assignment actions, then release assault phase %d/%d." % [keep.wave_index + 1, keep.authored_wave_count()]
 		if keep.authored_wave_count() > 0 and keep.wave_index >= keep.authored_wave_count():

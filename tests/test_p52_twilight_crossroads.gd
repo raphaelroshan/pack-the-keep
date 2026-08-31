@@ -1,0 +1,120 @@
+extends SceneTree
+
+const PackKeepState = preload("res://src/core/keep_state.gd")
+
+var failures: Array[String] = []
+
+func _check(condition: bool, message: String) -> void:
+	if not condition:
+		failures.append(message)
+
+func _place_mixed_answer(state: RefCounted, choice_id: String) -> bool:
+	if not bool(state.place_piece("pike_squad", Vector2i(0, 3), "ground").get("ok", false)):
+		return false
+	if choice_id == "carry_lamp_oil":
+		for pack_id in ["road_wardens", "crossbow_watch"]:
+			if not bool(state.open_pack(pack_id).get("ok", false)):
+				return false
+		for placement in [
+			["stake_line", Vector2i(1, 2), "ground"],
+			["hook_guard", Vector2i(4, 3), "ground"],
+			["crossbow_patrol", Vector2i(1, 1), "upper"],
+			["watch_banner", Vector2i(4, 1), "upper"],
+		]:
+			if not bool(state.place_piece(placement[0], placement[1], placement[2]).get("ok", false)):
+				return false
+		return true
+	for pack_id in ["lantern_watch", "runner_network"]:
+		if not bool(state.open_pack(pack_id).get("ok", false)):
+			return false
+	for placement in [
+		["dusk_bow", Vector2i(1, 1), "upper"],
+		["lantern_post", Vector2i(7, 1), "upper"],
+		["runner_pair", Vector2i(4, 3), "ground"],
+		["supply_cache", Vector2i(6, 3), "ground"],
+	]:
+		if not bool(state.place_piece(placement[0], placement[1], placement[2]).get("ok", false)):
+			return false
+	return true
+
+func _run(seed: int, commander_id: String, choice_id: String, resume: bool = false) -> Dictionary:
+	var state: RefCounted = PackKeepState.new(seed)
+	state.select_commander(commander_id)
+	state.select_scenario("the_twilight_road")
+	if not _place_mixed_answer(state, choice_id):
+		return {}
+	var restored: bool = false
+	var event_actions_before: int = -1
+	var selected_forecast: Dictionary = {}
+	var final_enemies: Array = []
+	for _guard in range(120):
+		if state.active_event_id == "twilight_crossroads":
+			event_actions_before = state.repair_actions_remaining
+			if resume and not restored:
+				var loaded: RefCounted = PackKeepState.new(1)
+				_check(bool(loaded.load_serialized(state.serialize()).get("ok", false)), "active Twilight Crossroads checkpoint should load")
+				state = loaded
+				restored = true
+			var unprepared: Dictionary = state.forecast()
+			if choice_id == "replant_road_stakes":
+				_check(not bool(unprepared.get("momentum_delayed", false)), "stakes branch should expose live momentum before the recovery choice")
+			else:
+				_check(not bool(unprepared.get("concealment_revealed", false)), "lamp branch should expose veiled attackers before the recovery choice")
+			_check(bool(state.choose_event_option(choice_id).get("ok", false)), "Twilight Crossroads choice should resolve")
+			_check(state.repair_actions_remaining == event_actions_before - 1, "Twilight Crossroads should consume exactly one recovery action")
+			selected_forecast = state.forecast().duplicate(true)
+			continue
+		if state.wave_active:
+			if state.wave_index == 3 and state.battle_step == 0 and final_enemies.is_empty():
+				final_enemies = state.enemies.duplicate(true)
+			state.advance_wave(1.0)
+			continue
+		if state.last_outcome == "collapse" or (state.wave_index >= state.authored_wave_count() and not state.has_next_wave()):
+			break
+		if state.repair_interval_active:
+			state.finish_repair_interval()
+		else:
+			state.start_wave(state.enemy_doctrine)
+	return {
+		"serialized": JSON.stringify(state.serialize()),
+		"waves": state.wave_history.size(),
+		"outcome": state.last_outcome,
+		"restored": restored,
+		"actions_before": event_actions_before,
+		"forecast": selected_forecast,
+		"enemies": final_enemies,
+		"flags": state.event_flags.duplicate(true),
+		"history": state.event_history.duplicate(true),
+	}
+
+func _initialize() -> void:
+	for choice_id in ["carry_lamp_oil", "replant_road_stakes"]:
+		for commander_id in ["castellan", "warden", "quartermaster"]:
+			for seed in [5601, 5602, 5603]:
+				var uninterrupted: Dictionary = _run(seed, commander_id, choice_id)
+				var resumed: Dictionary = _run(seed, commander_id, choice_id, true)
+				var label: String = "%s/%s/%d" % [choice_id, commander_id, seed]
+				_check(not uninterrupted.is_empty() and uninterrupted.serialized == resumed.serialized, "recovery branch should survive save/load for %s" % label)
+				_check(bool(resumed.get("restored", false)), "recovery branch should reach the active-event checkpoint for %s" % label)
+				_check(int(uninterrupted.get("actions_before", -1)) == 2, "recovery event should open with two actions for %s" % label)
+				_check(int(uninterrupted.get("waves", 0)) == 3 and String(uninterrupted.get("outcome", "")) != "collapse", "mixed answer should remain viable for %s" % label)
+				var forecast: Dictionary = uninterrupted.get("forecast", {})
+				var final_enemies: Array = uninterrupted.get("enemies", [])
+				_check(final_enemies.size() == 4, "final combined wave should retain four threats for %s" % label)
+				for enemy in final_enemies:
+					if String(enemy.get("enemy_id", "")) == "outrider":
+						_check(bool(enemy.get("momentum_delayed", false)), "mixed answer should delay final Outriders for %s" % label)
+					if String(enemy.get("enemy_id", "")) == "gloam_knife":
+						_check(bool(enemy.get("concealment_revealed", false)), "mixed answer should reveal final Gloam Knives for %s" % label)
+				_check(bool(forecast.get("momentum_delayed", false)) and bool(forecast.get("concealment_revealed", false)), "selected recovery branch should complete the mixed answer for %s" % label)
+				var spent_flag: String = "twilight_lamps_ready" if choice_id == "carry_lamp_oil" else "twilight_stakes_ready"
+				_check(not bool(uninterrupted.flags.get(spent_flag, true)), "selected route preparation should be spent at final-wave start for %s" % label)
+				_check(uninterrupted.history.size() == 1 and String(uninterrupted.history[0].get("choice_id", "")) == choice_id, "event history should preserve the recovery branch for %s" % label)
+
+	if failures.is_empty():
+		print("P52 Twilight Crossroads: PASS (18 mixed-plan recovery runs plus save-resume parity)")
+		quit(0)
+	else:
+		for failure in failures:
+			push_error(failure)
+		quit(1)

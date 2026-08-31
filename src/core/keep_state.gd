@@ -1570,6 +1570,8 @@ func _enemy_momentum_countered(enemy_id: String) -> bool:
 	var momentum: Variant = definition.get("momentum_profile")
 	if not momentum is Dictionary:
 		return false
+	if scenario_id == "the_twilight_road" and bool(event_flags.get("twilight_stakes_ready", false)):
+		return true
 	var counter_modifier: String = String(momentum.get("counter_modifier", ""))
 	for instance in pieces.values():
 		if bool(instance.get("disabled", false)) or float(instance.get("condition", 0.0)) <= 0.0:
@@ -1588,6 +1590,8 @@ func _enemy_concealment_revealed(enemy_id: String) -> bool:
 	var concealment: Variant = definition.get("concealment_profile")
 	if not concealment is Dictionary:
 		return false
+	if scenario_id == "the_twilight_road" and bool(event_flags.get("twilight_lamps_ready", false)):
+		return true
 	var counter_modifier: String = String(concealment.get("counter_modifier", ""))
 	for instance in pieces.values():
 		if bool(instance.get("disabled", false)) or float(instance.get("condition", 0.0)) <= 0.0:
@@ -2290,6 +2294,8 @@ func start_wave(doctrine: String) -> Dictionary:
 	if scenario_active and _scenario_definitions.has(scenario_id):
 		var wave_plan: Array = _scenario_definitions[scenario_id].wave_plans[mini(wave_index - 1, _scenario_definitions[scenario_id].wave_plans.size() - 1)]
 		composition = wave_plan.duplicate()
+	var twilight_stakes_prepared: bool = scenario_id == "the_twilight_road" and wave_index == 3 and bool(event_flags.get("twilight_stakes_ready", false))
+	var twilight_lamps_prepared: bool = scenario_id == "the_twilight_road" and wave_index == 3 and bool(event_flags.get("twilight_lamps_ready", false))
 	_reset_combat_metrics()
 	var enemy_health_bonus: int = _active_enemy_health_bonus()
 	for index in range(composition.size()):
@@ -2297,6 +2303,12 @@ func start_wave(doctrine: String) -> Dictionary:
 		var enemy_health: int = int(_enemy_definitions[enemy_id].get("health", 1)) + enemy_health_bonus
 		var arrival_state: Dictionary = _enemy_arrival_state(enemy_id)
 		enemies.append({"enemy_id": enemy_id, "max_health": enemy_health, "hp": enemy_health, "damage": int(_enemy_definitions[enemy_id].get("damage", 0)), "arrival_step": int(arrival_state.arrival_step), "signal_disrupted": bool(arrival_state.signal_disrupted), "momentum_delayed": bool(arrival_state.momentum_delayed), "concealment_revealed": bool(arrival_state.concealment_revealed), "target": "", "defeated": false, "slot": index, "attacks_received": 0, "damage_taken": 0})
+	if twilight_stakes_prepared:
+		event_flags.twilight_stakes_ready = false
+		_battle_log("The road crews' one-night stake line is committed to this assault and is now spent.")
+	if twilight_lamps_prepared:
+		event_flags.twilight_lamps_ready = false
+		_battle_log("The stair crew's one-night lamp line is committed to this assault and is now spent.")
 	_battle_log("Forecast: %s. Question: %s" % [doctrine.replace("_", " "), _doctrine_definitions[doctrine].question])
 	if enemy_health_bonus > 0:
 		_battle_log("%s hardens the vanguard; every enemy begins with +%d health." % [String(_modifier_definitions[equipped_modifier_id].name), enemy_health_bonus])
@@ -2319,7 +2331,8 @@ func start_wave(doctrine: String) -> Dictionary:
 			continue
 		logged_momentum.append(enemy_id)
 		if bool(enemy.get("momentum_delayed", false)):
-			_battle_log("Stake Line controlled the %s route; %s contact is delayed from step %d to step %d." % [String(_enemy_definitions[enemy_id].route).replace("_", " "), String(_enemy_definitions[enemy_id].name), int(_enemy_definitions[enemy_id].arrival_step), int(enemy.get("arrival_step", 1))])
+			var momentum_source: String = "Road crews" if twilight_stakes_prepared else "Stake Line"
+			_battle_log("%s controlled the %s route; %s contact is delayed from step %d to step %d." % [momentum_source, String(_enemy_definitions[enemy_id].route).replace("_", " "), String(_enemy_definitions[enemy_id].name), int(_enemy_definitions[enemy_id].arrival_step), int(enemy.get("arrival_step", 1))])
 		else:
 			_battle_log("%s kept breakthrough momentum; contact remains at step %d." % [String(_enemy_definitions[enemy_id].name), int(enemy.get("arrival_step", 1))])
 	var logged_concealment: Array[String] = []
@@ -2330,7 +2343,8 @@ func start_wave(doctrine: String) -> Dictionary:
 			continue
 		logged_concealment.append(enemy_id)
 		if bool(enemy.get("concealment_revealed", false)):
-			_battle_log("Lantern Post revealed the %s route; ranged defenders can engage %s." % [String(_enemy_definitions[enemy_id].route).replace("_", " "), String(_enemy_definitions[enemy_id].name)])
+			var visibility_source: String = "Stair crew lamps" if twilight_lamps_prepared else "Lantern Post"
+			_battle_log("%s revealed the %s route; ranged defenders can engage %s." % [visibility_source, String(_enemy_definitions[enemy_id].route).replace("_", " "), String(_enemy_definitions[enemy_id].name)])
 		else:
 			_battle_log("%s remains veiled on the %s route; ranged response is blocked until the next prepared assault." % [String(_enemy_definitions[enemy_id].name), String(_enemy_definitions[enemy_id].route).replace("_", " ")])
 	return {"ok": true, "message": "Wave %d begins. Pause between steps and read the target before using %s." % [wave_index, String(_commander_definitions.get(commander_id, {}).get("ability_name", "the commander intervention"))], "forecast": forecast(), "composition": composition.duplicate()}

@@ -26,7 +26,7 @@ EXPECTED_CONTENT_COUNTS = {
     "enemy_count": 10,
     "doctrine_count": 12,
     "scenario_count": 15,
-    "event_count": 9,
+    "event_count": 10,
     "modifier_count": 2,
 }
 PACKAGED_PHASES = ("clean_install", "reinstall", "stale_backup", "missing_profile", "upgrade", "forced_close_recovery")

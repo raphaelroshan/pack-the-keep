@@ -56,6 +56,9 @@ func _run(seed: int, commander_id: String, answer: String, resume: bool = false)
 			continue
 		if state.last_outcome == "collapse" or (state.wave_index >= state.authored_wave_count() and not state.has_next_wave()):
 			break
+		if state.active_event_id == "twilight_crossroads":
+			state.choose_event_option("carry_lamp_oil")
+			continue
 		if state.repair_interval_active:
 			state.finish_repair_interval()
 		else:
@@ -82,7 +85,7 @@ func _initialize() -> void:
 				if answer == "prepared_routes":
 					_check(bool(combined.get("momentum_delayed", false)) and bool(combined.get("concealment_revealed", false)), "prepared plan should delay and reveal both routes")
 				else:
-					_check(not bool(combined.get("momentum_delayed", true)) and not bool(combined.get("concealment_revealed", true)), "flexible plan should preserve live charge and veiled melee interception")
+					_check(not bool(combined.get("momentum_delayed", true)) and bool(combined.get("concealment_revealed", false)), "flexible plan should preserve live charge while the recovery choice lights the stair")
 
 	if failures.is_empty():
 		print("P51 Twilight Road: PASS (18 combined two-plan runs plus save-resume parity)")

@@ -879,3 +879,11 @@
 **Reason:** Each new question now has an isolated teaching scenario and deterministic alternatives. Combining them tests whether the player can maintain two forms of readiness without hiding a new rule inside the escalation.
 
 **Trade-off:** The scenario adds one doctrine label and authored composition but no new enemy, pack, state field, reward, or recovery mechanic. Broader replay variation remains deferred to P52 so this milestone can prove composition quality cleanly.
+
+## ADR-111: Twilight recovery prepares one route for one assault
+
+**Decision:** After The Twilight Road's second phase, require one authored recovery choice that spends one action to prepare either the fast road or the unlit stair. Store the selection as a one-shot event flag, apply it while constructing every matching enemy in the final wave, then mark it spent while preserving the ordinary per-enemy momentum and concealment fields.
+
+**Reason:** P52 needs replay variation that changes a concrete build and recovery decision without permanent power or hidden randomness. A player can now pair Road Wardens with Crossbow Watch and use lamp oil, or pair Lantern Watch with Runner Network and use road stakes, while the earlier complete plans remain valid.
+
+**Trade-off:** A fully prepared Road Wardens plus Lantern Watch layout can make either event effect redundant, though the action cost remains real. This is acceptable as a deliberate over-preparation option; terminal mastery should make the redundancy legible in the next P52 slice rather than adding a stronger stacking bonus.

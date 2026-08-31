@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.35.0",
+  "content_version": "0.36.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -700,6 +700,19 @@
     "viable_answers": ["road_wardens_plus_lantern_watch", "crossbow_watch_plus_runner_network"],
     "evidence": ["design/p51_twilight_road_combined_challenge.md", "docs/p51_twilight_road_verification.md", "tests/test_p51_twilight_road.gd", "tests/test_p51_twilight_road_ui.gd"],
     "next_slice": "p52_bounded_scenario_variation"
+  },
+  "p52_twilight_crossroads_recovery": {
+    "status": "implemented",
+    "event": "twilight_crossroads",
+    "scenario": "the_twilight_road",
+    "trigger": "wave_two_recovery_before_combined_final_assault",
+    "choices": ["replant_road_stakes", "carry_lamp_oil"],
+    "cost": "one_of_two_recovery_actions",
+    "one_shot_effects": ["delay_all_final_wave_outriders", "reveal_all_final_wave_gloam_knives"],
+    "viable_mixed_answers": ["road_wardens_plus_crossbow_watch_then_lamps", "lantern_watch_plus_runner_network_then_stakes"],
+    "presentation": "blocking_recovery_decision_leads_command_rail_and_controller_focus_without_permanent_hud",
+    "evidence": ["design/p52_twilight_crossroads_recovery.md", "docs/p52_twilight_crossroads_verification.md", "tests/test_p52_twilight_crossroads.gd", "tests/test_p52_twilight_crossroads_ui.gd"],
+    "next_slice": "p52_recovery_branch_debrief"
   },
   "campaign": {
     "title": "The Bell at Dusk",
@@ -1713,7 +1726,8 @@
       "old_drain_opens",
       "the_bell_has_a_pattern",
       "the_gate_is_not_the_keep",
-      "wrong_wall_report"
+      "wrong_wall_report",
+      "twilight_crossroads"
     ],
     "variation_contract": "seed-derived bounded target or resource variation; scenario objective and counter meaning remain fixed",
     "waves": [

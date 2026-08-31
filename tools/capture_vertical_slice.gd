@@ -11,6 +11,7 @@ var capture_spatial_transition: bool = false
 var capture_route_delay: bool = false
 var capture_route_reveal: bool = false
 var capture_twilight_road: bool = false
+var capture_twilight_choice: bool = false
 var capture_starting_defender: bool = false
 var capture_battle_exchange: bool = false
 var capture_battle_exchange_progress: float = 0.28
@@ -31,6 +32,7 @@ func _initialize() -> void:
 	capture_route_delay = OS.get_cmdline_user_args().has("--capture-route-delay")
 	capture_route_reveal = OS.get_cmdline_user_args().has("--capture-route-reveal")
 	capture_twilight_road = OS.get_cmdline_user_args().has("--capture-twilight-road")
+	capture_twilight_choice = OS.get_cmdline_user_args().has("--capture-twilight-choice")
 	capture_starting_defender = OS.get_cmdline_user_args().has("--inspect-starting-defender")
 	capture_battle_exchange = OS.get_cmdline_user_args().has("--capture-battle-exchange")
 	if not _argument_value("--battle-exchange-progress=").is_empty():
@@ -64,7 +66,7 @@ func _run_capture() -> void:
 	if ui.keep.scenario_ids().has(capture_scenario_id):
 		ui._select_option_metadata(ui.scenario_option, capture_scenario_id)
 		ui.keep.select_scenario(capture_scenario_id)
-	if capture_spatial_transition or capture_route_delay or capture_route_reveal or capture_twilight_road:
+	if capture_spatial_transition or capture_route_delay or capture_route_reveal or capture_twilight_road or capture_twilight_choice:
 		ui.guided_setup = false
 	ui._refresh_ui()
 	await _capture("02_war_council", ui)
@@ -79,6 +81,12 @@ func _run_capture() -> void:
 	elif capture_route_reveal and capture_scenario_id == "the_unlit_stair":
 		ui.keep.open_pack("lantern_watch")
 		ui.keep.place_piece("dusk_bow", Vector2i(1, 1), "upper")
+		ui._refresh_ui()
+	elif capture_twilight_choice and capture_scenario_id == "the_twilight_road":
+		ui.keep.open_pack("road_wardens")
+		ui.keep.open_pack("crossbow_watch")
+		ui.keep.place_piece("hook_guard", Vector2i(4, 3), "ground")
+		ui.keep.place_piece("crossbow_patrol", Vector2i(1, 1), "upper")
 		ui._refresh_ui()
 	elif capture_twilight_road and capture_scenario_id == "the_twilight_road":
 		ui.keep.open_pack("road_wardens")
@@ -102,7 +110,12 @@ func _run_capture() -> void:
 		ui.keep.place_piece("lantern_post", Vector2i(7, 1), "upper")
 		ui._refresh_ui()
 		await _capture("03c_route_reveal_ready", ui)
-	if capture_twilight_road and capture_scenario_id == "the_twilight_road":
+	if capture_twilight_choice and capture_scenario_id == "the_twilight_road":
+		ui.keep.place_piece("stake_line", Vector2i(1, 2), "ground")
+		ui.keep.place_piece("watch_banner", Vector2i(4, 1), "upper")
+		ui._refresh_ui()
+		await _capture("03c_mixed_routes_ready", ui)
+	elif capture_twilight_road and capture_scenario_id == "the_twilight_road":
 		ui.keep.place_piece("stake_line", Vector2i(1, 2), "ground")
 		ui.keep.place_piece("lantern_post", Vector2i(7, 1), "upper")
 		ui._refresh_ui()
@@ -128,6 +141,9 @@ func _run_capture() -> void:
 	await _capture("06_assault_phase_2", ui)
 	await _resolve_phase(ui)
 	await _capture("07_recovery_phase_2", ui)
+	if ui.keep.active_event_id == "twilight_crossroads":
+		ui._on_authored_event_choice_id("carry_lamp_oil")
+		await _capture("07b_lamp_route_prepared", ui)
 	ui._on_finish_interval()
 	await _capture("08_assault_phase_3", ui)
 	await _resolve_phase(ui)
@@ -177,6 +193,7 @@ func _write_manifest() -> void:
 		"route_delay_captured": capture_route_delay,
 		"route_reveal_captured": capture_route_reveal,
 		"twilight_road_captured": capture_twilight_road,
+		"twilight_choice_captured": capture_twilight_choice,
 		"starting_defender_inspected": capture_starting_defender,
 		"battle_exchange_staged": capture_battle_exchange,
 		"battle_exchange_progress": capture_battle_exchange_progress if capture_battle_exchange else null,
