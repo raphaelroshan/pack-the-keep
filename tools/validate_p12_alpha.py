@@ -24,8 +24,8 @@ EXPECTED_CONTENT_COUNTS = {
     "piece_count": 21,
     "pack_count": 11,
     "enemy_count": 10,
-    "doctrine_count": 11,
-    "scenario_count": 14,
+    "doctrine_count": 12,
+    "scenario_count": 15,
     "event_count": 9,
     "modifier_count": 2,
 }

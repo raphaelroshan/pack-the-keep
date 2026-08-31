@@ -1,14 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.34.0-lantern-watch` — the development candidate adds the Lantern Watch/Gloam Knife visibility teaching pair to the Quartermaster, Twinwatch, and Road Wardens P51 baseline; automated K8 and forced-close gates remain complete, while human sessions and owner approval remain pending
+**Current build identity:** `0.35.0-twilight-road` — the development candidate completes P51 by combining the proven Outrider tempo and Gloam Knife visibility questions in The Twilight Road; automated K8 and forced-close gates remain complete, while human sessions and owner approval remain pending
 
 ## Purpose
 
-This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch, Ash Ford, and Twinwatch support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan, Warden, or Quartermaster, select one of fourteen authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown, Rally, or Resupply, inspect health, armor, signal state, breakthrough momentum, concealment visibility, protection, assigned-specialist priority, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch, Ash Ford, and Twinwatch support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan, Warden, or Quartermaster, select one of fifteen authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown, Rally, or Resupply, inspect health, armor, signal state, breakthrough momentum, concealment visibility, protection, assigned-specialist priority, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
 
-## v0.34.0 acceptance checks
+## v0.35.0 acceptance checks
 
-Select The Unlit Stair and compare Lantern Watch against Road Wardens. Confirm an unlit Gloam Knife reports `Visibility: VEILED` and blocks ranged response, while a living Lantern Post beside an authored route room reports `Visibility: REVEALED` and allows Dusk Bow to commit damage. Verify Hook Guard and open-lane Runner Pair remain visible melee answers; save/resume must preserve reveal state exactly. The packaged P12/K8 lifecycle and forced-close recovery audits must continue to pass.
+Select The Twilight Road and compare Road Wardens plus Lantern Watch against Crossbow Watch plus Runner Network. Confirm phases one and two isolate Outrider tempo and Gloam Knife visibility, then phase three reports both `Charge: DELAYED/LIVE` and `Visibility: REVEALED/VEILED` from the chosen plan. Save/resume must preserve both states exactly. The packaged P12/K8 lifecycle and forced-close recovery audits must continue to pass.
 
 ## v0.30.0 acceptance checks
 
@@ -214,7 +214,7 @@ Presentation settings now use the same validated primary/backup candidate discip
 
 ## v0.12.7 Alpha scenario matrix
 
-Local headless verification now runs a documented viable baseline for every combination of thirteen non-overwhelming authored scenarios, all three commanders, and three seeds. Each of the 117 cases runs twice, producing 234 simulations that must serialize identically, resolve all three waves without collapse, close final recovery and event state, and retain the canonical replay key. This is deterministic viability evidence only; human playtest and presentation approval remain pending.
+Local headless verification now runs a documented viable baseline for every combination of fourteen non-overwhelming authored scenarios, all three commanders, and three seeds. Each of the 126 cases runs twice, producing 252 simulations that must serialize identically, resolve all three waves without collapse, close final recovery and event state, and retain the canonical replay key. This is deterministic viability evidence only; human playtest and presentation approval remain pending.
 
 ## v0.12.8 Scenario resume matrix
 
@@ -330,7 +330,7 @@ The supplied fort image informed only the high-level composition of a centered s
 
 ## Included playable loop
 
-The release starts with The Castellan, The Warden, or The Quartermaster, eleven packs, three defensive identities, and fourteen authored scenarios. The persistent gameplay board keeps placement and combat overlays on the fortress rather than replacing it. Battle is a real-time presentation of deterministic auto-battle: enemies move along named routes and defenders respond by role, floor, assignment, cooldown, ammunition, support, armor, signal integrity, breakthrough momentum, concealment visibility, and protection. Road Wardens versus Outriders isolates tempo; Lantern Watch versus Gloam Knives isolates visibility while preserving melee alternatives. Preparation retains bounded pack opening, direct placement, assignment, and repair; Battle retains pause, step, speed, focus, health, target, and causal impact feedback; Results retains recovery and terminal explanation. Dusk Bow joins the ranged-ammunition roster, while Lantern Post remains a non-attacking visibility support piece.
+The release starts with The Castellan, The Warden, or The Quartermaster, eleven packs, three defensive identities, and fifteen authored scenarios. The persistent gameplay board keeps placement and combat overlays on the fortress rather than replacing it. Battle is a real-time presentation of deterministic auto-battle: enemies move along named routes and defenders respond by role, floor, assignment, cooldown, ammunition, support, armor, signal integrity, breakthrough momentum, concealment visibility, and protection. Road Wardens versus Outriders isolates tempo; Lantern Watch versus Gloam Knives isolates visibility; The Twilight Road combines both while preserving prepared-route and flexible-response plans. Preparation retains bounded pack opening, direct placement, assignment, and repair; Battle retains pause, step, speed, focus, health, target, and causal impact feedback; Results retains recovery and terminal explanation.
 
 ## Visual kit
 

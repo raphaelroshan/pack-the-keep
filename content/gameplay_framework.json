@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.34.0-lantern-watch",
+  "framework_version": "0.35.0-twilight-road",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -201,7 +201,7 @@
   },
   "p12_alpha_scenario_matrix": {
     "status": "implemented",
-    "coverage": "thirteen_non_overwhelming_scenarios_by_three_commanders_by_three_seeds_run_uninterrupted_and_resumed",
+    "coverage": "fourteen_non_overwhelming_scenarios_by_three_commanders_by_three_seeds_run_uninterrupted_and_resumed",
     "resume_boundaries": ["wave_one_pre_step", "first_recovery_before_event_resolution", "wave_two_pre_step"],
     "viability_rule": "every_baseline_resolves_three_waves_without_collapse_and_closes_final_recovery_and_events",
     "determinism_rule": "checkpoint_round_trips_and_uninterrupted_resumed_terminal_states_produce_byte_identical_serialized_json",
@@ -317,6 +317,15 @@
     "presentation": ["visibility_veiled_or_revealed_text", "gloam_knife_board_marker", "authoritative_response_preview"],
     "determinism_rule": "concealment_is_resolved_from_catalog_data_and_stable_piece_positions_when_each_wave_starts",
     "non_goals": ["stealth_movement", "accuracy_rolls", "fog_of_war", "status_stacking", "combined_p51_enemy_challenge"]
+  },
+  "p51_twilight_road_combined_challenge": {
+    "status": "implemented",
+    "scenario": "the_twilight_road",
+    "doctrines": ["rapid_breakthrough", "veiled_entry", "twilight_crossing"],
+    "escalation": ["isolated_tempo", "isolated_visibility", "combined_pressure"],
+    "viable_answers": ["road_wardens_plus_lantern_watch", "crossbow_watch_plus_runner_network"],
+    "authority": "composition_only_over_existing_momentum_and_concealment_rules",
+    "non_goals": ["new_combat_state", "new_pack", "new_enemy", "random_composition", "fourth_phase"]
   },
   "p15_minimal_regional_consequence": {
     "status": "implemented",

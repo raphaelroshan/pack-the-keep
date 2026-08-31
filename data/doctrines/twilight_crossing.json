@@ -1,0 +1,9 @@
+{
+  "id": "twilight_crossing", "content_version": 1, "status": "active", "name": "Twilight Crossing",
+  "short_role": "Combine early breakthrough pressure with a concealed upper approach.",
+  "question": "Can the keep preserve both time and visibility without abandoning close response?",
+  "composition": ["outrider", "gloam_knife"], "route_pattern": "ridge_road_and_unlit_stair",
+  "target_priority": "early_exposed_specialist_then_concealed_upper_specialist", "principal_pressure": "Route tempo, visibility coverage, and divided unit protection",
+  "likely_target": "exposed precision, recon, morale, or support defenders across both approaches", "uncertainty": "which route reaches its eligible specialist first",
+  "counter_families": ["interception", "visibility", "precision", "mobile_response"]
+}

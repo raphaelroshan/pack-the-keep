@@ -1,0 +1,17 @@
+{
+  "id": "the_twilight_road", "content_version": 1, "status": "active", "name": "The Twilight Road",
+  "short_role": "Combine prepared tempo and route visibility after teaching each question alone.",
+  "question": "Can one keep answer the fast road and the unlit stair without making either line mandatory?",
+  "objective": "Preserve a response for both the Outrider charge and the concealed upper infiltration.",
+  "lesson": "Prepared Road Wardens plus Lantern Watch and flexible Crossbow Watch plus Runner Network are distinct complete plans.",
+  "keep_id": "greywatch_keep",
+  "recommended_packs": ["road_wardens", "lantern_watch"],
+  "starting_doctrine": "rapid_breakthrough",
+  "doctrines": ["rapid_breakthrough", "veiled_entry", "twilight_crossing"],
+  "wave_plans": [["outrider"], ["gloam_knife"], ["outrider", "gloam_knife", "outrider", "gloam_knife"]],
+  "variations": [
+    {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": ""},
+    {"id": "fading_light", "materials": -2, "morale": 1, "target_room": "north_tower"},
+    {"id": "long_twilight", "materials": 2, "morale": -1, "target_room": "gate"}
+  ]
+}
