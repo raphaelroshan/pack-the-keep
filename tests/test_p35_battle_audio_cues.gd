@@ -69,7 +69,9 @@ func _initialize() -> void:
 	var fallback_request: Dictionary = output_service.play_cue("impact", false, 0.5)
 	_check(bool(fallback_request.get("played", false)) and String(fallback_request.get("playback", "")) == "tone_fallback", "missing samples should retain the generated-tone fallback")
 	output_service.shutdown_output()
-	output_service.free()
+	await create_timer(0.5).timeout
+	output_service.queue_free()
+	await process_frame
 
 	ui.audio_muted = true
 	ui._play_battle_beat("breach")
