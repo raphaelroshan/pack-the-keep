@@ -115,10 +115,11 @@ func render(view_model: Dictionary) -> void:
 	var commander: Dictionary = view_model.get("commander", {})
 	var scenario: Dictionary = view_model.get("scenario", {})
 	var locked: bool = bool(view_model.get("locked", false))
-	summary_label.text = "%s  •  Modifier: %s\n%s" % [
-		String(view_model.get("mode", "SKIRMISH")),
-		String(view_model.get("modifier", "None")),
-		"%s\n%s" % [String(view_model.get("risk_summary", "RISK — STANDARD")), String(view_model.get("commitment", "Confirming enters the fortress with these run-defining choices."))],
+	summary_label.text = "%s\nPAIRING — %s\nSEED — %s\nFOCUS — %s" % [
+		String(view_model.get("run_frame", "SKIRMISH · STANDARD · defender wipe is recoverable")),
+		String(view_model.get("pairing", "Choose who leads which defense.")),
+		String(view_model.get("seed_pressure", "Standard Bell: baseline stores and authored pressure.")),
+		String(view_model.get("preparation_focus", "Read the first forecast before placing the defense.")),
 	]
 	lock_label.visible = locked
 	lock_label.text = "FIRST WATCH LOCKED — This lesson uses The Castellan and Gatehouse Lock so every taught command matches the authored defense." if locked else ""

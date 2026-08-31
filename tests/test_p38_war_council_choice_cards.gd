@@ -26,7 +26,9 @@ func _initialize() -> void:
 	_check(String(panel.scenario_name_label.text).contains("Gatehouse Lock"), "defense card should name the selected scenario")
 	_check(String(panel.scenario_identity_label.text).contains("FIRST QUESTION"), "defense card should expose its teaching question")
 	_check(String(panel.scenario_arc_label.text).contains("Gate Assault") and String(panel.scenario_arc_label.text).contains("Feint and Flank"), "defense card should expose the authored pressure arc")
-	_check(String(panel.scenario_fixed_label.text).contains("3 authored phases") and String(panel.summary_label.text).contains("seeded variation"), "War Council should explain what becomes fixed on entry")
+	_check(String(panel.scenario_fixed_label.text).contains("3 authored phases"), "the defense card should explain what becomes fixed on entry")
+	_check(String(panel.summary_label.text).contains("PAIRING — The Castellan leads Gatehouse Lock at Greywatch Keep."), "War Council should state the selected commander/defense relationship")
+	_check(String(panel.summary_label.text).contains("SEED —") and String(panel.summary_label.text).contains("FOCUS —"), "War Council should expose concise seeded pressure and preparation focus")
 	_check(ui.commander_option.visible and ui.scenario_option.visible, "advanced dropdown selectors should remain available as a fallback")
 	_check(not ui.commander_portrait.visible and not ui.commander_profile_label.visible, "the command rail should not duplicate the primary commander card")
 

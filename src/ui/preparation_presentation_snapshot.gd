@@ -79,10 +79,11 @@ static func _pack_offer(keep: Object, pack_id: String, pack_index: int, pack_cou
 static func _brief(keep: Object) -> Dictionary:
 	var forecast: Dictionary = keep.forecast()
 	var scenario: Dictionary = keep.scenario_preview()
+	var scenario_definition: Dictionary = keep.scenario_definition(keep.scenario_id)
 	var summary: Dictionary = keep.layout_summary()
 	var counts: Dictionary = summary.get("counts", {})
 	var doctrine_name: String = String(forecast.get("doctrine", "next pressure")).replace("_", " ").capitalize()
-	var question: String = "%s threatens %s. %s" % [doctrine_name, String(forecast.get("likely_target", "the keep")), String(scenario.get("lesson", "Read the route before committing the defense."))]
+	var question: String = "%s threatens %s. %s" % [doctrine_name, String(forecast.get("likely_target", "the keep")), String(scenario_definition.get("question", "What must this defense preserve?"))]
 	var answer: String
 	if keep.pieces.is_empty():
 		answer = "No defenders placed. Choose a pack and establish the first response line."

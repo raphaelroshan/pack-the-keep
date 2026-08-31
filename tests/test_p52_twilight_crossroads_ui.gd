@@ -34,7 +34,7 @@ func _initialize() -> void:
 	ui._refresh_ui()
 	await process_frame
 	var council_variation_text: String = String(ui.war_council_choice_panel.summary_label.text)
-	_check(council_variation_text.contains("final pressure") and council_variation_text.contains("preparation focus"), "War Council should disclose the seeded final composition and its preparation emphasis")
+	_check(council_variation_text.contains("final pressure") and council_variation_text.contains("FOCUS —"), "War Council should disclose the seeded final composition and its preparation emphasis")
 	ui._on_confirm_setup()
 	ui.keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
 	for pack_id in ["road_wardens", "crossbow_watch"]:

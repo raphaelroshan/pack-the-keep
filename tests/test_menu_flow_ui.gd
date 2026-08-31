@@ -32,7 +32,7 @@ func _initialize() -> void:
 	ui._on_start_custom_setup()
 	await process_frame
 	_check(ui.screen == "setup", "custom defense should open the briefing screen")
-	_check(ui.setup_overview_panel.visible and ui.setup_summary_panel.visible, "briefing should show its overview and selected-loadout summary")
+	_check(ui.setup_summary_panel.visible and String(ui.setup_overview_label.text).contains("PAIRING —"), "briefing should show its selected-loadout relationship summary")
 	_check(not ui.keep_canvas.visible, "briefing should not compete visually with the keep board")
 	_check(ui.setup_controls[0].visible, "briefing controls should be visible")
 	_check(not ui.preparation_controls[0].visible and not ui.battle_controls[0].visible, "briefing should hide preparation and battle tools")

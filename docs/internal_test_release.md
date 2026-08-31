@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.38.0-alpha-hardened` — the development candidate completes the automated roadmap with one integrated large-text accessibility, controller-focus, muted-audio, save/resume, and terminal-results journey on top of the existing packaged K8 and forced-close gates; human sessions and owner approval remain pending
+**Current build identity:** `0.39.0-responsive-decisions` — the development candidate adds a verified responsive War Council and Preparation decision hierarchy on top of the integrated large-text accessibility, controller-focus, muted-audio, save/resume, terminal-results, packaged K8, and forced-close gates; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch, Ash Ford, and Twinwatch support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan, Warden, or Quartermaster, select one of fifteen authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown, Rally, or Resupply, inspect health, armor, signal state, breakthrough momentum, concealment visibility, protection, assigned-specialist priority, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.39.0 acceptance checks
+
+At 1280×720/125%, confirm War Council removes the repeated defense brief, keeps Enter Keep and both next-choice controls in the first viewport, and names the selected commander, defense, keep, seeded pressure, and concise preparation focus. At 1600×900/100%, confirm the full overview and two-column command rail remain. At 1280×720/150%, confirm the focused primary action and first choice card remain readable in the deliberate single-column fallback. Enter Preparation at each constrained layout and confirm the commander/defense/keep relationship, authored strategic question, Ready Defense action, and fort remain reachable without horizontal clipping or state mutation.
 
 ## v0.38.0 acceptance checks
 

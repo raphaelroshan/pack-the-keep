@@ -63,7 +63,7 @@ func _initialize() -> void:
 	_check(selection_text.contains("OVERWHELMING") and selection_text.contains("Peak pressure: 7 attackers"), "scenario briefing should expose difficulty and peak pressure")
 	_check(selection_text.contains("Enemy roster:") and selection_text.contains("Siege Beast"), "scenario briefing should expose the threat roster")
 	_check(selection_text.contains("Defender wipe ends the run"), "scenario briefing should warn about the terminal rule")
-	_check(String(ui.setup_overview_label.text).contains("RISK — OVERWHELMING · defender wipe ends the run"), "briefing overview should repeat the decisive risk without requiring command-panel scrolling")
+	_check(String(ui.setup_overview_label.text).contains("OVERWHELMING · defender wipe ends the run"), "briefing summary should repeat the decisive risk without requiring command-panel scrolling")
 	_check(ui.scenario_previous_button.visible and ui.scenario_next_button.visible, "scenario browser controls should be visible during briefing")
 	ui._cycle_scenario(-1)
 	_check(ui._selected_id(ui.scenario_option) == scenario_ids[last_stand_index - 1], "previous scenario should move backward through the authored catalogue")

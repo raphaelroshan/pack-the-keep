@@ -27,7 +27,7 @@ func _initialize() -> void:
 	ui._refresh_ui()
 	await process_frame
 	var variation: Dictionary = ui.keep.scenario_variation_preview()
-	_check(String(ui.war_council_choice_panel.summary_label.text).contains("VARIATION — %s" % String(variation.get("summary", ""))), "War Council should state the concrete seeded variation before entry")
+	_check(String(ui.war_council_choice_panel.summary_label.text).contains("SEED — %s:" % String(variation.get("label", ""))), "War Council should state the concrete seeded variation before entry")
 
 	ui._on_confirm_setup()
 	ui.keep.open_pack("crossbow_watch")

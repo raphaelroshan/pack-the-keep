@@ -15,11 +15,13 @@ static func build(keep: Object, commander_id: String, scenario_id: String, tutor
 	var collapse_rule: bool = bool(scenario_preview.get("collapse_on_defender_wipe", false))
 	var end_state_summary: String = "defender wipe ends the run" if collapse_rule else "defender wipe is recoverable"
 	var setup_mode: String = "FIRST WATCH" if tutorial_active else "GUIDED DEFENSE" if guided_setup else "SKIRMISH"
+	var modifier_summary: String = "" if modifier_name == "None" else " · %s" % modifier_name
+	var preparation_focus: String = _concise_focus(String(variation.get("preparation_focus", "Read the first forecast before placing the defense.")))
 	return {
-		"mode": setup_mode,
-		"modifier": modifier_name,
-		"risk_summary": "RISK — %s · %s" % [String(scenario_preview.get("difficulty", "standard")).to_upper(), end_state_summary],
-		"commitment": "Entering fixes commander, keep, seeded variation, and pressure order for this run.\nVARIATION — %s" % String(variation.get("summary", "Baseline pressure.")),
+		"run_frame": "%s%s · %s · %s" % [setup_mode, modifier_summary, String(scenario_preview.get("difficulty", "standard")).to_upper(), end_state_summary],
+		"pairing": "%s leads %s at %s." % [String(commander_definition.get("name", commander_id)), String(scenario_preview.get("name", scenario_id)), String(scenario_preview.get("keep_name", "the keep"))],
+		"seed_pressure": _seed_pressure(keep, variation),
+		"preparation_focus": preparation_focus,
 		"locked": tutorial_active,
 		"commander": {
 			"index": commander_ids.find(commander_id) + 1,
@@ -46,3 +48,37 @@ static func build(keep: Object, commander_id: String, scenario_id: String, tutor
 			"fixed": "%s, %d authored phases; selected variation remains fixed." % [String(scenario_preview.get("keep_name", "Keep")), int(scenario_preview.get("wave_count", 0))],
 		},
 	}
+
+static func _seed_pressure(keep: Object, variation: Dictionary) -> String:
+	var parts: Array[String] = []
+	var material_delta: int = int(variation.get("materials", 0))
+	var morale_delta: int = int(variation.get("morale", 0))
+	if material_delta != 0:
+		parts.append("%+d materials" % material_delta)
+	if morale_delta != 0:
+		parts.append("%+d morale" % morale_delta)
+	var counts: Dictionary = {}
+	var order: Array[String] = []
+	for enemy_id_value in variation.get("final_wave_plan", []):
+		var enemy_id: String = String(enemy_id_value)
+		if not counts.has(enemy_id):
+			counts[enemy_id] = 0
+			order.append(enemy_id)
+		counts[enemy_id] = int(counts[enemy_id]) + 1
+	if not order.is_empty():
+		var composition: Array[String] = []
+		for enemy_id in order:
+			composition.append("%d %s" % [int(counts[enemy_id]), String(keep.enemy_definition(enemy_id).get("name", enemy_id))])
+		parts.append("final pressure %s" % " + ".join(composition))
+	if parts.is_empty():
+		parts.append("baseline stores and authored pressure")
+	return "%s: %s." % [String(variation.get("label", variation.get("id", "standard_bell").replace("_", " ").capitalize())), "; ".join(parts)]
+
+static func _concise_focus(value: String) -> String:
+	var focus: String = value.strip_edges()
+	var detail_separator: int = focus.find(";")
+	if detail_separator > 0:
+		focus = focus.left(detail_separator)
+	if focus.is_empty():
+		return "Read the first forecast before placing the defense."
+	return focus if focus.ends_with(".") else "%s." % focus
