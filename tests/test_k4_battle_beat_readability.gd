@@ -53,6 +53,15 @@ func _initialize() -> void:
 	_check(String(ui.keep_canvas.battle_beat_snapshot().get("id", "")) == "hostile_impact", "exchange should stage hostile impact after defender response")
 	ui.keep_canvas.engagement_ttl = ui.keep_canvas.engagement_duration * 0.10
 	_check(String(ui.keep_canvas.battle_beat_snapshot().get("id", "")) == "consequence", "exchange should expose the damage consequence before settling")
+	var defender_melee_effect: Dictionary = ui.keep_canvas.combat_effect_snapshot("defender", "melee")
+	var defender_ranged_effect: Dictionary = ui.keep_canvas.combat_effect_snapshot("defender", "ranged")
+	var hostile_melee_effect: Dictionary = ui.keep_canvas.combat_effect_snapshot("hostile", "melee")
+	var hostile_ranged_effect: Dictionary = ui.keep_canvas.combat_effect_snapshot("hostile", "ranged")
+	var demolition_effect: Dictionary = ui.keep_canvas.combat_effect_snapshot("hostile", "demolition")
+	for effect in [defender_melee_effect, defender_ranged_effect, hostile_melee_effect, hostile_ranged_effect, demolition_effect]:
+		_check(bool(effect.get("texture_loaded", false)) and String(effect.get("asset_status", "")) == "temporary_cc0", "combat effects should resolve loadable temporary CC0 textures")
+	_check(String(defender_melee_effect.get("texture_path", "")) != String(defender_ranged_effect.get("texture_path", "")), "defender melee and ranged impacts should remain visually distinct")
+	_check(String(hostile_melee_effect.get("texture_path", "")) != String(hostile_ranged_effect.get("texture_path", "")) and String(hostile_ranged_effect.get("texture_path", "")) != String(demolition_effect.get("texture_path", "")), "hostile melee, ranged, and demolition impacts should remain visually distinct")
 	ui.keep_canvas.engagement_ttl = ui.keep_canvas.engagement_duration * 0.03
 	_check(String(ui.keep_canvas.battle_beat_snapshot().get("id", "")) == "settle", "exchange should finish on a settle beat")
 

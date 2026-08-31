@@ -3995,6 +3995,7 @@ class KeepCanvas extends Control:
 	var authored_fort_texture: Texture2D
 	var inspected_subject: Dictionary = {}
 	var actor_texture_cache: Dictionary = {}
+	var effect_texture_cache: Dictionary = {}
 
 	func set_authored_fort_texture(texture: Texture2D) -> void:
 		authored_fort_texture = texture
@@ -4214,6 +4215,32 @@ class KeepCanvas extends Control:
 			draw_line(target - slash.rotated(-0.65), target + slash.rotated(-0.65), Color(color, 0.92), 2.5)
 			draw_line(target - slash.rotated(0.65), target + slash.rotated(0.65), Color(color, 0.7), 2.0)
 			draw_circle(target, 8.0 + strength * 4.0, Color(color, 0.55), false, 2.0)
+
+	func _effect_texture(path: String) -> Texture2D:
+		if path.is_empty():
+			return null
+		if effect_texture_cache.has(path):
+			return effect_texture_cache[path]
+		var texture := load(path) as Texture2D
+		effect_texture_cache[path] = texture
+		return texture
+
+	func combat_effect_snapshot(source_side: String, attack_style: String) -> Dictionary:
+		var profile: Dictionary = BoardVisuals.combat_effect_profile(source_side, attack_style)
+		profile["texture_loaded"] = _effect_texture(String(profile.get("texture_path", ""))) != null
+		profile["reduced_motion"] = reduced_motion_mode
+		return profile
+
+	func _draw_combat_effect(center: Vector2, source_side: String, attack_style: String, color: Color, strength: float) -> void:
+		var profile: Dictionary = combat_effect_snapshot(source_side, attack_style)
+		var texture: Texture2D = _effect_texture(String(profile.get("texture_path", "")))
+		if texture == null:
+			return
+		var base_size: float = float(profile.get("size", 28.0))
+		var effect_size: float = base_size if reduced_motion_mode else base_size * (0.82 + clampf(strength, 0.0, 1.0) * 0.28)
+		var alpha: float = 0.66 if high_contrast_mode else 0.48 + clampf(strength, 0.0, 1.0) * 0.14
+		var rect := Rect2(center - Vector2.ONE * effect_size * 0.5, Vector2.ONE * effect_size)
+		draw_texture_rect(texture, rect, false, Color(color, alpha))
 
 	func _enemy_reaction_offset(index: int) -> Vector2:
 		if reduced_motion_mode or engagement_ttl <= 0.0:
@@ -5211,6 +5238,7 @@ class KeepCanvas extends Control:
 			if reduced_motion_mode or response_progress >= 0.70:
 				var impact_strength: float = 1.0 if reduced_motion_mode else 1.0 - response_progress
 				draw_circle(target, 7.0 + impact_strength * 7.0, Color(trace_color, 0.75), false, 2.5)
+				_draw_combat_effect(target, "defender", style, trace_color, impact_strength)
 				draw_string(ThemeDB.fallback_font, target + Vector2(10, -8), "-%d" % int(trace.get("damage", 0)), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#fff4df"))
 		for impact in target_impacts:
 			if not show_hostile:
@@ -5244,6 +5272,7 @@ class KeepCanvas extends Control:
 					draw_line(slash_center + direction.rotated(PI * 0.5) * 7.0, slash_center - direction.rotated(PI * 0.5) * 7.0, Color(pressure_color, 0.72), 2.0)
 			if reduced_motion_mode or hostile_progress >= 0.66:
 				_draw_enemy_impact_mark(target, attack_style, pressure_color, 1.0 if reduced_motion_mode else 1.0 - hostile_progress)
+				_draw_combat_effect(target, "hostile", attack_style, pressure_color, 1.0 if reduced_motion_mode else 1.0 - hostile_progress)
 				draw_string(ThemeDB.fallback_font, target + Vector2(10, 12), _impact_damage_label(impact), HORIZONTAL_ALIGNMENT_LEFT, -1, 9, pressure_color.lightened(0.28))
 
 	func _draw() -> void:

@@ -1,6 +1,6 @@
 # Pack the Keep — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.41.0-tactile-audio` and later
+**Applies to:** `v0.42.0-combat-vfx` and later
 
 **Purpose:** Turn the First Watch prototype into a readable, tactile, game-quality keep-defense vertical slice. Automated verification, deterministic simulation checks, scripted flow coverage, and screenshot review are the active gates. Human testing remains useful for later confidence and tuning, but it is not a prerequisite for execution.
 
@@ -33,6 +33,7 @@ The game is a spatial defensive puzzle, not a rarity treadmill or a command spre
 | **P53.1 — Complete** | Audit the completed alpha flow | One end-to-end UI journey composes accessibility, controller focus, two file-backed save boundaries, semantic audio state, seeded pressure, and responsive terminal Results; the existing package and performance gates remain green. |
 | **P55 — Complete** | Replace abstract actor interiors with temporary licensed sprites | Active defenders and enemies read as melee, ranged, heavy, or siege actors while role silhouettes, color, health, cadence, targets, focus, and specialist overlays remain authoritative and visible. |
 | **P56 — Complete** | Give semantic battle beats tactile temporary foley | A bounded four-player sample pool differentiates warning, contact, response, impact, breach, recovery, control, and terminal cues while preserving mute, volume, visible labels, and synthesized fallback. |
+| **P57 — Complete** | Add restrained combat effect textures | Defender response and hostile melee, ranged, and demolition impacts gain distinct temporary CC0 effects without obscuring health, damage, target, or focus information. |
 
 ## Acceptance tests for every AI task
 
@@ -42,7 +43,7 @@ A task is incomplete if it hides the fort behind a menu, adds a unit before its 
 
 ## Recommended next prompt
 
-> The automated roadmap is complete at `0.41.0-tactile-audio`. Preserve every K1–K8, P51–P56, P54, responsive-decision, temporary-actor, and semantic-audio gate. Treat the licensed Tiny Battle sprites and Kenney foley as temporary testing assets, not final Greywatch production work. Do not invent human findings; the next evidence step is P16 observation only when the owner schedules real testers.
+> The automated roadmap is complete at `0.42.0-combat-vfx`. Preserve every K1–K8, P51–P57, P54, responsive-decision, temporary-actor, semantic-audio, and combat-effect gate. Treat all Kenney actors, foley, and effects as temporary testing assets, not final Greywatch production work. Do not invent human findings; the next evidence step is P16 observation only when the owner schedules real testers.
 
 ## Definition of game-quality readiness
 
@@ -78,3 +79,7 @@ No further autonomous implementation milestone is selected. P16 human observatio
 ## Tactile audio update — 2026-08-31
 
 `0.41.0-tactile-audio` maps the established semantic cue vocabulary to a restrained CC0 Interface Sounds/RPG Audio subset. Playback uses four reusable players, follows mute and effects-volume settings, keeps visible cue labels, and falls back to the existing generated tones when a sample is missing. Audio remains presentation-only and does not enter save state, combat resolution, or replay keys.
+
+## Combat effect readability update — 2026-08-31
+
+`0.42.0-combat-vfx` adds compact tinted Particle Pack textures at the existing defender-response and hostile-impact beats. Melee, ranged, and demolition profiles remain distinct, reduced motion uses a static compact treatment, and the procedural projectile, slash, ring, health-trail, damage-label, and focus grammar stays authoritative and visible.
