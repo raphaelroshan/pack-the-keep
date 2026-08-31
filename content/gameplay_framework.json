@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.32.0-twinwatch",
+  "framework_version": "0.33.0-road-wardens",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -201,7 +201,7 @@
   },
   "p12_alpha_scenario_matrix": {
     "status": "implemented",
-    "coverage": "ten_non_overwhelming_scenarios_by_two_commanders_by_three_seeds_run_uninterrupted_and_resumed",
+    "coverage": "twelve_non_overwhelming_scenarios_by_three_commanders_by_three_seeds_run_uninterrupted_and_resumed",
     "resume_boundaries": ["wave_one_pre_step", "first_recovery_before_event_resolution", "wave_two_pre_step"],
     "viability_rule": "every_baseline_resolves_three_waves_without_collapse_and_closes_final_recovery_and_events",
     "determinism_rule": "checkpoint_round_trips_and_uninterrupted_resumed_terminal_states_produce_byte_identical_serialized_json",
@@ -297,6 +297,16 @@
     "visual_identity": "cold_ridge_two_bastions_and_narrow_central_court",
     "viable_answers": ["anchored_shieldwall", "mobile_runner_network"],
     "non_goals": ["new_enemy_family", "new_pack_family", "route_pathfinding", "campaign_map"]
+  },
+  "p51_road_wardens_teaching_pair": {
+    "status": "implemented",
+    "teaching_pair": ["road_wardens", "outrider"],
+    "combat_rules": ["wave_start_route_control_check", "one_tick_breakthrough_delay", "unit_hunter_targeting", "effective_arrival_persistence"],
+    "scenario": "before_the_horn",
+    "viable_answers": ["stake_line_plus_hook_guard", "crossbow_patrol_plus_watch_banner"],
+    "presentation": ["momentum_live_or_charge_delayed_text", "base_and_effective_contact_timing", "outrider_board_marker"],
+    "determinism_rule": "momentum_is_resolved_from_catalog_data_and_stable_piece_positions_when_each_wave_starts",
+    "non_goals": ["freeform_movement", "knockback", "stun_stacking", "pathfinding", "combined_p51_enemy_challenge"]
   },
   "p15_minimal_regional_consequence": {
     "status": "implemented",

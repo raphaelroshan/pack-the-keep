@@ -127,6 +127,20 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         self.assertIn("arrival_step_delta", joined)
         self.assertIn("relay_modifier", joined)
 
+    def test_momentum_profile_requires_bounded_known_counter(self) -> None:
+        enemy = copy.deepcopy(load("data/enemies/outrider.json"))
+        enemy["momentum_profile"]["delay_steps"] = 3
+        enemy["momentum_profile"]["counter_modifier"] = "missing_control"
+        errors: list[str] = []
+        validator.validate_enemy(
+            Path("outrider.json"), enemy,
+            {"gate", "inner_yard", "north_tower"}, {"hook_guard"},
+            {"rapid_breakthrough"}, {"route_delay"}, {}, set(), errors,
+        )
+        joined = "\n".join(errors)
+        self.assertIn("delay_steps", joined)
+        self.assertIn("unknown support modifier", joined)
+
     def test_protection_fields_and_breaker_profile_are_typed(self) -> None:
         piece = copy.deepcopy(load("data/pieces/emergency_shutters.json"))
         piece["support_profile"]["room_damage_reduction"] = -1

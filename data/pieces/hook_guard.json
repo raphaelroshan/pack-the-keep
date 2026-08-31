@@ -1,0 +1,12 @@
+{
+  "id": "hook_guard", "content_version": 1, "status": "active", "name": "Hook Guard",
+  "short_role": "Catch fast attackers during a prepared delay.", "role": "finishes delayed breakthroughs",
+  "question": "Where can a modest response use one extra tick well?", "kind": "unit", "category": "control",
+  "footprint": [2, 1], "allowed_floors": ["ground"], "allowed_zones": ["wall", "courtyard"],
+  "cost": 8, "max_health": 11, "placement_question": "Which ground approach can the guard cover without blocking the reserve?",
+  "skill": "Hook and Hold: commits three damage to Outriders and nearby light attackers; a Stake Line gives it the third response needed to stop a full charge.",
+  "strength_tags": ["interception", "reach", "breakthrough_control"], "weakness_tags": ["ground_only", "narrow_targets", "no_armor_piercing"],
+  "attack_profile": {"style": "melee", "range": 2, "cooldown_steps": 1, "damage": 3, "defense": 1, "ammo_capacity": 0, "targets": ["outrider", "raider", "climber"]},
+  "support_profile": null, "assignment_rule": null, "availability": "road_wardens",
+  "presentation": {"icon": "", "marker_color_role": "interception", "radius_scale": 1.05}
+}

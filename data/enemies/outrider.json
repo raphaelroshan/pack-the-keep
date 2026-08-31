@@ -1,0 +1,14 @@
+{
+  "id": "outrider", "content_version": 1, "status": "active", "name": "Outrider",
+  "short_role": "Reach exposed specialists before a loose defense can settle.",
+  "question": "Can the keep delay or destroy a fast unit hunter before its second-tick contact?",
+  "health": 8, "damage": 3, "arrival_step": 2, "attack_interval": 2, "attack_style": "melee", "target_mode": "unit_hunter",
+  "target_piece_categories": ["precision", "recon", "support"], "target_piece_preference": "lowest_condition",
+  "route": "ridge_road", "target_rooms": ["gate", "inner_yard", "north_tower"], "doctrine": "rapid_breakthrough",
+  "counter": "hook_guard", "telegraph": "A forward-leaning horn marker announces second-tick contact unless prepared stakes control the route.",
+  "counter_families": ["interception", "precision", "mobile_response"],
+  "failure_mode": "The charge reaches an exposed specialist before a dispersed defense can commit enough damage.",
+  "report_phrase": "The Outrider carried breakthrough momentum into the support line.",
+  "momentum_profile": {"kind": "breakthrough_charge", "delay_steps": 1, "counter_modifier": "route_delay"},
+  "presentation": {"icon": "", "marker_color_role": "breakthrough", "radius_scale": 0.96}
+}

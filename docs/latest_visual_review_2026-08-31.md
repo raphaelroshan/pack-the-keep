@@ -1,6 +1,6 @@
 # Pack the Keep — Latest Visual Review
 
-**Build:** `0.32.0-twinwatch`
+**Build:** `0.33.0-road-wardens`
 
 **Engine:** Godot 4.7.2
 
@@ -8,17 +8,17 @@
 
 ## Evidence
 
-- [1280×720 Twinwatch sequence](visual_evidence/v0.32.0-twinwatch-review-2026-08-31/)
-- [2560×1440 Twinwatch sequence](visual_evidence/v0.32.0-twinwatch-2560x1440-review-2026-08-31/)
+- [1280×720 Road Wardens sequence](visual_evidence/v0.33.0-road-wardens-review-2026-08-31/)
+- [2560×1440 Road Wardens sequence](visual_evidence/v0.33.0-road-wardens-2560x1440-review-2026-08-31/)
 
-Each directory contains a ten-screen flow plus a machine-readable manifest. The additional `03c_spatial_rule_active.png` state records the visible transition from one staffed post to both staffed posts.
+Each directory contains a ten-screen flow plus a machine-readable manifest. The additional `03c_route_delay_ready.png` state records the transition from live Outrider momentum to a prepared one-tick delay.
 
 ## Findings
 
-The War Council clearly identifies Commander 3/3, the Quartermaster's reserve doctrine, and The Divided Bell's split-defense question. Preparation gives Twinwatch a distinct two-bastion silhouette, narrow center link, ridge palette, highlighted West Gatehouse/East Arsenal anchors, and a dedicated inactive/active status plate. The staged Battle frame preserves health bars, routes, active threats, real-time state, and Resupply availability without moving combat authority into presentation.
+The War Council clearly identifies Before the Horn's early-contact question and both recommended answers. Preparation shows Hook Guard first, then the added Stake Line without obscuring the Greywatch board. The staged Battle frame explicitly reports `Charge: DELAYED`, tick-three contact, Outrider health loss, route, target state, real-time controls, and the Warden intervention without moving timing authority into presentation.
 
-At 1280×720 and large text, optional detail requires vertical scrolling by design; the primary commitment and assault actions remain reachable and there is no horizontal clipping. At 2560×1440 / 150%, the choice brief and both board floors retain their hierarchy. Procedural room labels remain intentionally compact, and bespoke art is still placeholder-level, but no blocking overlap remains in the paired-post state.
+At 1280×720 and large text, optional detail requires vertical scrolling by design; the primary commitment and assault actions remain reachable and there is no horizontal clipping. At 2560×1440 / 150%, the question/answer/weakness brief and both board floors retain their hierarchy. Procedural actor art remains placeholder-level, but the new unit, obstacle, threat marker, and timing state remain distinguishable through shape, label, and color.
 
 ## Next visual target
 
-P51.3 should introduce one teaching pack and one isolated enemy question, with two viable answers proven before any combined challenge is authored.
+P51.4 should introduce the second teaching pack and isolated enemy family, with two viable answers proven before any combined P51 challenge is authored.

@@ -19,7 +19,8 @@ const PACK_PATHS: Array[String] = [
 	"res://data/packs/fallback_convoy.json",
 	"res://data/packs/crossbow_watch.json",
 	"res://data/packs/bell_guard.json",
-	"res://data/packs/shieldwall.json"
+	"res://data/packs/shieldwall.json",
+	"res://data/packs/road_wardens.json"
 ]
 
 const COMMANDER_PATHS: Array[String] = [
@@ -45,7 +46,9 @@ const PIECE_PATHS: Array[String] = [
 	"res://data/pieces/watch_banner.json",
 	"res://data/pieces/bellkeepers.json",
 	"res://data/pieces/shield_wardens.json",
-	"res://data/pieces/emergency_shutters.json"
+	"res://data/pieces/emergency_shutters.json",
+	"res://data/pieces/hook_guard.json",
+	"res://data/pieces/stake_line.json"
 ]
 
 const ENEMY_PATHS: Array[String] = [
@@ -56,7 +59,8 @@ const ENEMY_PATHS: Array[String] = [
 	"res://data/enemies/shield_guard.json",
 	"res://data/enemies/ash_slinger.json",
 	"res://data/enemies/shieldbreaker.json",
-	"res://data/enemies/standard_cutter.json"
+	"res://data/enemies/standard_cutter.json",
+	"res://data/enemies/outrider.json"
 ]
 
 const DOCTRINE_PATHS: Array[String] = [
@@ -68,7 +72,8 @@ const DOCTRINE_PATHS: Array[String] = [
 	"res://data/doctrines/shielded_advance.json",
 	"res://data/doctrines/smoke_and_signal.json",
 	"res://data/doctrines/break_the_line.json",
-	"res://data/doctrines/cut_the_chain.json"
+	"res://data/doctrines/cut_the_chain.json",
+	"res://data/doctrines/rapid_breakthrough.json"
 ]
 
 const SCENARIO_PATHS: Array[String] = [
@@ -83,6 +88,7 @@ const SCENARIO_PATHS: Array[String] = [
 	"res://data/scenarios/ash_ford_crossing.json",
 	"res://data/scenarios/the_cut_standard.json",
 	"res://data/scenarios/the_divided_bell.json",
+	"res://data/scenarios/before_the_horn.json",
 	"res://data/scenarios/last_stand.json"
 ]
 
@@ -562,6 +568,22 @@ func validate_enemy_definition(enemy: Dictionary, expected_id: String, known_roo
 				var modifier: String = String(disruption.get(modifier_field, ""))
 				if not modifier.is_empty() and not support_modifiers.has(modifier):
 					validation_errors.append("enemy %s references unknown support modifier: %s" % [enemy_id, modifier])
+	if enemy.has("momentum_profile"):
+		var momentum: Variant = enemy.get("momentum_profile")
+		if not momentum is Dictionary:
+			validation_errors.append("enemy %s momentum_profile must be an object" % enemy_id)
+		else:
+			for field in ["kind", "counter_modifier"]:
+				if not momentum.get(field) is String or String(momentum.get(field, "")).strip_edges().is_empty():
+					validation_errors.append("enemy %s momentum_profile %s must be non-empty text" % [enemy_id, field])
+			if String(momentum.get("kind", "")) != "breakthrough_charge":
+				validation_errors.append("enemy %s has an unsupported momentum kind" % enemy_id)
+			var delay_steps: Variant = momentum.get("delay_steps")
+			if not _is_integer_number(delay_steps) or int(delay_steps) < 1 or int(delay_steps) > 2:
+				validation_errors.append("enemy %s momentum_profile delay_steps must be an integer from 1 to 2" % enemy_id)
+			var counter_modifier: String = String(momentum.get("counter_modifier", ""))
+			if not counter_modifier.is_empty() and not _known_support_modifiers().has(counter_modifier):
+				validation_errors.append("enemy %s references unknown support modifier: %s" % [enemy_id, counter_modifier])
 	if enemy.has("target_piece_categories"):
 		_validate_non_empty_string_array(enemy, "target_piece_categories", enemy_id, validation_errors)
 	if enemy.has("target_piece_floors"):

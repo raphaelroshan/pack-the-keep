@@ -6,7 +6,7 @@ Keep every authored non-overwhelming defensive scenario locally reproducible and
 
 ## Matrix
 
-The automated matrix covers all eleven non-overwhelming scenarios, all three commanders, and seeds `3307`, `3308`, and `3309`: 99 cases. Every case is executed once continuously and once with a save/load checkpoint, for 198 total deterministic simulations.
+The automated matrix covers all twelve non-overwhelming scenarios, all three commanders, and seeds `3307`, `3308`, and `3309`: 108 cases. Every case is executed once continuously and once with a save/load checkpoint, for 216 total deterministic simulations.
 
 The three seeds deliberately exercise distinct persistence boundaries:
 

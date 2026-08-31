@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.32.0",
+  "content_version": "0.33.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -180,10 +180,10 @@
   },
   "p12_alpha_scenario_matrix": {
     "status": "implemented",
-    "scenarios": 11,
+    "scenarios": 12,
     "commanders": 3,
     "seeds_per_pair": 3,
-    "simulation_executions": 198,
+    "simulation_executions": 216,
     "resume_boundaries": ["wave_one_pre_step", "first_recovery_before_event_resolution", "wave_two_pre_step"],
     "contract": "byte_identical_uninterrupted_and_resumed_three_wave_non_collapse_baselines_with_closed_terminal_recovery_and_event_state",
     "evidence": ["design/p12_alpha_scenario_matrix.md", "tests/test_p12_alpha_scenario_matrix.gd"],
@@ -347,7 +347,7 @@
   "p24_unit_first_combat_board": {
     "status": "implemented",
     "target_roles": ["unit_hunter", "room_destroyer"],
-    "unit_hunters": ["raider", "climber", "ash_slinger", "shield_guard", "shieldbreaker"],
+    "unit_hunters": ["raider", "climber", "ash_slinger", "shield_guard", "shieldbreaker", "standard_cutter", "outrider"],
     "room_destroyers": ["sapper", "siege_beast"],
     "presentation": ["larger_gridless_keep", "preparation_only_placement_guides", "health_bars", "unit_target_lines", "room_hover_details", "idle_defender_facing", "melee_and_ranged_feedback"],
     "determinism": "role_selection_retargeting_damage_health_and_save_load_remain_authoritative_and_seed_replayable",
@@ -665,7 +665,19 @@
     "viable_answers": ["pike_line_plus_shieldwall", "pike_line_plus_runner_network"],
     "recovery_problem": "seven_material_twenty_five_condition_repairs_force_a_choice_between_posts",
     "evidence": ["design/p51_twinwatch_defensive_identity.md", "docs/p51_twinwatch_verification.md", "tests/test_p51_twinwatch_identity.gd", "tests/test_p51_twinwatch_ui.gd"],
-    "next_slice": "p51_first_teaching_pack"
+    "next_slice": "p51_road_wardens_teaching_pair"
+  },
+  "p51_road_wardens_teaching_pair": {
+    "status": "implemented",
+    "pack": "road_wardens",
+    "pieces": ["hook_guard", "stake_line"],
+    "enemy": "outrider",
+    "doctrine": "rapid_breakthrough",
+    "scenario": "before_the_horn",
+    "combat_rule": "a_living_stake_line_adjacent_to_an_authored_route_room_delays_breakthrough_contact_by_exactly_one_tick_at_wave_start",
+    "viable_answers": ["road_wardens_prepared_delay", "crossbow_watch_precision_stop"],
+    "evidence": ["design/p51_road_wardens_teaching_pair.md", "docs/p51_road_wardens_verification.md", "tests/test_p51_road_wardens.gd", "tests/test_p51_road_wardens_ui.gd"],
+    "next_slice": "p51_second_teaching_pack"
   },
   "campaign": {
     "title": "The Bell at Dusk",
@@ -884,6 +896,15 @@
       "doctrine": "anchored_gates",
       "limitation": "Static protection cannot stop a Shieldbreaker and leaves separated routes exposed.",
       "choice_text": "Protect one line while retaining a direct answer or secondary defense."
+    },
+    {
+      "id": "road_wardens",
+      "name": "Road Wardens",
+      "purpose": "Delay one fast breakthrough and finish it before contact.",
+      "pieces": ["hook_guard", "stake_line"],
+      "doctrine": "prepared_interception",
+      "limitation": "Consumes two ground footprints and the obstacle deals no direct damage.",
+      "choice_text": "Buy exactly one tick on one authored approach instead of adding broad damage."
     }
   ],
   "pieces": [
@@ -1012,6 +1033,18 @@
       "name": "Emergency Shutters",
       "role": "protects one adjacent room",
       "size": [1, 1]
+    },
+    {
+      "id": "hook_guard",
+      "name": "Hook Guard",
+      "role": "finishes delayed breakthroughs",
+      "size": [2, 1]
+    },
+    {
+      "id": "stake_line",
+      "name": "Stake Line",
+      "role": "delays breakthrough momentum",
+      "size": [2, 1]
     }
   ],
   "rooms": [
@@ -1201,6 +1234,13 @@
       "role": "assigned-specialist hunter",
       "teaching_question": "Can the player protect a command anchor without abandoning the wider defense?",
       "counter_options": ["crossbow_watch", "fallback_convoy", "precision", "mobile_response"]
+    },
+    {
+      "id": "outrider",
+      "name": "Outrider",
+      "role": "early breakthrough unit hunter",
+      "teaching_question": "Can the player delay or destroy a fast contact before it reaches the specialist line?",
+      "counter_options": ["road_wardens", "crossbow_watch", "runner_network", "commander_intervention"]
     }
   ],
   "events": [
@@ -1581,7 +1621,8 @@
       "rear_guard",
       "crossbow_patrol",
       "bellkeepers",
-      "shield_wardens"
+      "shield_wardens",
+      "hook_guard"
     ],
     "enemy_ids": [
       "raider",
@@ -1591,7 +1632,8 @@
       "shield_guard",
       "ash_slinger",
       "shieldbreaker",
-      "standard_cutter"
+      "standard_cutter",
+      "outrider"
     ],
     "scenario_ids": [
       "gatehouse_lock",
@@ -1605,6 +1647,7 @@
       "ash_ford_crossing",
       "the_cut_standard",
       "the_divided_bell",
+      "before_the_horn",
       "last_stand"
     ],
     "event_ids": [
@@ -1710,12 +1753,15 @@
       "shield_guard_actor",
       "ash_slinger_actor",
       "shieldbreaker_actor",
+      "standard_cutter_actor",
+      "outrider_actor",
       "declared_target_lines",
       "health_and_condition_bars",
       "siege_beast_area_radius",
       "shield_guard_armor_ring",
       "ash_slinger_smoke_ring",
-      "shieldbreaker_break_marker"
+      "shieldbreaker_break_marker",
+      "outrider_momentum_state"
     ],
     "focus_response_contract": {
       "status": "implemented",

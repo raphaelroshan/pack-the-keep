@@ -2676,12 +2676,13 @@ func _format_inspection(data: Dictionary) -> String:
 	if String(data.get("kind", "")) == "enemy":
 		var armor_text: String = " | armor %d" % int(data.get("armor", 0)) if int(data.get("armor", 0)) > 0 else ""
 		var signal_text: String = " | signal DISRUPTED" if bool(data.get("signal_disrupted", false)) else " | signal RELAYED" if bool(data.get("has_signal_disruption", false)) else ""
+		var momentum_text: String = " | charge DELAYED" if bool(data.get("momentum_delayed", false)) else " | momentum LIVE" if bool(data.get("has_momentum", false)) else ""
 		var protection_text: String = " | protection PIERCING" if bool(data.get("ignores_protection", false)) else ""
 		var target_role: String = "hunts assigned specialists first" if bool(data.get("targets_assigned_first", false)) else "hunts defenders" if String(data.get("target_mode", "room_destroyer")) == "unit_hunter" else "breaks structures"
 		var target_readout: Dictionary = keep.enemy_target_readout(int(data.get("index", -1)))
 		var counter_id: String = String(data.get("counter", ""))
 		var counter_name: String = String(keep.piece_definition(counter_id).get("name", counter_id.replace("_", " ").capitalize()))
-		return "INSPECTOR — ENEMY %s\n%s via %s | %s | %d/%d hp | damage %d%s%s%s | contact step %d\nCounter: %s | Target: %s" % [String(data.name), String(data.doctrine).replace("_", " "), String(data.route).replace("_", " "), target_role, int(data.health), int(data.max_health), int(data.damage), armor_text, signal_text, protection_text, int(data.get("arrival_step", 0)), counter_name, String(target_readout.get("summary", "Approaching"))]
+		return "INSPECTOR — ENEMY %s\n%s via %s | %s | %d/%d hp | damage %d%s%s%s%s | contact step %d\nCounter: %s | Target: %s" % [String(data.name), String(data.doctrine).replace("_", " "), String(data.route).replace("_", " "), target_role, int(data.health), int(data.max_health), int(data.damage), armor_text, signal_text, momentum_text, protection_text, int(data.get("arrival_step", 0)), counter_name, String(target_readout.get("summary", "Approaching"))]
 	var special_state: String = ""
 	if String(data.get("piece_id", "")) == "supply_cache":
 		special_state = "\nReserve: %s" % ("SPENT" if bool(data.get("supply_spent", false)) else "READY")
@@ -3799,6 +3800,8 @@ func _refresh_ui() -> void:
 		forecast_label.text += " | Signal: DISRUPTED"
 	elif bool(forecast.get("signal_network_active", false)):
 		forecast_label.text += " | Signal: REDUNDANT"
+	if bool(forecast.get("momentum_threat", false)):
+		forecast_label.text += " | Charge: DELAYED" if bool(forecast.get("momentum_delayed", false)) else " | Charge: LIVE"
 	if bool(forecast.get("composition_revealed", false)):
 		var actor_names: Array[String] = []
 		for enemy_id in forecast.get("composition", []):
@@ -3815,9 +3818,10 @@ func _refresh_ui() -> void:
 			target = "approach"
 		var armor_text: String = " — armor %d" % int(enemy_definition.get("armor", 0)) if int(enemy_definition.get("armor", 0)) > 0 else ""
 		var signal_text: String = " — signal DISRUPTED" if bool(enemy.get("signal_disrupted", false)) else " — signal RELAYED" if enemy_definition.get("disruption_profile") is Dictionary else ""
+		var momentum_text: String = " — charge DELAYED" if bool(enemy.get("momentum_delayed", false)) else " — momentum LIVE" if enemy_definition.get("momentum_profile") is Dictionary else ""
 		var protection_text: String = " — protection PIERCING" if bool(enemy_definition.get("ignores_protection", false)) else ""
 		var command_text: String = " — assigned HUNTER" if bool(enemy_definition.get("targets_assigned_first", false)) else ""
-		enemy_lines.append("%s — %s / %s%s%s%s%s — route %s — target %s" % [String(enemy_definition.get("name", enemy_id)), phase, enemy_state, armor_text, signal_text, protection_text, command_text, String(enemy_definition.get("route", "")).replace("_", " "), target])
+		enemy_lines.append("%s — %s / %s%s%s%s%s%s — route %s — target %s" % [String(enemy_definition.get("name", enemy_id)), phase, enemy_state, armor_text, signal_text, momentum_text, protection_text, command_text, String(enemy_definition.get("route", "")).replace("_", " "), target])
 	enemy_label.text = "ACTIVE THREATS\n" + ("\n".join(enemy_lines) if not enemy_lines.is_empty() else "No active enemies.")
 	var metrics: Dictionary = keep.combat_metrics
 	metrics_label.text = "METRICS — steps %d | unit attacks %d | damage dealt %d | ammo spent %d | enemy attacks %d | room damage %d | piece damage %d | repairs %d | disabled %d | defeated %d" % [int(metrics.get("battle_steps", 0)), int(metrics.get("unit_attacks", 0)), int(metrics.get("damage_dealt", 0)), int(metrics.get("ammo_spent", 0)), int(metrics.get("enemy_attacks", 0)), int(metrics.get("room_damage", 0)), int(metrics.get("piece_damage", 0)), int(metrics.get("repairs", 0)), int(metrics.get("disabled_units", 0)), int(metrics.get("defeated_enemies", 0))]
@@ -4375,7 +4379,8 @@ class KeepCanvas extends Control:
 		var interval: int = int(timing.get("attack_interval", inspection.get("attack_interval", 1)))
 		var strike_text: String = "No further strike this phase" if not bool(timing.get("within_wave", true)) else "Next strike T%d" % int(timing.get("next_attack_step", inspection.get("arrival_step", 0)))
 		var target_readout: Dictionary = keep.enemy_target_readout(index)
-		return "%s — %s\n%s | Route: %s\nHP %d/%d | Contact T%d | Strike every %dt · %s\nTarget: %s\nCounter: %s" % [String(inspection.get("name", "Threat")), String(inspection.get("doctrine", "unknown")).replace("_", " ").capitalize(), target_role, String(inspection.get("route", "unknown")).replace("_", " ").capitalize(), int(inspection.get("health", 0)), int(inspection.get("max_health", 0)), int(inspection.get("arrival_step", 0)), interval, strike_text, String(target_readout.get("summary", "Approaching")), counter_name]
+		var momentum_text: String = " | Charge delayed from T%d" % int(inspection.get("base_arrival_step", 0)) if bool(inspection.get("momentum_delayed", false)) else " | Momentum live" if bool(inspection.get("has_momentum", false)) else ""
+		return "%s — %s\n%s | Route: %s%s\nHP %d/%d | Contact T%d | Strike every %dt · %s\nTarget: %s\nCounter: %s" % [String(inspection.get("name", "Threat")), String(inspection.get("doctrine", "unknown")).replace("_", " ").capitalize(), target_role, String(inspection.get("route", "unknown")).replace("_", " ").capitalize(), momentum_text, int(inspection.get("health", 0)), int(inspection.get("max_health", 0)), int(inspection.get("arrival_step", 0)), interval, strike_text, String(target_readout.get("summary", "Approaching")), counter_name]
 
 	func _room_tooltip(room_id: String) -> String:
 		if keep == null or room_id.is_empty():

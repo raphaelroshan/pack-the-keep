@@ -1,0 +1,8 @@
+{
+  "id": "road_wardens", "content_version": 1, "status": "active", "name": "Road Wardens",
+  "short_role": "Delay a fast breakthrough and finish it before contact.", "question": "Which approach needs one more tick to become defensible?",
+  "family": "interception", "contents": ["hook_guard", "stake_line"], "doctrine": "prepared_interception", "cost": 5,
+  "strength": "A ground control unit and adjacent route obstacle turn one early charge into a readable interception window.", "weakness": "The obstacle deals no damage, the guard is ground-only, and neither answer covers armor or distant upper pressure.",
+  "choice": "Spend two ground footprints to buy exactly one tick against breakthrough momentum.", "commander_affinity": ["castellan", "warden"],
+  "spatial_demand": {"preferred_floors": ["ground"], "preferred_zones": ["wall", "courtyard"], "needs_open_lane": true, "needs_adjacency": true}
+}

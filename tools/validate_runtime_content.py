@@ -79,7 +79,7 @@ SUPPORTED_ZONES = {"wall", "courtyard", "keep"}
 SUPPORTED_ATTACK_STYLES = {"melee", "ranged", "support", "fortification"}
 SUPPORTED_ENEMY_ATTACK_STYLES = {"melee", "ranged", "demolition"}
 SUPPORTED_SCENARIO_DIFFICULTIES = {"guided", "standard", "advanced", "overwhelming"}
-SUPPORTED_DOCTRINES = {"gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach", "shielded_advance", "smoke_and_signal", "break_the_line", "cut_the_chain"}
+SUPPORTED_DOCTRINES = {"gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach", "shielded_advance", "smoke_and_signal", "break_the_line", "cut_the_chain", "rapid_breakthrough"}
 SUPPORTED_NON_ENEMY_TARGETS = {"all"} | SUPPORTED_DOCTRINES
 SUPPORTED_EVENT_TYPES = {"forecast", "recovery", "scenario_conclusion"}
 SUPPORTED_EVENT_PHASES = {"preparation", "recovery", "results"}
@@ -618,6 +618,22 @@ def validate_enemy(
                 modifier = disruption.get(field)
                 if isinstance(modifier, str) and modifier and modifier not in support_modifiers:
                     errors.append(f"{path}: disruption_profile references unknown support modifier: {modifier}")
+    if "momentum_profile" in enemy:
+        momentum = enemy.get("momentum_profile")
+        if not isinstance(momentum, dict):
+            errors.append(f"{path}: momentum_profile must be an object")
+        else:
+            for field in ("kind", "counter_modifier"):
+                if not isinstance(momentum.get(field), str) or not momentum[field].strip():
+                    errors.append(f"{path}: momentum_profile {field} must be non-empty text")
+            if momentum.get("kind") != "breakthrough_charge":
+                errors.append(f"{path}: momentum_profile kind is unsupported")
+            delay_steps = momentum.get("delay_steps")
+            if not is_integer(delay_steps) or not 1 <= delay_steps <= 2:
+                errors.append(f"{path}: momentum_profile delay_steps must be an integer from 1 to 2")
+            modifier = momentum.get("counter_modifier")
+            if isinstance(modifier, str) and modifier and modifier not in support_modifiers:
+                errors.append(f"{path}: momentum_profile references unknown support modifier: {modifier}")
     target_mode = enemy.get("target_mode")
     if target_mode not in {"unit_hunter", "room_destroyer"}:
         errors.append(f"{path}: target_mode must be unit_hunter or room_destroyer")

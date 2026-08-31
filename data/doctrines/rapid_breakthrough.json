@@ -1,0 +1,9 @@
+{
+  "id": "rapid_breakthrough", "content_version": 1, "status": "active", "name": "Rapid Breakthrough",
+  "short_role": "Send a fast unit hunter ahead of the main pressure.",
+  "question": "Can the keep buy or exploit one extra tick before the support line is contacted?",
+  "composition": ["outrider", "raider"], "route_pattern": "ridge_road_to_exposed_specialist",
+  "target_priority": "lowest_condition_precision_recon_or_support_defender", "principal_pressure": "Preparation tempo and exposed specialist survival",
+  "likely_target": "an exposed precision, recon, or support defender", "uncertainty": "which eligible specialist has the lowest condition at contact",
+  "counter_families": ["interception", "precision", "mobile_response"]
+}

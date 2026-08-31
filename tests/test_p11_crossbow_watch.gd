@@ -45,7 +45,7 @@ func _initialize() -> void:
 	var catalog_state = PackKeepState.new(3307)
 	var status: Dictionary = catalog_state.content_catalog_status()
 	_check(bool(status.get("ok", false)), "P11 content catalog should validate")
-	_check(int(status.get("pack_count", 0)) == 9 and int(status.get("piece_count", 0)) == 17 and int(status.get("enemy_count", 0)) == 8 and int(status.get("doctrine_count", 0)) == 9 and int(status.get("scenario_count", 0)) >= 11, "catalog counts should retain all teaching pairs, the challenge, and K6")
+	_check(int(status.get("pack_count", 0)) >= 9 and int(status.get("piece_count", 0)) >= 17 and int(status.get("enemy_count", 0)) >= 8 and int(status.get("doctrine_count", 0)) >= 9 and int(status.get("scenario_count", 0)) >= 11, "catalog counts should retain all teaching pairs, the challenge, and K6")
 	_check(catalog_state.pack_definition("crossbow_watch").get("contents", []) == ["crossbow_patrol", "watch_banner"], "Crossbow Watch should expose both doctrine pieces")
 	_check(int(catalog_state.enemy_definition("shield_guard").get("armor", 0)) == 2, "Shield Guard should author two armor")
 	var catalog = ContentCatalog.new()
