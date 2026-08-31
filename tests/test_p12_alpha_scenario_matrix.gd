@@ -14,7 +14,7 @@ const SCENARIOS: Array[String] = [
 	"ash_ford_crossing",
 	"the_cut_standard",
 ]
-const COMMANDERS: Array[String] = ["castellan", "warden"]
+const COMMANDERS: Array[String] = ["castellan", "warden", "quartermaster"]
 const SEEDS: Array[int] = [3307, 3308, 3309]
 
 var failures: Array[String] = []
@@ -191,7 +191,7 @@ func _run_case(seed: int, commander_id: String, scenario_id: String, checkpoint_
 				break
 			continue
 		if state.wave_active:
-			if state.battle_step == 0:
+			if state.battle_step == 0 and commander_id != "quartermaster":
 				_check_command(state.use_commander_ability(), "%s wave %d commander ability" % [label, state.wave_index])
 			state.advance_wave(1.0)
 			continue

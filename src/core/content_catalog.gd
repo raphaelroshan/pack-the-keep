@@ -23,7 +23,8 @@ const PACK_PATHS: Array[String] = [
 
 const COMMANDER_PATHS: Array[String] = [
 	"res://data/commanders/castellan.json",
-	"res://data/commanders/warden.json"
+	"res://data/commanders/warden.json",
+	"res://data/commanders/quartermaster.json"
 ]
 
 const PIECE_PATHS: Array[String] = [
@@ -1149,6 +1150,22 @@ func validate_commander_definition(commander: Dictionary, expected_id: String) -
 		for family in families:
 			if not family is String or not _known_pack_families().has(String(family)):
 				validation_errors.append("commander %s references unknown pack family: %s" % [commander_id, String(family)])
+	if commander.has("passive_profile"):
+		var passive_profile: Variant = commander.get("passive_profile")
+		if not passive_profile is Dictionary or String(passive_profile.get("kind", "")) != "reserve_economy":
+			validation_errors.append("commander %s has an unsupported passive profile" % commander_id)
+		else:
+			for field in ["first_pack_discount", "supply_cache_recovery_bonus"]:
+				if not _is_integer_number(passive_profile.get(field)) or int(passive_profile.get(field, 0)) < 0:
+					validation_errors.append("commander %s passive profile needs a non-negative integer %s" % [commander_id, field])
+	if commander.has("ability_profile"):
+		var ability_profile: Variant = commander.get("ability_profile")
+		if not ability_profile is Dictionary or String(ability_profile.get("kind", "")) != String(commander.get("ability", "")):
+			validation_errors.append("commander %s ability profile must match its ability" % commander_id)
+		else:
+			for field in ["health_restore", "ammo_restore"]:
+				if not _is_integer_number(ability_profile.get(field)) or int(ability_profile.get(field, 0)) < 0:
+					validation_errors.append("commander %s ability profile needs a non-negative integer %s" % [commander_id, field])
 	return validation_errors
 
 func validate_pack_definition(pack: Dictionary, expected_id: String, known_piece_ids: Array) -> Array[String]:

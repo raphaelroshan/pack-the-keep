@@ -1,0 +1,19 @@
+{
+  "id": "quartermaster",
+  "content_version": 1,
+  "status": "active",
+  "name": "The Quartermaster",
+  "short_role": "Stretch one chosen reserve across the whole defense.",
+  "question": "Which reserve must still exist after first contact?",
+  "passive": "Measured Stores: the first pack each Preparation costs 2 fewer materials, and a surviving Supply Cache releases 2 extra materials.",
+  "ability": "resupply",
+  "ability_name": "Resupply",
+  "ability_text": "Once per assault, restore up to 2 health and 2 ammunition to every living defender that can use them.",
+  "limitation": "Thin Ledger: starts with 48 materials and 5 morale; reserves only pay off if they survive long enough to be used.",
+  "starting_materials": 48,
+  "starting_morale": 5,
+  "preferred_pattern": "protected_reserve_chain",
+  "favored_pack_families": ["support", "mobile_response"],
+  "passive_profile": {"kind": "reserve_economy", "first_pack_discount": 2, "supply_cache_recovery_bonus": 2},
+  "ability_profile": {"kind": "resupply", "health_restore": 2, "ammo_restore": 2}
+}

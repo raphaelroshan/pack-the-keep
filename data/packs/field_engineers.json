@@ -12,7 +12,7 @@
   "strength": "Room damage and partial-breach recovery.",
   "weakness": "Consumes materials and creates a high-value support target.",
   "choice": "Spend immediate strength on the ability to survive a later mistake.",
-  "commander_affinity": ["castellan", "warden"],
+  "commander_affinity": ["castellan", "warden", "quartermaster"],
   "spatial_demand": {
     "preferred_floors": ["ground"],
     "preferred_zones": ["keep"],

@@ -1,0 +1,28 @@
+{
+  "battle_exchange_progress": 0.28,
+  "battle_exchange_staged": true,
+  "build_version": "0.31.0-quartermaster",
+  "commander": "quartermaster",
+  "debug_ui": false,
+  "files": [
+    "01_title.png",
+    "02_war_council.png",
+    "03_preparation.png",
+    "03b_pack_offer.png",
+    "04_assault_phase_1.png",
+    "05_recovery_phase_1.png",
+    "06_assault_phase_2.png",
+    "07_recovery_phase_2.png",
+    "08_assault_phase_3.png",
+    "09_terminal_results.png"
+  ],
+  "human_evidence": false,
+  "pack_offer_captured": true,
+  "resolution": {
+    "height": 1440,
+    "width": 2560
+  },
+  "schema_version": 1,
+  "starting_defender_inspected": true,
+  "ui_scale_percent": 150
+}

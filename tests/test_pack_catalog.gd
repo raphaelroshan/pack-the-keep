@@ -156,10 +156,11 @@ func _initialize() -> void:
 	malformed_piece.assignment_rule = {"room": "missing_room", "effect": "bad reference"}
 	var piece_errors: Array[String] = catalog.validate_piece_definition(malformed_piece, "wrong_filename", PackKeepState.ROOMS.keys(), known_piece_targets)
 	_check(piece_errors.size() >= 8, "catalog validator did not reject missing fields, ID mismatch, footprint, floor, zone, availability, enemy, and room references")
-	_check(catalog.commander_ids() == ["castellan", "warden"], "commander catalog order or active IDs changed")
+	_check(catalog.commander_ids() == ["castellan", "warden", "quartermaster"], "commander catalog order or active IDs changed")
 	var expected_commanders: Dictionary = {
 		"castellan": {"materials": 60, "morale": 6, "ability": "lockdown"},
-		"warden": {"materials": 52, "morale": 7, "ability": "rally"}
+		"warden": {"materials": 52, "morale": 7, "ability": "rally"},
+		"quartermaster": {"materials": 48, "morale": 5, "ability": "resupply"}
 	}
 	for commander_id in expected_commanders.keys():
 		var commander: Dictionary = catalog.commander_definition(String(commander_id))
@@ -205,12 +206,12 @@ func _initialize() -> void:
 
 	var first: PackKeepState = PackKeepState.new(3307)
 	var second: PackKeepState = PackKeepState.new(3307)
-	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("keep_count", 0)) == 2 and int(first.content_catalog_status().get("region_count", 0)) == 1 and int(first.content_catalog_status().get("pack_count", 0)) == 9 and int(first.content_catalog_status().get("commander_count", 0)) == 2 and int(first.content_catalog_status().get("piece_count", 0)) == 17 and int(first.content_catalog_status().get("enemy_count", 0)) == 8 and int(first.content_catalog_status().get("doctrine_count", 0)) == 9 and int(first.content_catalog_status().get("scenario_count", 0)) == 11 and int(first.content_catalog_status().get("event_count", 0)) == 9 and int(first.content_catalog_status().get("modifier_count", 0)) == 2, "KeepState did not expose the complete K6 runtime catalog")
+	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("keep_count", 0)) == 2 and int(first.content_catalog_status().get("region_count", 0)) == 1 and int(first.content_catalog_status().get("pack_count", 0)) == 9 and int(first.content_catalog_status().get("commander_count", 0)) == 3 and int(first.content_catalog_status().get("piece_count", 0)) == 17 and int(first.content_catalog_status().get("enemy_count", 0)) == 8 and int(first.content_catalog_status().get("doctrine_count", 0)) == 9 and int(first.content_catalog_status().get("scenario_count", 0)) == 11 and int(first.content_catalog_status().get("event_count", 0)) == 9 and int(first.content_catalog_status().get("modifier_count", 0)) == 2, "KeepState did not expose the complete P51 runtime catalog")
 	_check(first.piece_ids() == catalog.piece_ids(), "KeepState did not preserve stable piece order")
 	_check(first.enemy_ids() == catalog.enemy_ids(), "KeepState did not preserve stable enemy order")
 	_check(first.doctrine_ids() == catalog.doctrine_ids(), "KeepState did not preserve stable doctrine order")
 	_check(first.scenario_ids() == catalog.scenario_ids(), "KeepState did not preserve stable scenario order")
-	_check(first.commander_ids() == ["castellan", "warden"], "KeepState did not preserve stable commander order")
+	_check(first.commander_ids() == ["castellan", "warden", "quartermaster"], "KeepState did not preserve stable commander order")
 	var selected_warden: Dictionary = first.select_commander("warden")
 	_check(bool(selected_warden.get("ok", false)) and first.materials == 52 and first.morale == 7, "externalized Warden did not preserve starting resources")
 	_check(String(first.commander_definition("warden").get("ability", "")) == "rally", "externalized Warden did not preserve Rally")

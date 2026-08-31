@@ -3788,8 +3788,11 @@ func _refresh_ui() -> void:
 	status_label.text = "%s — %s\nMaterials %d  •  Morale %d  •  Command %d  •  Defenders %d  •  Phase %d/%d  •  Tick %d  •  %s" % [String(keep.keep_definition().get("name", keep.keep_id)), String(keep.scenario_preview().get("name", "Defense")), keep.materials, keep.morale, keep.command_points, keep.pieces.size(), keep.wave_index, maxi(1, keep.authored_wave_count()), keep.battle_step, "PAUSED" if battle_paused else "LIVE %.1fx" % _battle_speed()]
 	var commander: Dictionary = keep.commander_definition(keep.commander_id)
 	commander_profile_label.text = "%s\nPassive: %s\nAbility: %s — %s\nLimitation: %s" % [String(commander.get("name", keep.commander_id)), String(commander.get("passive", "")), String(commander.get("ability_name", "")), String(commander.get("ability_text", "")), String(commander.get("limitation", ""))]
-	commander_portrait.modulate = Color("#9fb9c3") if keep.commander_id == "warden" else Color.WHITE
-	commander_portrait.tooltip_text = "The Warden — Open Lanes and Rally" if keep.commander_id == "warden" else "The Castellan — Layered Masonry and Lockdown"
+	match keep.commander_id:
+		"warden": commander_portrait.modulate = Color("#9fb9c3")
+		"quartermaster": commander_portrait.modulate = Color("#d8b56f")
+		_: commander_portrait.modulate = Color.WHITE
+	commander_portrait.tooltip_text = "%s — %s and %s" % [String(commander.get("name", keep.commander_id)), String(commander.get("passive", "Commander doctrine")).get_slice(":", 0), String(commander.get("ability_name", "intervention"))]
 	var forecast: Dictionary = keep.forecast()
 	forecast_label.text = "INVASION FORECAST — %s\nLikely target: %s  •  Uncertainty: %s  •  Scout detail: %s" % [String(forecast.get("doctrine", "")).replace("_", " ").capitalize(), String(forecast.get("likely_target", "")), String(forecast.get("uncertainty", "")), "revealed" if bool(forecast.get("scout_bonus", false)) else "limited"]
 	if bool(forecast.get("signal_disrupted", false)):

@@ -107,6 +107,8 @@ if command -v godot >/dev/null 2>&1; then
   godot --headless --audio-driver Dummy --path . --script res://tests/test_k7_replay_mastery.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_k7_replay_mastery_ui.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_k8_performance_budget.gd
+  godot --headless --audio-driver Dummy --path . --script res://tests/test_p51_quartermaster.gd
+  godot --headless --audio-driver Dummy --path . --script res://tests/test_p51_quartermaster_ui.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_initial_combat.gd
 elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --import
@@ -194,6 +196,8 @@ elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_k7_replay_mastery.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_k7_replay_mastery_ui.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_k8_performance_budget.gd
+  godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p51_quartermaster.gd
+  godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p51_quartermaster_ui.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_initial_combat.gd
 else
   echo "Godot 4.x is not installed or not on PATH."

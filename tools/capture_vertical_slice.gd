@@ -4,6 +4,8 @@ var output_dir: String = ""
 var captured_files: Array[String] = []
 var capture_size: Vector2i = Vector2i(1600, 900)
 var capture_scale_index: int = 1
+var capture_commander_id: String = "castellan"
+var capture_pack_offer: bool = false
 var capture_starting_defender: bool = false
 var capture_battle_exchange: bool = false
 var capture_battle_exchange_progress: float = 0.28
@@ -17,6 +19,8 @@ func _initialize() -> void:
 	capture_size.x = maxi(640, int(_argument_value("--width=").to_int())) if not _argument_value("--width=").is_empty() else 1600
 	capture_size.y = maxi(360, int(_argument_value("--height=").to_int())) if not _argument_value("--height=").is_empty() else 900
 	capture_scale_index = clampi(int(_argument_value("--ui-scale-index=").to_int()), 0, 4) if not _argument_value("--ui-scale-index=").is_empty() else 1
+	capture_commander_id = _argument_value("--commander=") if not _argument_value("--commander=").is_empty() else "castellan"
+	capture_pack_offer = OS.get_cmdline_user_args().has("--capture-pack-offer")
 	capture_starting_defender = OS.get_cmdline_user_args().has("--inspect-starting-defender")
 	capture_battle_exchange = OS.get_cmdline_user_args().has("--capture-battle-exchange")
 	if not _argument_value("--battle-exchange-progress=").is_empty():
@@ -44,11 +48,18 @@ func _run_capture() -> void:
 	ui._apply_responsive_layout()
 	await _capture("01_title", ui)
 	ui._on_start_quick_playtest()
+	if ui.keep.commander_ids().has(capture_commander_id):
+		ui._select_option_metadata(ui.commander_option, capture_commander_id)
+		ui.keep.select_commander(capture_commander_id)
+		ui._refresh_ui()
 	await _capture("02_war_council", ui)
 	ui._on_confirm_setup()
 	if capture_starting_defender:
 		ui._on_map_clicked("ground", Vector2i(4, 5))
 	await _capture("03_preparation", ui)
+	if capture_pack_offer:
+		ui._scroll_page_to_control(ui.preparation_pack_offer_panel)
+		await _capture("03b_pack_offer", ui)
 	ui._on_start_wave()
 	if capture_battle_exchange:
 		ui._toggle_battle_pause()
@@ -109,6 +120,8 @@ func _write_manifest() -> void:
 		"build_version": String(ProjectSettings.get_setting("application/config/version", "unknown")),
 		"resolution": {"width": capture_size.x, "height": capture_size.y},
 		"ui_scale_percent": int(ui_scale_percent()),
+		"commander": capture_commander_id,
+		"pack_offer_captured": capture_pack_offer,
 		"starting_defender_inspected": capture_starting_defender,
 		"battle_exchange_staged": capture_battle_exchange,
 		"battle_exchange_progress": capture_battle_exchange_progress if capture_battle_exchange else null,

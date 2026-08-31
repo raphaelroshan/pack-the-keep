@@ -797,9 +797,11 @@ def validate_event(
     errors: list[str],
     room_ids: set[str] | None = None,
     piece_ids: set[str] | None = None,
+    commander_ids: set[str] | None = None,
 ) -> tuple[str | None, str, str]:
     room_ids = room_ids or set()
     piece_ids = piece_ids or set()
+    commander_ids = commander_ids or set()
     for field in sorted(EVENT_FIELDS - event.keys()):
         errors.append(f"{path}: missing required field: {field}")
     event_id = event.get("id")
@@ -998,7 +1000,7 @@ def validate_event(
     else:
         for commander_id, variant in commander_variants.items():
             if (
-                commander_id not in {"castellan", "warden"}
+                commander_id not in commander_ids
                 or not isinstance(variant, dict)
                 or not isinstance(variant.get("setup"), str)
                 or not variant["setup"].strip()
@@ -1171,6 +1173,22 @@ def validate_commander(
     for family in families:
         if family not in pack_families:
             errors.append(f"{path}: unknown favored pack family: {family}")
+    passive_profile = commander.get("passive_profile")
+    if passive_profile is not None:
+        if not isinstance(passive_profile, dict) or passive_profile.get("kind") != "reserve_economy":
+            errors.append(f"{path}: passive_profile is unsupported")
+        else:
+            for field in ("first_pack_discount", "supply_cache_recovery_bonus"):
+                if not is_integer(passive_profile.get(field)) or passive_profile[field] < 0:
+                    errors.append(f"{path}: passive_profile {field} must be a non-negative integer")
+    ability_profile = commander.get("ability_profile")
+    if ability_profile is not None:
+        if not isinstance(ability_profile, dict) or ability_profile.get("kind") != commander.get("ability"):
+            errors.append(f"{path}: ability_profile kind must match ability")
+        else:
+            for field in ("health_restore", "ammo_restore"):
+                if not is_integer(ability_profile.get(field)) or ability_profile[field] < 0:
+                    errors.append(f"{path}: ability_profile {field} must be a non-negative integer")
     manifest_commander = manifest_commanders.get(commander_id)
     if not isinstance(manifest_commander, dict):
         errors.append(f"{path}: commander is missing from content manifest")
@@ -1389,7 +1407,7 @@ def main() -> int:
         if not isinstance(event, dict):
             errors.append(f"{path}: root must be an object")
             continue
-        event_id, event_scenario, follow_up = validate_event(path, event, seen_scenarios, seen_modifiers, seen_events, errors, room_ids, seen_pieces)
+        event_id, event_scenario, follow_up = validate_event(path, event, seen_scenarios, seen_modifiers, seen_events, errors, room_ids, seen_pieces, set(manifest_commanders))
         if event_id is not None:
             runtime_events[event_id] = (event_scenario, follow_up)
     validate_id_parity("event", manifest_event_ids, seen_events, errors)

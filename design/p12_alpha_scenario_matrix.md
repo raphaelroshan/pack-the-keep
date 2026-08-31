@@ -2,11 +2,11 @@
 
 ## Intent
 
-Keep every authored defensive scenario locally reproducible and demonstrably viable across both commanders before human alpha playtesting. This is a regression contract for the current content set, not a claim that every strategy is balanced or that the human playtest gate is complete.
+Keep every authored non-overwhelming defensive scenario locally reproducible and demonstrably viable across every active commander before human alpha playtesting. This is a regression contract for the current content set, not a claim that every strategy is balanced or that the human playtest gate is complete.
 
 ## Matrix
 
-The automated matrix covers all nine scenarios, both commanders, and seeds `3307`, `3308`, and `3309`: 54 cases. Every case is executed once continuously and once with a save/load checkpoint, for 108 total deterministic simulations.
+The automated matrix covers all ten non-overwhelming scenarios, all three commanders, and seeds `3307`, `3308`, and `3309`: 90 cases. Every case is executed once continuously and once with a save/load checkpoint, for 180 total deterministic simulations.
 
 The three seeds deliberately exercise distinct persistence boundaries:
 

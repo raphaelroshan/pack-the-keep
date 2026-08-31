@@ -3,6 +3,6 @@
   "short_role": "Hold a second line and spend one structure to save another.", "question": "What should remain ready after the first line bends?",
   "family": "mobile_response", "contents": ["rear_guard", "breakaway_barricade"], "doctrine": "controlled_fallback", "cost": 4,
   "strength": "Reactive defense after visible damage and one controlled sacrifice.", "weakness": "Provides less value before contact and consumes precious reserve space.",
-  "choice": "Reserve space and condition now so the keep can yield without collapsing.", "commander_affinity": ["castellan", "warden"],
+  "choice": "Reserve space and condition now so the keep can yield without collapsing.", "commander_affinity": ["castellan", "warden", "quartermaster"],
   "spatial_demand": {"preferred_floors": ["ground"], "preferred_zones": ["courtyard", "keep"], "needs_open_lane": true, "needs_adjacency": true}
 }
