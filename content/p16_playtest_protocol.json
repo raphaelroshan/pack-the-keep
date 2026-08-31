@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.43.0-room-feedback",
+  "build_version": "0.44.0-room-accents",
   "status": "ready_for_human_sessions",
   "release_ready": false,
   "minimum_completed_sessions": 4,

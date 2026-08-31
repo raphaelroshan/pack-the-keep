@@ -4262,6 +4262,15 @@ class KeepCanvas extends Control:
 		profile["texture_loaded"] = not texture_path.is_empty() and _effect_texture(texture_path) != null
 		return profile
 
+	func room_function_accent_snapshot(room_id: String) -> Dictionary:
+		var keep_id: String = String(keep.keep_id) if keep != null else ""
+		var profile: Dictionary = BoardVisuals.room_function_accent_profile(keep_id, room_id)
+		var texture_path: String = String(profile.get("texture_path", ""))
+		profile["opacity"] = float(profile.get("opacity", 0.0)) * (0.62 if high_contrast_mode else 1.0)
+		profile["high_contrast"] = high_contrast_mode
+		profile["texture_loaded"] = not texture_path.is_empty() and _effect_texture(texture_path) != null
+		return profile
+
 	func repair_effect_snapshot() -> Dictionary:
 		if repair_feedback_ttl <= 0.0 or repair_feedback.is_empty():
 			return {"active": false}
@@ -4295,6 +4304,18 @@ class KeepCanvas extends Control:
 		var color: Color = Color("#ffb15c") if String(profile.get("state", "")) == "breached" else Color("#c8b6a0")
 		var opacity: float = float(profile.get("opacity", 0.16)) * (1.2 if high_contrast_mode else 1.0)
 		draw_texture_rect(texture, Rect2(center - Vector2.ONE * effect_size * 0.5, Vector2.ONE * effect_size), false, Color(color, opacity))
+
+	func _draw_room_function_accent(room_id: String, rect: Rect2) -> void:
+		var profile: Dictionary = room_function_accent_snapshot(room_id)
+		if not bool(profile.get("active", false)):
+			return
+		var texture: Texture2D = _effect_texture(String(profile.get("texture_path", "")))
+		if texture == null:
+			return
+		var accent_size: float = minf(float(profile.get("size", 18.0)), minf(rect.size.x, rect.size.y) * 0.42)
+		var center: Vector2 = rect.position + Vector2(rect.size.x - accent_size * 0.72, rect.size.y * 0.56)
+		var opacity: float = float(profile.get("opacity", 0.30))
+		draw_texture_rect(texture, Rect2(center - Vector2.ONE * accent_size * 0.5, Vector2.ONE * accent_size), false, Color(0.92, 0.82, 0.67, opacity))
 
 	func _draw_repair_feedback() -> void:
 		var snapshot: Dictionary = repair_effect_snapshot()
@@ -4933,6 +4954,7 @@ class KeepCanvas extends Control:
 			draw_rect(rect, Color("#c8b6a0"), false, 1.0)
 			draw_rect(Rect2(rect.position + Vector2(1, 1), Vector2(rect.size.x - 2.0, 3.0)), room_profile.edge, true)
 			draw_line(rect.position + Vector2(3, rect.size.y - 3), rect.end - Vector2(3, 3), Color(0.08, 0.07, 0.09, 0.42), 1.0)
+			_draw_room_function_accent(String(room_id), rect)
 			_draw_room_damage_effect(String(room_id), rect)
 			if bool(room.get("critical", false)):
 				var marker: Vector2 = rect.position + Vector2(rect.size.x - 8.0, 9.0)

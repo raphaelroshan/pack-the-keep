@@ -1,6 +1,6 @@
 # Pack the Keep — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.43.0-room-feedback` and later
+**Applies to:** `v0.44.0-room-accents` and later
 
 **Purpose:** Turn the First Watch prototype into a readable, tactile, game-quality keep-defense vertical slice. Automated verification, deterministic simulation checks, scripted flow coverage, and screenshot review are the active gates. Human testing remains useful for later confidence and tuning, but it is not a prerequisite for execution.
 
@@ -35,6 +35,7 @@ The game is a spatial defensive puzzle, not a rarity treadmill or a command spre
 | **P56 — Complete** | Give semantic battle beats tactile temporary foley | A bounded four-player sample pool differentiates warning, contact, response, impact, breach, recovery, control, and terminal cues while preserving mute, volume, visible labels, and synthesized fallback. |
 | **P57 — Complete** | Add restrained combat effect textures | Defender response and hostile melee, ranged, and demolition impacts gain distinct temporary CC0 effects without obscuring health, damage, target, or focus information. |
 | **P58 — Complete** | Make damage and recovery physically legible | Damaged/breached rooms gain restrained state-driven atmosphere and successful room/defender repairs gain one localized restored-value pulse. |
+| **P59 — Complete** | Add temporary room-function recognition | Seven Greywatch functional rooms use restrained Tiny Dungeon prop accents beneath all tactical information; unaccented movement and structural spaces remain quiet. |
 
 ## Acceptance tests for every AI task
 
@@ -44,7 +45,7 @@ A task is incomplete if it hides the fort behind a menu, adds a unit before its 
 
 ## Recommended next prompt
 
-> The automated roadmap is complete at `0.43.0-room-feedback`. Preserve every K1–K8, P51–P58, P54, responsive-decision, temporary-actor, semantic-audio, combat-effect, and repair-feedback gate. Treat all Kenney actors, foley, and effects as temporary testing assets, not final Greywatch production work. Do not invent human findings; the next evidence step is P16 observation only when the owner schedules real testers.
+> The automated roadmap is complete at `0.44.0-room-accents`. Preserve every K1–K8, P51–P59, P54, responsive-decision, temporary-actor, semantic-audio, combat-effect, repair-feedback, and room-accent gate. Treat all Kenney props, actors, foley, and effects as temporary testing assets, not final Greywatch production work. Do not invent human findings; the next evidence step is P16 observation only when the owner schedules real testers.
 
 ## Definition of game-quality readiness
 
@@ -88,3 +89,7 @@ No further autonomous implementation milestone is selected. P16 human observatio
 ## Room damage and repair update — 2026-08-31
 
 `0.43.0-room-feedback` gives damaged and breached rooms restrained state-driven smoke/scorch treatment, then anchors a short restored-value spark to successful room and defender repairs. Stable rooms stay quiet, blocked actions create no success pulse, reduced motion shortens the treatment, and authoritative repair costs and amounts remain unchanged.
+
+## Temporary room-function accent update — 2026-08-31
+
+`0.44.0-room-accents` gives seven Greywatch functional rooms a small, low-opacity Tiny Dungeon prop silhouette beneath labels, health, units, damage, focus, and selection. The inner yard and outer wall remain quiet, other keeps retain their established rendering, and all room identity remains presentation-only with procedural fallback.

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.43.0-room-feedback",
+  "framework_version": "0.44.0-room-accents",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -24,7 +24,7 @@
     "status": "implemented",
     "battle_timing": ["live_assault_start", "continuous_enemy_interpolation", "presentation_clock", "0.5x", "1.0x", "2.0x", "pause_inspection", "manual_single_step"],
     "named_input_actions": ["battle_pause", "battle_advance", "battle_speed_half", "battle_speed_normal", "battle_speed_double", "battle_manual_step", "placement_arm", "placement_cancel", "report_focus", "feedback_mute", "contrast_toggle"],
-    "feedback_cues": ["room_condition_bars", "piece_health_bars", "explicit_state_labels", "declared_target_lines", "siege_beast_area_radius", "transient_defender_engagement_traces", "temporary_cc0_response_and_impact_effects", "state_driven_room_damage_atmosphere", "localized_repair_feedback", "transient_impact_recovery_frame"],
+    "feedback_cues": ["room_condition_bars", "piece_health_bars", "explicit_state_labels", "declared_target_lines", "siege_beast_area_radius", "transient_defender_engagement_traces", "temporary_cc0_response_and_impact_effects", "temporary_cc0_room_function_accents", "state_driven_room_damage_atmosphere", "localized_repair_feedback", "transient_impact_recovery_frame"],
     "accessibility": ["high_contrast_cues", "keyboard_mouse_path", "focusable_controls", "scrollable_command_panel", "mute_feedback_tones"],
     "audio": "pooled_temporary_cc0_semantic_samples_with_generated_tone_fallback",
     "determinism_rule": "pause_speed_input_and_presentation_feedback_do_not mutate authoritative keep outcomes",
@@ -1798,7 +1798,7 @@
     "status": "implemented",
     "registry": "src/ui/board_visual_registry.gd",
     "layers": ["background_atmosphere", "structural_board", "room_surfaces", "placement_zones", "defender_actors", "enemy_routes_and_actors", "damage_and_status", "focus_and_selection", "tactical_labels"],
-    "floor_treatments": ["ground_fort_or_river", "upper_wall_walk"],
+    "floor_treatments": ["ground_fort_or_river", "upper_wall_walk", "greywatch_temporary_room_function_accents"],
     "actor_grammar": ["defender_role_badges", "enemy_type_silhouettes", "redundant_initials", "health_and_status_overlays"],
     "determinism_rule": "visual_profiles_and_drawing_do_not_change_geometry_hit_testing_targeting_timing_or_save_state"
   },
@@ -1909,6 +1909,16 @@
     "accessibility_rule": "high_contrast_reduces_texture_opacity_and_increases_selection_width",
     "fallback_rule": "keeps_without_authored_materials_retain_their_existing_terrain_renderer",
     "determinism_rule": "surface_sampling_selection_projection_and_drawing_do_not_mutate_geometry_hit_testing_or_pack_keep_state"
+  },
+  "temporary_room_function_accents": {
+    "status": "implemented",
+    "source": "Kenney Tiny Dungeon CC0 temporary testing kit",
+    "scope": "greywatch_keep_only",
+    "accented_rooms": ["gate", "armory", "workshop", "barracks", "supply_room", "north_tower", "old_chapel"],
+    "quiet_spaces": ["inner_yard", "outer_wall", "ash_ford", "twinwatch_bastion"],
+    "layering": "beneath_labels_health_units_damage_focus_selection_and_combat_feedback",
+    "accessibility_rule": "high_contrast_reduces_accent_opacity",
+    "determinism_rule": "room_accent_lookup_caching_and_drawing_are_presentation_only_and_never_change_room_state_or_simulation"
   },
   "temporary_actor_readability": {
     "status": "implemented",
