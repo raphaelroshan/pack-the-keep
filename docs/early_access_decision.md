@@ -1,0 +1,11 @@
+# Pack the Keep — Early Access Decision Record
+
+**Decision:** Target Early Access as a small keep-defense campaign with multiple distinct keeps and viable defensive doctrines, rather than repeating Greywatch or waiting for a complete roster.
+
+Greywatch remains the quality anchor. Two additional keeps may reuse the renderer, temporary asset kit, and UI framework, but each must pose a different spatial or invasion question, provide at least two viable seeded plans, and include the complete Preparation → Battle → Recovery → Results loop.
+
+The principal trade-off is **content breadth versus authored depth**. We accept compact packs, reused effects, and skeletal room art in later keeps. We do not accept cosmetic reskins, stat-only units, invisible counters, mandatory build orders, or encounters that cannot be understood from the forecast and preparation surfaces.
+
+The second trade-off is **real-time spectacle versus solo readability**. Combat remains deterministic and automatic, with presentation staging layered over authoritative state. New effects may improve timing and impact, but they cannot decide damage, targeting, ammunition, recovery, or pause/speed outcomes. Reduced motion and controller paths must retain equivalent information.
+
+The active implementation order is Greywatch completion, a second keep, a third keep and commander lens, enemy/counter breadth, event/mastery depth, and alpha hardening. Human P16 sessions may later calibrate comprehension but are not a prerequisite for implementation. Headless state tests, deterministic replay, complete-flow fixtures, layout/scaling/input checks, screenshots, and package recovery evidence are the active gates.

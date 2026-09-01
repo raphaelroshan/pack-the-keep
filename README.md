@@ -192,3 +192,11 @@ The repository includes a small internal test-release presentation for Greywatch
 ## Temporary asset kit
 
 The testing-only art, audio, VFX, and animation kit is documented in [`docs/temporary_asset_kit.md`](docs/temporary_asset_kit.md). Curated CC0 files are under [`assets/temporary/`](assets/temporary/), with machine-readable provenance in [`assets/temporary/manifest.json`](assets/temporary/manifest.json). These assets support breadth, combat timing, and feel testing; they are not the final Greywatch, commander, or enemy art direction.
+
+
+## Early Access breadth contract
+
+The skeletal-but-playable Early Access target is defined in [`docs/early_access_requirements.md`](docs/early_access_requirements.md). It preserves Greywatch as the quality anchor while requiring three distinct playable keeps, broader commander/pack/enemy coverage, multiple viable defensive plans, complete recovery and Results loops, and release-safe persistence before Early Access claims are made.
+
+| `docs/early_access_requirements.md` | Skeletal-but-playable Early Access breadth floor, quality gates, and agent-executable expansion order. |
+| `docs/early_access_decision.md` | Decision record explaining the breadth-versus-depth and spectacle-versus-readability trade-offs. |
