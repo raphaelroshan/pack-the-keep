@@ -1,6 +1,6 @@
 # Pack the Keep — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.49.0-authored-effects` and later
+**Applies to:** `v0.50.0-ea1-greywatch-anchor` and later
 
 **Purpose:** Turn the First Watch prototype into a readable, tactile, game-quality keep-defense vertical slice. Automated verification, deterministic simulation checks, scripted flow coverage, and screenshot review are the active gates. Human testing remains useful for later confidence and tuning, but it is not a prerequisite for execution.
 
@@ -50,7 +50,7 @@ A task is incomplete if it hides the fort behind a menu, adds a unit before its 
 
 ## Recommended next prompt
 
-> The automated roadmap is complete at `0.49.0-authored-effects`. Preserve every K1–K8, P51–P65, P54, responsive-decision, room-label, authored-actor, authored-room, semantic-audio, combat-effect, and repair-feedback gate. Treat remaining Kenney foley as temporary testing audio, not a final Greywatch production mix. Do not invent human findings; the next evidence step is P16 observation only when the owner schedules real testers.
+> The Greywatch anchor and prior automated roadmap are complete at `0.50.0-ea1-greywatch-anchor`. Preserve PTK-EA-1, K1–K8, P51–P65, P54, responsive-decision, room-label, authored-actor, authored-room, semantic-audio, combat-effect, and repair-feedback gates while beginning PTK-EA-2. Treat remaining Kenney foley as temporary testing audio, not a final mix. Do not invent human findings.
 
 ## Definition of game-quality readiness
 

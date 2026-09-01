@@ -1,6 +1,6 @@
 # Pack the Keep — Latest Visual Review
 
-**Build:** `0.49.0-authored-effects`
+**Build:** `0.50.0-ea1-greywatch-anchor`
 
 **Engine:** Godot 4.7.2
 
@@ -8,6 +8,7 @@
 
 ## Evidence
 
+- [PTK-EA-1 Greywatch anchor review](visual_evidence/v0.50.0-ea1-greywatch-anchor-review-2026-09-02/)
 - [Authored battle-effect review](visual_evidence/v0.49.0-authored-effects-review-2026-09-01/)
 - [Authored room-function review](visual_evidence/v0.48.0-authored-room-accents-review-2026-09-01/)
 - [Complete authored-actor review](visual_evidence/v0.47.0-authored-actors-review-2026-09-01/)
@@ -20,7 +21,7 @@
 - [Responsive decision-surface review](visual_evidence/v0.39.0-responsive-decisions-review-2026-08-31/)
 - [Earlier complete seeded-pressure sequence](visual_evidence/v0.37.0-seeded-pressure-review-2026-08-31/)
 
-The authored battle-effect review contains the ten-screen Gatehouse Lock flow at the real target viewport, including a staged defender response and localized repair. Its machine-readable manifest records build, viewport, scenario, inspected-defender state, staged battle-exchange method, and repair capture. The room and actor reviews remain the spatial-identity references, while responsive and Large Text sets remain active regression evidence.
+The PTK-EA-1 review recaptures the ten-screen Gatehouse Lock journey at the real target viewport, including a staged defender response and localized repair. Its machine-readable manifest records the exact milestone build, viewport, scenario, inspected-defender state, battle-exchange method, and repair capture. The earlier room, actor, responsive, and Large Text sets remain active regression evidence.
 
 ## Findings
 
@@ -46,4 +47,4 @@ P65 replaces all active Particle Pack textures with eight original 48×48 effect
 
 ## Next visual target
 
-The authored board-scale visual pass is complete for all current actors, Greywatch functional rooms, combat impacts, room-state atmosphere, and repair feedback. Temporary foley is the remaining active borrowed asset family and still blocks a final-mix claim. Its replacement should remain a bounded audio-production pass with the same semantic, mute, volume, pool-size, and generated-tone fallback contracts; human P16 observation remains the only scheduled evidence gate.
+PTK-EA-1 is complete: Greywatch is the enforced quality anchor for responsive setup, three-phase combat, recovery, terminal explanation, authored board visuals, save/replay, input, accessibility, and package evidence. PTK-EA-2 is the next bounded product task: deepen Ash Ford from one scenario into a complete keep slice with two approaches, at least six repeatable scenarios, two viable opening plans, contextual briefing, and full-flow evidence. Temporary foley remains the only active borrowed asset family.

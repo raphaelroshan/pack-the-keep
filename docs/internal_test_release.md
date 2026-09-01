@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.49.0-authored-effects` — the development candidate gives every active defender, enemy family, Greywatch functional room, combat impact, room-state atmosphere, and repair pulse an original small-scale visual asset above the stable tactical-overlay grammar, while retaining responsive decisions, deterministic combat, accessibility, save/resume, terminal-results, packaged K8, and forced-close gates; human sessions and owner approval remain pending
+**Current build identity:** `0.50.0-ea1-greywatch-anchor` — PTK-EA-1 now enforces Greywatch as the Early Access quality anchor across responsive setup, its tutorial and full three-assault journey, two recovery intervals, terminal replay, authored board visuals, deterministic save/replay, accessibility, package, and forced-close evidence; the broader Early Access floor, human sessions, and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch, Ash Ford, and Twinwatch support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan, Warden, or Quartermaster, select one of fifteen authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown, Rally, or Resupply, inspect health, armor, signal state, breakthrough momentum, concealment visibility, protection, assigned-specialist priority, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.50.0 acceptance checks
+
+From a fresh profile, enter Greywatch through War Council at 1280×720 / 125%, apply the recommended defense, and complete all three assaults plus both recovery intervals without debug actions. Confirm tick-zero warnings, the visible fort, actionable recovery, terminal causal debrief, and Review Setup replay path remain intact. Repeat at 1600×900 / 100%, and validate `content/early_access_progress.json` reports PTK-EA-1 implemented, PTK-EA-2 next, the exact runtime inventory, and `early_access_ready: false`.
 
 ## v0.49.0 acceptance checks
 

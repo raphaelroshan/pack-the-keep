@@ -935,3 +935,11 @@
 **Reason:** The temporary set proved the effect density and cadence, but its mixed sprite language no longer matches the authored actors, rooms, and fortress. A compact directional vocabulary closes that visual inconsistency while leaving exact damage and targets to the established tactical overlays.
 
 **Trade-off:** These are static marks rather than animation sheets or particle emitters. Variation comes from existing timing, scale, tint, projectile, slash, recoil, ring, and damage-number layers; a future animation pass can replace the same registry paths without changing simulation authority.
+
+## ADR-118: Early Access progress is an explicit non-release gate
+
+**Decision:** Record the approved breadth floor, exact current content inventory, ordered PTK-EA milestone states, and PTK-EA-1 evidence in `content/early_access_progress.json`. Validate that ledger in local verification and CI, and keep `early_access_ready` false until later milestones meet their own acceptance contracts.
+
+**Reason:** The Early Access strategy adds a multi-release breadth plan whose prose can drift from runtime content. A small machine-readable gate makes Greywatch's completed anchor auditable and prevents existing keeps or partial systems from being misrepresented as the full commercial floor.
+
+**Trade-off:** The gate proves evidence presence, catalog counts, and milestone honesty; it does not prove enjoyment or replace the linked gameplay tests and visual review. Future content slices must update both runtime data and the inventory ledger, adding modest release bookkeeping in exchange for explicit scope control.

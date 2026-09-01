@@ -1,7 +1,7 @@
 {
   "slug": "pack-the-keep",
   "display_name": "Pack the Keep",
-  "build_version": "0.49.0-authored-effects",
+  "build_version": "0.50.0-ea1-greywatch-anchor",
   "godot_test": "res://tests/test_keep_state.gd",
   "primary_repo": "raphaelroshan/pack-the-keep",
   "release_platforms": ["steam", "epic-games-store"],
