@@ -903,3 +903,11 @@
 **Reason:** Earlier variation changed resources and room pressure but did not materially change what the player prepared for. A disclosed 2/2, 1/3, or 3/1 composition makes the seed alter the visible route emphasis while preserving the existing packs, recovery branches, deterministic combat, and two viable mixed answers.
 
 **Trade-off:** The variation changes only the final authored phase and remains bounded to four existing enemies. It does not add hidden stats, procedural wave generation, stronger event bonuses, or a forced counter; the preparation focus is advisory and the exact roster remains the authoritative evidence.
+
+## ADR-114: Core actors use original small-scale vector silhouettes
+
+**Decision:** Replace Tiny Battle tiles for all active defender roles and the Raider, Sapper, Climber, and Siege Beast with original text-free SVG silhouettes designed on a 32×32 view box. Keep the existing role card, enemy shape, health, focus, target, cadence, and status grammar around each asset. Extended enemy families retain the licensed temporary fallback until their own bounded pass.
+
+**Reason:** The temporary tiles proved that actor imagery helps, but their toy-like style does not belong to Greywatch and larger inventory illustrations collapse at the 13–20px board scale. Purpose-built silhouettes can use fewer, stronger motifs and remain replaceable through the existing visual registry.
+
+**Trade-off:** This is a deliberately compact role language rather than animated character art. Several defender pieces share a role silhouette, and six extended enemies remain temporary; names and procedural shapes continue to provide redundant identification. Texture lookup and drawing stay presentation-only and cannot change simulation state.

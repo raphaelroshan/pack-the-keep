@@ -15,6 +15,14 @@ The Greywatch kit is an original, first-pass 2D illustrated asset set generated 
 | `raider_icon.png` | 512×512 | Raider identity; direct gate-pressure doctrine | Integrated in the enemy asset strip in `src/ui/main.gd` |
 | `sapper_icon.png` | 512×512 | Sapper identity; support-sabotage doctrine | Integrated in the enemy asset strip in `src/ui/main.gd` |
 | `climber_icon.png` | 512×512 | Climber identity; upper-floor bypass doctrine | Integrated in the enemy asset strip in `src/ui/main.gd` |
+| `actors/defender_formation.svg` | 32×32 | Shield-and-pikes silhouette for formation defenders | Integrated in active board markers |
+| `actors/defender_ranged.svg` | 32×32 | Bow-and-bolt silhouette for ranged defenders | Integrated in active board markers |
+| `actors/defender_mobile.svg` | 32×32 | Linked-movement silhouette for mobile support | Integrated in active board markers |
+| `actors/defender_signal.svg` | 32×32 | Raised-standard silhouette for signal defenders | Integrated in active board markers |
+| `actors/enemy_raider.svg` | 32×32 | Horned raider with crossed blades | Integrated in active board markers |
+| `actors/enemy_sapper.svg` | 32×32 | Demolition charge and fuse silhouette | Integrated in active board markers |
+| `actors/enemy_climber.svg` | 32×32 | Grapnel-and-climber silhouette | Integrated in active board markers |
+| `actors/enemy_siege_beast.svg` | 32×32 | Heavy ram silhouette | Integrated in active board markers |
 | Hybrid Greywatch fort renderer | N/A | Authored stone/timber material sampling plus deterministic walls, rooms, open courtyard, gate approach, upper wall walk, towers, health, selection, and placement overlays | Integrated in `KeepCanvas`; authored texture never owns geometry, hit testing, state color, or simulation |
 | Top-down board art direction | N/A | Map-first composition, readable silhouettes, persistent overlays, and high-level pixel-board reference principles | Documented in `design/top_down_board_art_direction.md`; public reference image kept outside the repository |
 | Warden profile treatment | N/A | P1 commander identity: Open Lanes, Rally, and Spread Thin | Integrated as readable profile text and a tinted shared portrait; dedicated portrait deferred until the next image-generation window |
@@ -36,4 +44,4 @@ The art is stored as regular repository source content because it is part of the
 
 ## Temporary testing kit
 
-The temporary CC0 breadth kit is documented in [`docs/temporary_asset_kit.md`](../docs/temporary_asset_kit.md) and inventoried in [`assets/temporary/manifest.json`](temporary/manifest.json). It includes Kenney Tiny Dungeon, Tiny Battle, Interface Sounds, RPG Audio, and a curated Particle Pack subset. `0.40.0`–`0.44.0` integrate temporary board actors, bounded foley, restrained combat effects, room-state feedback, and low-density Greywatch room props; `0.45.0-readable-rooms` keeps stable fitted labels above that temporary layer. Tactical overlays and procedural/audio fallbacks remain intact. None of these assets are the final Greywatch production direction.
+The temporary CC0 breadth kit is documented in [`docs/temporary_asset_kit.md`](../docs/temporary_asset_kit.md) and inventoried in [`assets/temporary/manifest.json`](temporary/manifest.json). It includes Kenney Tiny Dungeon, Tiny Battle, Interface Sounds, RPG Audio, and a curated Particle Pack subset. `0.40.0`–`0.44.0` integrate temporary board actors, bounded foley, restrained combat effects, room-state feedback, and low-density Greywatch room props; `0.45.0-readable-rooms` keeps stable fitted labels above that layer. `0.46.0-authored-core-actors` replaces all active defender tiles and the four signature vertical-slice enemies with original text-free 32×32 SVG silhouettes. Extended enemy families still use Tiny Battle placeholders. Tactical overlays and procedural/audio fallbacks remain intact.

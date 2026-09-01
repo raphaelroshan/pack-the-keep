@@ -59,11 +59,24 @@ func _initialize() -> void:
 	_check(String(pike.piece.get("shape", "")) == "shield", "formation defenders should use a shield silhouette family")
 	_check(String(repair.piece.get("shape", "")) == "cross", "support defenders should use a support-cross silhouette family")
 	_check(String(gate.piece.get("shape", "")) == "barrier", "fortification pieces should use a barrier silhouette family")
-	_check(String(pike.piece.get("sprite_path", "")).ends_with("tile_0125.png") and bool(pike.get("piece_texture_loaded", false)), "formation defenders should resolve the temporary melee actor sprite")
+	_check(String(pike.piece.get("sprite_path", "")).ends_with("defender_formation.svg") and String(pike.piece.get("asset_status", "")) == "authored_original" and bool(pike.get("piece_texture_loaded", false)), "formation defenders should resolve the authored small-scale silhouette")
 	var ranged: Dictionary = ui.keep_canvas.actor_visual_snapshot("fire_team", "ash_slinger")
-	_check(String(ranged.piece.get("sprite_path", "")).ends_with("tile_0124.png") and bool(ranged.get("piece_texture_loaded", false)), "ranged defenders should resolve a distinct temporary actor sprite")
-	_check(String(ranged.enemy.get("sprite_path", "")).ends_with("tile_0160.png") and bool(ranged.get("enemy_texture_loaded", false)), "ranged enemies should resolve the temporary hostile ranged sprite")
-	_check(String(board.get("temporary_actor_source", "")).contains("CC0"), "the board snapshot should identify temporary actor provenance")
+	_check(String(ranged.piece.get("sprite_path", "")).ends_with("defender_ranged.svg") and bool(ranged.get("piece_texture_loaded", false)), "ranged defenders should resolve a distinct authored silhouette")
+	var authored_defender_paths: Dictionary = {}
+	for piece_id in ["pike_squad", "fire_team", "runner_pair", "bellkeepers"]:
+		var actor: Dictionary = ui.keep_canvas.actor_visual_snapshot(piece_id, "raider")
+		_check(String(actor.piece.get("asset_status", "")) == "authored_original" and bool(actor.get("piece_texture_loaded", false)), "%s should resolve an authored defender-role silhouette" % piece_id)
+		authored_defender_paths[String(actor.piece.get("sprite_path", ""))] = true
+	_check(authored_defender_paths.size() == 4, "combat defenders should retain four distinct authored role silhouettes")
+	_check(String(ranged.enemy.get("sprite_path", "")).ends_with("tile_0160.png") and String(ranged.enemy.get("asset_status", "")) == "temporary_cc0" and bool(ranged.get("enemy_texture_loaded", false)), "extended ranged enemies should retain the temporary hostile fallback")
+	_check(bool(board.get("authored_core_actor_assets", false)) and String(board.get("authored_core_actor_source", "")).contains("32px"), "the board snapshot should identify authored core actor provenance")
+	_check(String(board.get("temporary_actor_source", "")).contains("CC0") and String(board.get("temporary_actor_scope", "")) == "extended enemy families", "the board snapshot should identify the remaining temporary actor scope")
+	var authored_enemy_paths: Dictionary = {}
+	for enemy_id in ["raider", "sapper", "climber", "siege_beast"]:
+		var actor: Dictionary = ui.keep_canvas.actor_visual_snapshot("pike_squad", enemy_id)
+		_check(String(actor.enemy.get("asset_status", "")) == "authored_original" and bool(actor.get("enemy_texture_loaded", false)), "%s should resolve an authored small-scale silhouette" % enemy_id)
+		authored_enemy_paths[String(actor.enemy.get("sprite_path", ""))] = true
+	_check(authored_enemy_paths.size() == 4, "core enemies should retain four distinct authored silhouettes")
 	var accented_rooms: Array[String] = ["gate", "armory", "workshop", "barracks", "supply_room", "north_tower", "old_chapel"]
 	var accent_paths: Dictionary = {}
 	for room_id in accented_rooms:
@@ -92,7 +105,7 @@ func _initialize() -> void:
 	_check(unique_shapes.size() == 5, "Raider, Sapper, Climber, Siege Beast, and Standard Cutter should have distinct silhouettes")
 	var beast: Dictionary = ui.keep_canvas.actor_visual_snapshot("pike_squad", "siege_beast")
 	_check(String(beast.enemy.get("shape", "")) == "hex" and float(beast.enemy.get("scale", 1.0)) > 1.0, "Siege Beast should reserve the largest heavy silhouette")
-	_check(String(beast.enemy.get("sprite_path", "")).ends_with("tile_0170.png") and bool(beast.get("enemy_texture_loaded", false)), "Siege Beast should resolve a distinct temporary siege actor")
+	_check(String(beast.enemy.get("sprite_path", "")).ends_with("enemy_siege_beast.svg") and bool(beast.get("enemy_texture_loaded", false)), "Siege Beast should resolve a distinct authored siege silhouette")
 
 	ui.keep_canvas.queue_redraw()
 	await process_frame

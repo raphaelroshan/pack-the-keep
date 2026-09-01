@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.45.0-readable-rooms",
+  "framework_version": "0.46.0-authored-core-actors",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -24,7 +24,7 @@
     "status": "implemented",
     "battle_timing": ["live_assault_start", "continuous_enemy_interpolation", "presentation_clock", "0.5x", "1.0x", "2.0x", "pause_inspection", "manual_single_step"],
     "named_input_actions": ["battle_pause", "battle_advance", "battle_speed_half", "battle_speed_normal", "battle_speed_double", "battle_manual_step", "placement_arm", "placement_cancel", "report_focus", "feedback_mute", "contrast_toggle"],
-    "feedback_cues": ["fitted_room_function_labels", "room_condition_bars", "piece_health_bars", "explicit_state_labels", "declared_target_lines", "siege_beast_area_radius", "transient_defender_engagement_traces", "temporary_cc0_response_and_impact_effects", "temporary_cc0_room_function_accents", "state_driven_room_damage_atmosphere", "localized_repair_feedback", "transient_impact_recovery_frame"],
+    "feedback_cues": ["authored_core_actor_silhouettes", "fitted_room_function_labels", "room_condition_bars", "piece_health_bars", "explicit_state_labels", "declared_target_lines", "siege_beast_area_radius", "transient_defender_engagement_traces", "temporary_cc0_response_and_impact_effects", "temporary_cc0_room_function_accents", "state_driven_room_damage_atmosphere", "localized_repair_feedback", "transient_impact_recovery_frame"],
     "accessibility": ["high_contrast_cues", "keyboard_mouse_path", "focusable_controls", "scrollable_command_panel", "mute_feedback_tones"],
     "audio": "pooled_temporary_cc0_semantic_samples_with_generated_tone_fallback",
     "determinism_rule": "pause_speed_input_and_presentation_feedback_do_not mutate authoritative keep outcomes",
@@ -1928,11 +1928,20 @@
     "inspection_rule": "room_inspection_retains_complete_authoritative_name_and_role",
     "determinism_rule": "label_selection_measurement_and_drawing_are_presentation_only_and_never_change_room_identity_geometry_or_simulation"
   },
+  "authored_core_actor_readability": {
+    "status": "implemented",
+    "source": "Pack the Keep original 32px vector silhouettes",
+    "defender_roles": ["formation", "ranged", "mobile_support", "signal"],
+    "core_enemies": ["raider", "sapper", "climber", "siege_beast"],
+    "retained_overlays": ["role_shape", "role_color", "health", "cadence", "target", "focus", "armor", "smoke", "breach", "command_hunter"],
+    "fallback_rule": "missing authored textures retain the existing procedural glyph",
+    "determinism_rule": "authored texture lookup caching and drawing are presentation-only and never change combat state"
+  },
   "temporary_actor_readability": {
     "status": "implemented",
     "source": "Kenney Tiny Battle CC0 temporary testing kit",
-    "defenders": ["melee_actor", "ranged_actor"],
-    "enemies": ["melee_actor", "ranged_actor", "heavy_actor", "siege_actor"],
+    "scope": "extended enemy families pending their authored pass",
+    "enemies": ["shield_guard", "ash_slinger", "shieldbreaker", "standard_cutter", "outrider", "gloam_knife"],
     "retained_overlays": ["role_shape", "role_color", "health", "cadence", "target", "focus", "armor", "smoke", "breach", "command_hunter"],
     "fallback_rule": "missing temporary textures retain the prior procedural glyph",
     "determinism_rule": "sprite lookup caching and drawing are presentation-only and never change combat state"

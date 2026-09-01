@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.45.0-readable-rooms` — the development candidate gives every compact room a stable fully fitted board label above the existing Greywatch room-function accents, licensed actors, semantic foley, combat effects, damaged-room atmosphere, and localized repair confirmation, while retaining responsive decisions, deterministic tactical overlays, accessibility, save/resume, terminal-results, packaged K8, and forced-close gates; human sessions and owner approval remain pending
+**Current build identity:** `0.46.0-authored-core-actors` — the development candidate gives every active defender plus Raider, Sapper, Climber, and Siege Beast an original small-scale silhouette above the stable room-label and tactical-overlay grammar, while retaining responsive decisions, deterministic combat, accessibility, save/resume, terminal-results, packaged K8, and forced-close gates; extended enemy art, human sessions, and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch, Ash Ford, and Twinwatch support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan, Warden, or Quartermaster, select one of fifteen authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown, Rally, or Resupply, inspect health, armor, signal state, breakthrough momentum, concealment visibility, protection, assigned-specialist priority, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.46.0 acceptance checks
+
+Enter Greywatch Preparation and confirm formation defenders read as shield-and-pikes rather than a borrowed character tile. Stage each assault phase and confirm Raider, Sapper, Climber, and Siege Beast have distinct text-free silhouettes at normal play distance. Verify health bars, target lines, focus rings, cadence, damage numbers, and room labels remain dominant. Toggle high contrast and confirm the silhouette framing remains visible. Extended enemies may retain the documented Tiny Battle fallback.
 
 ## v0.45.0 acceptance checks
 

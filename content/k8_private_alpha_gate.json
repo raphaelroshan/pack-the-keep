@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.45.0-readable-rooms",
+  "build_version": "0.46.0-authored-core-actors",
   "status": "automated_candidate",
   "release_ready": false,
   "public_alpha_ready": false,

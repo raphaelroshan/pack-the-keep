@@ -1,13 +1,14 @@
 # Pack the Keep — Latest Visual Review
 
-**Build:** `0.45.0-readable-rooms`
+**Build:** `0.46.0-authored-core-actors`
 
 **Engine:** Godot 4.7.2
 
-**Capture:** Real local renderer at 1600×900 / 100% for the complete Greywatch flow with fully fitted room labels; prior room-accent, room-feedback, combat-effect, actor, responsive, and Large Text evidence remains active.
+**Capture:** Real local renderer at 1600×900 / 100% for the complete Greywatch flow with original core actor silhouettes and fully fitted room labels; prior room-accent, room-feedback, combat-effect, responsive, and Large Text evidence remains active.
 
 ## Evidence
 
+- [Authored core-actor review](visual_evidence/v0.46.0-authored-core-actors-review-2026-09-01/)
 - [Readable-room review](visual_evidence/v0.45.0-readable-rooms-review-2026-09-01/)
 - [Room-function accent review](visual_evidence/v0.44.0-room-accents-review-2026-08-31/)
 - [Room damage and repair review](visual_evidence/v0.43.0-room-feedback-review-2026-08-31/)
@@ -16,13 +17,13 @@
 - [Responsive decision-surface review](visual_evidence/v0.39.0-responsive-decisions-review-2026-08-31/)
 - [Earlier complete seeded-pressure sequence](visual_evidence/v0.37.0-seeded-pressure-review-2026-08-31/)
 
-The readable-room review contains the complete nine-screen Greywatch flow plus a machine-readable manifest recording build, viewport, state, and capture method. The room-accent review remains the prop-density reference, the room-feedback review remains the damage/recovery reference, the combat-VFX review remains the exchange-beat reference, and the actor and responsive sets remain active regression evidence.
+The authored core-actor review contains the complete nine-screen Greywatch flow plus a machine-readable manifest recording build, viewport, selected starting defender, staged battle exchange, and capture method. The readable-room review remains the label reference, the room-accent review remains the prop-density reference, the room-feedback review remains the damage/recovery reference, and the responsive sets remain active regression evidence.
 
 ## Findings
 
-Temporary Tiny Battle actors now occupy the center of active defender and hostile markers. Melee formations and ranged defenders are distinguishable before reading their labels; Outriders and Gloam Knives read as advancing hostile actors in the four-threat final phase; the Siege Beast reserves a separate heavy vehicle silhouette. The sprites sit inside the existing color/shape grammar, so doctrine identity is not reduced to the borrowed art.
+P55 first proved that actor imagery helps at board scale by placing temporary Tiny Battle tiles inside the existing marker grammar. That evidence remains useful for the six extended enemy families that have not yet received authored silhouettes.
 
-Preparation retains piece names, role colors, health bars, room edges, and floor separation around the new actors. During Battle, focus rings, target lines, cadence, health, defender-response traces, and specialist labels remain more prominent than the sprite detail. Timeline markers deliberately remain procedural because the source sprites are unreadable at that scale. The borrowed art is visibly temporary and toy-like, but it materially improves actor recognition without claiming final Greywatch production quality.
+Preparation retains piece names, role colors, health bars, room edges, and floor separation around actor art. During Battle, focus rings, target lines, cadence, health, defender-response traces, and specialist labels remain more prominent than silhouette detail. Timeline markers deliberately remain procedural because full actor silhouettes are unreadable at that smaller scale.
 
 The P57 response and impact textures add a restrained material flash inside the existing projectile, slash, ring, recoil, health-trail, and damage-number grammar. They remain localized to the resolved target and do not obscure room names, health bars, focus rings, timeline markers, or the command rail. The borrowed effects are intentionally low-opacity and remain temporary; the procedural marks still carry the readable fallback and high-contrast structure.
 
@@ -32,6 +33,8 @@ P59 adds one compact prop silhouette to each of Greywatch's seven functional roo
 
 P61 removes accidental `Works...` and `Barrac...` truncation by fitting stable complete labels between 10px and 8px. Supply Room uses the purposeful board shorthand `Supply`, and North Tower remains `Tower`; selecting either still exposes the complete authored identity and role. Ash Ford and Twinwatch use their own functional labels for shared room IDs, including `Grain`, `Signal`, `Magazine`, and `East Post`. Empty placement slots now retain the warm placement outline without repeating `PLACE` over the room-name strip. The new labels fit without moving critical markers, health bars, props, pieces, or combat overlays.
 
+P62 replaces every active defender tile plus Raider, Sapper, Climber, and Siege Beast with original text-free 32×32 SVG silhouettes designed for the board renderer's 13–20px range. Formation defenders use shield-and-pikes, ranged defenders use bow-and-bolt, mobile support uses linked movement, and signal defenders use a raised standard. The four core enemies retain distinct hostile profiles while health, focus, target, cadence, and effect layers remain visually dominant.
+
 ## Next visual target
 
-The next visual production target is replacement of the temporary Tiny Battle actors with purpose-built Greywatch silhouettes, beginning with the core defender line and the first signature enemy family. A local prototype that cropped the existing 512px inventory illustrations into board markers was rejected: the detailed dark artwork collapsed into noisier shapes than the temporary 16px actors at play distance. Future replacements must be authored specifically for the 13–20px marker scale. Until then, the temporary sprites are suitable for combat-timing and recognition tests but not final marketing screenshots.
+The next visual production target is the remaining extended enemy set: Shield Guard, Ash Slinger, Shieldbreaker, Standard Cutter, Outrider, and Gloam Knife still use temporary Tiny Battle tiles inside their distinct procedural profiles. Their replacements should follow the same 32×32, text-free, small-scale silhouette discipline before any final-art or marketing claim. The prior prototype that cropped 512px inventory illustrations remains rejected because its detailed dark artwork collapsed at play distance.
