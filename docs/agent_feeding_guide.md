@@ -176,3 +176,12 @@ Acceptance criteria:
 Verification: [exact command plus manual check]
 Report: intent, plan, files changed, verification result, risks, one next task.
 ```
+
+
+## Early Access breadth contract
+
+Before adding broader content, read [`early_access_requirements.md`](early_access_requirements.md). Greywatch is the quality anchor, not the complete Early Access game. After the current K1–K8 presentation and hardening gates, issue one complete keep slice at a time: distinct room geometry, three named zones, two approach patterns, one recovery rule, two viable seeded opening plans, a contextual briefing, presentation snapshots, save coverage, and deterministic evidence. Continue until the Early Access floor of three keeps, four commanders, fifteen to eighteen packs, twenty-four to thirty defensive pieces, twelve to fourteen enemy families, twenty to twenty-four scenarios, fourteen to eighteen events, and twelve or more viable commander/keep starts is met.
+
+Do not make human testing a prerequisite. Use headless state tests, deterministic replay, complete-flow launches, 1280×720 and 1600×900 layout checks, large-text/controller/reduced-motion checks, save boundaries, screenshots, and known-limitations notes as the active gates. No new unit or enemy should be a cosmetic reskin with no distinct defensive question.
+
+The recommended feeds are **PTK-EA-1** Greywatch completion, **PTK-EA-2** second keep, **PTK-EA-3** third keep and commander lens, **PTK-EA-4** enemy/counter breadth, **PTK-EA-5** events and mastery, and **PTK-EA-6** release hardening.
