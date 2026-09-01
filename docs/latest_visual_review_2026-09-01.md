@@ -1,13 +1,14 @@
 # Pack the Keep — Latest Visual Review
 
-**Build:** `0.48.0-authored-room-accents`
+**Build:** `0.49.0-authored-effects`
 
 **Engine:** Godot 4.7.2
 
-**Capture:** Real local renderer at 1600×900 / 100% for the complete Gatehouse Lock flow with the original actor and Greywatch room-function sets; Preparation inspects a starting defender and the first assault is staged during defender response. Prior extended-enemy, room-label, room-feedback, combat-effect, responsive, and Large Text evidence remains active.
+**Capture:** Real local renderer at 1600×900 / 100% for the complete Gatehouse Lock flow with original actors, rooms, combat impacts, room-state atmosphere, and repair feedback; Preparation inspects a starting defender, the first assault is staged during defender response, and Recovery captures a localized room repair. Prior extended-enemy, room-label, responsive, and Large Text evidence remains active.
 
 ## Evidence
 
+- [Authored battle-effect review](visual_evidence/v0.49.0-authored-effects-review-2026-09-01/)
 - [Authored room-function review](visual_evidence/v0.48.0-authored-room-accents-review-2026-09-01/)
 - [Complete authored-actor review](visual_evidence/v0.47.0-authored-actors-review-2026-09-01/)
 - [Authored core-actor review](visual_evidence/v0.46.0-authored-core-actors-review-2026-09-01/)
@@ -19,7 +20,7 @@
 - [Responsive decision-surface review](visual_evidence/v0.39.0-responsive-decisions-review-2026-08-31/)
 - [Earlier complete seeded-pressure sequence](visual_evidence/v0.37.0-seeded-pressure-review-2026-08-31/)
 
-The authored room-function review contains the nine-screen Gatehouse Lock flow at the real target viewport. Its machine-readable manifest records build, viewport, scenario, inspected-defender state, and staged battle-exchange method. The complete actor review remains the specialist-enemy reference, the readable-room review remains the label reference, and the room-feedback, combat-effect, and responsive sets remain active regression evidence.
+The authored battle-effect review contains the ten-screen Gatehouse Lock flow at the real target viewport, including a staged defender response and localized repair. Its machine-readable manifest records build, viewport, scenario, inspected-defender state, staged battle-exchange method, and repair capture. The room and actor reviews remain the spatial-identity references, while responsive and Large Text sets remain active regression evidence.
 
 ## Findings
 
@@ -41,6 +42,8 @@ P63 completes the set with a reinforced shield, sling-and-ash arc, breaking axe,
 
 P64 replaces the seven active Greywatch Tiny Dungeon props with original portcullis, crossed-arms, hammer-and-anvil, bunk-rack, crate-and-barrel, battlement, and chapel marks. At their 18px rendered size they act as quiet spatial memory cues rather than inventory illustrations. Preparation and Assault preserve complete labels, health bars, critical markers, units, target lines, and combat effects above them; the inner yard and outer wall remain deliberately empty. No current Greywatch room-function profile now references Tiny Dungeon.
 
+P65 replaces all active Particle Pack textures with eight original 48×48 effect marks. Allied bolt and sweeping-strike responses, hostile projectile and claw impacts, and demolition blasts remain distinct inside the existing eight-beat exchange. Damaged rooms use light smoke, breached rooms add rubble and heavier smoke, and a successful repair produces a centered cross-and-ring pulse beside the exact restored value. The real render confirms that these marks stay beneath health, damage, focus, target, and room labels while preserving the procedural feedback that carries the fallback.
+
 ## Next visual target
 
-The authored board-scale silhouette pass is complete for all current actors and Greywatch functional rooms. Temporary combat/room-state effects and foley remain suitable for internal testing but still block any final-art or final-mix claim. Their replacement should remain a separate bounded production pass with the same reduced-motion, high-contrast, mute, and procedural-fallback contracts; human P16 observation remains the only scheduled evidence gate.
+The authored board-scale visual pass is complete for all current actors, Greywatch functional rooms, combat impacts, room-state atmosphere, and repair feedback. Temporary foley is the remaining active borrowed asset family and still blocks a final-mix claim. Its replacement should remain a bounded audio-production pass with the same semantic, mute, volume, pool-size, and generated-tone fallback contracts; human P16 observation remains the only scheduled evidence gate.

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.48.0-authored-room-accents",
+  "build_version": "0.49.0-authored-effects",
   "status": "ready_for_human_sessions",
   "release_ready": false,
   "minimum_completed_sessions": 4,

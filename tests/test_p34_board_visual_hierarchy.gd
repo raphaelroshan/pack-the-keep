@@ -96,10 +96,12 @@ func _initialize() -> void:
 	var damaged_effect: Dictionary = BoardVisualRegistry.room_damage_effect_profile("damaged")
 	var breached_effect: Dictionary = BoardVisualRegistry.room_damage_effect_profile("breached")
 	_check(not bool(stable_effect.get("active", true)) and String(stable_effect.get("texture_path", "")).is_empty(), "stable rooms should remain visually quiet")
-	_check(bool(damaged_effect.get("active", false)) and ResourceLoader.exists(String(damaged_effect.get("texture_path", ""))), "damaged rooms should resolve a loadable temporary atmosphere texture")
-	_check(bool(breached_effect.get("active", false)) and ResourceLoader.exists(String(breached_effect.get("texture_path", ""))) and damaged_effect.get("texture_path") != breached_effect.get("texture_path"), "breached rooms should resolve a distinct stronger atmosphere texture")
+	_check(bool(damaged_effect.get("active", false)) and ResourceLoader.exists(String(damaged_effect.get("texture_path", ""))) and String(damaged_effect.get("asset_status", "")) == "authored_original", "damaged rooms should resolve a loadable authored atmosphere texture")
+	_check(bool(breached_effect.get("active", false)) and ResourceLoader.exists(String(breached_effect.get("texture_path", ""))) and damaged_effect.get("texture_path") != breached_effect.get("texture_path") and String(breached_effect.get("source", "")).contains("48px"), "breached rooms should resolve a distinct stronger authored atmosphere texture")
 	var repair_effect: Dictionary = BoardVisualRegistry.repair_effect_profile()
-	_check(ResourceLoader.exists(String(repair_effect.get("texture_path", ""))) and String(repair_effect.get("asset_status", "")) == "temporary_cc0", "repair feedback should resolve a loadable temporary CC0 effect")
+	_check(ResourceLoader.exists(String(repair_effect.get("texture_path", ""))) and String(repair_effect.get("asset_status", "")) == "authored_original", "repair feedback should resolve a loadable authored effect")
+	_check(bool(board.get("authored_effect_assets", false)) and int(board.get("authored_effect_asset_count", 0)) == 8 and String(board.get("authored_effect_source", "")).contains("48px"), "the board snapshot should identify the complete authored effect set")
+	_check(not bool(board.get("temporary_combat_effects", true)) and not bool(board.get("temporary_room_state_effects", true)), "current combat and room-state effects should no longer depend on temporary Particle Pack textures")
 
 	var enemy_shapes: Dictionary = board.get("enemy_shapes", {})
 	var unique_shapes: Dictionary = {}

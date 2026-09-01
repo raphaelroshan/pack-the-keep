@@ -927,3 +927,11 @@
 **Reason:** The temporary props established that a quiet functional cue improves room recognition, but their borrowed visual language remained visibly disconnected from the authored fortress and actor set. A bounded room-specific vocabulary removes that inconsistency without increasing board density.
 
 **Trade-off:** These silhouettes communicate room family rather than detailed interior furnishing, and only Greywatch receives them in this pass. Labels remain the redundant accessible identifier, while other keeps keep their distinct surfaces and fitted labels until their own authored accent sets are justified.
+
+## ADR-117: Combat consequence uses one authored effect vocabulary
+
+**Decision:** Replace the five active combat, two room-state, and one repair Particle Pack textures with eight original text-free SVG marks designed on a 48×48 view box. Preserve the existing event mapping, tint, opacity, timing, reduced-motion behavior, texture cache, and procedural fallback.
+
+**Reason:** The temporary set proved the effect density and cadence, but its mixed sprite language no longer matches the authored actors, rooms, and fortress. A compact directional vocabulary closes that visual inconsistency while leaving exact damage and targets to the established tactical overlays.
+
+**Trade-off:** These are static marks rather than animation sheets or particle emitters. Variation comes from existing timing, scale, tint, projectile, slash, recoil, ring, and damage-number layers; a future animation pass can replace the same registry paths without changing simulation authority.

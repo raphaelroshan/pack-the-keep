@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.48.0-authored-room-accents",
+  "framework_version": "0.49.0-authored-effects",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -24,7 +24,7 @@
     "status": "implemented",
     "battle_timing": ["live_assault_start", "continuous_enemy_interpolation", "presentation_clock", "0.5x", "1.0x", "2.0x", "pause_inspection", "manual_single_step"],
     "named_input_actions": ["battle_pause", "battle_advance", "battle_speed_half", "battle_speed_normal", "battle_speed_double", "battle_manual_step", "placement_arm", "placement_cancel", "report_focus", "feedback_mute", "contrast_toggle"],
-    "feedback_cues": ["authored_actor_silhouettes", "authored_room_function_silhouettes", "fitted_room_function_labels", "room_condition_bars", "piece_health_bars", "explicit_state_labels", "declared_target_lines", "siege_beast_area_radius", "transient_defender_engagement_traces", "temporary_cc0_response_and_impact_effects", "state_driven_room_damage_atmosphere", "localized_repair_feedback", "transient_impact_recovery_frame"],
+    "feedback_cues": ["authored_actor_silhouettes", "authored_room_function_silhouettes", "authored_response_impact_and_repair_effects", "fitted_room_function_labels", "room_condition_bars", "piece_health_bars", "explicit_state_labels", "declared_target_lines", "siege_beast_area_radius", "transient_defender_engagement_traces", "state_driven_room_damage_atmosphere", "localized_repair_feedback", "transient_impact_recovery_frame"],
     "accessibility": ["high_contrast_cues", "keyboard_mouse_path", "focusable_controls", "scrollable_command_panel", "mute_feedback_tones"],
     "audio": "pooled_temporary_cc0_semantic_samples_with_generated_tone_fallback",
     "determinism_rule": "pause_speed_input_and_presentation_feedback_do_not mutate authoritative keep outcomes",

@@ -15,14 +15,14 @@ const AUTHORED_ENEMY_SHIELDBREAKER := "res://assets/actors/enemy_shieldbreaker.s
 const AUTHORED_ENEMY_STANDARD_CUTTER := "res://assets/actors/enemy_standard_cutter.svg"
 const AUTHORED_ENEMY_OUTRIDER := "res://assets/actors/enemy_outrider.svg"
 const AUTHORED_ENEMY_GLOAM_KNIFE := "res://assets/actors/enemy_gloam_knife.svg"
-const TEMP_DEFENDER_RANGED_EFFECT := "res://assets/temporary/kenney/particle-pack/spark_01.png"
-const TEMP_DEFENDER_MELEE_EFFECT := "res://assets/temporary/kenney/particle-pack/slash_01.png"
-const TEMP_HOSTILE_RANGED_EFFECT := "res://assets/temporary/kenney/particle-pack/spark_02.png"
-const TEMP_HOSTILE_MELEE_EFFECT := "res://assets/temporary/kenney/particle-pack/slash_02.png"
-const TEMP_DEMOLITION_EFFECT := "res://assets/temporary/kenney/particle-pack/scorch_01.png"
-const TEMP_DAMAGED_ROOM_EFFECT := "res://assets/temporary/kenney/particle-pack/smoke_01.png"
-const TEMP_BREACHED_ROOM_EFFECT := "res://assets/temporary/kenney/particle-pack/smoke_04.png"
-const TEMP_REPAIR_EFFECT := "res://assets/temporary/kenney/particle-pack/spark_04.png"
+const AUTHORED_DEFENDER_RANGED_EFFECT := "res://assets/effects/defender_ranged.svg"
+const AUTHORED_DEFENDER_MELEE_EFFECT := "res://assets/effects/defender_melee.svg"
+const AUTHORED_HOSTILE_RANGED_EFFECT := "res://assets/effects/hostile_ranged.svg"
+const AUTHORED_HOSTILE_MELEE_EFFECT := "res://assets/effects/hostile_melee.svg"
+const AUTHORED_DEMOLITION_EFFECT := "res://assets/effects/demolition_blast.svg"
+const AUTHORED_DAMAGED_ROOM_EFFECT := "res://assets/effects/room_damaged.svg"
+const AUTHORED_BREACHED_ROOM_EFFECT := "res://assets/effects/room_breached.svg"
+const AUTHORED_REPAIR_EFFECT := "res://assets/effects/repair_pulse.svg"
 const AUTHORED_ROOM_GATE := "res://assets/rooms/room_gate.svg"
 const AUTHORED_ROOM_ARMORY := "res://assets/rooms/room_armory.svg"
 const AUTHORED_ROOM_WORKSHOP := "res://assets/rooms/room_workshop.svg"
@@ -241,21 +241,21 @@ static func combat_effect_profile(source_side: String, attack_style: String) -> 
 	var effect_path: String
 	var size: float
 	if attack_style == "ranged":
-		effect_path = TEMP_DEFENDER_RANGED_EFFECT if defender else TEMP_HOSTILE_RANGED_EFFECT
+		effect_path = AUTHORED_DEFENDER_RANGED_EFFECT if defender else AUTHORED_HOSTILE_RANGED_EFFECT
 		size = 34.0
 	elif attack_style == "demolition":
-		effect_path = TEMP_DEMOLITION_EFFECT
+		effect_path = AUTHORED_DEMOLITION_EFFECT
 		size = 48.0
 	else:
-		effect_path = TEMP_DEFENDER_MELEE_EFFECT if defender else TEMP_HOSTILE_MELEE_EFFECT
+		effect_path = AUTHORED_DEFENDER_MELEE_EFFECT if defender else AUTHORED_HOSTILE_MELEE_EFFECT
 		size = 40.0
 	return {
 		"source_side": source_side,
 		"attack_style": attack_style,
 		"texture_path": effect_path,
 		"size": size,
-		"asset_status": "temporary_cc0",
-		"source": "Kenney Particle Pack · CC0",
+		"asset_status": "authored_original",
+		"source": "Pack the Keep original 48px effect silhouettes",
 	}
 
 static func room_damage_effect_profile(state: String) -> Dictionary:
@@ -264,11 +264,11 @@ static func room_damage_effect_profile(state: String) -> Dictionary:
 	return {
 		"active": true,
 		"state": state,
-		"texture_path": TEMP_BREACHED_ROOM_EFFECT if state == "breached" else TEMP_DAMAGED_ROOM_EFFECT,
+		"texture_path": AUTHORED_BREACHED_ROOM_EFFECT if state == "breached" else AUTHORED_DAMAGED_ROOM_EFFECT,
 		"size": 38.0 if state == "breached" else 28.0,
 		"opacity": 0.24 if state == "breached" else 0.16,
-		"asset_status": "temporary_cc0",
-		"source": "Kenney Particle Pack · CC0",
+		"asset_status": "authored_original",
+		"source": "Pack the Keep original 48px effect silhouettes",
 	}
 
 
@@ -298,10 +298,10 @@ static func room_function_accent_profile(keep_id: String, room_id: String) -> Di
 
 static func repair_effect_profile() -> Dictionary:
 	return {
-		"texture_path": TEMP_REPAIR_EFFECT,
+		"texture_path": AUTHORED_REPAIR_EFFECT,
 		"size": 42.0,
-		"asset_status": "temporary_cc0",
-		"source": "Kenney Particle Pack · CC0",
+		"asset_status": "authored_original",
+		"source": "Pack the Keep original 48px effect silhouettes",
 	}
 
 static func presentation_snapshot() -> Dictionary:
@@ -326,9 +326,11 @@ static func presentation_snapshot() -> Dictionary:
 		"authored_actor_source": "Pack the Keep original 32px vector silhouettes",
 		"authored_enemy_count": 10,
 		"temporary_actor_assets": false,
-		"temporary_combat_effects": true,
-		"temporary_combat_effect_source": "Kenney Particle Pack · CC0",
-		"temporary_room_state_effects": true,
+		"authored_effect_assets": true,
+		"authored_effect_asset_count": 8,
+		"authored_effect_source": "Pack the Keep original 48px effect silhouettes",
+		"temporary_combat_effects": false,
+		"temporary_room_state_effects": false,
 		"authored_room_accents": true,
 		"authored_room_accent_count": 7,
 		"authored_room_accent_source": "Pack the Keep original 32px room-function silhouettes",
