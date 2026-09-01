@@ -1,0 +1,42 @@
+{
+  "battle_exchange_progress": 0.28,
+  "battle_exchange_staged": true,
+  "build_version": "0.47.0-authored-actors",
+  "commander": "castellan",
+  "debug_ui": false,
+  "files": [
+    "01_title.png",
+    "02_war_council.png",
+    "03_preparation.png",
+    "03c_mixed_routes_ready.png",
+    "04_assault_phase_1.png",
+    "05_recovery_phase_1.png",
+    "06_assault_phase_2.png",
+    "07_recovery_phase_2.png",
+    "07b_lamp_route_prepared.png",
+    "08_assault_phase_3.png",
+    "09_terminal_results.png"
+  ],
+  "human_evidence": false,
+  "pack_offer_captured": false,
+  "repair_feedback_captured": false,
+  "representative_enemy_captures": [
+    {"file": "10_shield_guard.png", "scenario": "red_banner_road", "enemy": "shield_guard"},
+    {"file": "11_ash_slinger.png", "scenario": "ash_at_the_bell", "enemy": "ash_slinger"},
+    {"file": "12_shieldbreaker.png", "scenario": "the_splintered_gate", "enemy": "shieldbreaker"},
+    {"file": "13_standard_cutter.png", "scenario": "the_cut_standard", "enemy": "standard_cutter"}
+  ],
+  "resolution": {
+    "height": 900,
+    "width": 1600
+  },
+  "route_delay_captured": false,
+  "route_reveal_captured": false,
+  "scenario": "the_twilight_road",
+  "schema_version": 1,
+  "spatial_transition_captured": false,
+  "starting_defender_inspected": false,
+  "twilight_choice_captured": true,
+  "twilight_road_captured": false,
+  "ui_scale_percent": 100
+}

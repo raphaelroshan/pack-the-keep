@@ -68,15 +68,17 @@ func _initialize() -> void:
 		_check(String(actor.piece.get("asset_status", "")) == "authored_original" and bool(actor.get("piece_texture_loaded", false)), "%s should resolve an authored defender-role silhouette" % piece_id)
 		authored_defender_paths[String(actor.piece.get("sprite_path", ""))] = true
 	_check(authored_defender_paths.size() == 4, "combat defenders should retain four distinct authored role silhouettes")
-	_check(String(ranged.enemy.get("sprite_path", "")).ends_with("tile_0160.png") and String(ranged.enemy.get("asset_status", "")) == "temporary_cc0" and bool(ranged.get("enemy_texture_loaded", false)), "extended ranged enemies should retain the temporary hostile fallback")
-	_check(bool(board.get("authored_core_actor_assets", false)) and String(board.get("authored_core_actor_source", "")).contains("32px"), "the board snapshot should identify authored core actor provenance")
-	_check(String(board.get("temporary_actor_source", "")).contains("CC0") and String(board.get("temporary_actor_scope", "")) == "extended enemy families", "the board snapshot should identify the remaining temporary actor scope")
+	_check(String(ranged.enemy.get("sprite_path", "")).ends_with("enemy_ash_slinger.svg") and String(ranged.enemy.get("asset_status", "")) == "authored_original" and bool(ranged.get("enemy_texture_loaded", false)), "extended ranged enemies should resolve an authored hostile silhouette")
+	_check(bool(board.get("authored_actor_assets", false)) and int(board.get("authored_enemy_count", 0)) == 10 and String(board.get("authored_actor_source", "")).contains("32px"), "the board snapshot should identify complete authored actor provenance")
+	_check(not bool(board.get("temporary_actor_assets", true)), "the board should no longer depend on temporary actor tiles")
 	var authored_enemy_paths: Dictionary = {}
-	for enemy_id in ["raider", "sapper", "climber", "siege_beast"]:
+	for enemy_id in ["raider", "sapper", "climber", "siege_beast", "shield_guard", "ash_slinger", "shieldbreaker", "standard_cutter", "outrider", "gloam_knife"]:
 		var actor: Dictionary = ui.keep_canvas.actor_visual_snapshot("pike_squad", enemy_id)
 		_check(String(actor.enemy.get("asset_status", "")) == "authored_original" and bool(actor.get("enemy_texture_loaded", false)), "%s should resolve an authored small-scale silhouette" % enemy_id)
 		authored_enemy_paths[String(actor.enemy.get("sprite_path", ""))] = true
-	_check(authored_enemy_paths.size() == 4, "core enemies should retain four distinct authored silhouettes")
+	_check(authored_enemy_paths.size() == 10, "all enemy families should retain distinct authored silhouettes")
+	var unknown_actor: Dictionary = BoardVisualRegistry.enemy_profile("unknown_enemy")
+	_check(String(unknown_actor.get("asset_status", "")) == "procedural_fallback" and String(unknown_actor.get("sprite_path", "")).is_empty(), "unknown enemies should retain procedural fallback without borrowed art")
 	var accented_rooms: Array[String] = ["gate", "armory", "workshop", "barracks", "supply_room", "north_tower", "old_chapel"]
 	var accent_paths: Dictionary = {}
 	for room_id in accented_rooms:
