@@ -40,6 +40,30 @@ const LAYER_ORDER: Array[String] = [
 	"tactical_labels"
 ]
 
+const ROOM_DISPLAY_LABELS := {
+	"greywatch_keep": {
+		"supply_room": "Supply",
+		"north_tower": "Tower",
+	},
+	"ash_ford_redoubt": {
+		"gate": "West Head",
+		"inner_yard": "Causeway",
+		"workshop": "Sluice",
+		"barracks": "Ferry",
+		"supply_room": "Grain",
+		"north_tower": "Signal",
+		"old_chapel": "Refuge",
+	},
+	"twinwatch_bastion": {
+		"gate": "West Gate",
+		"armory": "East Post",
+		"workshop": "Forge",
+		"barracks": "Quarters",
+		"supply_room": "Magazine",
+		"old_chapel": "Chapel",
+	},
+}
+
 static func floor_profile(floor_name: String, terrain: String = "fort", high_contrast: bool = false) -> Dictionary:
 	if terrain == "ridge" and floor_name == "ground":
 		return {
@@ -85,6 +109,11 @@ static func room_profile(critical: bool, state: String, high_contrast: bool = fa
 		"edge": Color("#f3cf82") if critical else Color("#8fc6c8"),
 		"symbol": "diamond" if critical else "notch"
 	}
+
+
+static func room_display_label(keep_id: String, room_id: String, fallback_name: String) -> String:
+	var keep_labels: Dictionary = ROOM_DISPLAY_LABELS.get(keep_id, {})
+	return String(keep_labels.get(room_id, fallback_name))
 
 static func surface_finish_profile(keep_id: String, floor_name: String, high_contrast: bool = false) -> Dictionary:
 	if keep_id != "greywatch_keep":

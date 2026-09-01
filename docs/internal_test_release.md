@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.44.0-room-accents` — the development candidate adds restrained Greywatch room-function accents to the existing licensed actors, semantic foley, combat effects, damaged-room atmosphere, and localized repair confirmation, while retaining responsive decisions, deterministic tactical overlays, accessibility, save/resume, terminal-results, packaged K8, and forced-close gates; human sessions and owner approval remain pending
+**Current build identity:** `0.45.0-readable-rooms` — the development candidate gives every compact room a stable fully fitted board label above the existing Greywatch room-function accents, licensed actors, semantic foley, combat effects, damaged-room atmosphere, and localized repair confirmation, while retaining responsive decisions, deterministic tactical overlays, accessibility, save/resume, terminal-results, packaged K8, and forced-close gates; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch, Ash Ford, and Twinwatch support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan, Warden, or Quartermaster, select one of fifteen authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown, Rally, or Resupply, inspect health, armor, signal state, breakthrough momentum, concealment visibility, protection, assigned-specialist priority, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.45.0 acceptance checks
+
+Enter Preparation and Battle at 1600×900. Confirm Workshop and Barracks appear in full, Supply Room uses the stable `Supply` board label, North Tower uses `Tower`, and no active room label ends in an accidental ellipsis. Confirm empty placement slots retain their warm outline without repeating `PLACE` over room names. Select each compact room and confirm inspection still shows its complete authored name and role. Verify critical-room markers, health bars, state labels, room accents, units, target lines, and high contrast retain their existing hierarchy.
 
 ## v0.44.0 acceptance checks
 
@@ -360,7 +364,7 @@ The command table now includes **Quick test: advance one battle step**. It start
 
 ## v0.8.3 placement-box additions
 
-The procedural fort now exposes a visible placement box in each authoritative room and upper-floor area. Empty boxes use a low-contrast warm `PLACE` outline; occupied boxes retain their slot outline beneath the placed piece. These boxes are aligned to the existing floor grid and are affordances only: the existing `keep_state.gd` footprint, overlap, materials, availability, and assignment validation remains authoritative. The ground courtyard, gate, keep rooms, upper wall walk, North Tower, and Old Chapel remain visible during preparation and combat.
+The procedural fort now exposes a visible placement box in each authoritative room and upper-floor area. Empty boxes use a low-contrast warm outline; occupied boxes retain their slot outline beneath the placed piece. These boxes are aligned to the existing floor grid and are affordances only: the existing `keep_state.gd` footprint, overlap, materials, availability, and assignment validation remains authoritative. The ground courtyard, gate, keep rooms, upper wall walk, North Tower, and Old Chapel remain visible during preparation and combat.
 
 The supplied fort image informed only the high-level composition of a centered stronghold with distinct rooms, wall sections, visible approaches, and side controls. It is not copied into the build and no exact external UI or asset is claimed.
 

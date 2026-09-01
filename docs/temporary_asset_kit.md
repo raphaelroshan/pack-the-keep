@@ -4,7 +4,7 @@
 **Build target:** Current private alpha branch  
 **Purpose:** Give AI agents usable temporary defenders, enemies, rooms, VFX, audio, and animation ingredients while Greywatch’s final authored art is developed.
 
-**Current integration:** `0.44.0-room-accents` retains the Tiny Battle actors, bounded Interface Sounds/RPG Audio cue pool, restrained combat effects, damaged-room atmosphere, and localized repair spark, then adds seven low-density Tiny Dungeon props to Greywatch's functional rooms. Existing room fills, health bars, state labels, procedural combat marks, and generated tones remain the fallbacks. The inner yard, outer wall, Ash Ford, and Twinwatch remain free of Dungeon accents.
+**Current integration:** `0.45.0-readable-rooms` retains the Tiny Battle actors, bounded Interface Sounds/RPG Audio cue pool, restrained combat effects, damaged-room atmosphere, localized repair spark, and seven low-density Tiny Dungeon props in Greywatch's functional rooms. Stable fitted room labels remain above that temporary art; existing room fills, health bars, state labels, procedural combat marks, and generated tones remain the fallbacks. The inner yard, outer wall, Ash Ford, and Twinwatch remain free of Dungeon accents.
 
 ## Included sources
 

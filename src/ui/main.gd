@@ -4451,7 +4451,7 @@ class KeepCanvas extends Control:
 			"upper": BoardVisuals.surface_finish_profile(keep_id, "upper", high_contrast_mode),
 			"texture_assigned": authored_fort_texture != null,
 		}
-		snapshot.merge({"cell_size": Vector2(CELL_X, CELL_Y), "grid_visible": false, "placement_guides_visible": placement_guides_visible, "canvas_size": BASE_CANVAS_SIZE})
+		snapshot.merge({"cell_size": Vector2(CELL_X, CELL_Y), "grid_visible": false, "placement_guides_visible": placement_guides_visible, "placement_guide_style": "outline_only", "canvas_size": BASE_CANVAS_SIZE})
 		return snapshot
 
 	func selected_subject_snapshot() -> Dictionary:
@@ -4678,6 +4678,30 @@ class KeepCanvas extends Control:
 			shortened = shortened.left(shortened.length() - 1)
 		return shortened + "…" if shortened.length() < label_text.length() else shortened
 
+	func _fitted_board_label_size(label_text: String, max_width: float, preferred_size: int = 10, minimum_size: int = 8) -> int:
+		for candidate in range(preferred_size, minimum_size - 1, -1):
+			if ThemeDB.fallback_font.get_string_size(label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, candidate).x <= max_width:
+				return candidate
+		return minimum_size
+
+	func room_label_snapshot(room_id: String) -> Dictionary:
+		if keep == null or not keep.room_definitions().has(room_id):
+			return {}
+		var room: Dictionary = keep.room_definition(room_id)
+		var label_text: String = BoardVisuals.room_display_label(String(keep.keep_id), room_id, String(room.get("name", room_id)))
+		var room_size: Vector2i = room.get("size", Vector2i.ONE)
+		var max_width: float = float(room_size.x) * CELL_X - 14.0
+		var font_size: int = _fitted_board_label_size(label_text, max_width)
+		var measured_width: float = ThemeDB.fallback_font.get_string_size(label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		return {
+			"room_id": room_id,
+			"text": label_text,
+			"font_size": font_size,
+			"max_width": max_width,
+			"measured_width": measured_width,
+			"fits": measured_width <= max_width,
+		}
+
 	func _room_label_visible(room_id: String, floor_name: String, origin: Vector2) -> bool:
 		return not _placement_box_occupied(_room_rect(room_id, origin), floor_name, origin)
 
@@ -4747,7 +4771,7 @@ class KeepCanvas extends Control:
 		var fade: float = 0.72 if reduced_motion_mode else clampf(1.0 - _combat_effect_progress() * 0.7, 0.2, 0.72)
 		draw_rect(rect.grow(-1.0), Color(color, fade), false, 2.5)
 
-	func _draw_placement_boxes(floor_name: String, origin: Vector2, outline_only: bool = false) -> void:
+	func _draw_placement_boxes(floor_name: String, origin: Vector2) -> void:
 		if not placement_guides_visible:
 			return
 		for room_id in keep.room_definitions().keys():
@@ -4758,8 +4782,6 @@ class KeepCanvas extends Control:
 			var occupied: bool = _placement_box_occupied(box, floor_name, origin)
 			var box_color := Color(0.93, 0.75, 0.42, 0.72) if not occupied else Color(0.78, 0.88, 0.71, 0.58)
 			draw_rect(box, box_color, false, 2.0)
-			if not outline_only and not occupied:
-				draw_string(ThemeDB.fallback_font, box.position + Vector2(3, 10), "PLACE", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(0.98, 0.88, 0.62, 0.9))
 
 	func _room_color(room_id: String) -> Color:
 		if keep == null:
@@ -4960,7 +4982,10 @@ class KeepCanvas extends Control:
 				var marker: Vector2 = rect.position + Vector2(rect.size.x - 8.0, 9.0)
 				draw_colored_polygon(PackedVector2Array([marker + Vector2(0, -4), marker + Vector2(4, 0), marker + Vector2(0, 4), marker + Vector2(-4, 0)]), room_profile.edge)
 			if show_room_text:
-				draw_string(ThemeDB.fallback_font, rect.position + Vector2(3, 15), _compact_board_label(String(room.name), rect.size.x - 14.0, 10, true), HORIZONTAL_ALIGNMENT_LEFT, rect.size.x - 14, 10, Color("#eadfce"))
+				var room_label: Dictionary = room_label_snapshot(String(room_id))
+				var room_label_text: String = String(room_label.get("text", room.name))
+				var room_label_size: int = int(room_label.get("font_size", 10))
+				draw_string(ThemeDB.fallback_font, rect.position + Vector2(3, 15), room_label_text, HORIZONTAL_ALIGNMENT_LEFT, float(room_label.get("max_width", rect.size.x - 14.0)), room_label_size, Color("#eadfce"))
 			var condition: int = keep.room_condition(String(room_id))
 			var state_text: String = keep.room_state(String(room_id)).to_upper()
 			var room_health_rect: Rect2 = Rect2(rect.position + Vector2(3, rect.size.y - 9), Vector2(rect.size.x - 6.0, 6.0))
@@ -5005,7 +5030,7 @@ class KeepCanvas extends Control:
 			if bool(instance.get("disabled", false)):
 				draw_line(piece_rect.position + Vector2(5, 5), piece_rect.end - Vector2(5, 5), Color("#6f2430"), 3.0)
 				draw_line(Vector2(piece_rect.end.x - 5, piece_rect.position.y + 5), Vector2(piece_rect.position.x + 5, piece_rect.end.y - 5), Color("#6f2430"), 3.0)
-		_draw_placement_boxes(floor_name, origin, true)
+		_draw_placement_boxes(floor_name, origin)
 
 	func _draw_piece_role_badge(rect: Rect2, shape: String, color: Color) -> void:
 		var center: Vector2 = rect.position + Vector2(rect.size.x - 9.0, rect.size.y * 0.5 + 2.0)
