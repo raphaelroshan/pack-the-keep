@@ -4,7 +4,7 @@
 **Build target:** Current private alpha branch  
 **Purpose:** Give AI agents usable temporary defenders, enemies, rooms, VFX, audio, and animation ingredients while Greywatch’s final authored art is developed.
 
-**Current integration:** `0.48.0-authored-room-accents` replaces every active Tiny Battle actor tile and Tiny Dungeon room-function prop with original small-scale SVG silhouettes. Both kits remain archived as licensed fallback material but no current actor or Greywatch room-function profile references them. The bounded Interface Sounds/RPG Audio cue pool, restrained combat effects, damaged-room atmosphere, and localized repair spark remain temporary. Stable fitted room labels, room fills, health bars, state labels, procedural combat marks, and generated tones remain the fallbacks.
+**Current integration:** `0.49.0-authored-effects` replaces every active Tiny Battle actor tile, Tiny Dungeon room-function prop, and Particle Pack combat/room/recovery effect with original small-scale SVG silhouettes. Those visual kits remain archived as licensed fallback material but no current board profile references them. The bounded Interface Sounds/RPG Audio cue pool remains temporary. Stable fitted room labels, room fills, health bars, state labels, procedural combat marks, and generated tones remain the fallbacks.
 
 ## Included sources
 

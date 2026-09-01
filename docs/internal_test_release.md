@@ -1,10 +1,14 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.48.0-authored-room-accents` — the development candidate gives every active defender, all ten enemy families, and seven Greywatch functional rooms an original small-scale silhouette above the stable room-label and tactical-overlay grammar, while retaining responsive decisions, deterministic combat, accessibility, save/resume, terminal-results, packaged K8, and forced-close gates; human sessions and owner approval remain pending
+**Current build identity:** `0.49.0-authored-effects` — the development candidate gives every active defender, enemy family, Greywatch functional room, combat impact, room-state atmosphere, and repair pulse an original small-scale visual asset above the stable tactical-overlay grammar, while retaining responsive decisions, deterministic combat, accessibility, save/resume, terminal-results, packaged K8, and forced-close gates; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch, Ash Ford, and Twinwatch support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan, Warden, or Quartermaster, select one of fifteen authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown, Rally, or Resupply, inspect health, armor, signal state, breakthrough momentum, concealment visibility, protection, assigned-specialist priority, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
+
+## v0.49.0 acceptance checks
+
+Stage defender melee/ranged responses and hostile melee/ranged/demolition impacts. Confirm each uses a distinct original effect while exact health trails, damage values, target lines, focus, and beat labels remain dominant. Damage and breach a room, then repair a room and defender; confirm the two atmosphere marks and localized repair pulse resolve from original assets. Toggle reduced motion and high contrast, and confirm effect timing, geometry, simulation state, and procedural fallbacks remain unchanged.
 
 ## v0.48.0 acceptance checks
 
