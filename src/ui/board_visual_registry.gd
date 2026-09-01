@@ -1,9 +1,6 @@
 class_name BoardVisualRegistry
 extends RefCounted
 
-const TEMP_ENEMY_RANGED := "res://assets/temporary/kenney/tiny-battle/Tiles/tile_0160.png"
-const TEMP_ENEMY_MELEE := "res://assets/temporary/kenney/tiny-battle/Tiles/tile_0161.png"
-const TEMP_ENEMY_HEAVY := "res://assets/temporary/kenney/tiny-battle/Tiles/tile_0179.png"
 const AUTHORED_ALLY_FORMATION := "res://assets/actors/defender_formation.svg"
 const AUTHORED_ALLY_RANGED := "res://assets/actors/defender_ranged.svg"
 const AUTHORED_ALLY_MOBILE := "res://assets/actors/defender_mobile.svg"
@@ -12,6 +9,12 @@ const AUTHORED_ENEMY_RAIDER := "res://assets/actors/enemy_raider.svg"
 const AUTHORED_ENEMY_SAPPER := "res://assets/actors/enemy_sapper.svg"
 const AUTHORED_ENEMY_CLIMBER := "res://assets/actors/enemy_climber.svg"
 const AUTHORED_ENEMY_SIEGE := "res://assets/actors/enemy_siege_beast.svg"
+const AUTHORED_ENEMY_SHIELD_GUARD := "res://assets/actors/enemy_shield_guard.svg"
+const AUTHORED_ENEMY_ASH_SLINGER := "res://assets/actors/enemy_ash_slinger.svg"
+const AUTHORED_ENEMY_SHIELDBREAKER := "res://assets/actors/enemy_shieldbreaker.svg"
+const AUTHORED_ENEMY_STANDARD_CUTTER := "res://assets/actors/enemy_standard_cutter.svg"
+const AUTHORED_ENEMY_OUTRIDER := "res://assets/actors/enemy_outrider.svg"
+const AUTHORED_ENEMY_GLOAM_KNIFE := "res://assets/actors/enemy_gloam_knife.svg"
 const TEMP_DEFENDER_RANGED_EFFECT := "res://assets/temporary/kenney/particle-pack/spark_01.png"
 const TEMP_DEFENDER_MELEE_EFFECT := "res://assets/temporary/kenney/particle-pack/slash_01.png"
 const TEMP_HOSTILE_RANGED_EFFECT := "res://assets/temporary/kenney/particle-pack/spark_02.png"
@@ -208,12 +211,18 @@ static func enemy_profile(enemy_id: String, attack_style: String = "melee") -> D
 	profile.merge(actor)
 	return profile
 
-static func _enemy_actor_profile(enemy_id: String, attack_style: String) -> Dictionary:
+static func _enemy_actor_profile(enemy_id: String, _attack_style: String) -> Dictionary:
 	var authored_paths: Dictionary = {
 		"raider": AUTHORED_ENEMY_RAIDER,
 		"sapper": AUTHORED_ENEMY_SAPPER,
 		"climber": AUTHORED_ENEMY_CLIMBER,
 		"siege_beast": AUTHORED_ENEMY_SIEGE,
+		"shield_guard": AUTHORED_ENEMY_SHIELD_GUARD,
+		"ash_slinger": AUTHORED_ENEMY_ASH_SLINGER,
+		"shieldbreaker": AUTHORED_ENEMY_SHIELDBREAKER,
+		"standard_cutter": AUTHORED_ENEMY_STANDARD_CUTTER,
+		"outrider": AUTHORED_ENEMY_OUTRIDER,
+		"gloam_knife": AUTHORED_ENEMY_GLOAM_KNIFE,
 	}
 	if authored_paths.has(enemy_id):
 		return {
@@ -221,17 +230,10 @@ static func _enemy_actor_profile(enemy_id: String, attack_style: String) -> Dict
 			"asset_status": "authored_original",
 			"source": "Pack the Keep 32px vector silhouettes",
 		}
-	var temporary_path: String
-	if attack_style == "demolition" or enemy_id == "outrider":
-		temporary_path = TEMP_ENEMY_HEAVY
-	elif attack_style == "ranged":
-		temporary_path = TEMP_ENEMY_RANGED
-	else:
-		temporary_path = TEMP_ENEMY_MELEE
 	return {
-		"sprite_path": temporary_path,
-		"asset_status": "temporary_cc0",
-		"source": "Kenney Tiny Battle · CC0",
+		"sprite_path": "",
+		"asset_status": "procedural_fallback",
+		"source": "BoardVisualRegistry procedural silhouette",
 	}
 
 static func combat_effect_profile(source_side: String, attack_style: String) -> Dictionary:
@@ -320,11 +322,10 @@ static func presentation_snapshot() -> Dictionary:
 			"outrider": enemy_profile("outrider").shape,
 			"gloam_knife": enemy_profile("gloam_knife").shape
 		},
-		"authored_core_actor_assets": true,
-		"authored_core_actor_source": "Pack the Keep original 32px vector silhouettes",
-		"temporary_actor_assets": true,
-		"temporary_actor_scope": "extended enemy families",
-		"temporary_actor_source": "Kenney Tiny Battle · CC0",
+		"authored_actor_assets": true,
+		"authored_actor_source": "Pack the Keep original 32px vector silhouettes",
+		"authored_enemy_count": 10,
+		"temporary_actor_assets": false,
 		"temporary_combat_effects": true,
 		"temporary_combat_effect_source": "Kenney Particle Pack · CC0",
 		"temporary_room_state_effects": true,

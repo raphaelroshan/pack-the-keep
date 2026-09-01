@@ -911,3 +911,11 @@
 **Reason:** The temporary tiles proved that actor imagery helps, but their toy-like style does not belong to Greywatch and larger inventory illustrations collapse at the 13–20px board scale. Purpose-built silhouettes can use fewer, stronger motifs and remain replaceable through the existing visual registry.
 
 **Trade-off:** This is a deliberately compact role language rather than animated character art. Several defender pieces share a role silhouette, and six extended enemies remain temporary; names and procedural shapes continue to provide redundant identification. Texture lookup and drawing stay presentation-only and cannot change simulation state.
+
+## ADR-115: Every current enemy owns a board-scale silhouette
+
+**Decision:** Extend the original 32×32 actor set to Shield Guard, Ash Slinger, Shieldbreaker, Standard Cutter, Outrider, and Gloam Knife. Map all ten current enemy IDs directly to unique authored assets and use the procedural profile alone for unknown future IDs.
+
+**Reason:** The P62 core set established a coherent Greywatch language, but later scenarios still crossed back into visibly borrowed art. Completing the finite current roster removes that inconsistency and lets armor, smoke, protection breaking, command hunting, momentum, and concealment begin with recognizable visual verbs.
+
+**Trade-off:** The silhouettes remain static role marks rather than animation sheets, and some meaning still depends on the existing adjacent labels and overlays. Tiny Battle stays in the repository for provenance and historical evidence, but no current actor profile references it.

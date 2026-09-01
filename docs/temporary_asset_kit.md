@@ -4,7 +4,7 @@
 **Build target:** Current private alpha branch  
 **Purpose:** Give AI agents usable temporary defenders, enemies, rooms, VFX, audio, and animation ingredients while Greywatch’s final authored art is developed.
 
-**Current integration:** `0.46.0-authored-core-actors` replaces the Tiny Battle tiles for active defenders plus Raider, Sapper, Climber, and Siege Beast with original small-scale SVG silhouettes. Tiny Battle remains only for extended enemy families. The bounded Interface Sounds/RPG Audio cue pool, restrained combat effects, damaged-room atmosphere, localized repair spark, and seven low-density Tiny Dungeon props remain temporary. Stable fitted room labels, room fills, health bars, state labels, procedural combat marks, and generated tones remain the fallbacks.
+**Current integration:** `0.47.0-authored-actors` replaces every active Tiny Battle actor tile with original small-scale SVG silhouettes. Tiny Battle remains archived as licensed fallback material but no current actor profile references it. The bounded Interface Sounds/RPG Audio cue pool, restrained combat effects, damaged-room atmosphere, localized repair spark, and seven low-density Tiny Dungeon props remain temporary. Stable fitted room labels, room fills, health bars, state labels, procedural combat marks, and generated tones remain the fallbacks.
 
 ## Included sources
 

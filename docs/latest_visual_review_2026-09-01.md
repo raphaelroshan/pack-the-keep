@@ -1,13 +1,14 @@
 # Pack the Keep — Latest Visual Review
 
-**Build:** `0.46.0-authored-core-actors`
+**Build:** `0.47.0-authored-actors`
 
 **Engine:** Godot 4.7.2
 
-**Capture:** Real local renderer at 1600×900 / 100% for the complete Greywatch flow with original core actor silhouettes and fully fitted room labels; prior room-accent, room-feedback, combat-effect, responsive, and Large Text evidence remains active.
+**Capture:** Real local renderer at 1600×900 / 100% for the complete Twilight Road flow with the full original actor set; representative real-scale checks cover each extended enemy family, while prior room-label, room-accent, room-feedback, combat-effect, responsive, and Large Text evidence remains active.
 
 ## Evidence
 
+- [Complete authored-actor review](visual_evidence/v0.47.0-authored-actors-review-2026-09-01/)
 - [Authored core-actor review](visual_evidence/v0.46.0-authored-core-actors-review-2026-09-01/)
 - [Readable-room review](visual_evidence/v0.45.0-readable-rooms-review-2026-09-01/)
 - [Room-function accent review](visual_evidence/v0.44.0-room-accents-review-2026-08-31/)
@@ -17,7 +18,7 @@
 - [Responsive decision-surface review](visual_evidence/v0.39.0-responsive-decisions-review-2026-08-31/)
 - [Earlier complete seeded-pressure sequence](visual_evidence/v0.37.0-seeded-pressure-review-2026-08-31/)
 
-The authored core-actor review contains the complete nine-screen Greywatch flow plus a machine-readable manifest recording build, viewport, selected starting defender, staged battle exchange, and capture method. The readable-room review remains the label reference, the room-accent review remains the prop-density reference, the room-feedback review remains the damage/recovery reference, and the responsive sets remain active regression evidence.
+The complete authored-actor review contains the nine-screen Twilight Road flow plus focused live-assault frames for Shield Guard, Ash Slinger, Shieldbreaker, and Standard Cutter. Its machine-readable manifest records build, viewport, scenario, and capture method. The core-actor review remains the Greywatch signature-enemy reference, the readable-room review remains the label reference, and the room-accent, room-feedback, combat-effect, and responsive sets remain active regression evidence.
 
 ## Findings
 
@@ -35,6 +36,8 @@ P61 removes accidental `Works...` and `Barrac...` truncation by fitting stable c
 
 P62 replaces every active defender tile plus Raider, Sapper, Climber, and Siege Beast with original text-free 32×32 SVG silhouettes designed for the board renderer's 13–20px range. Formation defenders use shield-and-pikes, ranged defenders use bow-and-bolt, mobile support uses linked movement, and signal defenders use a raised standard. The four core enemies retain distinct hostile profiles while health, focus, target, cadence, and effect layers remain visually dominant.
 
+P63 completes the set with a reinforced shield, sling-and-ash arc, breaking axe, cut standard, forward charge, and concealed crossed knives for the six extended families. The retained procedural under-shapes still carry color-safe differentiation, while armor, smoke, protection-breaking, command-hunter, momentum, and concealment overlays remain the authoritative explanations. No current actor profile now references Tiny Battle.
+
 ## Next visual target
 
-The next visual production target is the remaining extended enemy set: Shield Guard, Ash Slinger, Shieldbreaker, Standard Cutter, Outrider, and Gloam Knife still use temporary Tiny Battle tiles inside their distinct procedural profiles. Their replacements should follow the same 32×32, text-free, small-scale silhouette discipline before any final-art or marketing claim. The prior prototype that cropped 512px inventory illustrations remains rejected because its detailed dark artwork collapsed at play distance.
+The next bounded visual production target is the seven temporary Greywatch room-function accents. They should be replaced with equally restrained original silhouettes without adding density to the inner yard or outer wall. Temporary effects and foley remain suitable for internal testing but still block any final-art or final-mix claim.
