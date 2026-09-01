@@ -1,7 +1,7 @@
 # Pack the Keep — Early Access Requirements
 
-**Status:** Planning contract for a skeletal but commercially credible Early Access build  
-**Current baseline:** High-quality Greywatch-centered keep-defense slice with three commanders, multiple keeps, packs, enemy doctrines, authored events, deterministic real-time auto-battle, recovery, Results, accessibility, persistence, and private-alpha hardening.
+**Status:** Active, machine-checked contract for a skeletal but commercially credible Early Access build
+**Current baseline:** `0.50.0-ea1-greywatch-anchor`; PTK-EA-1 is implemented and PTK-EA-2 is next. `content/early_access_progress.json` records the exact inventory, evidence, pending milestones, and non-release boundary.
 
 ## Product decision
 
@@ -74,7 +74,7 @@ Every new commander, keep, pack, piece, enemy, doctrine, or event is a vertical 
 
 ## Recommended order
 
-**PTK-EA-1:** finish the Greywatch Early Access anchor, including the responsive preparation flow, complete multi-wave journey, and final temporary-asset integration where useful.  
+**PTK-EA-1 — Complete:** Greywatch is the CI-enforced quality anchor, including responsive preparation, the complete multi-wave journey, authored board visuals, bounded semantic foley, deterministic/save evidence, and a versioned capture.
 **PTK-EA-2:** add a second keep with a distinct geometry question and a compact scenario set.  
 **PTK-EA-3:** add a fourth commander or doctrine lens plus the third keep, preserving two viable plans.  
 **PTK-EA-4:** add two enemy families and their counters, including telegraphs and recovery consequences.  

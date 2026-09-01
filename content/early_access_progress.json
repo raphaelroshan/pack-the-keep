@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "build_version": "0.50.0-ea1-greywatch-anchor",
+  "status": "in_progress",
+  "early_access_ready": false,
+  "breadth_floor": {
+    "keeps": 3,
+    "commanders": 4,
+    "packs_min": 15,
+    "packs_max": 18,
+    "pieces_min": 24,
+    "pieces_max": 30,
+    "enemies_min": 12,
+    "enemies_max": 14,
+    "scenarios_min": 20,
+    "scenarios_max": 24,
+    "events_min": 14,
+    "events_max": 18,
+    "viable_commander_keep_starts": 12
+  },
+  "current_inventory": {
+    "keeps": 3,
+    "commanders": 3,
+    "packs": 11,
+    "pieces": 21,
+    "enemies": 10,
+    "doctrines": 12,
+    "scenarios": 15,
+    "events": 10,
+    "commander_keep_starts": 9
+  },
+  "active_temporary_asset_families": [
+    "semantic_foley"
+  ],
+  "milestones": [
+    {
+      "id": "PTK-EA-1",
+      "status": "implemented",
+      "keep_id": "greywatch_keep",
+      "requirements": [
+        {"id": "distinct_room_graph", "status": "automated", "evidence": ["data/keeps/greywatch_keep.json", "tests/test_ea1_greywatch_anchor.gd"]},
+        {"id": "two_approach_patterns", "status": "automated", "evidence": ["data/scenarios/gatehouse_lock.json", "data/scenarios/wrong_wall.json", "tests/test_ea1_greywatch_anchor.gd"]},
+        {"id": "recovery_rule", "status": "automated", "evidence": ["data/keeps/greywatch_keep.json", "tests/test_multi_wave_ui.gd"]},
+        {"id": "two_viable_seeded_plans", "status": "automated", "evidence": ["tests/test_p1_balance.gd", "tests/test_p12_alpha_scenario_matrix.gd"]},
+        {"id": "contextual_briefing", "status": "automated", "evidence": ["tests/test_p31_tutorial_flow.gd", "tests/test_ea1_greywatch_anchor.gd"]},
+        {"id": "complete_multi_wave_journey", "status": "automated", "evidence": ["tests/test_multi_wave_ui.gd", "tests/test_ea1_greywatch_anchor.gd"]},
+        {"id": "responsive_input_accessibility", "status": "automated", "evidence": ["tests/test_p48_responsive_layout.gd", "tests/test_p53_alpha_flow_hardening.gd"]},
+        {"id": "save_and_replay", "status": "automated", "evidence": ["tests/test_p53_alpha_flow_hardening.gd", "tests/test_p12_alpha_scenario_matrix.gd"]},
+        {"id": "presentation_evidence", "status": "documented", "evidence": ["docs/latest_visual_review_2026-09-01.md", "docs/visual_evidence/v0.50.0-ea1-greywatch-anchor-review-2026-09-02/capture-manifest.json"]},
+        {"id": "asset_provenance", "status": "documented", "evidence": ["assets/ASSETS.md", "docs/temporary_asset_kit.md"]}
+      ]
+    },
+    {"id": "PTK-EA-2", "status": "planned"},
+    {"id": "PTK-EA-3", "status": "planned"},
+    {"id": "PTK-EA-4", "status": "planned"},
+    {"id": "PTK-EA-5", "status": "planned"},
+    {"id": "PTK-EA-6", "status": "planned"}
+  ],
+  "next_milestone": "PTK-EA-2",
+  "human_evidence_required_for_implementation": false,
+  "owner_approval_required_for_distribution": true
+}

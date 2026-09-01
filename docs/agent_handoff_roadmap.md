@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
-**Document status:** Automated game-quality roadmap implemented through P65 authored battle-effect language
-**Current development baseline:** `0.49.0-authored-effects`; every active defender, enemy family, Greywatch functional room, combat impact, room-state atmosphere, and repair pulse uses an original small-scale visual asset above the stable tactical grammar; bounded temporary foley and every K1 responsive, simulation, accessibility, packaging, and recovery gate remain active, while optional human private-alpha evidence and owner distribution approval remain pending
+**Document status:** Early Access roadmap implemented through PTK-EA-1 Greywatch anchor
+**Current development baseline:** `0.50.0-ea1-greywatch-anchor`; Greywatch's responsive setup, contextual tutorial, deterministic three-assault journey, two recovery intervals, terminal replay, authored board visuals, save/replay, input, accessibility, and package evidence are enforced together; PTK-EA-2 is next, while optional human evidence and owner distribution approval remain pending
 **Release posture:** CI-verified public repository with owner-controlled merges; no public alpha release or storefront claim yet
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
@@ -142,6 +142,7 @@ Milestones must be completed in order. An agent may split a milestone into small
 | P63 | Implemented | Six additional original silhouettes complete all ten enemy families and remove Tiny Battle from current actor profiles. | Preserve the complete authored actor registry. |
 | P64 | Implemented | Seven original 32×32 silhouettes replace every active Greywatch Tiny Dungeon room prop while preserving low opacity, fitted labels, tactical overlays, and quiet yard/wall space. | Preserve this bounded room vocabulary; replace temporary effects and foley only through separate reviewed passes. |
 | P65 | Implemented | Eight original 48×48 marks replace active Particle Pack combat, room-damage, breach, and repair textures while preserving effect timing, tint, reduced-motion behavior, and procedural fallback. | Preserve the presentation-only boundary; temporary foley is the remaining active borrowed asset family. |
+| PTK-EA-1 | Implemented | A machine-readable gate inventories the Early Access floor and proves Greywatch's room graph, approach breadth, recovery identity, viable plans, contextual tutorial, full multi-wave journey, responsive/input/save coverage, presentation evidence, and asset provenance. | Begin PTK-EA-2 as a complete Ash Ford keep slice; do not claim the overall Early Access floor yet. |
 
 P13 onward are planning identifiers, not permission to release automatically. Every milestone still requires local validation, CI, visual review, and explicit human approval before external distribution. The existing P5–P12 sections below remain useful as acceptance contracts, but agents must not re-implement them unless a regression or refactor explicitly requires it.
 
