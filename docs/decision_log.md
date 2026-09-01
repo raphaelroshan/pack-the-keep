@@ -919,3 +919,11 @@
 **Reason:** The P62 core set established a coherent Greywatch language, but later scenarios still crossed back into visibly borrowed art. Completing the finite current roster removes that inconsistency and lets armor, smoke, protection breaking, command hunting, momentum, and concealment begin with recognizable visual verbs.
 
 **Trade-off:** The silhouettes remain static role marks rather than animation sheets, and some meaning still depends on the existing adjacent labels and overlays. Tiny Battle stays in the repository for provenance and historical evidence, but no current actor profile references it.
+
+## ADR-116: Greywatch rooms use original functional silhouettes
+
+**Decision:** Replace all seven active Tiny Dungeon room props with distinct original text-free SVG silhouettes designed on a 32×32 view box. Preserve the existing low-opacity upper-right placement and keep the inner yard, outer wall, and other keeps unaccented.
+
+**Reason:** The temporary props established that a quiet functional cue improves room recognition, but their borrowed visual language remained visibly disconnected from the authored fortress and actor set. A bounded room-specific vocabulary removes that inconsistency without increasing board density.
+
+**Trade-off:** These silhouettes communicate room family rather than detailed interior furnishing, and only Greywatch receives them in this pass. Labels remain the redundant accessible identifier, while other keeps keep their distinct surfaces and fitted labels until their own authored accent sets are justified.
