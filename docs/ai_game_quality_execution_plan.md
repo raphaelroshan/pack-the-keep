@@ -1,6 +1,6 @@
 # Pack the Keep — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.45.0-readable-rooms` and later
+**Applies to:** `v0.46.0-authored-core-actors` and later
 
 **Purpose:** Turn the First Watch prototype into a readable, tactile, game-quality keep-defense vertical slice. Automated verification, deterministic simulation checks, scripted flow coverage, and screenshot review are the active gates. Human testing remains useful for later confidence and tuning, but it is not a prerequisite for execution.
 
@@ -37,6 +37,7 @@ The game is a spatial defensive puzzle, not a rarity treadmill or a command spre
 | **P58 — Complete** | Make damage and recovery physically legible | Damaged/breached rooms gain restrained state-driven atmosphere and successful room/defender repairs gain one localized restored-value pulse. |
 | **P59 — Complete** | Add temporary room-function recognition | Seven Greywatch functional rooms use restrained Tiny Dungeon prop accents beneath all tactical information; unaccented movement and structural spaces remain quiet. |
 | **P61 — Complete** | Keep room functions readable at board scale | Every room uses a stable fully fitted board label; purposeful short labels replace accidental ellipses while inspection retains complete names. |
+| **P62 — Complete** | Replace core actor placeholders at board scale | Four defender-role and four signature-enemy silhouettes use original text-free 32×32 vector art while tactical overlays and procedural fallback remain intact. |
 
 ## Acceptance tests for every AI task
 
@@ -46,7 +47,7 @@ A task is incomplete if it hides the fort behind a menu, adds a unit before its 
 
 ## Recommended next prompt
 
-> The automated roadmap is complete at `0.45.0-readable-rooms`. Preserve every K1–K8, P51–P61, P54, responsive-decision, room-label, temporary-actor, semantic-audio, combat-effect, repair-feedback, and room-accent gate. Treat all Kenney props, actors, foley, and effects as temporary testing assets, not final Greywatch production work. Do not invent human findings; the next evidence step is P16 observation only when the owner schedules real testers.
+> The automated roadmap is complete at `0.46.0-authored-core-actors`. Preserve every K1–K8, P51–P62, P54, responsive-decision, room-label, authored-core-actor, semantic-audio, combat-effect, repair-feedback, and room-accent gate. Treat remaining Kenney props, extended enemies, foley, and effects as temporary testing assets, not final Greywatch production work. Do not invent human findings; the next evidence step is P16 observation only when the owner schedules real testers.
 
 ## Definition of game-quality readiness
 
@@ -98,3 +99,7 @@ No further autonomous implementation milestone is selected. P16 human observatio
 ## Room-label legibility update — 2026-09-01
 
 `0.45.0-readable-rooms` fits every stable room label between 10px and 8px before drawing. Workshop and Barracks remain complete, Supply Room and North Tower use purposeful board shorthand, and inspection retains the complete authored names and roles without changing room identity or simulation state.
+
+## Authored core actor update — 2026-09-01
+
+`0.46.0-authored-core-actors` replaces temporary tiles for all active defender roles plus Raider, Sapper, Climber, and Siege Beast with original text-free 32×32 SVG silhouettes designed for the actual board-marker scale. The remaining extended enemies retain their declared CC0 fallback until the next bounded art pass.

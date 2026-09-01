@@ -1,12 +1,17 @@
 class_name BoardVisualRegistry
 extends RefCounted
 
-const TEMP_ALLY_RANGED := "res://assets/temporary/kenney/tiny-battle/Tiles/tile_0124.png"
-const TEMP_ALLY_MELEE := "res://assets/temporary/kenney/tiny-battle/Tiles/tile_0125.png"
 const TEMP_ENEMY_RANGED := "res://assets/temporary/kenney/tiny-battle/Tiles/tile_0160.png"
 const TEMP_ENEMY_MELEE := "res://assets/temporary/kenney/tiny-battle/Tiles/tile_0161.png"
 const TEMP_ENEMY_HEAVY := "res://assets/temporary/kenney/tiny-battle/Tiles/tile_0179.png"
-const TEMP_SIEGE_ACTOR := "res://assets/temporary/kenney/tiny-battle/Tiles/tile_0170.png"
+const AUTHORED_ALLY_FORMATION := "res://assets/actors/defender_formation.svg"
+const AUTHORED_ALLY_RANGED := "res://assets/actors/defender_ranged.svg"
+const AUTHORED_ALLY_MOBILE := "res://assets/actors/defender_mobile.svg"
+const AUTHORED_ALLY_SIGNAL := "res://assets/actors/defender_signal.svg"
+const AUTHORED_ENEMY_RAIDER := "res://assets/actors/enemy_raider.svg"
+const AUTHORED_ENEMY_SAPPER := "res://assets/actors/enemy_sapper.svg"
+const AUTHORED_ENEMY_CLIMBER := "res://assets/actors/enemy_climber.svg"
+const AUTHORED_ENEMY_SIEGE := "res://assets/actors/enemy_siege_beast.svg"
 const TEMP_DEFENDER_RANGED_EFFECT := "res://assets/temporary/kenney/particle-pack/spark_01.png"
 const TEMP_DEFENDER_MELEE_EFFECT := "res://assets/temporary/kenney/particle-pack/slash_01.png"
 const TEMP_HOSTILE_RANGED_EFFECT := "res://assets/temporary/kenney/particle-pack/spark_02.png"
@@ -164,9 +169,17 @@ static func piece_profile(piece_id: String, combat_style: String = "support") ->
 		"card": Color("#202a31")
 	}
 	if piece_id in ACTOR_PIECES:
-		profile["sprite_path"] = TEMP_ALLY_RANGED if family in ["ranged", "mobile_support"] else TEMP_ALLY_MELEE
-		profile["asset_status"] = "temporary_cc0"
+		profile["sprite_path"] = _defender_actor_path(family)
+		profile["asset_status"] = "authored_original"
+		profile["source"] = "Pack the Keep 32px vector silhouettes"
 	return profile
+
+static func _defender_actor_path(family: String) -> String:
+	match family:
+		"ranged": return AUTHORED_ALLY_RANGED
+		"mobile_support": return AUTHORED_ALLY_MOBILE
+		"signal": return AUTHORED_ALLY_SIGNAL
+		_: return AUTHORED_ALLY_FORMATION
 
 static func enemy_profile(enemy_id: String, attack_style: String = "melee") -> Dictionary:
 	var profiles: Dictionary = {
@@ -191,18 +204,35 @@ static func enemy_profile(enemy_id: String, attack_style: String = "melee") -> D
 		"initial": "?",
 		"scale": 1.0
 		}
-	profile["sprite_path"] = _enemy_sprite_path(enemy_id, attack_style)
-	profile["asset_status"] = "temporary_cc0"
+	var actor: Dictionary = _enemy_actor_profile(enemy_id, attack_style)
+	profile.merge(actor)
 	return profile
 
-static func _enemy_sprite_path(enemy_id: String, attack_style: String) -> String:
-	if enemy_id == "siege_beast":
-		return TEMP_SIEGE_ACTOR
+static func _enemy_actor_profile(enemy_id: String, attack_style: String) -> Dictionary:
+	var authored_paths: Dictionary = {
+		"raider": AUTHORED_ENEMY_RAIDER,
+		"sapper": AUTHORED_ENEMY_SAPPER,
+		"climber": AUTHORED_ENEMY_CLIMBER,
+		"siege_beast": AUTHORED_ENEMY_SIEGE,
+	}
+	if authored_paths.has(enemy_id):
+		return {
+			"sprite_path": authored_paths[enemy_id],
+			"asset_status": "authored_original",
+			"source": "Pack the Keep 32px vector silhouettes",
+		}
+	var temporary_path: String
 	if attack_style == "demolition" or enemy_id == "outrider":
-		return TEMP_ENEMY_HEAVY
-	if attack_style == "ranged":
-		return TEMP_ENEMY_RANGED
-	return TEMP_ENEMY_MELEE
+		temporary_path = TEMP_ENEMY_HEAVY
+	elif attack_style == "ranged":
+		temporary_path = TEMP_ENEMY_RANGED
+	else:
+		temporary_path = TEMP_ENEMY_MELEE
+	return {
+		"sprite_path": temporary_path,
+		"asset_status": "temporary_cc0",
+		"source": "Kenney Tiny Battle · CC0",
+	}
 
 static func combat_effect_profile(source_side: String, attack_style: String) -> Dictionary:
 	var defender: bool = source_side == "defender"
@@ -290,7 +320,10 @@ static func presentation_snapshot() -> Dictionary:
 			"outrider": enemy_profile("outrider").shape,
 			"gloam_knife": enemy_profile("gloam_knife").shape
 		},
+		"authored_core_actor_assets": true,
+		"authored_core_actor_source": "Pack the Keep original 32px vector silhouettes",
 		"temporary_actor_assets": true,
+		"temporary_actor_scope": "extended enemy families",
 		"temporary_actor_source": "Kenney Tiny Battle · CC0",
 		"temporary_combat_effects": true,
 		"temporary_combat_effect_source": "Kenney Particle Pack · CC0",
