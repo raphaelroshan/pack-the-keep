@@ -1,13 +1,14 @@
 # Pack the Keep — Latest Visual Review
 
-**Build:** `0.47.0-authored-actors`
+**Build:** `0.48.0-authored-room-accents`
 
 **Engine:** Godot 4.7.2
 
-**Capture:** Real local renderer at 1600×900 / 100% for the complete Twilight Road flow with the full original actor set; representative real-scale checks cover each extended enemy family, while prior room-label, room-accent, room-feedback, combat-effect, responsive, and Large Text evidence remains active.
+**Capture:** Real local renderer at 1600×900 / 100% for the complete Gatehouse Lock flow with the original actor and Greywatch room-function sets; Preparation inspects a starting defender and the first assault is staged during defender response. Prior extended-enemy, room-label, room-feedback, combat-effect, responsive, and Large Text evidence remains active.
 
 ## Evidence
 
+- [Authored room-function review](visual_evidence/v0.48.0-authored-room-accents-review-2026-09-01/)
 - [Complete authored-actor review](visual_evidence/v0.47.0-authored-actors-review-2026-09-01/)
 - [Authored core-actor review](visual_evidence/v0.46.0-authored-core-actors-review-2026-09-01/)
 - [Readable-room review](visual_evidence/v0.45.0-readable-rooms-review-2026-09-01/)
@@ -18,11 +19,11 @@
 - [Responsive decision-surface review](visual_evidence/v0.39.0-responsive-decisions-review-2026-08-31/)
 - [Earlier complete seeded-pressure sequence](visual_evidence/v0.37.0-seeded-pressure-review-2026-08-31/)
 
-The complete authored-actor review contains the nine-screen Twilight Road flow plus focused live-assault frames for Shield Guard, Ash Slinger, Shieldbreaker, and Standard Cutter. Its machine-readable manifest records build, viewport, scenario, and capture method. The core-actor review remains the Greywatch signature-enemy reference, the readable-room review remains the label reference, and the room-accent, room-feedback, combat-effect, and responsive sets remain active regression evidence.
+The authored room-function review contains the nine-screen Gatehouse Lock flow at the real target viewport. Its machine-readable manifest records build, viewport, scenario, inspected-defender state, and staged battle-exchange method. The complete actor review remains the specialist-enemy reference, the readable-room review remains the label reference, and the room-feedback, combat-effect, and responsive sets remain active regression evidence.
 
 ## Findings
 
-P55 first proved that actor imagery helps at board scale by placing temporary Tiny Battle tiles inside the existing marker grammar. That evidence remains useful for the six extended enemy families that have not yet received authored silhouettes.
+P55 first proved that actor imagery helps at board scale by placing temporary Tiny Battle tiles inside the existing marker grammar. P62 and P63 subsequently replaced every current actor profile with original small-scale silhouettes; the older evidence remains useful as a comparison point only.
 
 Preparation retains piece names, role colors, health bars, room edges, and floor separation around actor art. During Battle, focus rings, target lines, cadence, health, defender-response traces, and specialist labels remain more prominent than silhouette detail. Timeline markers deliberately remain procedural because full actor silhouettes are unreadable at that smaller scale.
 
@@ -38,6 +39,8 @@ P62 replaces every active defender tile plus Raider, Sapper, Climber, and Siege 
 
 P63 completes the set with a reinforced shield, sling-and-ash arc, breaking axe, cut standard, forward charge, and concealed crossed knives for the six extended families. The retained procedural under-shapes still carry color-safe differentiation, while armor, smoke, protection-breaking, command-hunter, momentum, and concealment overlays remain the authoritative explanations. No current actor profile now references Tiny Battle.
 
+P64 replaces the seven active Greywatch Tiny Dungeon props with original portcullis, crossed-arms, hammer-and-anvil, bunk-rack, crate-and-barrel, battlement, and chapel marks. At their 18px rendered size they act as quiet spatial memory cues rather than inventory illustrations. Preparation and Assault preserve complete labels, health bars, critical markers, units, target lines, and combat effects above them; the inner yard and outer wall remain deliberately empty. No current Greywatch room-function profile now references Tiny Dungeon.
+
 ## Next visual target
 
-The next bounded visual production target is the seven temporary Greywatch room-function accents. They should be replaced with equally restrained original silhouettes without adding density to the inner yard or outer wall. Temporary effects and foley remain suitable for internal testing but still block any final-art or final-mix claim.
+The authored board-scale silhouette pass is complete for all current actors and Greywatch functional rooms. Temporary combat/room-state effects and foley remain suitable for internal testing but still block any final-art or final-mix claim. Their replacement should remain a separate bounded production pass with the same reduced-motion, high-contrast, mute, and procedural-fallback contracts; human P16 observation remains the only scheduled evidence gate.

@@ -23,13 +23,13 @@ const TEMP_DEMOLITION_EFFECT := "res://assets/temporary/kenney/particle-pack/sco
 const TEMP_DAMAGED_ROOM_EFFECT := "res://assets/temporary/kenney/particle-pack/smoke_01.png"
 const TEMP_BREACHED_ROOM_EFFECT := "res://assets/temporary/kenney/particle-pack/smoke_04.png"
 const TEMP_REPAIR_EFFECT := "res://assets/temporary/kenney/particle-pack/spark_04.png"
-const TEMP_ROOM_GATE := "res://assets/temporary/kenney/tiny-dungeon/Tiles/tile_0047.png"
-const TEMP_ROOM_ARMORY := "res://assets/temporary/kenney/tiny-dungeon/Tiles/tile_0075.png"
-const TEMP_ROOM_WORKSHOP := "res://assets/temporary/kenney/tiny-dungeon/Tiles/tile_0064.png"
-const TEMP_ROOM_BARRACKS := "res://assets/temporary/kenney/tiny-dungeon/Tiles/tile_0072.png"
-const TEMP_ROOM_SUPPLY := "res://assets/temporary/kenney/tiny-dungeon/Tiles/tile_0066.png"
-const TEMP_ROOM_TOWER := "res://assets/temporary/kenney/tiny-dungeon/Tiles/tile_0029.png"
-const TEMP_ROOM_CHAPEL := "res://assets/temporary/kenney/tiny-dungeon/Tiles/tile_0065.png"
+const AUTHORED_ROOM_GATE := "res://assets/rooms/room_gate.svg"
+const AUTHORED_ROOM_ARMORY := "res://assets/rooms/room_armory.svg"
+const AUTHORED_ROOM_WORKSHOP := "res://assets/rooms/room_workshop.svg"
+const AUTHORED_ROOM_BARRACKS := "res://assets/rooms/room_barracks.svg"
+const AUTHORED_ROOM_SUPPLY := "res://assets/rooms/room_supply.svg"
+const AUTHORED_ROOM_TOWER := "res://assets/rooms/room_tower.svg"
+const AUTHORED_ROOM_CHAPEL := "res://assets/rooms/room_chapel.svg"
 
 const ACTOR_PIECES: Array[String] = [
 	"pike_squad", "fire_team", "runner_pair", "rear_guard", "crossbow_patrol",
@@ -274,13 +274,13 @@ static func room_damage_effect_profile(state: String) -> Dictionary:
 
 static func room_function_accent_profile(keep_id: String, room_id: String) -> Dictionary:
 	var paths: Dictionary = {
-		"gate": TEMP_ROOM_GATE,
-		"armory": TEMP_ROOM_ARMORY,
-		"workshop": TEMP_ROOM_WORKSHOP,
-		"barracks": TEMP_ROOM_BARRACKS,
-		"supply_room": TEMP_ROOM_SUPPLY,
-		"north_tower": TEMP_ROOM_TOWER,
-		"old_chapel": TEMP_ROOM_CHAPEL,
+		"gate": AUTHORED_ROOM_GATE,
+		"armory": AUTHORED_ROOM_ARMORY,
+		"workshop": AUTHORED_ROOM_WORKSHOP,
+		"barracks": AUTHORED_ROOM_BARRACKS,
+		"supply_room": AUTHORED_ROOM_SUPPLY,
+		"north_tower": AUTHORED_ROOM_TOWER,
+		"old_chapel": AUTHORED_ROOM_CHAPEL,
 	}
 	if keep_id != "greywatch_keep" or not paths.has(room_id):
 		return {"active": false, "keep_id": keep_id, "room_id": room_id, "texture_path": ""}
@@ -291,8 +291,8 @@ static func room_function_accent_profile(keep_id: String, room_id: String) -> Di
 		"texture_path": String(paths[room_id]),
 		"size": 18.0,
 		"opacity": 0.30,
-		"asset_status": "temporary_cc0",
-		"source": "Kenney Tiny Dungeon · CC0",
+		"asset_status": "authored_original",
+		"source": "Pack the Keep original 32px room-function silhouettes",
 	}
 
 
@@ -329,6 +329,8 @@ static func presentation_snapshot() -> Dictionary:
 		"temporary_combat_effects": true,
 		"temporary_combat_effect_source": "Kenney Particle Pack · CC0",
 		"temporary_room_state_effects": true,
-		"temporary_room_accents": true,
-		"temporary_room_accent_source": "Kenney Tiny Dungeon · CC0",
+		"authored_room_accents": true,
+		"authored_room_accent_count": 7,
+		"authored_room_accent_source": "Pack the Keep original 32px room-function silhouettes",
+		"temporary_room_accents": false,
 	}

@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
-**Document status:** Automated game-quality roadmap implemented through P63 complete authored actor silhouettes
-**Current development baseline:** `0.47.0-authored-actors`; every active defender and all ten enemy families use original small-scale silhouettes above stable fitted room labels, low-density temporary room props, restrained combat effects, state-driven damaged-room atmosphere, localized repair confirmation, and the existing deterministic tactical grammar; every K1 responsive, simulation, accessibility, packaging, and recovery gate remains active, and optional human private-alpha evidence and owner distribution approval remain pending
+**Document status:** Automated game-quality roadmap implemented through P64 authored room-function silhouettes
+**Current development baseline:** `0.48.0-authored-room-accents`; every active defender, all ten enemy families, and seven Greywatch functional rooms use original small-scale silhouettes above the stable fitted labels and deterministic tactical grammar; restrained temporary combat effects, state-driven damaged-room atmosphere, localized repair confirmation, and every K1 responsive, simulation, accessibility, packaging, and recovery gate remain active, while optional human private-alpha evidence and owner distribution approval remain pending
 **Release posture:** CI-verified public repository with owner-controlled merges; no public alpha release or storefront claim yet
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
@@ -136,10 +136,11 @@ Milestones must be completed in order. An agent may split a milestone into small
 | P56 | Implemented | Existing semantic cues use a bounded four-player pool of temporary CC0 foley, respect mute/effects volume, and retain generated-tone fallback. | Replace temporary samples with an authored Greywatch sound palette after human mix review. |
 | P57 | Implemented | Resolved defender responses and hostile melee, ranged, and demolition impacts use restrained temporary CC0 textures beneath procedural marks and tactical overlays. | Replace temporary effects with an authored Greywatch impact language before final-art claims. |
 | P58 | Implemented | Damaged and breached rooms gain state-driven atmosphere, while successful room and defender repairs create one localized restored-value pulse. | Validate atmosphere density and repair readability during human play without treating temporary effects as final art. |
-| P59 | Implemented | Seven Greywatch functional rooms gain restrained Tiny Dungeon prop accents beneath labels, health, units, damage, focus, and selection; open-yard and wall spaces remain quiet. | Replace the temporary room accents before final-art or marketing claims. |
+| P59 | Implemented | Seven Greywatch functional rooms gain restrained Tiny Dungeon prop accents beneath labels, health, units, damage, focus, and selection; open-yard and wall spaces remain quiet. | Historical temporary-art proof replaced by P64. |
 | P61 | Implemented | Stable short labels and bounded font fitting keep every room function readable without accidental ellipses while inspection retains complete authored names. | Preserve the label-fit gate as room art and supported display modes evolve. |
 | P62 | Implemented | Original 32×32 silhouettes replace temporary tiles for all active defender roles and the four signature vertical-slice enemies while tactical overlays remain dominant. | Preserve as the core actor readability contract. |
-| P63 | Implemented | Six additional original silhouettes complete all ten enemy families and remove Tiny Battle from current actor profiles. | Replace temporary room-function accents next while preserving low board density. |
+| P63 | Implemented | Six additional original silhouettes complete all ten enemy families and remove Tiny Battle from current actor profiles. | Preserve the complete authored actor registry. |
+| P64 | Implemented | Seven original 32×32 silhouettes replace every active Greywatch Tiny Dungeon room prop while preserving low opacity, fitted labels, tactical overlays, and quiet yard/wall space. | Preserve this bounded room vocabulary; replace temporary effects and foley only through separate reviewed passes. |
 
 P13 onward are planning identifiers, not permission to release automatically. Every milestone still requires local validation, CI, visual review, and explicit human approval before external distribution. The existing P5–P12 sections below remain useful as acceptance contracts, but agents must not re-implement them unless a regression or refactor explicitly requires it.
 

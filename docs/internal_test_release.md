@@ -1,12 +1,12 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.47.0-authored-actors` — the development candidate gives every active defender and all ten enemy families an original small-scale silhouette above the stable room-label and tactical-overlay grammar, while retaining responsive decisions, deterministic combat, accessibility, save/resume, terminal-results, packaged K8, and forced-close gates; human sessions and owner approval remain pending
+**Current build identity:** `0.48.0-authored-room-accents` — the development candidate gives every active defender, all ten enemy families, and seven Greywatch functional rooms an original small-scale silhouette above the stable room-label and tactical-overlay grammar, while retaining responsive decisions, deterministic combat, accessibility, save/resume, terminal-results, packaged K8, and forced-close gates; human sessions and owner approval remain pending
 
 ## Purpose
 
 This package is an internal pre-alpha test release, not a commercial demo or storefront build. Its purpose is to test whether Greywatch, Ash Ford, and Twinwatch support distinct strategic lenses and whether the battle communicates decisions clearly: choose the Castellan, Warden, or Quartermaster, select one of fifteen authored scenarios, preview difficulty, enemy roster, pressure phases, recommended packs, and end-state rules, place units directly on either floor with a footprint preview, inspect rooms/pieces/enemies, read an escalating forecast, watch each assault unfold continuously at three presentation speeds, pause or step for inspection, use Lockdown, Rally, or Resupply, inspect health, armor, signal state, breakthrough momentum, concealment visibility, protection, assigned-specialist priority, and combat metrics, recover during authored lulls, or reach an explicit terminal collapse in The Last Bell.
 
-## v0.47.0 acceptance checks
+## v0.48.0 acceptance checks
 
 Run the scenarios Red Banner Road, Ash at the Bell, The Splintered Gate, The Cut Standard, and The Twilight Road. Confirm Shield Guard, Ash Slinger, Shieldbreaker, Standard Cutter, Outrider, and Gloam Knife each read through a distinct original silhouette before relying on labels. Verify their existing armor, smoke, break, command, momentum, concealment, health, target, and focus cues remain dominant. No current actor marker should use a Tiny Battle tile.
 

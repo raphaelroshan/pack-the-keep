@@ -29,6 +29,13 @@ The Greywatch kit is an original, first-pass 2D illustrated asset set generated 
 | `actors/enemy_standard_cutter.svg` | 32×32 | Slashed command-standard silhouette | Integrated in active board markers |
 | `actors/enemy_outrider.svg` | 32×32 | Forward-rushing mounted silhouette | Integrated in active board markers |
 | `actors/enemy_gloam_knife.svg` | 32×32 | Hood and crossed-knives silhouette | Integrated in active board markers |
+| `rooms/room_gate.svg` | 32×32 | Portcullis-and-arch room silhouette | Integrated in Greywatch room surfaces |
+| `rooms/room_armory.svg` | 32×32 | Crossed-arms-and-shield room silhouette | Integrated in Greywatch room surfaces |
+| `rooms/room_workshop.svg` | 32×32 | Hammer-and-anvil room silhouette | Integrated in Greywatch room surfaces |
+| `rooms/room_barracks.svg` | 32×32 | Bunk-rack room silhouette | Integrated in Greywatch room surfaces |
+| `rooms/room_supply.svg` | 32×32 | Crate-and-barrel room silhouette | Integrated in Greywatch room surfaces |
+| `rooms/room_tower.svg` | 32×32 | Battlement-tower room silhouette | Integrated in Greywatch room surfaces |
+| `rooms/room_chapel.svg` | 32×32 | Chapel-and-cross room silhouette | Integrated in Greywatch room surfaces |
 | Hybrid Greywatch fort renderer | N/A | Authored stone/timber material sampling plus deterministic walls, rooms, open courtyard, gate approach, upper wall walk, towers, health, selection, and placement overlays | Integrated in `KeepCanvas`; authored texture never owns geometry, hit testing, state color, or simulation |
 | Top-down board art direction | N/A | Map-first composition, readable silhouettes, persistent overlays, and high-level pixel-board reference principles | Documented in `design/top_down_board_art_direction.md`; public reference image kept outside the repository |
 | Warden profile treatment | N/A | P1 commander identity: Open Lanes, Rally, and Spread Thin | Integrated as readable profile text and a tinted shared portrait; dedicated portrait deferred until the next image-generation window |
@@ -50,4 +57,4 @@ The art is stored as regular repository source content because it is part of the
 
 ## Temporary testing kit
 
-The temporary CC0 breadth kit is documented in [`docs/temporary_asset_kit.md`](../docs/temporary_asset_kit.md) and inventoried in [`assets/temporary/manifest.json`](temporary/manifest.json). It includes Kenney Tiny Dungeon, Tiny Battle, Interface Sounds, RPG Audio, and a curated Particle Pack subset. `0.40.0`–`0.44.0` integrated temporary board actors, bounded foley, restrained combat effects, room-state feedback, and low-density Greywatch room props; `0.45.0-readable-rooms` kept stable fitted labels above that layer. `0.46.0`–`0.47.0` replace all active defender and enemy tiles with original text-free 32×32 SVG silhouettes. Tiny Battle remains archived as licensed fallback material but is no longer used by current actor profiles. Tactical overlays and procedural fallback remain intact.
+The temporary CC0 breadth kit is documented in [`docs/temporary_asset_kit.md`](../docs/temporary_asset_kit.md) and inventoried in [`assets/temporary/manifest.json`](temporary/manifest.json). It includes Kenney Tiny Dungeon, Tiny Battle, Interface Sounds, RPG Audio, and a curated Particle Pack subset. `0.40.0`–`0.44.0` integrated temporary board actors, bounded foley, restrained combat effects, room-state feedback, and low-density Greywatch room props; `0.45.0-readable-rooms` kept stable fitted labels above that layer. `0.46.0`–`0.47.0` replace all active defender and enemy tiles with original text-free 32×32 SVG silhouettes, and `0.48.0` replaces all active Greywatch room props with seven original room-function silhouettes. Tiny Battle and Tiny Dungeon remain archived as licensed fallback material but are no longer used by current actor or room-function profiles. Tactical overlays and procedural fallback remain intact.

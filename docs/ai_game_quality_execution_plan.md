@@ -1,6 +1,6 @@
 # Pack the Keep — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.47.0-authored-actors` and later
+**Applies to:** `v0.48.0-authored-room-accents` and later
 
 **Purpose:** Turn the First Watch prototype into a readable, tactile, game-quality keep-defense vertical slice. Automated verification, deterministic simulation checks, scripted flow coverage, and screenshot review are the active gates. Human testing remains useful for later confidence and tuning, but it is not a prerequisite for execution.
 
@@ -39,6 +39,7 @@ The game is a spatial defensive puzzle, not a rarity treadmill or a command spre
 | **P61 — Complete** | Keep room functions readable at board scale | Every room uses a stable fully fitted board label; purposeful short labels replace accidental ellipses while inspection retains complete names. |
 | **P62 — Complete** | Replace core actor placeholders at board scale | Four defender-role and four signature-enemy silhouettes use original text-free 32×32 vector art while tactical overlays and procedural fallback remain intact. |
 | **P63 — Complete** | Complete the authored enemy set | Shield Guard, Ash Slinger, Shieldbreaker, Standard Cutter, Outrider, and Gloam Knife gain distinct original silhouettes; current actor profiles no longer use Tiny Battle. |
+| **P64 — Complete** | Replace Greywatch room props | Seven original 32×32 functional silhouettes replace current Tiny Dungeon room props without adding density to the open yard or structural wall. |
 
 ## Acceptance tests for every AI task
 
@@ -48,7 +49,7 @@ A task is incomplete if it hides the fort behind a menu, adds a unit before its 
 
 ## Recommended next prompt
 
-> The automated roadmap is complete at `0.47.0-authored-actors`. Preserve every K1–K8, P51–P63, P54, responsive-decision, room-label, authored-actor, semantic-audio, combat-effect, repair-feedback, and room-accent gate. Treat remaining Kenney props, foley, and effects as temporary testing assets, not final Greywatch production work. Do not invent human findings; the next evidence step is P16 observation only when the owner schedules real testers.
+> The automated roadmap is complete at `0.48.0-authored-room-accents`. Preserve every K1–K8, P51–P64, P54, responsive-decision, room-label, authored-actor, semantic-audio, combat-effect, repair-feedback, and authored-room gate. Treat remaining Kenney foley and effects as temporary testing assets, not a final Greywatch production mix. Do not invent human findings; the next evidence step is P16 observation only when the owner schedules real testers.
 
 ## Definition of game-quality readiness
 
@@ -108,3 +109,7 @@ No further autonomous implementation milestone is selected. P16 human observatio
 ## Complete authored actor update — 2026-09-01
 
 `0.47.0-authored-actors` adds distinct original silhouettes for Shield Guard, Ash Slinger, Shieldbreaker, Standard Cutter, Outrider, and Gloam Knife. All ten enemy profiles and every active defender role now use the text-free 32×32 actor language, with procedural shapes retained as the no-texture fallback.
+
+## Authored room-function update — 2026-09-01
+
+`0.48.0-authored-room-accents` replaces the seven active Greywatch Tiny Dungeon props with original portcullis, armory, workshop, barracks, supply, tower, and chapel silhouettes. Their established low-density placement and opacity remain unchanged, the inner yard and outer wall stay quiet, and labels plus tactical overlays remain dominant.
