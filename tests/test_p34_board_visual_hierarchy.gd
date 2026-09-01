@@ -23,9 +23,35 @@ func _initialize() -> void:
 	var layers: Array = board.get("layers", [])
 	_check(layers == ["background_atmosphere", "structural_board", "room_surfaces", "placement_zones", "defender_actors", "enemy_routes_and_actors", "damage_and_status", "focus_and_selection", "tactical_labels"], "board should expose the intended structural-to-tactical layer order")
 	_check(not bool(board.get("grid_visible", true)), "board hierarchy should preserve the gridless normal presentation")
+	_check(String(board.get("placement_guide_style", "")) == "outline_only", "placement guides should not compete with room-function labels")
 	_check(String(board.get("ground", {}).get("pattern", "")) == "stone", "Greywatch ground floor should use the stone fortress treatment")
 	_check(String(board.get("upper", {}).get("pattern", "")) == "wall_walk", "upper floor should use the distinct wall-walk treatment")
 	_check(board.get("ground", {}).get("surface", Color.BLACK) != board.get("upper", {}).get("surface", Color.BLACK), "ground and upper surfaces should not collapse into one treatment")
+	for room_id_value in ui.keep.room_definitions().keys():
+		var room_id: String = String(room_id_value)
+		var room_label: Dictionary = ui.keep_canvas.room_label_snapshot(room_id)
+		_check(bool(room_label.get("fits", false)), "%s should fit its stable board label without accidental truncation" % room_id)
+	_check(String(ui.keep_canvas.room_label_snapshot("supply_room").get("text", "")) == "Supply", "Supply Room should use a purposeful compact board label")
+	_check(String(ui.keep_canvas.room_label_snapshot("north_tower").get("text", "")) == "Tower", "North Tower should use a purposeful compact board label")
+	_check(String(ui.keep_canvas.room_label_snapshot("workshop").get("text", "")) == "Workshop", "Workshop should remain unabridged through font fitting")
+	_check(String(ui.keep_canvas.room_label_snapshot("barracks").get("text", "")) == "Barracks", "Barracks should remain unabridged through font fitting")
+	_check(BoardVisualRegistry.room_display_label("ash_ford_redoubt", "supply_room", "Grain Store") == "Grain", "Ash Ford should retain a keep-specific Grain label")
+	_check(BoardVisualRegistry.room_display_label("ash_ford_redoubt", "north_tower", "Signal Mast") == "Signal", "Ash Ford should retain a keep-specific Signal label")
+	_check(BoardVisualRegistry.room_display_label("twinwatch_bastion", "supply_room", "Central Magazine") == "Magazine", "Twinwatch should retain a keep-specific Magazine label")
+	_check(BoardVisualRegistry.room_display_label("twinwatch_bastion", "armory", "East Arsenal") == "East Post", "Twinwatch should retain a keep-specific eastern-post label")
+	var label_ui: Control = load("res://scenes/Main.tscn").instantiate()
+	root.add_child(label_ui)
+	await process_frame
+	label_ui.preferences_persistence_enabled = false
+	label_ui.display_application_enabled = false
+	for scenario_id in ["gatehouse_lock", "ash_ford_crossing", "the_divided_bell"]:
+		_check(bool(label_ui.keep.select_scenario(scenario_id).get("ok", false)), "%s should be available for cross-keep label validation" % scenario_id)
+		for room_id_value in label_ui.keep.room_definitions().keys():
+			var room_id: String = String(room_id_value)
+			var room_label: Dictionary = label_ui.keep_canvas.room_label_snapshot(room_id)
+			_check(bool(room_label.get("fits", false)), "%s/%s should fit its stable board label" % [label_ui.keep.keep_id, room_id])
+	label_ui.queue_free()
+	await process_frame
 
 	var pike: Dictionary = ui.keep_canvas.actor_visual_snapshot("pike_squad", "raider")
 	var repair: Dictionary = ui.keep_canvas.actor_visual_snapshot("repair_station", "sapper")
