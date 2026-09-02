@@ -1,0 +1,11 @@
+{
+  "id": "ferry_scouts", "content_version": 1, "status": "active", "name": "Ferry Scouts",
+  "short_role": "Carry limited ranged response between separated approaches.", "role": "answers pressure across a divided keep", "question": "Which bank needs a mobile firing reserve?",
+  "kind": "unit", "category": "mobile_response", "footprint": [1, 1], "allowed_floors": ["ground", "upper"], "allowed_zones": ["wall", "courtyard", "keep"],
+  "cost": 7, "max_health": 9, "placement_question": "Where does an open lane cover both approaches?",
+  "skill": "Ferry Volley: three-damage ranged response against fast and exposed specialists.",
+  "strength_tags": ["mobile_response", "open_lane", "harrier_counter"], "weakness_tags": ["finite_ammunition", "fragile", "open_lane"],
+  "attack_profile": {"style": "ranged", "range": 3, "cooldown_steps": 1, "damage": 3, "defense": 0, "ammo_capacity": 4, "targets": ["harrier", "outrider", "sapper", "climber"]},
+  "support_profile": null, "assignment_rule": {"room": "barracks", "effect": "posted reserve response +1 under the Marshal"}, "availability": "ferry_network",
+  "presentation": {"icon": "", "marker_color_role": "mobile_response", "radius_scale": 0.95}
+}

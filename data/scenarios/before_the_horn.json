@@ -4,7 +4,7 @@
   "question": "Can one approach gain enough time to stop the Outrider before second-tick contact?",
   "objective": "Preserve the specialist line while Outriders arrive ahead of the main assault.",
   "lesson": "Prepared stakes buy one exact tick; concentrated precision can remove the same threat without delaying it.",
-  "keep_id": "greywatch_keep",
+  "keep_id": "twinwatch_bastion",
   "recommended_packs": ["road_wardens", "crossbow_watch"],
   "starting_doctrine": "rapid_breakthrough",
   "doctrines": ["rapid_breakthrough", "gate_assault", "rapid_breakthrough"],

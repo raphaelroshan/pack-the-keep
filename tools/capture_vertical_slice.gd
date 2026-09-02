@@ -73,6 +73,11 @@ func _run_capture() -> void:
 	ui._refresh_ui()
 	await _capture("02_war_council", ui)
 	ui._on_confirm_setup()
+	if not ui.keep.active_event_id.is_empty():
+		var opening_event: Dictionary = ui.keep.current_event()
+		var opening_choices: Array = opening_event.get("choices", [])
+		if not opening_choices.is_empty():
+			ui._on_authored_event_choice_id(String(opening_choices[0].get("id", "")))
 	if capture_spatial_transition and capture_scenario_id == "the_divided_bell":
 		ui.keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
 		ui._refresh_ui()
@@ -139,6 +144,7 @@ func _run_capture() -> void:
 		ui.keep_canvas._process(ui.keep_canvas.engagement_duration)
 	await _resolve_phase(ui)
 	await _capture("05_recovery_phase_1", ui)
+	_resolve_open_event(ui)
 	ui._on_finish_interval()
 	await _capture("06_assault_phase_2", ui)
 	await _resolve_phase(ui)
@@ -158,6 +164,8 @@ func _run_capture() -> void:
 	if ui.keep.active_event_id == "twilight_crossroads":
 		ui._on_authored_event_choice_id("carry_lamp_oil")
 		await _capture("07b_lamp_route_prepared", ui)
+	else:
+		_resolve_open_event(ui)
 	ui._on_finish_interval()
 	await _capture("08_assault_phase_3", ui)
 	await _resolve_phase(ui)
@@ -175,6 +183,14 @@ func _resolve_phase(ui: Control) -> void:
 	while ui.keep.wave_active:
 		ui._on_advance_wave()
 		await process_frame
+
+func _resolve_open_event(ui: Control) -> void:
+	if ui.keep.active_event_id.is_empty():
+		return
+	var event: Dictionary = ui.keep.current_event()
+	var choices: Array = event.get("choices", [])
+	if not choices.is_empty():
+		ui._on_authored_event_choice_id(String(choices[0].get("id", "")))
 
 func _capture(stem: String, ui: Control) -> void:
 	await process_frame

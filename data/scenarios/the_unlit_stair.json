@@ -4,7 +4,7 @@
   "question": "Can the upper keep expose the Gloam Knife before it reaches a specialist?",
   "objective": "Preserve the upper response line while concealed infiltrators test the dark stair.",
   "lesson": "A Lantern Post opens ranged response; melee interception remains viable without revealing the route.",
-  "keep_id": "greywatch_keep",
+  "keep_id": "twinwatch_bastion",
   "recommended_packs": ["lantern_watch", "road_wardens"],
   "starting_doctrine": "veiled_entry",
   "doctrines": ["veiled_entry", "feint_and_flank", "veiled_entry"],

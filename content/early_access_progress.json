@@ -1,42 +1,14 @@
 {
   "schema_version": 1,
-  "build_version": "0.50.0-ea1-greywatch-anchor",
-  "status": "in_progress",
-  "early_access_ready": false,
-  "breadth_floor": {
-    "keeps": 3,
-    "commanders": 4,
-    "packs_min": 15,
-    "packs_max": 18,
-    "pieces_min": 24,
-    "pieces_max": 30,
-    "enemies_min": 12,
-    "enemies_max": 14,
-    "scenarios_min": 20,
-    "scenarios_max": 24,
-    "events_min": 14,
-    "events_max": 18,
-    "viable_commander_keep_starts": 12
-  },
-  "current_inventory": {
-    "keeps": 3,
-    "commanders": 3,
-    "packs": 11,
-    "pieces": 21,
-    "enemies": 10,
-    "doctrines": 12,
-    "scenarios": 15,
-    "events": 10,
-    "commander_keep_starts": 9
-  },
-  "active_temporary_asset_families": [
-    "semantic_foley"
-  ],
+  "build_version": "0.51.0-early-access-candidate",
+  "status": "candidate",
+  "early_access_ready": true,
+  "breadth_floor": {"keeps": 3, "commanders": 4, "packs_min": 15, "packs_max": 18, "pieces_min": 24, "pieces_max": 30, "enemies_min": 12, "enemies_max": 14, "scenarios_min": 20, "scenarios_max": 24, "events_min": 14, "events_max": 18, "viable_commander_keep_starts": 12},
+  "current_inventory": {"keeps": 3, "commanders": 4, "packs": 15, "pieces": 29, "enemies": 12, "doctrines": 14, "scenarios": 20, "events": 14, "commander_keep_starts": 12},
+  "active_temporary_asset_families": ["semantic_foley"],
   "milestones": [
     {
-      "id": "PTK-EA-1",
-      "status": "implemented",
-      "keep_id": "greywatch_keep",
+      "id": "PTK-EA-1", "status": "implemented", "keep_id": "greywatch_keep",
       "requirements": [
         {"id": "distinct_room_graph", "status": "automated", "evidence": ["data/keeps/greywatch_keep.json", "tests/test_ea1_greywatch_anchor.gd"]},
         {"id": "two_approach_patterns", "status": "automated", "evidence": ["data/scenarios/gatehouse_lock.json", "data/scenarios/wrong_wall.json", "tests/test_ea1_greywatch_anchor.gd"]},
@@ -50,13 +22,66 @@
         {"id": "asset_provenance", "status": "documented", "evidence": ["assets/ASSETS.md", "docs/temporary_asset_kit.md"]}
       ]
     },
-    {"id": "PTK-EA-2", "status": "planned"},
-    {"id": "PTK-EA-3", "status": "planned"},
-    {"id": "PTK-EA-4", "status": "planned"},
-    {"id": "PTK-EA-5", "status": "planned"},
-    {"id": "PTK-EA-6", "status": "planned"}
+    {
+      "id": "PTK-EA-2", "status": "implemented", "keep_id": "ash_ford_redoubt",
+      "requirements": [
+        {"id": "ash_ford_scenario_set", "status": "automated", "evidence": ["data/keeps/ash_ford_redoubt.json", "tests/test_early_access_campaign.gd"]},
+        {"id": "distinct_geometry", "status": "automated", "evidence": ["data/keeps/ash_ford_redoubt.json", "tests/test_p15_ash_ford_identity.gd"]},
+        {"id": "two_approach_patterns", "status": "automated", "evidence": ["data/scenarios/flood_mark.json", "data/scenarios/broken_ferry.json"]},
+        {"id": "recovery_rule", "status": "automated", "evidence": ["tests/test_p15_ash_ford_identity.gd", "docs/ptk_ea2_ash_ford_verification.md"]},
+        {"id": "two_viable_seeded_plans", "status": "automated", "evidence": ["tests/test_p12_alpha_scenario_matrix.gd", "docs/ptk_ea2_ash_ford_verification.md"]},
+        {"id": "complete_flow", "status": "automated", "evidence": ["tests/test_early_access_campaign_ui.gd", "tests/test_p12_alpha_scenario_matrix.gd"]},
+        {"id": "presentation_evidence", "status": "documented", "evidence": ["docs/ptk_ea2_ash_ford_verification.md", "docs/visual_evidence/v0.51.0-early-access-candidate-ash-ford/capture-manifest.json"]}
+      ]
+    },
+    {
+      "id": "PTK-EA-3", "status": "implemented", "keep_id": "twinwatch_bastion", "commander_id": "marshal",
+      "requirements": [
+        {"id": "twinwatch_scenario_set", "status": "automated", "evidence": ["data/keeps/twinwatch_bastion.json", "tests/test_early_access_campaign.gd"]},
+        {"id": "fourth_commander", "status": "automated", "evidence": ["data/commanders/marshal.json", "tests/test_early_access_campaign.gd"]},
+        {"id": "distinct_geometry", "status": "automated", "evidence": ["tests/test_p51_twinwatch_identity.gd", "docs/ptk_ea3_twinwatch_marshal_verification.md"]},
+        {"id": "two_viable_seeded_plans", "status": "automated", "evidence": ["tests/test_p12_alpha_scenario_matrix.gd", "tests/test_p51_twinwatch_identity.gd"]},
+        {"id": "complete_flow", "status": "automated", "evidence": ["tests/test_early_access_campaign_ui.gd", "tests/test_p12_alpha_scenario_matrix.gd"]},
+        {"id": "save_and_replay", "status": "automated", "evidence": ["tests/test_early_access_campaign.gd", "tests/test_p12_alpha_scenario_matrix.gd"]},
+        {"id": "presentation_evidence", "status": "documented", "evidence": ["docs/ptk_ea3_twinwatch_marshal_verification.md", "docs/visual_evidence/v0.51.0-early-access-candidate-twinwatch/capture-manifest.json"]}
+      ]
+    },
+    {
+      "id": "PTK-EA-4", "status": "implemented",
+      "requirements": [
+        {"id": "two_enemy_families", "status": "automated", "evidence": ["data/enemies/battering_ram.json", "data/enemies/harrier.json", "tests/test_early_access_campaign.gd"]},
+        {"id": "explicit_counters", "status": "automated", "evidence": ["data/packs/mason_train.json", "data/packs/ridge_company.json", "tests/test_early_access_campaign.gd"]},
+        {"id": "telegraphs", "status": "automated", "evidence": ["data/doctrines/hammer_road.json", "data/doctrines/harrying_fire.json", "tests/test_p2_ui.gd"]},
+        {"id": "recovery_consequences", "status": "automated", "evidence": ["data/events/ferry_reckoning.json", "data/events/ridge_relief.json"]},
+        {"id": "save_and_replay", "status": "automated", "evidence": ["tests/test_early_access_campaign.gd", "tests/test_p12_alpha_scenario_matrix.gd"]},
+        {"id": "visual_identity", "status": "documented", "evidence": ["assets/actors/enemy_battering_ram.svg", "assets/actors/enemy_harrier.svg", "docs/ptk_ea4_enemy_counterplay_verification.md"]}
+      ]
+    },
+    {
+      "id": "PTK-EA-5", "status": "implemented",
+      "requirements": [
+        {"id": "event_floor", "status": "automated", "evidence": ["data/events/flood_mark_choice.json", "data/events/ferry_reckoning.json", "data/events/twinwatch_signal.json", "data/events/ridge_relief.json"]},
+        {"id": "scenario_floor", "status": "automated", "evidence": ["tests/test_early_access_campaign.gd", "tests/test_p12_alpha_scenario_matrix.gd"]},
+        {"id": "bounded_variation", "status": "automated", "evidence": ["data/scenarios/millers_debt.json", "data/scenarios/rimebound_relief.json", "tests/test_k7_replay_mastery.gd"]},
+        {"id": "mastery_comparison", "status": "automated", "evidence": ["tests/test_k7_replay_mastery.gd", "tests/test_k7_replay_mastery_ui.gd"]},
+        {"id": "event_persistence", "status": "automated", "evidence": ["tests/test_early_access_campaign.gd", "tests/test_p13_event_history_ledger.gd"]}
+      ]
+    },
+    {
+      "id": "PTK-EA-6", "status": "implemented",
+      "requirements": [
+        {"id": "breadth_floor", "status": "automated", "evidence": ["tools/validate_early_access_progress.py", "tests/test_early_access_progress.py"]},
+        {"id": "accessibility", "status": "automated", "evidence": ["tests/test_p10_accessibility_preferences.gd", "tests/test_early_access_campaign_ui.gd"]},
+        {"id": "controller", "status": "automated", "evidence": ["tests/test_p10_controller_scaling.gd", "tests/test_p53_alpha_flow_hardening.gd"]},
+        {"id": "performance", "status": "automated", "evidence": ["tests/test_k8_performance_budget.gd"]},
+        {"id": "persistence", "status": "automated", "evidence": ["tests/test_p12_save_recovery.gd", "tests/test_packaged_smoke_runner.py"]},
+        {"id": "packaging", "status": "automated", "evidence": ["src/platform/packaged_smoke.gd", "tools/run_packaged_smoke.py"]},
+        {"id": "known_limitations", "status": "documented", "evidence": ["docs/ptk_ea6_candidate_hardening.md", "docs/internal_test_release.md"]},
+        {"id": "distribution_boundary", "status": "documented", "evidence": ["content/p16_playtest_protocol.json", "docs/ptk_ea6_candidate_hardening.md"]}
+      ]
+    }
   ],
-  "next_milestone": "PTK-EA-2",
+  "next_milestone": "",
   "human_evidence_required_for_implementation": false,
   "owner_approval_required_for_distribution": true
 }

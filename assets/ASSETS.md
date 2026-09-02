@@ -29,6 +29,8 @@ The Greywatch kit is an original, first-pass 2D illustrated asset set generated 
 | `actors/enemy_standard_cutter.svg` | 32×32 | Slashed command-standard silhouette | Integrated in active board markers |
 | `actors/enemy_outrider.svg` | 32×32 | Forward-rushing mounted silhouette | Integrated in active board markers |
 | `actors/enemy_gloam_knife.svg` | 32×32 | Hood and crossed-knives silhouette | Integrated in active board markers |
+| `actors/enemy_battering_ram.svg` | 32×32 | Armored ram and wheel silhouette | Integrated in active board markers |
+| `actors/enemy_harrier.svg` | 32×32 | Split-arrow ranged hunter silhouette | Integrated in active board markers |
 | `rooms/room_gate.svg` | 32×32 | Portcullis-and-arch room silhouette | Integrated in Greywatch room surfaces |
 | `rooms/room_armory.svg` | 32×32 | Crossed-arms-and-shield room silhouette | Integrated in Greywatch room surfaces |
 | `rooms/room_workshop.svg` | 32×32 | Hammer-and-anvil room silhouette | Integrated in Greywatch room surfaces |
@@ -65,4 +67,4 @@ The art is stored as regular repository source content because it is part of the
 
 ## Temporary testing kit
 
-The temporary CC0 breadth kit is documented in [`docs/temporary_asset_kit.md`](../docs/temporary_asset_kit.md) and inventoried in [`assets/temporary/manifest.json`](temporary/manifest.json). It includes Kenney Tiny Dungeon, Tiny Battle, Interface Sounds, RPG Audio, and a curated Particle Pack subset. `0.40.0`–`0.44.0` established the temporary presentation proof; `0.45.0`–`0.49.0` replace room labels, every active actor and room prop, and every active visual effect with original small-scale assets. Tiny Battle, Tiny Dungeon, and Particle Pack remain archived as licensed fallback material but are no longer used by current board profiles. Tactical overlays and procedural fallback remain intact; temporary foley remains the only active borrowed asset family.
+The temporary CC0 breadth kit is documented in [`docs/temporary_asset_kit.md`](../docs/temporary_asset_kit.md) and inventoried in [`assets/temporary/manifest.json`](temporary/manifest.json). It includes Kenney Tiny Dungeon, Tiny Battle, Interface Sounds, RPG Audio, and a curated Particle Pack subset. `0.40.0`–`0.44.0` established the temporary presentation proof; `0.45.0`–`0.51.0` replace room labels, every active actor and room prop, and every active visual effect with original small-scale assets. Tiny Battle, Tiny Dungeon, and Particle Pack remain archived as licensed fallback material but are no longer used by current board profiles. Tactical overlays and procedural fallback remain intact; temporary foley remains the only active borrowed asset family.

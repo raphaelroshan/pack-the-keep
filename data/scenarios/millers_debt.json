@@ -1,0 +1,15 @@
+{
+  "id": "millers_debt", "content_version": 1, "status": "active", "name": "The Miller's Debt",
+  "short_role": "Combine structural and specialist pressure around a damaged river reserve.", "question": "Which bank can be allowed to bend when both stores and exhausted defenders are named?",
+  "objective": "Finish three assaults with either the Grain Store or Sluice House still stable.",
+  "lesson": "Recovery mastery means choosing one function to restore and carrying a second answer into the next assault.",
+  "keep_id": "ash_ford_redoubt", "recommended_packs": ["mason_train", "ferry_network"], "starting_doctrine": "harrying_fire",
+  "doctrines": ["harrying_fire", "hammer_road", "twilight_crossing"],
+  "wave_plans": [["harrier"], ["battering_ram", "sapper"], ["harrier", "outrider", "gloam_knife"]],
+  "event_chain": [],
+  "variations": [
+    {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": "supply_room", "final_wave_plan": ["harrier", "outrider", "gloam_knife"], "preparation_focus": "Balance ammunition protection with one structural reserve."},
+    {"id": "heavy_debt", "materials": -3, "morale": 1, "target_room": "workshop", "final_wave_plan": ["harrier", "harrier", "outrider"], "preparation_focus": "Harrying Fire dominates the final approach."},
+    {"id": "late_grain", "materials": 3, "morale": -1, "target_room": "supply_room", "final_wave_plan": ["battering_ram", "harrier"], "preparation_focus": "The final assault trades breadth for one armored structural threat."}
+  ]
+}

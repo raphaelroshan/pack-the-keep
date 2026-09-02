@@ -1,0 +1,8 @@
+{
+  "id": "ferry_network", "content_version": 1, "status": "active", "name": "Ferry Network",
+  "short_role": "Connect separated banks with mobile fire and a durable signal marker.", "question": "Where should the reserve cross when the visible bank is a feint?",
+  "family": "mobile_response", "contents": ["ferry_scouts", "signal_buoy"], "doctrine": "crossing_relief", "cost": 4,
+  "strength": "Flexible ranged response and warning coverage across a divided keep.", "weakness": "Limited ammunition and modest stopping power require a surviving route.",
+  "choice": "Spend less on a fixed line and preserve a response that can cover either bank.", "commander_affinity": ["warden", "quartermaster"],
+  "spatial_demand": {"preferred_floors": ["ground", "upper"], "preferred_zones": ["courtyard", "wall"], "needs_open_lane": true, "needs_adjacency": false}
+}

@@ -1,0 +1,11 @@
+{
+  "id": "ridge_sentinel", "content_version": 1, "status": "active", "name": "Ridge Sentinel",
+  "short_role": "Hold one distant post with disciplined anti-Harrier fire.", "role": "protects depleted specialists", "question": "Which post needs a committed precision guard?",
+  "kind": "unit", "category": "precision", "footprint": [2, 1], "allowed_floors": ["ground", "upper"], "allowed_zones": ["wall", "keep"],
+  "cost": 9, "max_health": 11, "placement_question": "Which post sees the Harrying Fire route?",
+  "skill": "Ridge Shot: four-damage ranged response against Harriers and command hunters.",
+  "strength_tags": ["precision", "harrier_counter", "command_anchor"], "weakness_tags": ["finite_ammunition", "assignment_exposure", "large_footprint"],
+  "attack_profile": {"style": "ranged", "range": 3, "cooldown_steps": 1, "damage": 4, "defense": 1, "ammo_capacity": 5, "targets": ["harrier", "standard_cutter", "ash_slinger", "gloam_knife"]},
+  "support_profile": null, "assignment_rule": {"room": "armory", "effect": "posted precision response +1 under the Marshal"}, "availability": "ridge_company",
+  "presentation": {"icon": "", "marker_color_role": "precision", "radius_scale": 1.0}
+}

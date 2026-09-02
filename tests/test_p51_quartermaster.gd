@@ -38,7 +38,7 @@ func _initialize() -> void:
 	var catalog: RefCounted = ContentCatalog.new()
 	var loaded: Dictionary = catalog.load_default(PackKeepState.ROOMS.keys())
 	_check(bool(loaded.get("ok", false)), "P51 runtime content should validate")
-	_check(catalog.commander_ids() == ["castellan", "warden", "quartermaster"], "Quartermaster should be the third stable commander")
+	_check(catalog.commander_ids() == ["castellan", "warden", "quartermaster", "marshal"], "Quartermaster should remain the third stable commander")
 	var definition: Dictionary = catalog.commander_definition("quartermaster")
 	_check(String(definition.get("ability", "")) == "resupply", "Quartermaster should expose Resupply")
 	_check(String(definition.get("passive_profile", {}).get("kind", "")) == "reserve_economy", "Quartermaster should declare reserve economy authority")

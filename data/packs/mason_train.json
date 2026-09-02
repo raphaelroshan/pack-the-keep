@@ -1,0 +1,8 @@
+{
+  "id": "mason_train", "content_version": 1, "status": "active", "name": "Mason Train",
+  "short_role": "Meet armored demolition with piercing tools and a sacrificial stone screen.", "question": "Which structural route must be interrupted before the ram lands?",
+  "family": "support", "contents": ["mason_crew", "stone_screen"], "doctrine": "counter_siege", "cost": 5,
+  "strength": "Armor-piercing melee response and strong adjacent room protection against demolition.", "weakness": "Short range and heavy footprints cannot answer distant or concealed unit hunters.",
+  "choice": "Build a durable anti-siege pocket instead of adding broad defender coverage.", "commander_affinity": ["castellan", "quartermaster", "marshal"],
+  "spatial_demand": {"preferred_floors": ["ground"], "preferred_zones": ["wall", "keep"], "needs_open_lane": false, "needs_adjacency": true}
+}

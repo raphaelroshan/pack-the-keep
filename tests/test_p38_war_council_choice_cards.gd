@@ -43,7 +43,10 @@ func _initialize() -> void:
 	_check(ui._selected_id(ui.commander_option) == "quartermaster" and ui.keep.commander_id == "quartermaster", "commander card navigation should reach the Quartermaster")
 	_check(String(panel.commander_name_label.text).contains("Quartermaster") and String(panel.commander_strength_label.text).contains("Measured Stores"), "commander card should explain the Quartermaster reserve lens")
 	panel.commander_next_button.pressed.emit()
-	_check(ui._selected_id(ui.commander_option) == "castellan", "commander card navigation should wrap through all three leaders")
+	_check(ui._selected_id(ui.commander_option) == "marshal", "commander card navigation should reach the Marshal")
+	_check(String(panel.commander_name_label.text).contains("Marshal") and String(panel.commander_strength_label.text).contains("Posted Orders"), "commander card should explain the Marshal assignment lens")
+	panel.commander_next_button.pressed.emit()
+	_check(ui._selected_id(ui.commander_option) == "castellan", "commander card navigation should wrap through all four leaders")
 
 	var starting_scenario: String = ui._selected_id(ui.scenario_option)
 	panel.scenario_next_button.pressed.emit()

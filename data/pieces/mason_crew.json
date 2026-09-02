@@ -1,0 +1,11 @@
+{
+  "id": "mason_crew", "content_version": 1, "status": "active", "name": "Mason Crew",
+  "short_role": "Meet armored siege pressure with short-range piercing tools.", "role": "breaks demolition armor", "question": "Which structural approach needs a crew ready at contact?",
+  "kind": "unit", "category": "support", "footprint": [2, 1], "allowed_floors": ["ground"], "allowed_zones": ["wall", "courtyard", "keep"],
+  "cost": 8, "max_health": 12, "placement_question": "Which room edge will the ram reach first?",
+  "skill": "Wedge and Maul: armor-piercing melee response against demolition threats.",
+  "strength_tags": ["armor_piercing", "demolition_counter", "repair"], "weakness_tags": ["ground_only", "short_range", "specialist_target"],
+  "attack_profile": {"style": "melee", "range": 1, "cooldown_steps": 1, "damage": 4, "defense": 1, "ammo_capacity": 0, "targets": ["battering_ram", "sapper", "siege_beast"]},
+  "support_profile": null, "assignment_rule": {"room": "workshop", "effect": "posted demolition response +1 under the Marshal"}, "availability": "mason_train",
+  "presentation": {"icon": "", "marker_color_role": "support", "radius_scale": 1.0}
+}

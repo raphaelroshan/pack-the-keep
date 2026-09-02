@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.50.0-ea1-greywatch-anchor` — PTK-EA-1 now enforces Greywatch as the Early Access quality anchor across responsive setup, its tutorial and full three-assault journey, two recovery intervals, terminal replay, authored board visuals, deterministic save/replay, accessibility, package, and forced-close evidence; the broader Early Access floor, human sessions, and owner approval remain pending
+**Current build identity:** `0.51.0-early-access-candidate` — PTK-EA-1 through PTK-EA-6 now enforce the three-keep, four-commander campaign and its full content breadth, deterministic save/replay, accessibility, package, and forced-close evidence; human sessions and owner distribution approval remain pending
 
 ## Purpose
 
@@ -136,7 +136,7 @@ Enter Preparation and confirm the command rail begins with a complete Pike Line 
 
 ## v0.23.0 acceptance checks
 
-Open Skirmish and confirm the War Council shows separate Commander and Defense cards before the board appears. Browse all three commanders and confirm identity, passive strength, intervention, limitation, and first question update through the existing selection path. For the Quartermaster, confirm the first Preparation pack names its two-material Measured Stores discount before purchase. Browse scenarios and confirm keep, objective, teaching question, pressure arc, difficulty, peak pressure, terminal rule, and fixed commitments remain synchronized with the advanced dropdown. At 125% scale confirm the cards stack. Start First Watch and confirm both card navigation and fallback dropdowns are visibly locked to The Castellan and Gatehouse Lock.
+Open Skirmish and confirm the War Council shows separate Commander and Defense cards before the board appears. Browse all four commanders and confirm identity, passive strength, intervention, limitation, and first question update through the existing selection path. For the Quartermaster, confirm the first Preparation pack names its two-material Measured Stores discount before purchase. Browse scenarios and confirm keep, objective, teaching question, pressure arc, difficulty, peak pressure, terminal rule, and fixed commitments remain synchronized with the advanced dropdown. At 125% scale confirm the cards stack. Start First Watch and confirm both card navigation and fallback dropdowns are visibly locked to The Castellan and Gatehouse Lock.
 
 ## v0.22.3 acceptance checks
 
@@ -270,7 +270,7 @@ Presentation settings now use the same validated primary/backup candidate discip
 
 ## v0.12.7 Alpha scenario matrix
 
-Local headless verification now runs a documented viable baseline for every combination of fourteen non-overwhelming authored scenarios, all three commanders, and three seeds. Each of the 126 cases runs twice, producing 252 simulations that must serialize identically, resolve all three waves without collapse, close final recovery and event state, and retain the canonical replay key. This is deterministic viability evidence only; human playtest and presentation approval remain pending.
+Local headless verification now runs a documented viable baseline for every combination of nineteen non-overwhelming authored scenarios, all four commanders, and three seeds. Each of the 228 cases runs twice, producing 456 simulations that must serialize identically, resolve all three waves without collapse, close final recovery and event state, and retain the canonical replay key. This is deterministic viability evidence only; human playtest and presentation approval remain pending.
 
 ## v0.12.8 Scenario resume matrix
 

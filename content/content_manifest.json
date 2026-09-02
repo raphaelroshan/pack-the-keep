@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.50.0",
+  "content_version": "0.51.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -180,10 +180,10 @@
   },
   "p12_alpha_scenario_matrix": {
     "status": "implemented",
-    "scenarios": 14,
-    "commanders": 3,
+    "scenarios": 19,
+    "commanders": 4,
     "seeds_per_pair": 3,
-    "simulation_executions": 252,
+    "simulation_executions": 456,
     "resume_boundaries": ["wave_one_pre_step", "first_recovery_before_event_resolution", "wave_two_pre_step"],
     "contract": "byte_identical_uninterrupted_and_resumed_three_wave_non_collapse_baselines_with_closed_terminal_recovery_and_event_state",
     "evidence": ["design/p12_alpha_scenario_matrix.md", "tests/test_p12_alpha_scenario_matrix.gd"],
@@ -865,6 +865,18 @@
         "field_engineers",
         "fallback_convoy"
       ]
+    },
+    {
+      "id": "marshal",
+      "name": "The Marshal",
+      "public_doctrine": "A posted specialist is strongest when the rest of the keep can still relieve the post.",
+      "passive": "Assigned combat defenders deal one additional response damage.",
+      "ability": "relief_order",
+      "strength": "Turns distributed room assignments into a high-output command network.",
+      "drawback": "Gains little before assignments and exposes concentrated value to command hunters.",
+      "character_voice": "Calm, exact, and attentive to the human cost of holding every post.",
+      "story_arc": ["arrives_with_a_complete_roster", "learns_that_orders_create_visible_targets", "keeps_a_relief_line_open"],
+      "favored_packs": ["ridge_company", "mason_train"]
     }
   ],
   "packs": [
@@ -978,6 +990,26 @@
       "doctrine": "lit_crossfire",
       "limitation": "Consumes two upper-wall footprints and the lantern deals no direct damage.",
       "choice_text": "Spend wall space on visibility instead of accepting close interception risk."
+    },
+    {
+      "id": "river_wardens", "name": "River Wardens", "purpose": "Hold one bank without blocking Ash Ford's causeway.",
+      "pieces": ["river_guard", "sluice_barrier"], "doctrine": "ford_control",
+      "limitation": "Ground-bound and route-specific.", "choice_text": "Commit one bank while preserving the central crossing."
+    },
+    {
+      "id": "ferry_network", "name": "Ferry Network", "purpose": "Carry warning and ranged response between separated banks.",
+      "pieces": ["ferry_scouts", "signal_buoy"], "doctrine": "crossing_relief",
+      "limitation": "Limited ammunition and modest stopping power.", "choice_text": "Keep a mobile answer instead of duplicating a fixed line."
+    },
+    {
+      "id": "ridge_company", "name": "Ridge Company", "purpose": "Make one exposed Twinwatch post a disciplined command anchor.",
+      "pieces": ["ridge_sentinel", "relay_drum"], "doctrine": "posted_crossfire",
+      "limitation": "Concentrates value into a visible specialist.", "choice_text": "Strengthen one post while preserving relief for the other."
+    },
+    {
+      "id": "mason_train", "name": "Mason Train", "purpose": "Counter armored demolition with piercing tools and structural protection.",
+      "pieces": ["mason_crew", "stone_screen"], "doctrine": "counter_siege",
+      "limitation": "Large short-range footprints cannot answer distant unit hunters.", "choice_text": "Build one anti-siege pocket instead of broad coverage."
     }
   ],
   "pieces": [
@@ -1130,7 +1162,15 @@
       "name": "Lantern Post",
       "role": "reveals veiled routes",
       "size": [1, 1]
-    }
+    },
+    {"id": "river_guard", "name": "River Guard", "role": "intercepts crossing pressure", "size": [2, 1]},
+    {"id": "sluice_barrier", "name": "Sluice Barrier", "role": "buffers a bank structure", "size": [1, 1]},
+    {"id": "ferry_scouts", "name": "Ferry Scouts", "role": "answers pressure across a divided keep", "size": [1, 1]},
+    {"id": "signal_buoy", "name": "Signal Buoy", "role": "extends crossing warning", "size": [1, 1]},
+    {"id": "ridge_sentinel", "name": "Ridge Sentinel", "role": "protects depleted specialists", "size": [2, 1]},
+    {"id": "relay_drum", "name": "Relay Drum", "role": "supports nearby ranged response", "size": [1, 1]},
+    {"id": "mason_crew", "name": "Mason Crew", "role": "breaks demolition armor", "size": [2, 1]},
+    {"id": "stone_screen", "name": "Stone Screen", "role": "fortifies against demolition", "size": [2, 1]}
   ],
   "rooms": [
     {
@@ -1333,6 +1373,16 @@
       "role": "concealed upper unit hunter",
       "teaching_question": "Can the player reveal the route or preserve a close-interception answer?",
       "counter_options": ["lantern_watch", "road_wardens", "runner_network", "commander_intervention"]
+    },
+    {
+      "id": "battering_ram", "name": "Battering Ram", "role": "armored structural demolition",
+      "teaching_question": "Can the player pierce the engine or protect its declared room before impact?",
+      "counter_options": ["mason_train", "river_wardens", "precision", "room_protection"]
+    },
+    {
+      "id": "harrier", "name": "Harrier", "role": "depleted-specialist hunter",
+      "teaching_question": "Can the player protect or replace the ammunition user nearest exhaustion?",
+      "counter_options": ["ridge_company", "ferry_network", "precision", "mobile_response"]
     }
   ],
   "events": [
@@ -1689,6 +1739,15 @@
       "character_note": "Neither commander calls the loss inevitable; the report names the choice that made it likely."
     }
   ],
+  "ptk_early_access_campaign": {
+    "status": "candidate",
+    "milestones": ["PTK-EA-1", "PTK-EA-2", "PTK-EA-3", "PTK-EA-4", "PTK-EA-5", "PTK-EA-6"],
+    "keeps": ["greywatch_keep", "ash_ford_redoubt", "twinwatch_bastion"],
+    "commanders": ["castellan", "warden", "quartermaster", "marshal"],
+    "breadth": {"packs": 15, "pieces": 29, "enemies": 12, "doctrines": 14, "scenarios": 20, "events": 14, "commander_keep_starts": 12},
+    "human_evidence": "pending",
+    "distribution_approval": "owner_required"
+  },
   "active_slice": {
     "keep_id": "greywatch_keep",
     "keep_ids": [
@@ -1702,7 +1761,8 @@
     "commander_ids": [
       "castellan",
       "warden",
-      "quartermaster"
+      "quartermaster",
+      "marshal"
     ],
     "unit_ids": [
       "pike_squad",
@@ -1715,7 +1775,11 @@
       "bellkeepers",
       "shield_wardens",
       "hook_guard",
-      "dusk_bow"
+      "dusk_bow",
+      "river_guard",
+      "ferry_scouts",
+      "ridge_sentinel",
+      "mason_crew"
     ],
     "enemy_ids": [
       "raider",
@@ -1727,7 +1791,9 @@
       "shieldbreaker",
       "standard_cutter",
       "outrider",
-      "gloam_knife"
+      "gloam_knife",
+      "battering_ram",
+      "harrier"
     ],
     "scenario_ids": [
       "gatehouse_lock",
@@ -1744,7 +1810,12 @@
       "before_the_horn",
       "the_unlit_stair",
       "the_twilight_road",
-      "last_stand"
+      "last_stand",
+      "flood_mark",
+      "broken_ferry",
+      "millers_debt",
+      "two_fires",
+      "rimebound_relief"
     ],
     "event_ids": [
       "relief_road_warning",
@@ -1756,7 +1827,11 @@
       "the_bell_has_a_pattern",
       "the_gate_is_not_the_keep",
       "wrong_wall_report",
-      "twilight_crossroads"
+      "twilight_crossroads",
+      "flood_mark_choice",
+      "ferry_reckoning",
+      "twinwatch_signal",
+      "ridge_relief"
     ],
     "variation_contract": "seed-derived bounded target or resource variation; scenario objective and counter meaning remain fixed",
     "waves": [
@@ -1834,6 +1909,26 @@
         "piece": "rear_guard",
         "room": "barracks",
         "effect": "fallback response remains ready behind the first line"
+      },
+      {
+        "piece": "river_guard",
+        "room": "gate",
+        "effect": "posted crossing response +1 under the Marshal"
+      },
+      {
+        "piece": "ferry_scouts",
+        "room": "barracks",
+        "effect": "posted reserve response +1 under the Marshal"
+      },
+      {
+        "piece": "ridge_sentinel",
+        "room": "armory",
+        "effect": "posted precision response +1 under the Marshal"
+      },
+      {
+        "piece": "mason_crew",
+        "room": "workshop",
+        "effect": "posted demolition response +1 under the Marshal"
       }
     ],
     "menu_states": [
@@ -1860,7 +1955,9 @@
       "ash_slinger_smoke_ring",
       "shieldbreaker_break_marker",
       "outrider_momentum_state",
-      "gloam_knife_visibility_state"
+      "gloam_knife_visibility_state",
+      "battering_ram_armor_and_demolition",
+      "harrier_ammunition_targeting"
     ],
     "focus_response_contract": {
       "status": "implemented",

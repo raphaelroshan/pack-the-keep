@@ -1,0 +1,11 @@
+{
+  "id": "signal_buoy", "content_version": 1, "status": "active", "name": "Signal Buoy",
+  "short_role": "Keep a warning marker visible between separated banks.", "role": "extends crossing warning", "question": "Where can one marker keep both routes readable?",
+  "kind": "equipment", "category": "recon", "footprint": [1, 1], "allowed_floors": ["ground", "upper"], "allowed_zones": ["wall", "courtyard", "keep"],
+  "cost": 5, "max_health": 8, "placement_question": "Which open edge preserves signal coverage?",
+  "skill": "River Signal: provides signal coverage and preserves an open response route.",
+  "strength_tags": ["warning", "signal_coverage", "split_defense"], "weakness_tags": ["no_direct_stop", "fragile_support"],
+  "attack_profile": {"style": "support", "range": 4, "cooldown_steps": 1, "damage": 0, "defense": 0, "ammo_capacity": 0, "targets": ["all"]},
+  "support_profile": {"kind": "signal", "target_rooms": [], "condition_restore": 0, "response_modifier": "warden_signal_coverage"},
+  "assignment_rule": null, "availability": "ferry_network", "presentation": {"icon": "", "marker_color_role": "recon", "radius_scale": 0.92}
+}

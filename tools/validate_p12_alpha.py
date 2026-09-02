@@ -20,13 +20,13 @@ REQUIRED_HUMAN_GATES = {
 EXPECTED_CONTENT_COUNTS = {
     "keep_count": 3,
     "region_count": 1,
-    "commander_count": 3,
-    "piece_count": 21,
-    "pack_count": 11,
-    "enemy_count": 10,
-    "doctrine_count": 12,
-    "scenario_count": 15,
-    "event_count": 10,
+    "commander_count": 4,
+    "piece_count": 29,
+    "pack_count": 15,
+    "enemy_count": 12,
+    "doctrine_count": 14,
+    "scenario_count": 20,
+    "event_count": 14,
     "modifier_count": 2,
 }
 PACKAGED_PHASES = ("clean_install", "reinstall", "stale_backup", "missing_profile", "upgrade", "forced_close_recovery")
