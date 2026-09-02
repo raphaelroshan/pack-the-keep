@@ -29,6 +29,12 @@
       {"piece_id": "narrow_gate", "origin": [2, 5], "floor": "ground", "reason": "concentrates contact before the yard"}
     ]
   },
+  "doctrine_geometry": [
+    {"commander_id": "castellan", "recommended_pack_id": "pike_line", "opening": "Join the Gate and Inner Yard into one reinforced contact line.", "fit": "Layered Masonry compounds Greywatch's compact room edges.", "risk": "Upper-wall bypass remains lightly covered."},
+    {"commander_id": "warden", "recommended_pack_id": "firekeepers", "opening": "Leave response cells open around the yard and punish enemies crossing them.", "fit": "Open Lanes turns Greywatch's central yard into a mobile response pocket.", "risk": "Separated defenders receive less protection from the compact core."},
+    {"commander_id": "quartermaster", "recommended_pack_id": "field_engineers", "opening": "Bank repair capacity beside the Workshop before committing the front line.", "fit": "Measured Stores pays for Greywatch's expensive deep repairs across three assaults.", "risk": "The first contact has fewer direct attackers."},
+    {"commander_id": "marshal", "recommended_pack_id": "crossbow_watch", "opening": "Assign precision cover to the upper wall while the gate holds below.", "fit": "Posted Orders rewards Greywatch's short assignment links and protected specialists.", "risk": "Standard Cutters can turn those fixed posts into exposed priorities."}
+  ],
   "recovery_profile": {"room_repair_materials": 8, "room_repair_condition": 30, "question": "Which damaged function is worth a deep repair?"},
   "visual": {"terrain": "fort", "ground_label": "GROUND FLOOR", "upper_label": "UPPER WALL", "board_label": "KEEP ROOMS / DEFENSE BOARD"}
 }

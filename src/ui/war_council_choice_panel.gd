@@ -134,7 +134,7 @@ func render(view_model: Dictionary) -> void:
 
 	scenario_index_label.text = "DEFENSE %d / %d  •  %s" % [int(scenario.get("index", 0)), int(scenario.get("count", 0)), String(scenario.get("difficulty", "standard")).to_upper()]
 	scenario_name_label.text = String(scenario.get("name", "Defense"))
-	scenario_identity_label.text = "%s  •  %s\nFIRST QUESTION — %s" % [String(scenario.get("keep", "Keep")), String(scenario.get("identity", "Authored pressure")), String(scenario.get("question", "What must this defense preserve?"))]
+	scenario_identity_label.text = "%s  •  %s\nGEOMETRY FIT — %s\nOPENING — %s\nFIRST QUESTION — %s" % [String(scenario.get("keep", "Keep")), String(scenario.get("identity", "Authored pressure")), String(scenario.get("geometry", "Read the keep geometry.")), String(scenario.get("geometry_opening", "Build one legible answer.")), String(scenario.get("question", "What must this defense preserve?"))]
 	scenario_objective_label.text = "OBJECTIVE\n%s" % String(scenario.get("objective", ""))
 	scenario_arc_label.text = "PRESSURE ARC\n%s" % String(scenario.get("arc", ""))
 	scenario_risk_label.text = "RUN RULE\n%s" % String(scenario.get("risk", ""))

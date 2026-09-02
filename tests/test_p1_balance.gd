@@ -5,6 +5,7 @@ const PackKeepState = preload("res://src/core/keep_state.gd")
 var failures: Array[String] = []
 var completed_runs: int = 0
 var outcome_counts: Dictionary = {}
+var layout_outcomes: Dictionary = {}
 
 func _initialize() -> void:
 	for commander_id in ["castellan", "warden"]:
@@ -12,9 +13,16 @@ func _initialize() -> void:
 			for layout_name in ["compact", "recovery", "open_yard"]:
 				for run_seed in [3307, 3308]:
 					_run_case(String(commander_id), String(scenario_id), String(layout_name), int(run_seed))
+	for layout_name in ["compact", "recovery", "open_yard"]:
+		var outcomes: Dictionary = layout_outcomes.get(layout_name, {})
+		if int(outcomes.get("collapse", 0)) != 0:
+			failures.append("%s opening should remain viable across the Greywatch seed matrix" % layout_name)
+		if int(outcomes.get("held", 0)) == 0 or int(outcomes.get("partial_breach", 0)) == 0:
+			failures.append("%s opening should expose both strength and recovery cost instead of dominating every seed" % layout_name)
 	if failures.is_empty():
 		print("PASS: Pack the Keep P1 balance harness (%d bounded runs)" % completed_runs)
 		print("P1 outcomes: %s" % outcome_counts)
+		print("P1 opening outcomes: %s" % layout_outcomes)
 		quit(0)
 	else:
 		for failure in failures:
@@ -76,6 +84,10 @@ func _run_case(commander_id: String, scenario_id: String, layout_name: String, r
 		failures.append("%s/%s/%s/%d: non-collapse run did not complete all three waves" % [commander_id, scenario_id, layout_name, run_seed])
 	completed_runs += 1
 	outcome_counts[keep.last_outcome] = int(outcome_counts.get(keep.last_outcome, 0)) + 1
+	if not layout_outcomes.has(layout_name):
+		layout_outcomes[layout_name] = {}
+	var plan_outcomes: Dictionary = layout_outcomes[layout_name]
+	plan_outcomes[keep.last_outcome] = int(plan_outcomes.get(keep.last_outcome, 0)) + 1
 
 func _resolve_active_event(keep: PackKeepState, label: String) -> bool:
 	while not keep.active_event_id.is_empty():

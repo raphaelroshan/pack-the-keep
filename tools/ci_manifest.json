@@ -1,7 +1,7 @@
 {
   "slug": "pack-the-keep",
   "display_name": "Pack the Keep",
-  "build_version": "0.58.0-recovery-action-order",
+  "build_version": "0.59.0-gpt56-packet-completion",
   "godot_test": "res://tests/test_keep_state.gd",
   "primary_repo": "raphaelroshan/pack-the-keep",
   "release_platforms": ["steam", "epic-games-store"],

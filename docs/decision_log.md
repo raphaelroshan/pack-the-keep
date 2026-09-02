@@ -1047,3 +1047,11 @@
 **Reason:** The v0.57 full-flow capture showed two blocked repair cards before the legal assignment action. With only two recovery actions, the rail should surface viable decisions before diagnostics while retaining every explanation.
 
 **Trade-off:** Card position can change after an action alters legality. The card titles remain explicit, and controller focus is recalculated through the existing first-legal-control path.
+
+## ADR-132: Commander-to-keep fit is authored once and projected at choice time
+
+**Decision:** Add one `doctrine_geometry` row per active commander to every keep definition. Each row names a compatible pack, an opening pattern, the reason that pattern works with the keep's spatial rule, and its accepted risk. War Council projects only the currently selected row; a strict GPT56 gate validates the complete 4x3 matrix and composes the existing campaign evidence.
+
+**Reason:** The runtime already meets the GPT56 roster floor, but the relationship between commander doctrine and keep geometry is easier to infer after entering Preparation than while choosing the defense. Making that relationship explicit turns an existing mechanical distinction into a player-facing decision and avoids adding redundant content merely to increase counts.
+
+**Trade-off:** The authored row is guidance, not an optimality score or guarantee. Players may choose any pack and placement, simulation outcomes remain authoritative, and future commanders or keeps must add a matrix row before runtime content validation passes.

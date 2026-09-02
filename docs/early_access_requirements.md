@@ -1,7 +1,7 @@
 # Pack the Keep — Early Access Requirements
 
 **Status:** Active, machine-checked contract for a skeletal but commercially credible Early Access build
-**Current baseline:** `0.58.0-recovery-action-order`; all investment and Early Access gates are machine-checked, first plans remain synchronized with doctrine cards, each phase has truthful decision framing, tactical labels preserve the map-first hierarchy, War Council choices use progressive disclosure, Recovery surfaces legal actions first, and all active presentation assets are original. The progress ledgers record exact evidence, automated candidate status, and the owner-controlled distribution boundary.
+**Current baseline:** `0.59.0-gpt56-packet-completion`; GPT56, investment, and Early Access gates are machine-checked, all twelve commander/keep geometry fits are authored, each phase has truthful decision framing, and all active presentation assets are original. The progress ledgers record exact evidence, automated candidate status, and the owner-controlled distribution boundary.
 
 ## Product decision
 

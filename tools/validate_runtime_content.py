@@ -16,8 +16,9 @@ PACK_FIELDS = {
 }
 KEEP_FIELDS = {
     "id", "content_version", "status", "name", "short_role", "question", "grid_size",
-    "rooms", "connections", "spatial_rule", "recovery_profile", "visual",
+    "rooms", "connections", "spatial_rule", "starter_plan", "doctrine_geometry", "recovery_profile", "visual",
 }
+DOCTRINE_GEOMETRY_FIELDS = {"commander_id", "recommended_pack_id", "opening", "fit", "risk"}
 ROOM_FIELDS = {"name", "floor", "origin", "size", "critical", "role"}
 REGION_FIELDS = {"id", "content_version", "status", "name", "need", "route", "consequences"}
 REGION_CONSEQUENCE_FIELDS = {
@@ -364,6 +365,30 @@ def validate_keep(
             errors.append(f"{path}: room_repair_condition must be from 1 to 100")
         if not isinstance(recovery.get("question"), str) or not recovery["question"].strip():
             errors.append(f"{path}: recovery question must be non-empty text")
+    doctrine_geometry = keep.get("doctrine_geometry")
+    seen_geometry_commanders: set[str] = set()
+    if not isinstance(doctrine_geometry, list) or not doctrine_geometry:
+        errors.append(f"{path}: doctrine_geometry must be a non-empty array")
+    else:
+        for index, row in enumerate(doctrine_geometry):
+            if not isinstance(row, dict):
+                errors.append(f"{path}: doctrine_geometry[{index}] must be an object")
+                continue
+            for field in sorted(DOCTRINE_GEOMETRY_FIELDS - row.keys()):
+                errors.append(f"{path}: doctrine_geometry[{index}] missing required field: {field}")
+            commander_id = row.get("commander_id")
+            pack_id = row.get("recommended_pack_id")
+            if not isinstance(commander_id, str) or not SNAKE_CASE.fullmatch(commander_id):
+                errors.append(f"{path}: doctrine_geometry[{index}] commander_id must be snake_case")
+            elif commander_id in seen_geometry_commanders:
+                errors.append(f"{path}: duplicate doctrine_geometry commander_id: {commander_id}")
+            else:
+                seen_geometry_commanders.add(commander_id)
+            if not isinstance(pack_id, str) or not SNAKE_CASE.fullmatch(pack_id):
+                errors.append(f"{path}: doctrine_geometry[{index}] recommended_pack_id must be snake_case")
+            for field in ("opening", "fit", "risk"):
+                if not isinstance(row.get(field), str) or not row[field].strip():
+                    errors.append(f"{path}: doctrine_geometry[{index}] {field} must be non-empty text")
     visual = keep.get("visual")
     if not isinstance(visual, dict) or visual.get("terrain") not in {"fort", "river", "ridge"}:
         errors.append(f"{path}: invalid visual profile")

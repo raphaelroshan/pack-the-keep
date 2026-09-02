@@ -46,6 +46,16 @@ class RuntimeContentValidatorTests(unittest.TestCase):
         self.assertIn("room_damage_reduction", joined)
         self.assertIn("room_repair_condition", joined)
 
+    def test_keep_rejects_incomplete_or_duplicate_doctrine_geometry(self) -> None:
+        keep = copy.deepcopy(load("data/keeps/greywatch_keep.json"))
+        keep["doctrine_geometry"][0]["fit"] = ""
+        keep["doctrine_geometry"][1]["commander_id"] = "castellan"
+        errors: list[str] = []
+        validator.validate_keep(Path("greywatch_keep.json"), keep, set(), errors)
+        joined = "\n".join(errors)
+        self.assertIn("fit must be non-empty text", joined)
+        self.assertIn("duplicate doctrine_geometry commander_id", joined)
+
     def test_paired_bastions_require_two_known_distinct_anchors(self) -> None:
         keep = copy.deepcopy(load("data/keeps/twinwatch_bastion.json"))
         keep["spatial_rule"]["anchor_rooms"] = ["gate", "missing_room"]
