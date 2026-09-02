@@ -1845,7 +1845,7 @@ func _build_title_card() -> PanelContainer:
 	content.add_child(pillars)
 	build_identity_label = Label.new()
 	build_identity_label.name = "BuildIdentityLabel"
-	build_identity_label.text = "PRE-ALPHA • %s • HUMAN PLAYTEST PENDING" % String(ProjectSettings.get_setting("application/config/version", "unknown"))
+	build_identity_label.text = "PRE-ALPHA • %s • AUTOMATED BASELINE VERIFIED" % String(ProjectSettings.get_setting("application/config/version", "unknown"))
 	build_identity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	build_identity_label.add_theme_color_override("font_color", Color("#aab1b2"))
 	content.add_child(build_identity_label)

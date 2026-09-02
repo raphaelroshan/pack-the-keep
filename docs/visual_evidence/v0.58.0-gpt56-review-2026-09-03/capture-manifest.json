@@ -1,0 +1,11 @@
+{
+  "game": "Pack the Keep",
+  "build": "0.58.0-recovery-action-order",
+  "review_date": "2026-09-03",
+  "engine": "Godot 4.4.1",
+  "viewport": {"width": 1280, "height": 720},
+  "capture_source": "current main audit after automated-baseline title status change",
+  "states": ["title", "war_council", "build_and_assign"],
+  "files": ["01_title.png", "02_first_action.png", "03_followup.png"],
+  "notes": ["The title now reports automated evidence accurately and does not imply human validation.", "Preparation is mechanically meaningful but remains dense; the next task is a board-first preparation decision surface.", "Screenshots are automated development evidence, not human playtest evidence."]
+}
