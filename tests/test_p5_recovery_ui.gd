@@ -42,6 +42,9 @@ func _initialize() -> void:
 	_check(not ui.recovery_assign_button.disabled, "adjacent specialist assignment was not a legal action card")
 	_check(ui.recovery_clear_button.disabled, "unassigned piece incorrectly exposed a legal clear action")
 	_check(String(ui.recovery_clear_card_detail.text).contains("piece has no room assignment"), "blocked clear card did not show the authoritative reason")
+	_check(ui.recovery_room_card_panel.get_index() == 2 and ui.recovery_piece_card_panel.get_index() == 3 and ui.recovery_assign_card_panel.get_index() == 4, "ready recovery cards should preserve their authored relative order")
+	_check(ui.recovery_clear_card_panel.get_index() > ui.recovery_assign_card_panel.get_index(), "blocked recovery cards should follow every legal action")
+	_check(ui.finish_interval_button.get_index() == ui.recovery_actions_panel.get_child_count() - 1, "Finish Recovery should remain the final command-rail control")
 
 	var materials_before: int = ui.keep.materials
 	ui.recovery_room_button.pressed.emit()
@@ -76,6 +79,7 @@ func _initialize() -> void:
 	ui._refresh_ui()
 	await process_frame
 	_check(not ui.recovery_clear_button.disabled, "assigned piece did not expose a legal clear-assignment card")
+	_check(ui.recovery_clear_card_panel.get_index() == 2, "the sole legal clear-assignment card should move ahead of blocked repair and assignment diagnostics")
 	ui.recovery_clear_button.pressed.emit()
 	await process_frame
 	_check(String(ui.keep.pieces["pike_squad_0"].get("assignment", "")).is_empty(), "clear-assignment card did not invoke the authoritative command")

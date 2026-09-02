@@ -235,15 +235,19 @@ var response_preview_label: Label
 var recovery_priority_label: Label
 var recovery_actions_panel: VBoxContainer
 var recovery_stage_label: Label
+var recovery_room_card_panel: PanelContainer
 var recovery_room_card_title: Label
 var recovery_room_card_detail: Label
 var recovery_room_button: Button
+var recovery_piece_card_panel: PanelContainer
 var recovery_piece_card_title: Label
 var recovery_piece_card_detail: Label
 var recovery_piece_button: Button
+var recovery_assign_card_panel: PanelContainer
 var recovery_assign_card_title: Label
 var recovery_assign_card_detail: Label
 var recovery_assign_button: Button
+var recovery_clear_card_panel: PanelContainer
 var recovery_clear_card_title: Label
 var recovery_clear_card_detail: Label
 var recovery_clear_button: Button
@@ -1559,24 +1563,28 @@ func _build_ui() -> void:
 	recovery_actions_panel.add_child(recovery_stage_label)
 
 	var room_card: Dictionary = _build_recovery_action_card("REPAIR ROOM", "Repair selected room", _on_repair_room)
+	recovery_room_card_panel = room_card.panel
 	recovery_room_card_title = room_card.title
 	recovery_room_card_detail = room_card.detail
 	recovery_room_button = room_card.button
 	recovery_actions_panel.add_child(room_card.panel)
 
 	var piece_card: Dictionary = _build_recovery_action_card("REPAIR PIECE", "Repair selected piece", _on_repair_piece)
+	recovery_piece_card_panel = piece_card.panel
 	recovery_piece_card_title = piece_card.title
 	recovery_piece_card_detail = piece_card.detail
 	recovery_piece_button = piece_card.button
 	recovery_actions_panel.add_child(piece_card.panel)
 
 	var assign_card: Dictionary = _build_recovery_action_card("ASSIGN SPECIALIST", "Assign selected piece", _on_assign_piece)
+	recovery_assign_card_panel = assign_card.panel
 	recovery_assign_card_title = assign_card.title
 	recovery_assign_card_detail = assign_card.detail
 	recovery_assign_button = assign_card.button
 	recovery_actions_panel.add_child(assign_card.panel)
 
 	var clear_card: Dictionary = _build_recovery_action_card("CLEAR ASSIGNMENT", "Clear selected assignment", _on_clear_assignment)
+	recovery_clear_card_panel = clear_card.panel
 	recovery_clear_card_title = clear_card.title
 	recovery_clear_card_detail = clear_card.detail
 	recovery_clear_button = clear_card.button
@@ -2963,10 +2971,33 @@ func _refresh_recovery_action_cards(rebuild_snapshot: bool = true) -> void:
 	_apply_recovery_action_card(recovery_piece_card_title, recovery_piece_card_detail, recovery_piece_button, cards.get("piece", {}))
 	_apply_recovery_action_card(recovery_assign_card_title, recovery_assign_card_detail, recovery_assign_button, cards.get("assign", {}))
 	_apply_recovery_action_card(recovery_clear_card_title, recovery_clear_card_detail, recovery_clear_button, cards.get("clear", {}))
+	_sort_recovery_action_cards(cards)
 	var finish: Dictionary = recovery_presentation_snapshot.get("finish", {})
 	finish_interval_button.disabled = bool(finish.get("disabled", false))
 	finish_interval_button.tooltip_text = String(finish.get("tooltip", ""))
 	finish_interval_button.text = String(finish.get("text", "FINISH RECOVERY"))
+
+func _sort_recovery_action_cards(cards: Dictionary) -> void:
+	var ordered_cards: Array[Dictionary] = [
+		{"id": "room", "panel": recovery_room_card_panel},
+		{"id": "piece", "panel": recovery_piece_card_panel},
+		{"id": "assign", "panel": recovery_assign_card_panel},
+		{"id": "clear", "panel": recovery_clear_card_panel},
+	]
+	var target_index: int = 2
+	for ready_state in [true, false]:
+		for entry in ordered_cards:
+			if bool(cards.get(String(entry.id), {}).get("ready", false)) != ready_state:
+				continue
+			var panel: PanelContainer = entry.panel
+			if panel != null:
+				recovery_actions_panel.move_child(panel, target_index)
+				target_index += 1
+	if recovery_priority_label != null:
+		recovery_actions_panel.move_child(recovery_priority_label, target_index)
+		target_index += 1
+	if finish_interval_button != null:
+		recovery_actions_panel.move_child(finish_interval_button, target_index)
 
 func _on_remove_piece() -> void:
 	if not _tutorial_allows("remove_piece"):

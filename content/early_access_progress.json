@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.57.0-war-council-disclosure",
+  "build_version": "0.58.0-recovery-action-order",
   "status": "candidate",
   "early_access_ready": true,
   "breadth_floor": {"keeps": 3, "commanders": 4, "packs_min": 15, "packs_max": 18, "pieces_min": 24, "pieces_max": 30, "enemies_min": 12, "enemies_max": 14, "scenarios_min": 20, "scenarios_max": 24, "events_min": 14, "events_max": 18, "viable_commander_keep_starts": 12},
