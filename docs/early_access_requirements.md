@@ -1,7 +1,7 @@
 # Pack the Keep — Early Access Requirements
 
 **Status:** Active, machine-checked contract for a skeletal but commercially credible Early Access build
-**Current baseline:** `0.51.0-early-access-candidate`; PTK-EA-1 through PTK-EA-6 are implemented and machine-checked. `content/early_access_progress.json` records the exact inventory, evidence, automated candidate status, and owner-controlled distribution boundary.
+**Current baseline:** `0.52.0-authored-foley`; PTK-EA-1 through PTK-EA-6 are implemented and machine-checked, and all active presentation assets are original. `content/early_access_progress.json` records the exact inventory, evidence, automated candidate status, and owner-controlled distribution boundary.
 
 ## Product decision
 

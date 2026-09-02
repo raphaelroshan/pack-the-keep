@@ -15,7 +15,7 @@ REQUIRED_AREAS = {
 }
 ALLOWED_STATUSES = {"automated", "packaged", "documented"}
 REQUIRED_HUMAN_GATES = {
-    "windows_gpu_presentation", "physical_controller_matrix", "procedural_audio_review",
+    "windows_gpu_presentation", "physical_controller_matrix", "authored_audio_mix_review",
     "forced_close_recovery", "signed_installer", "storefront_launch", "human_playtest",
 }
 PACKAGED_PHASES = ("clean_install", "reinstall", "stale_backup", "missing_profile", "upgrade", "forced_close_recovery")

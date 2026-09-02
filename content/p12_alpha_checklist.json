@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.51.0-early-access-candidate",
+  "build_version": "0.52.0-authored-foley",
   "status": "candidate",
   "checks": [
     {"id": "windows_launch", "status": "implemented", "evidence": ["tests/test_release_identity.py", "tools/run_packaged_smoke.py", ".github/workflows/ci.yml"]},
@@ -18,7 +18,7 @@
   "human_gates": [
     {"id": "windows_gpu_presentation", "status": "pending", "evidence": "docs/p12_human_alpha_checklist.md"},
     {"id": "physical_controller_matrix", "status": "pending", "evidence": "docs/p12_human_alpha_checklist.md"},
-    {"id": "procedural_audio_review", "status": "pending", "evidence": "docs/p12_human_alpha_checklist.md"},
+    {"id": "authored_audio_mix_review", "status": "pending", "evidence": "docs/p12_human_alpha_checklist.md"},
     {"id": "forced_close_recovery", "status": "pending", "evidence": "docs/p12_human_alpha_checklist.md"},
     {"id": "signed_installer", "status": "pending", "evidence": "docs/p12_human_alpha_checklist.md"},
     {"id": "storefront_launch", "status": "pending", "evidence": "docs/p12_human_alpha_checklist.md"},

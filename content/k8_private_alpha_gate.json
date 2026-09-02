@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.51.0-early-access-candidate",
+  "build_version": "0.52.0-authored-foley",
   "status": "automated_candidate",
   "release_ready": false,
   "public_alpha_ready": false,
@@ -27,7 +27,7 @@
   "pending_human_gates": [
     "windows_gpu_presentation",
     "physical_controller_matrix",
-    "procedural_audio_review",
+    "authored_audio_mix_review",
     "forced_close_recovery",
     "signed_installer",
     "storefront_launch",

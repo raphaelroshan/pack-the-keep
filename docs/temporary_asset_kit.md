@@ -1,10 +1,10 @@
 # Pack the Keep — Temporary Asset Kit
 
 **Status:** Testing-only breadth kit  
-**Build target:** Current private alpha branch  
+**Build target:** Archived prototype support
 **Purpose:** Give AI agents usable temporary defenders, enemies, rooms, VFX, audio, and animation ingredients while Greywatch’s final authored art is developed.
 
-**Current integration:** `0.51.0-early-access-candidate` retains original small-scale SVG silhouettes for every active actor, including Battering Ram and Harrier, plus Greywatch room-function props and all combat/room/recovery effects. Earlier visual kits remain archived as licensed fallback material but no current board profile references them. The bounded Interface Sounds/RPG Audio cue pool remains temporary. Stable fitted room labels, room fills, health bars, state labels, procedural combat marks, and generated tones remain the fallbacks.
+**Current integration:** `0.52.0-authored-foley` uses original small-scale SVG silhouettes for every active actor, Greywatch room-function props, combat/room/recovery effects, and fourteen original semantic WAV cues. Earlier visual and audio kits remain archived as licensed historical material, but no current presentation profile references them. Stable fitted room labels, room fills, health bars, state labels, procedural combat marks, and generated tones remain the fallbacks.
 
 ## Included sources
 

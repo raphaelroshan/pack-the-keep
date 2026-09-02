@@ -24,6 +24,7 @@ class EarlyAccessProgressValidatorTests(unittest.TestCase):
         self.assertTrue(progress["early_access_ready"])
         self.assertEqual(progress["status"], "candidate")
         self.assertEqual([row["status"] for row in progress["milestones"]], ["implemented"] * 6)
+        self.assertEqual(progress["active_temporary_asset_families"], [])
         self.assertTrue(progress["owner_approval_required_for_distribution"])
 
     def test_rejects_stale_inventory_incomplete_readiness_and_missing_evidence(self) -> None:

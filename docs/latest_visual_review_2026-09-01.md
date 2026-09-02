@@ -51,4 +51,4 @@ P65 replaces all active Particle Pack textures with eight original 48×48 effect
 
 ## Next visual target
 
-PTK-EA-1 through PTK-EA-6 are complete at the automated candidate boundary. The next bounded product task is a real P16 human comprehension session on the exact packaged artifact; automation must not fabricate that evidence. Temporary foley remains the only active borrowed asset family, and public distribution still requires owner approval.
+PTK-EA-1 through PTK-EA-6 are complete at the automated candidate boundary. P66 subsequently replaces the final active borrowed asset family with original semantic foley; this does not alter the retained visual evidence. The next bounded product task is a real P16 human comprehension and listening session on the exact packaged artifact; automation must not fabricate that evidence, and public distribution still requires owner approval.

@@ -14,7 +14,7 @@ REQUIRED_CHECKS = {
     "controller", "scaling", "input_remapping", "pause", "crash_safe_close", "clean_reinstall",
 }
 REQUIRED_HUMAN_GATES = {
-    "windows_gpu_presentation", "physical_controller_matrix", "procedural_audio_review",
+    "windows_gpu_presentation", "physical_controller_matrix", "authored_audio_mix_review",
     "forced_close_recovery", "signed_installer", "storefront_launch", "human_playtest",
 }
 EXPECTED_CONTENT_COUNTS = {

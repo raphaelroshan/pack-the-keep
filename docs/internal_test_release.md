@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.51.0-early-access-candidate` — PTK-EA-1 through PTK-EA-6 now enforce the three-keep, four-commander campaign and its full content breadth, deterministic save/replay, accessibility, package, and forced-close evidence; human sessions and owner distribution approval remain pending
+**Current build identity:** `0.52.0-authored-foley` — PTK-EA-1 through PTK-EA-6 enforce the three-keep, four-commander campaign and its full content breadth, deterministic save/replay, accessibility, package, forced-close evidence, and original active presentation assets; human sessions and owner distribution approval remain pending
 
 ## Purpose
 
