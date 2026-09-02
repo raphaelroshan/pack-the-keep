@@ -1,0 +1,60 @@
+# Pack the Keep — Investment-Evaluation Roadmap
+
+## Purpose
+
+The next milestone is not another isolated commander, pack, or enemy. It is a **full creative vertical** that demonstrates the complete fantasy: choose a commander and keep, pack a coherent defense, read the invasion, watch the defense resolve, make an emergency decision, recover from damage, and understand what changed.
+
+The game should present as an original top-down fortress-defense game inspired by the accessibility and immediacy of compact auto-battlers. Its identity comes from physical room layout, pack doctrine, two-floor defense, readable enemy questions, and deliberate recovery—not from a large card collection or raw unit count.
+
+## Verified baseline
+
+The current main branch contains a playable Early Access candidate with a polished menu → War Council → Preparation → real-time Battle → Recovery → Results loop. It includes four commanders, three keeps, fifteen packs, twenty-nine pieces, twelve enemy types, fourteen doctrines, twenty scenarios, fourteen events, deterministic variation, authored actors, semantic audio, combat VFX, recovery feedback, persistence, input/accessibility support, and packaged lifecycle gates. The automated verification suite passes.
+
+The current investment risk is not lack of systems. It is **whether the breadth is visibly and mechanically differentiated enough to justify continued investment**. Greywatch is the clearest anchor. The next work must prove that another keep and commander create a different spatial question rather than adding content that only changes labels or numbers.
+
+## Definition of the full creative vertical
+
+A reviewer must be able to start a fresh run and complete: title → commander/keep choice → doctrine pack selection → visible placement plan → forecast → live auto-battle → pause/inspection → one emergency intervention → hold, breach, or collapse → recovery choice → terminal Results with causal explanation and replay suggestion.
+
+The vertical must include one visually authored keep, two clearly different commander lenses, at least four packs that produce visibly different layouts, four enemy questions with readable counters, one recovery dilemma, one named scenario, one failure-forward consequence, strong preparation and battle audio, and an authored final debrief. The player must be able to understand what the build is trying to solve before pressing Begin Assault.
+
+## Skeletal Early Access floor
+
+The Early Access candidate should contain three distinct keeps, four commanders, fifteen to eighteen packs, twenty-four to thirty defensive pieces, twelve to fourteen enemy families, twenty to twenty-four scenarios, fourteen to eighteen events, and at least twelve viable commander/keep openings. At least two keeps must alter the preferred placement geometry; at least two commanders must alter the preferred intervention or resource pattern; and every enemy family must pose a distinct defensive question with at least two understandable counters.
+
+Later keeps may reuse the core rendering system, temporary art kit, room-label language, audio buses, and battle grammar. They may not be cosmetic reskins. Each keep must add one spatial rule, one pressure curve, one recovery trade-off, one signature threat or doctrine, and one scenario where the keep’s identity matters.
+
+## Ordered implementation gates
+
+| Gate | Player-facing deliverable | Required evidence |
+|---|---|---|
+| **PTK-I1 — Creative vertical lock** | Greywatch becomes a complete, visually coherent, tutorial-safe showcase from War Council through Results. | Normal-flow capture, deterministic three-wave run, save/resume at Preparation/Battle/Recovery/Results, and controller/large-text/reduced-motion checks. |
+| **PTK-I2 — Second keep** | A second keep changes room connectivity, preferred placement, and recovery priorities. | Keep manifest, two viable seeded plans, isolated teaching scenario, combination scenario, and screenshots at 1280×720 and 1600×900. |
+| **PTK-I3 — Commander and pack expression** | A second commander lens and four additional packs create different opening decisions, not stat inflation. | Balance matrix, pack/commander interaction tests, forecast explanation, and replay comparison. |
+| **PTK-I4 — Enemy question breadth** | Six to eight additional enemy families or doctrines are introduced through readable counters and staged teaching encounters. | Enemy counter matrix, deterministic scenario fixtures, pause/speed/reduced-motion coverage, and battle evidence. |
+| **PTK-I5 — Campaign loop** | A player can complete multiple scenarios, recover, unlock or reserve packs, see consequences, and start a new keep without grind. | Campaign save migration, clean-reset flow, scenario progression test, failure-forward result, and terminal report. |
+| **PTK-I6 — Early Access hardening** | The game supports repeatable 30–90 minute defense sessions with reliable saves, settings, package behavior, known limitations, and an honest content boundary. | Full verification, seeded balance matrix, packaged launch/recovery tests, input/scaling checks, and release manifest. |
+
+## Content authoring rule
+
+Every pack, piece, enemy, commander, keep, event, and scenario must state the tactical question it introduces, the physical or resource trade-off it creates, its visible counters, its failure consequence, and the reason it is not interchangeable with existing content. A new enemy that only has more health is not new content. A new keep that only changes colors is not a new keep.
+
+## Combat and feel requirements
+
+Real-time presentation may be dramatic, but the player must be able to pause, inspect, predict, and understand the result. Every meaningful assault should make forecast, approach, target, wind-up, response, impact, consequence, and settle legible. Audio and VFX must reinforce those beats without owning state. Reduced motion must preserve the same information in a shorter form.
+
+Recovery is part of the game, not a failure screen. A hold, breach, or collapse should explain what failed, what remains valuable, and what the player can sacrifice or repair. The terminal Results screen should tell a causal story and suggest a concrete replay experiment.
+
+## What not to build yet
+
+Do not add multiplayer, rarity tiers, monetization, an enormous pack catalogue, procedural narrative, live-service progression, or platform services before PTK-I1 through PTK-I3 pass. Do not add more enemies until existing enemy families create distinct counter decisions. Do not let the game become a build-order puzzle where one commander or pack is objectively correct.
+
+## Agent task contract
+
+Each task must be one player-facing defense question, keep simulation must remain authoritative, presentation must consume read-only state, and the task must include scenario fixtures, deterministic tests, save boundaries, accessibility/input coverage, and a screenshot at the current version. The final report must list changed files, exact commands, player-facing result, evidence paths, known limitations, and exactly one next task.
+
+The active sequence is **PTK-I1 Creative vertical**, **PTK-I2 Second keep**, **PTK-I3 Commander/pack expression**, **PTK-I4 Enemy question breadth**, **PTK-I5 Campaign loop**, and **PTK-I6 Early Access hardening**. Human testing can later calibrate difficulty and comprehension but is not a prerequisite for these implementation gates.
+
+## Decision
+
+The investment target is a compact fortress-defense game with one excellent keep and enough mechanically distinct adjacent content to prove continuation. We prefer three keeps with real spatial identities over a dozen reskinned maps, and a small set of readable enemy questions over a large list of stat variants.

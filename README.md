@@ -203,3 +203,8 @@ Run `python3 tools/validate_early_access_progress.py` to compare the tracked mil
 | `docs/early_access_requirements.md` | Skeletal-but-playable Early Access breadth floor, quality gates, and agent-executable expansion order. |
 | `docs/early_access_decision.md` | Decision record explaining the breadth-versus-depth and spectacle-versus-readability trade-offs. |
 | `content/early_access_progress.json` | Machine-readable Early Access floor, current inventory, milestone status, evidence, and release boundary. |
+
+
+## Investment evaluation roadmap
+
+The full creative vertical and skeletal Early Access campaign requirements are defined in [`docs/investment_evaluation_roadmap.md`](docs/investment_evaluation_roadmap.md). The dated build audit and screenshots are in [`docs/investment_evaluation_review_2026-09-02.md`](docs/investment_evaluation_review_2026-09-02.md). The current investment gate is PTK-I1: lock Greywatch as a complete creative vertical before adding more breadth.
