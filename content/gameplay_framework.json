@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.50.0-ea1-greywatch-anchor",
+  "framework_version": "0.51.0-early-access-candidate",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -201,7 +201,7 @@
   },
   "p12_alpha_scenario_matrix": {
     "status": "implemented",
-    "coverage": "fourteen_non_overwhelming_scenarios_by_three_commanders_by_three_seeds_run_uninterrupted_and_resumed",
+    "coverage": "nineteen_non_overwhelming_scenarios_by_four_commanders_by_three_seeds_run_uninterrupted_and_resumed",
     "resume_boundaries": ["wave_one_pre_step", "first_recovery_before_event_resolution", "wave_two_pre_step"],
     "viability_rule": "every_baseline_resolves_three_waves_without_collapse_and_closes_final_recovery_and_events",
     "determinism_rule": "checkpoint_round_trips_and_uninterrupted_resumed_terminal_states_produce_byte_identical_serialized_json",

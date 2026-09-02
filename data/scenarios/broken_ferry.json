@@ -1,0 +1,15 @@
+{
+  "id": "broken_ferry", "content_version": 1, "status": "active", "name": "The Broken Ferry",
+  "short_role": "Teach mobile response across separated river approaches.", "question": "Can a reserve answer the far bank after the obvious approach becomes a feint?",
+  "objective": "Preserve the Ferry Barracks and Grain Store through alternating ground and upper pressure.",
+  "lesson": "Open lanes and warning coverage let a light response protect both banks without duplicating every defense.",
+  "keep_id": "ash_ford_redoubt", "recommended_packs": ["ferry_network", "runner_network"], "starting_doctrine": "feint_and_flank",
+  "doctrines": ["feint_and_flank", "rapid_breakthrough", "harrying_fire"],
+  "wave_plans": [["raider", "climber"], ["outrider", "raider"], ["harrier", "climber", "raider"]],
+  "event_chain": ["ferry_reckoning"],
+  "variations": [
+    {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": "barracks", "preparation_focus": "Preserve one mobile answer for the far bank."},
+    {"id": "cut_rope", "materials": -2, "morale": 1, "target_room": "supply_room", "preparation_focus": "The reserve route is shorter on materials and must protect the stores."},
+    {"id": "night_current", "materials": 2, "morale": -1, "target_room": "north_tower", "preparation_focus": "Upper warning is exposed before the final Harrier arrives."}
+  ]
+}

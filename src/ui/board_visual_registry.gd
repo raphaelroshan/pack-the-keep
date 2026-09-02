@@ -15,6 +15,8 @@ const AUTHORED_ENEMY_SHIELDBREAKER := "res://assets/actors/enemy_shieldbreaker.s
 const AUTHORED_ENEMY_STANDARD_CUTTER := "res://assets/actors/enemy_standard_cutter.svg"
 const AUTHORED_ENEMY_OUTRIDER := "res://assets/actors/enemy_outrider.svg"
 const AUTHORED_ENEMY_GLOAM_KNIFE := "res://assets/actors/enemy_gloam_knife.svg"
+const AUTHORED_ENEMY_BATTERING_RAM := "res://assets/actors/enemy_battering_ram.svg"
+const AUTHORED_ENEMY_HARRIER := "res://assets/actors/enemy_harrier.svg"
 const AUTHORED_DEFENDER_RANGED_EFFECT := "res://assets/effects/defender_ranged.svg"
 const AUTHORED_DEFENDER_MELEE_EFFECT := "res://assets/effects/defender_melee.svg"
 const AUTHORED_HOSTILE_RANGED_EFFECT := "res://assets/effects/hostile_ranged.svg"
@@ -33,7 +35,8 @@ const AUTHORED_ROOM_CHAPEL := "res://assets/rooms/room_chapel.svg"
 
 const ACTOR_PIECES: Array[String] = [
 	"pike_squad", "fire_team", "runner_pair", "rear_guard", "crossbow_patrol",
-	"bellkeepers", "shield_wardens", "hook_guard", "dusk_bow"
+	"bellkeepers", "shield_wardens", "hook_guard", "dusk_bow", "river_guard",
+	"ferry_scouts", "ridge_sentinel", "mason_crew"
 ]
 
 const LAYER_ORDER: Array[String] = [
@@ -147,16 +150,16 @@ static func surface_finish_profile(keep_id: String, floor_name: String, high_con
 static func piece_profile(piece_id: String, combat_style: String = "support") -> Dictionary:
 	var family: String = "support"
 	var accent: Color = Color("#83a47d")
-	if piece_id in ["pike_squad", "rear_guard", "shield_wardens", "hook_guard"]:
+	if piece_id in ["pike_squad", "rear_guard", "shield_wardens", "hook_guard", "river_guard", "mason_crew"]:
 		family = "formation"
 		accent = Color("#7cb0a0") if piece_id == "hook_guard" else Color("#6fa1b8")
-	elif piece_id in ["fire_team", "crossbow_patrol", "dusk_bow"]:
+	elif piece_id in ["fire_team", "crossbow_patrol", "dusk_bow", "ferry_scouts", "ridge_sentinel"]:
 		family = "ranged"
 		accent = Color("#c87b5d") if piece_id == "fire_team" else Color("#d9b65f") if piece_id == "dusk_bow" else Color("#9a7bc3")
-	elif piece_id in ["narrow_gate", "breakaway_barricade", "emergency_shutters", "stake_line"]:
+	elif piece_id in ["narrow_gate", "breakaway_barricade", "emergency_shutters", "stake_line", "sluice_barrier", "stone_screen"]:
 		family = "fortification"
 		accent = Color("#9eb36b") if piece_id == "stake_line" else Color("#c69358")
-	elif piece_id in ["scout_post", "watch_banner", "bellkeepers", "signal_beacon", "lantern_post"]:
+	elif piece_id in ["scout_post", "watch_banner", "bellkeepers", "signal_beacon", "lantern_post", "signal_buoy", "relay_drum"]:
 		family = "signal"
 		accent = Color("#efc968") if piece_id == "lantern_post" else Color("#d2b95f")
 	elif piece_id in ["runner_pair", "supply_cache"]:
@@ -195,6 +198,8 @@ static func enemy_profile(enemy_id: String, attack_style: String = "melee") -> D
 		"standard_cutter": {"shape": "standard", "color": Color("#a84f67"), "initial": "T", "scale": 1.08},
 		"outrider": {"shape": "chevron", "color": Color("#d9904f"), "initial": "O", "scale": 0.96},
 		"gloam_knife": {"shape": "claw", "color": Color("#75649b"), "initial": "K", "scale": 0.92},
+		"battering_ram": {"shape": "hex", "color": Color("#b66f42"), "initial": "M", "scale": 1.35},
+		"harrier": {"shape": "chevron", "color": Color("#c56b9a"), "initial": "H", "scale": 0.98},
 		"siege_beast": {"shape": "hex", "color": Color("#b36c45"), "initial": "B", "scale": 1.5}
 	}
 	var profile: Dictionary
@@ -223,6 +228,8 @@ static func _enemy_actor_profile(enemy_id: String, _attack_style: String) -> Dic
 		"standard_cutter": AUTHORED_ENEMY_STANDARD_CUTTER,
 		"outrider": AUTHORED_ENEMY_OUTRIDER,
 		"gloam_knife": AUTHORED_ENEMY_GLOAM_KNIFE,
+		"battering_ram": AUTHORED_ENEMY_BATTERING_RAM,
+		"harrier": AUTHORED_ENEMY_HARRIER,
 	}
 	if authored_paths.has(enemy_id):
 		return {
@@ -324,7 +331,7 @@ static func presentation_snapshot() -> Dictionary:
 		},
 		"authored_actor_assets": true,
 		"authored_actor_source": "Pack the Keep original 32px vector silhouettes",
-		"authored_enemy_count": 10,
+		"authored_enemy_count": 12,
 		"temporary_actor_assets": false,
 		"authored_effect_assets": true,
 		"authored_effect_asset_count": 8,

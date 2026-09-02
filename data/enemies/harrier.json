@@ -1,0 +1,11 @@
+{
+  "id": "harrier", "content_version": 1, "status": "active", "name": "Harrier",
+  "short_role": "Use ranged pressure to isolate the defender closest to exhausting its ammunition.", "question": "Can the keep protect or replace the specialist whose reserve is nearly spent?",
+  "health": 9, "damage": 2, "arrival_step": 3, "attack_interval": 1, "attack_style": "ranged", "target_mode": "unit_hunter",
+  "target_piece_categories": ["precision", "control", "recon", "morale", "visibility"], "target_piece_preference": "lowest_ammo_ratio",
+  "route": "ridge_arc", "target_rooms": ["north_tower", "outer_wall", "armory"], "doctrine": "harrying_fire", "counter": "ridge_sentinel",
+  "telegraph": "A split-arrow marker points toward the eligible specialist with the lowest ammunition ratio.",
+  "counter_families": ["precision", "morale", "mobile_response"], "failure_mode": "A depleted specialist is disabled before recovery can reload the firing line.",
+  "report_phrase": "Harrying Fire found the most depleted eligible specialist.",
+  "presentation": {"icon": "", "marker_color_role": "harrying_fire", "radius_scale": 0.98}
+}

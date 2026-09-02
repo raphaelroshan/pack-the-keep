@@ -23,17 +23,31 @@ FLOOR = {
     "events_max": 18,
     "viable_commander_keep_starts": 12,
 }
-EA1_REQUIREMENTS = {
-    "distinct_room_graph",
-    "two_approach_patterns",
-    "recovery_rule",
-    "two_viable_seeded_plans",
-    "contextual_briefing",
-    "complete_multi_wave_journey",
-    "responsive_input_accessibility",
-    "save_and_replay",
-    "presentation_evidence",
-    "asset_provenance",
+MILESTONE_REQUIREMENTS = {
+    "PTK-EA-1": {
+        "distinct_room_graph", "two_approach_patterns", "recovery_rule",
+        "two_viable_seeded_plans", "contextual_briefing", "complete_multi_wave_journey",
+        "responsive_input_accessibility", "save_and_replay", "presentation_evidence", "asset_provenance",
+    },
+    "PTK-EA-2": {
+        "ash_ford_scenario_set", "distinct_geometry", "two_approach_patterns",
+        "recovery_rule", "two_viable_seeded_plans", "complete_flow", "presentation_evidence",
+    },
+    "PTK-EA-3": {
+        "twinwatch_scenario_set", "fourth_commander", "distinct_geometry",
+        "two_viable_seeded_plans", "complete_flow", "save_and_replay", "presentation_evidence",
+    },
+    "PTK-EA-4": {
+        "two_enemy_families", "explicit_counters", "telegraphs", "recovery_consequences",
+        "save_and_replay", "visual_identity",
+    },
+    "PTK-EA-5": {
+        "event_floor", "scenario_floor", "bounded_variation", "mastery_comparison", "event_persistence",
+    },
+    "PTK-EA-6": {
+        "breadth_floor", "accessibility", "controller", "performance", "persistence",
+        "packaging", "known_limitations", "distribution_boundary",
+    },
 }
 MILESTONE_IDS = [f"PTK-EA-{index}" for index in range(1, 7)]
 
@@ -71,8 +85,10 @@ def validate_progress(progress: dict[str, Any], manifest: dict[str, Any], root: 
         errors.append("Early Access progress schema_version must be 1")
     if progress.get("build_version") != manifest.get("build_version"):
         errors.append("Early Access progress build_version must match CI manifest")
-    if progress.get("status") != "in_progress" or progress.get("early_access_ready") is not False:
-        errors.append("Early Access must remain in_progress and not ready until every breadth floor and milestone passes")
+    ready = progress.get("early_access_ready") is True
+    expected_status = "candidate" if ready else "in_progress"
+    if progress.get("status") != expected_status:
+        errors.append(f"Early Access status must be {expected_status} for its readiness state")
     if progress.get("breadth_floor") != FLOOR:
         errors.append("Early Access breadth floor must match the approved product contract")
 
@@ -98,39 +114,70 @@ def validate_progress(progress: dict[str, Any], manifest: dict[str, Any], root: 
     if milestone_ids != MILESTONE_IDS:
         errors.append("Early Access milestones must preserve ordered PTK-EA-1 through PTK-EA-6")
         return
-    ea1 = milestones[0]
-    if ea1.get("status") != "implemented" or ea1.get("keep_id") != "greywatch_keep":
-        errors.append("PTK-EA-1 must identify the implemented Greywatch anchor")
-    requirements = ea1.get("requirements")
-    if not isinstance(requirements, list):
-        errors.append("PTK-EA-1 requirements must be an array")
-    else:
+    saw_planned = False
+    for milestone in milestones:
+        milestone_id = milestone.get("id")
+        milestone_status = milestone.get("status")
+        if milestone_status not in {"implemented", "planned"}:
+            errors.append(f"{milestone_id} has invalid status")
+            continue
+        if milestone_status == "planned":
+            saw_planned = True
+            continue
+        if saw_planned:
+            errors.append(f"{milestone_id} cannot be implemented after a planned milestone")
+        requirements = milestone.get("requirements")
+        if not isinstance(requirements, list):
+            errors.append(f"{milestone_id} requirements must be an array")
+            continue
         seen: set[str] = set()
+        expected_requirements = MILESTONE_REQUIREMENTS.get(str(milestone_id), set())
         for row in requirements:
             if not isinstance(row, dict):
-                errors.append("PTK-EA-1 requirement entries must be objects")
+                errors.append(f"{milestone_id} requirement entries must be objects")
                 continue
             requirement_id = row.get("id")
-            if requirement_id not in EA1_REQUIREMENTS or requirement_id in seen:
-                errors.append(f"invalid or duplicate PTK-EA-1 requirement: {requirement_id!r}")
+            if requirement_id not in expected_requirements or requirement_id in seen:
+                errors.append(f"invalid or duplicate {milestone_id} requirement: {requirement_id!r}")
                 continue
             seen.add(str(requirement_id))
             if row.get("status") not in {"automated", "documented"}:
-                errors.append(f"PTK-EA-1 requirement {requirement_id} has invalid status")
+                errors.append(f"{milestone_id} requirement {requirement_id} has invalid status")
             evidence = row.get("evidence")
             if not isinstance(evidence, list) or not evidence:
-                errors.append(f"PTK-EA-1 requirement {requirement_id} needs evidence")
+                errors.append(f"{milestone_id} requirement {requirement_id} needs evidence")
                 continue
             for relative in evidence:
                 if not isinstance(relative, str) or not _exists(root, relative):
-                    errors.append(f"PTK-EA-1 requirement {requirement_id} has missing evidence: {relative!r}")
-        for missing in sorted(EA1_REQUIREMENTS - seen):
-            errors.append(f"PTK-EA-1 is missing requirement: {missing}")
-    for milestone in milestones[1:]:
-        if milestone.get("status") != "planned":
-            errors.append(f"{milestone.get('id')} must remain planned until its own acceptance gate lands")
-    if progress.get("next_milestone") != "PTK-EA-2":
-        errors.append("PTK-EA-2 must be the next milestone after the Greywatch anchor")
+                    errors.append(f"{milestone_id} requirement {requirement_id} has missing evidence: {relative!r}")
+        for missing in sorted(expected_requirements - seen):
+            errors.append(f"{milestone_id} is missing requirement: {missing}")
+    first_planned = next((row.get("id") for row in milestones if row.get("status") == "planned"), "")
+    if progress.get("next_milestone") != first_planned:
+        errors.append(f"next_milestone must be {first_planned!r}")
+    if ready and first_planned:
+        errors.append("Early Access cannot be ready while milestones remain planned")
+    if not ready and not first_planned:
+        errors.append("Early Access must be ready when every milestone is implemented")
+    if ready:
+        inventory = progress.get("current_inventory", {})
+        for field in ["keeps", "commanders"]:
+            if int(inventory.get(field, 0)) < FLOOR[field]:
+                errors.append(f"Early Access inventory is below the {field} floor")
+        if int(inventory.get("commander_keep_starts", 0)) < FLOOR["viable_commander_keep_starts"]:
+            errors.append("Early Access inventory is below the viable commander/keep start floor")
+        for field in ["packs", "pieces", "enemies", "scenarios", "events"]:
+            if not FLOOR[f"{field}_min"] <= int(inventory.get(field, 0)) <= FLOOR[f"{field}_max"]:
+                errors.append(f"Early Access inventory {field} is outside its approved range")
+        scenarios_per_keep: dict[str, int] = {}
+        for path in (root / "data" / "scenarios").glob("*.json"):
+            scenario = _load(path, errors)
+            keep_id = scenario.get("keep_id")
+            if isinstance(keep_id, str):
+                scenarios_per_keep[keep_id] = scenarios_per_keep.get(keep_id, 0) + 1
+        for keep_id in ["greywatch_keep", "ash_ford_redoubt", "twinwatch_bastion"]:
+            if scenarios_per_keep.get(keep_id, 0) < 6:
+                errors.append(f"{keep_id} must have at least six scenarios")
     if progress.get("human_evidence_required_for_implementation") is not False:
         errors.append("human evidence must not block implementation")
     if progress.get("owner_approval_required_for_distribution") is not True:
@@ -153,11 +200,11 @@ def main() -> int:
         return 1
     inventory = progress["current_inventory"]
     print(
-        "PTK-EA-1 Greywatch anchor: PASS "
+        "PTK Early Access roadmap: PASS "
         f"({inventory['keeps']} keeps, {inventory['commanders']} commanders, "
         f"{inventory['packs']} packs, {inventory['pieces']} pieces, "
         f"{inventory['enemies']} enemies, {inventory['scenarios']} scenarios, "
-        f"{inventory['events']} events; PTK-EA-2 next)"
+        f"{inventory['events']} events; readiness={progress['early_access_ready']})"
     )
     return 0
 

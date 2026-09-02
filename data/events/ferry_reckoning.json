@@ -1,0 +1,12 @@
+{
+  "id": "ferry_reckoning", "content_version": 1, "status": "active", "title": "One Boat Returns",
+  "short_role": "Choose supplies or morale when the divided defense reaches its first recovery.", "type": "recovery", "scenario": "broken_ferry",
+  "trigger": {"phase": "recovery", "wave": 1},
+  "selection": {"stream": "broken_ferry_recovery", "repeat_policy": "once_per_run", "cooldown_waves": 0, "max_occurrences": 1},
+  "setup": "Only one ferry returns before the next alarm. It can carry repair timber or evacuate the shaken watch.",
+  "choices": [
+    {"id": "unload_repair_timber", "label": "Unload repair timber (+4 materials)", "requirements": {}, "effects": [{"op": "add_materials", "amount": 4}, {"op": "set_flag", "flag": "ferry_timber_unloaded", "value": true}], "visible_result": "Four materials support later repairs; morale receives no relief."},
+    {"id": "evacuate_shaken_watch", "label": "Evacuate the shaken watch (+1 morale)", "requirements": {}, "effects": [{"op": "add_morale", "amount": 1}, {"op": "set_flag", "flag": "ferry_watch_evacuated", "value": true}], "visible_result": "Morale recovers by one; the repair budget remains unchanged."}
+  ],
+  "follow_up": ""
+}

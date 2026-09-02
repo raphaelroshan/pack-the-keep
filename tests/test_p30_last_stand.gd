@@ -70,7 +70,8 @@ func _initialize() -> void:
 	ui._cycle_scenario(1)
 	_check(ui._selected_id(ui.scenario_option) == "last_stand", "next scenario should return to Last Stand")
 	ui._cycle_scenario(1)
-	_check(ui._selected_id(ui.scenario_option) == "gatehouse_lock", "scenario navigation should wrap without losing selection")
+	var next_scenario_index: int = (last_stand_index + 1) % scenario_ids.size()
+	_check(ui._selected_id(ui.scenario_option) == scenario_ids[next_scenario_index], "scenario navigation should advance without losing selection")
 	ui.queue_free()
 	await process_frame
 

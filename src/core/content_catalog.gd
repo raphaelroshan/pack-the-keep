@@ -21,13 +21,18 @@ const PACK_PATHS: Array[String] = [
 	"res://data/packs/bell_guard.json",
 	"res://data/packs/shieldwall.json",
 	"res://data/packs/road_wardens.json",
-	"res://data/packs/lantern_watch.json"
+	"res://data/packs/lantern_watch.json",
+	"res://data/packs/river_wardens.json",
+	"res://data/packs/ferry_network.json",
+	"res://data/packs/ridge_company.json",
+	"res://data/packs/mason_train.json"
 ]
 
 const COMMANDER_PATHS: Array[String] = [
 	"res://data/commanders/castellan.json",
 	"res://data/commanders/warden.json",
-	"res://data/commanders/quartermaster.json"
+	"res://data/commanders/quartermaster.json",
+	"res://data/commanders/marshal.json"
 ]
 
 const PIECE_PATHS: Array[String] = [
@@ -51,7 +56,15 @@ const PIECE_PATHS: Array[String] = [
 	"res://data/pieces/hook_guard.json",
 	"res://data/pieces/stake_line.json",
 	"res://data/pieces/dusk_bow.json",
-	"res://data/pieces/lantern_post.json"
+	"res://data/pieces/lantern_post.json",
+	"res://data/pieces/river_guard.json",
+	"res://data/pieces/sluice_barrier.json",
+	"res://data/pieces/ferry_scouts.json",
+	"res://data/pieces/signal_buoy.json",
+	"res://data/pieces/ridge_sentinel.json",
+	"res://data/pieces/relay_drum.json",
+	"res://data/pieces/mason_crew.json",
+	"res://data/pieces/stone_screen.json"
 ]
 
 const ENEMY_PATHS: Array[String] = [
@@ -64,7 +77,9 @@ const ENEMY_PATHS: Array[String] = [
 	"res://data/enemies/shieldbreaker.json",
 	"res://data/enemies/standard_cutter.json",
 	"res://data/enemies/outrider.json",
-	"res://data/enemies/gloam_knife.json"
+	"res://data/enemies/gloam_knife.json",
+	"res://data/enemies/battering_ram.json",
+	"res://data/enemies/harrier.json"
 ]
 
 const DOCTRINE_PATHS: Array[String] = [
@@ -79,7 +94,9 @@ const DOCTRINE_PATHS: Array[String] = [
 	"res://data/doctrines/cut_the_chain.json",
 	"res://data/doctrines/rapid_breakthrough.json",
 	"res://data/doctrines/veiled_entry.json",
-	"res://data/doctrines/twilight_crossing.json"
+	"res://data/doctrines/twilight_crossing.json",
+	"res://data/doctrines/hammer_road.json",
+	"res://data/doctrines/harrying_fire.json"
 ]
 
 const SCENARIO_PATHS: Array[String] = [
@@ -97,7 +114,12 @@ const SCENARIO_PATHS: Array[String] = [
 	"res://data/scenarios/before_the_horn.json",
 	"res://data/scenarios/the_unlit_stair.json",
 	"res://data/scenarios/the_twilight_road.json",
-	"res://data/scenarios/last_stand.json"
+	"res://data/scenarios/last_stand.json",
+	"res://data/scenarios/flood_mark.json",
+	"res://data/scenarios/broken_ferry.json",
+	"res://data/scenarios/millers_debt.json",
+	"res://data/scenarios/two_fires.json",
+	"res://data/scenarios/rimebound_relief.json"
 ]
 
 const EVENT_PATHS: Array[String] = [
@@ -110,7 +132,11 @@ const EVENT_PATHS: Array[String] = [
 	"res://data/events/the_bell_has_a_pattern.json",
 	"res://data/events/the_gate_is_not_the_keep.json",
 	"res://data/events/wrong_wall_report.json",
-	"res://data/events/twilight_crossroads.json"
+	"res://data/events/twilight_crossroads.json",
+	"res://data/events/flood_mark_choice.json",
+	"res://data/events/ferry_reckoning.json",
+	"res://data/events/twinwatch_signal.json",
+	"res://data/events/ridge_relief.json"
 ]
 
 const MODIFIER_PATHS: Array[String] = [
@@ -620,8 +646,8 @@ func validate_enemy_definition(enemy: Dictionary, expected_id: String, known_roo
 		for floor in enemy.get("target_piece_floors", []):
 			if not ["ground", "upper"].has(String(floor)):
 				validation_errors.append("enemy %s target_piece_floors contains unsupported floor: %s" % [enemy_id, String(floor)])
-	if enemy.has("target_piece_preference") and not ["lowest_condition", "highest_max_health"].has(String(enemy.get("target_piece_preference", ""))):
-		validation_errors.append("enemy %s target_piece_preference must be lowest_condition or highest_max_health" % enemy_id)
+	if enemy.has("target_piece_preference") and not ["lowest_condition", "highest_max_health", "lowest_ammo_ratio"].has(String(enemy.get("target_piece_preference", ""))):
+		validation_errors.append("enemy %s target_piece_preference must be lowest_condition, highest_max_health, or lowest_ammo_ratio" % enemy_id)
 	if enemy.has("targets_assigned_first") and not enemy.get("targets_assigned_first") is bool:
 		validation_errors.append("enemy %s targets_assigned_first must be boolean" % enemy_id)
 	if enemy.has("ignores_protection") and not enemy.get("ignores_protection") is bool:
@@ -1221,10 +1247,11 @@ func validate_commander_definition(commander: Dictionary, expected_id: String) -
 				validation_errors.append("commander %s references unknown pack family: %s" % [commander_id, String(family)])
 	if commander.has("passive_profile"):
 		var passive_profile: Variant = commander.get("passive_profile")
-		if not passive_profile is Dictionary or String(passive_profile.get("kind", "")) != "reserve_economy":
+		if not passive_profile is Dictionary or not ["reserve_economy", "assigned_command"].has(String(passive_profile.get("kind", ""))):
 			validation_errors.append("commander %s has an unsupported passive profile" % commander_id)
 		else:
-			for field in ["first_pack_discount", "supply_cache_recovery_bonus"]:
+			var passive_fields: Array = ["first_pack_discount", "supply_cache_recovery_bonus"] if String(passive_profile.get("kind", "")) == "reserve_economy" else ["assigned_response_bonus"]
+			for field in passive_fields:
 				if not _is_integer_number(passive_profile.get(field)) or int(passive_profile.get(field, 0)) < 0:
 					validation_errors.append("commander %s passive profile needs a non-negative integer %s" % [commander_id, field])
 	if commander.has("ability_profile"):
@@ -1232,7 +1259,8 @@ func validate_commander_definition(commander: Dictionary, expected_id: String) -
 		if not ability_profile is Dictionary or String(ability_profile.get("kind", "")) != String(commander.get("ability", "")):
 			validation_errors.append("commander %s ability profile must match its ability" % commander_id)
 		else:
-			for field in ["health_restore", "ammo_restore"]:
+			var ability_fields: Array = ["health_restore", "ammo_restore"] if String(ability_profile.get("kind", "")) == "resupply" else ["health_restore"]
+			for field in ability_fields:
 				if not _is_integer_number(ability_profile.get(field)) or int(ability_profile.get(field, 0)) < 0:
 					validation_errors.append("commander %s ability profile needs a non-negative integer %s" % [commander_id, field])
 	return validation_errors

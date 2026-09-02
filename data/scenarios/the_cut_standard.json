@@ -4,7 +4,7 @@
   "question": "Can one command anchor remain useful without becoming the keep's single point of failure?",
   "objective": "Preserve at least one specialist response while Standard Cutters pressure the command chain.",
   "lesson": "Precision can stop the Cutter early; a mobile reserve can absorb contact without sacrificing the whole line.",
-  "keep_id": "greywatch_keep",
+  "keep_id": "twinwatch_bastion",
   "recommended_packs": ["crossbow_watch", "fallback_convoy"],
   "starting_doctrine": "cut_the_chain",
   "doctrines": ["cut_the_chain", "gate_assault", "cut_the_chain"],

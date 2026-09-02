@@ -1,13 +1,15 @@
 # Pack the Keep — Latest Visual Review
 
-**Build:** `0.50.0-ea1-greywatch-anchor`
+**Build:** `0.51.0-early-access-candidate`
 
 **Engine:** Godot 4.7.2
 
-**Capture:** Real local renderer at 1600×900 / 100% for the complete Gatehouse Lock flow with original actors, rooms, combat impacts, room-state atmosphere, and repair feedback; Preparation inspects a starting defender, the first assault is staged during defender response, and Recovery captures a localized room repair. Prior extended-enemy, room-label, responsive, and Large Text evidence remains active.
+**Capture:** Real local renderer at 1600×900 / 100% for complete Ash Ford and Twinwatch flows led by the Marshal, plus the retained Greywatch anchor set. The captures cover War Council, Preparation, live assault, recovery, terminal Results, the clear-causeway and paired-bastion identities, and authored Battering Ram presentation.
 
 ## Evidence
 
+- [Early Access Ash Ford review](visual_evidence/v0.51.0-early-access-candidate-ash-ford/)
+- [Early Access Twinwatch review](visual_evidence/v0.51.0-early-access-candidate-twinwatch/)
 - [PTK-EA-1 Greywatch anchor review](visual_evidence/v0.50.0-ea1-greywatch-anchor-review-2026-09-02/)
 - [Authored battle-effect review](visual_evidence/v0.49.0-authored-effects-review-2026-09-01/)
 - [Authored room-function review](visual_evidence/v0.48.0-authored-room-accents-review-2026-09-01/)
@@ -24,6 +26,8 @@
 The PTK-EA-1 review recaptures the ten-screen Gatehouse Lock journey at the real target viewport, including a staged defender response and localized repair. Its machine-readable manifest records the exact milestone build, viewport, scenario, inspected-defender state, battle-exchange method, and repair capture. The earlier room, actor, responsive, and Large Text sets remain active regression evidence.
 
 ## Findings
+
+The Early Access capture pair confirms that the same screen hierarchy survives the campaign expansion. Ash Ford keeps the cyan river/causeway grammar and presents the Battering Ram as a large authored demolition silhouette with a clear target, cadence, health, and focus treatment. Twinwatch keeps its violet split-bastion grammar, shows the `BOTH POSTS STAFFED` state directly on the board, and carries the Marshal identity from War Council through terminal Results. Both flows remain legible at 1600×900 without adding a second command rail or map overlay system.
 
 P55 first proved that actor imagery helps at board scale by placing temporary Tiny Battle tiles inside the existing marker grammar. P62 and P63 subsequently replaced every current actor profile with original small-scale silhouettes; the older evidence remains useful as a comparison point only.
 
@@ -47,4 +51,4 @@ P65 replaces all active Particle Pack textures with eight original 48×48 effect
 
 ## Next visual target
 
-PTK-EA-1 is complete: Greywatch is the enforced quality anchor for responsive setup, three-phase combat, recovery, terminal explanation, authored board visuals, save/replay, input, accessibility, and package evidence. PTK-EA-2 is the next bounded product task: deepen Ash Ford from one scenario into a complete keep slice with two approaches, at least six repeatable scenarios, two viable opening plans, contextual briefing, and full-flow evidence. Temporary foley remains the only active borrowed asset family.
+PTK-EA-1 through PTK-EA-6 are complete at the automated candidate boundary. The next bounded product task is a real P16 human comprehension session on the exact packaged artifact; automation must not fabricate that evidence. Temporary foley remains the only active borrowed asset family, and public distribution still requires owner approval.

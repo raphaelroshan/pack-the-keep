@@ -1,0 +1,11 @@
+{
+  "id": "river_guard", "content_version": 1, "status": "active", "name": "River Guard",
+  "short_role": "Hold fast ground beside a crossing without occupying its center.", "role": "intercepts crossing pressure", "question": "Which bank needs a close defender while the causeway stays clear?",
+  "kind": "unit", "category": "interception", "footprint": [2, 1], "allowed_floors": ["ground"], "allowed_zones": ["wall", "courtyard", "keep"],
+  "cost": 8, "max_health": 13, "placement_question": "Which edge can cover the ford without blocking it?",
+  "skill": "Bank Hook: reliable melee damage against breakthrough and demolition units.",
+  "strength_tags": ["armor_piercing", "crossing_control", "demolition_counter"], "weakness_tags": ["ground_only", "short_range", "split_pressure"],
+  "attack_profile": {"style": "melee", "range": 1, "cooldown_steps": 1, "damage": 3, "defense": 2, "ammo_capacity": 0, "targets": ["raider", "outrider", "battering_ram"]},
+  "support_profile": null, "assignment_rule": {"room": "gate", "effect": "posted crossing response +1 under the Marshal"}, "availability": "river_wardens",
+  "presentation": {"icon": "", "marker_color_role": "interception", "radius_scale": 1.0}
+}

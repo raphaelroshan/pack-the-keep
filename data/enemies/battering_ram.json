@@ -1,0 +1,10 @@
+{
+  "id": "battering_ram", "content_version": 1, "status": "active", "name": "Battering Ram",
+  "short_role": "Carry formation armor into a slow, severe structural impact.", "question": "Can the keep pierce the engine or layer protection around its declared room?",
+  "health": 15, "damage": 4, "armor": 1, "armor_counter_tag": "armor_piercing", "arrival_step": 4, "attack_interval": 3,
+  "attack_style": "demolition", "target_mode": "room_destroyer", "route": "hammer_road", "target_rooms": ["gate", "armory", "workshop"],
+  "doctrine": "hammer_road", "counter": "mason_crew", "telegraph": "A broad iron ram and heavy cadence ring name the threatened structural route two beats before impact.",
+  "counter_families": ["support", "precision", "frontline"], "failure_mode": "The armored engine survives scattered fire and removes a critical room's recovery value.",
+  "report_phrase": "The Battering Ram converted a slow approach into heavy structural damage.",
+  "presentation": {"icon": "", "marker_color_role": "armored_demolition", "radius_scale": 1.35}
+}

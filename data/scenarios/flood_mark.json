@@ -1,0 +1,15 @@
+{
+  "id": "flood_mark", "content_version": 1, "status": "active", "name": "The Flood Mark",
+  "short_role": "Teach an open crossing against armored demolition.", "question": "Can the causeway remain clear while a ram declares one bank as its target?",
+  "objective": "Preserve the West Bridgehead and Sluice House through a Hammer Road assault.",
+  "lesson": "A clear causeway reduces every room impact, while piercing crews or layered protection stop the ram itself.",
+  "keep_id": "ash_ford_redoubt", "recommended_packs": ["river_wardens", "mason_train"], "starting_doctrine": "hammer_road",
+  "doctrines": ["hammer_road", "distributed_sabotage", "hammer_road"],
+  "wave_plans": [["battering_ram"], ["sapper", "raider"], ["battering_ram", "sapper"]],
+  "event_chain": ["flood_mark_choice"],
+  "variations": [
+    {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": "gate", "preparation_focus": "Keep the causeway empty and prepare one anti-siege answer."},
+    {"id": "high_water", "materials": -2, "morale": 1, "target_room": "workshop", "preparation_focus": "The sluice is exposed; protect recovery without filling the crossing."},
+    {"id": "stone_wagon", "materials": 3, "morale": -1, "target_room": "armory", "preparation_focus": "Extra stone supports a fixed screen, but morale leaves less collapse margin."}
+  ]
+}

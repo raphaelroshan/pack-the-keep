@@ -79,7 +79,7 @@ SUPPORTED_ZONES = {"wall", "courtyard", "keep"}
 SUPPORTED_ATTACK_STYLES = {"melee", "ranged", "support", "fortification"}
 SUPPORTED_ENEMY_ATTACK_STYLES = {"melee", "ranged", "demolition"}
 SUPPORTED_SCENARIO_DIFFICULTIES = {"guided", "standard", "advanced", "overwhelming"}
-SUPPORTED_DOCTRINES = {"gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach", "shielded_advance", "smoke_and_signal", "break_the_line", "cut_the_chain", "rapid_breakthrough", "veiled_entry", "twilight_crossing"}
+SUPPORTED_DOCTRINES = {"gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach", "shielded_advance", "smoke_and_signal", "break_the_line", "cut_the_chain", "rapid_breakthrough", "veiled_entry", "twilight_crossing", "hammer_road", "harrying_fire"}
 SUPPORTED_NON_ENEMY_TARGETS = {"all"} | SUPPORTED_DOCTRINES
 SUPPORTED_EVENT_TYPES = {"forecast", "recovery", "scenario_conclusion"}
 SUPPORTED_EVENT_PHASES = {"preparation", "recovery", "results"}
@@ -662,8 +662,8 @@ def validate_enemy(
         for floor in floors:
             if floor not in SUPPORTED_FLOORS:
                 errors.append(f"{path}: target_piece_floors contains unsupported floor: {floor}")
-    if "target_piece_preference" in enemy and enemy.get("target_piece_preference") not in {"lowest_condition", "highest_max_health"}:
-        errors.append(f"{path}: target_piece_preference must be lowest_condition or highest_max_health")
+    if "target_piece_preference" in enemy and enemy.get("target_piece_preference") not in {"lowest_condition", "highest_max_health", "lowest_ammo_ratio"}:
+        errors.append(f"{path}: target_piece_preference must be lowest_condition, highest_max_health, or lowest_ammo_ratio")
     if "targets_assigned_first" in enemy and not isinstance(enemy.get("targets_assigned_first"), bool):
         errors.append(f"{path}: targets_assigned_first must be boolean")
     if "ignores_protection" in enemy and not isinstance(enemy.get("ignores_protection"), bool):
@@ -1227,10 +1227,11 @@ def validate_commander(
             errors.append(f"{path}: unknown favored pack family: {family}")
     passive_profile = commander.get("passive_profile")
     if passive_profile is not None:
-        if not isinstance(passive_profile, dict) or passive_profile.get("kind") != "reserve_economy":
+        if not isinstance(passive_profile, dict) or passive_profile.get("kind") not in {"reserve_economy", "assigned_command"}:
             errors.append(f"{path}: passive_profile is unsupported")
         else:
-            for field in ("first_pack_discount", "supply_cache_recovery_bonus"):
+            passive_fields = ("first_pack_discount", "supply_cache_recovery_bonus") if passive_profile.get("kind") == "reserve_economy" else ("assigned_response_bonus",)
+            for field in passive_fields:
                 if not is_integer(passive_profile.get(field)) or passive_profile[field] < 0:
                     errors.append(f"{path}: passive_profile {field} must be a non-negative integer")
     ability_profile = commander.get("ability_profile")
@@ -1238,7 +1239,8 @@ def validate_commander(
         if not isinstance(ability_profile, dict) or ability_profile.get("kind") != commander.get("ability"):
             errors.append(f"{path}: ability_profile kind must match ability")
         else:
-            for field in ("health_restore", "ammo_restore"):
+            ability_fields = ("health_restore", "ammo_restore") if ability_profile.get("kind") == "resupply" else ("health_restore",)
+            for field in ability_fields:
                 if not is_integer(ability_profile.get(field)) or ability_profile[field] < 0:
                     errors.append(f"{path}: ability_profile {field} must be a non-negative integer")
     manifest_commander = manifest_commanders.get(commander_id)

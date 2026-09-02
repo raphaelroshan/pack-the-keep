@@ -1,0 +1,19 @@
+{
+  "id": "marshal",
+  "content_version": 1,
+  "status": "active",
+  "name": "The Marshal",
+  "short_role": "Turn committed room assignments into a disciplined command network.",
+  "question": "Which specialists deserve a permanent post, and which must remain free?",
+  "passive": "Posted Orders: assigned combat defenders deal +1 response damage.",
+  "ability": "relief_order",
+  "ability_name": "Relief Order",
+  "ability_text": "Once per assault, restore 4 health to every living damaged assigned defender.",
+  "limitation": "Fixed Chain: unassigned defenders gain no bonus, and assigned specialists remain priority targets for command hunters.",
+  "starting_materials": 54,
+  "starting_morale": 6,
+  "preferred_pattern": "distributed_assignments",
+  "favored_pack_families": ["precision", "support"],
+  "passive_profile": {"kind": "assigned_command", "assigned_response_bonus": 1},
+  "ability_profile": {"kind": "relief_order", "health_restore": 4}
+}

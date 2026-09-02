@@ -22,9 +22,9 @@ def packaged_report(phase: str, profile: str, executable: str) -> dict[str, obje
         "controller_navigation_ready": True, "controller_defaults_ready": True,
         "settings_state_unchanged": True,
         "content_status": {
-            "ok": True, "commander_count": 3, "piece_count": 21, "pack_count": 11,
-            "keep_count": 3, "region_count": 1, "enemy_count": 10, "doctrine_count": 12, "scenario_count": 15,
-            "event_count": 10, "modifier_count": 2,
+            "ok": True, "commander_count": 4, "piece_count": 29, "pack_count": 15,
+            "keep_count": 3, "region_count": 1, "enemy_count": 12, "doctrine_count": 14, "scenario_count": 20,
+            "event_count": 14, "modifier_count": 2,
         },
         "user_data_dir": profile, "save_path": f"{profile}\\run.save",
         "settings_path": f"{profile}\\settings.json", "executable_path": executable,

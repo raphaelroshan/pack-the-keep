@@ -1,0 +1,8 @@
+{
+  "id": "hammer_road", "content_version": 1, "status": "active", "name": "Hammer Road",
+  "short_role": "Drive an armored demolition engine into a named structural anchor.",
+  "question": "Can the keep pierce the ram or protect its target before the slow impact lands?",
+  "composition": ["battering_ram"], "route_pattern": "causeway_to_critical_room", "target_priority": "lowest_condition_gate_armory_or_workshop",
+  "principal_pressure": "Critical room protection and anti-siege response", "likely_target": "gate, armory, or workshop",
+  "uncertainty": "which damaged structural anchor the ram chooses", "counter_families": ["support", "precision", "frontline"]
+}

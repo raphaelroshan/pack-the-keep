@@ -1,0 +1,12 @@
+{
+  "id": "flood_mark_choice", "content_version": 1, "status": "active", "title": "The Mark on the Sluice",
+  "short_role": "Choose command certainty or spare stone before the ram enters the ford.", "type": "forecast", "scenario": "flood_mark",
+  "trigger": {"phase": "preparation", "wave": 0},
+  "selection": {"stream": "flood_mark_preparation", "repeat_policy": "once_per_run", "cooldown_waves": 0, "max_occurrences": 1},
+  "setup": "The sluice crew can mark the ram's approach now, or release a wagon of stone to the general stores.",
+  "choices": [
+    {"id": "mark_hammer_road", "label": "Mark Hammer Road (1 command)", "requirements": {"command_points": {"gte": 1}}, "effects": [{"op": "spend_command_points", "amount": 1}, {"op": "set_flag", "flag": "hammer_road_marked", "value": true}], "visible_result": "The structural route is recorded clearly, but one intervention is spent before contact."},
+    {"id": "release_stone_wagon", "label": "Release stone wagon (+3 materials)", "requirements": {}, "effects": [{"op": "add_materials", "amount": 3}, {"op": "set_flag", "flag": "flood_stone_released", "value": true}], "visible_result": "Three materials enter the build budget; the ram receives no advance command marker."}
+  ],
+  "follow_up": ""
+}

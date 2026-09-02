@@ -1,0 +1,15 @@
+{
+  "id": "rimebound_relief", "content_version": 1, "status": "active", "name": "Rimebound Relief",
+  "short_role": "Close Twinwatch with a recovery-led mixed assault.", "question": "Can posted specialists survive one branch while a reserve carries the other?",
+  "objective": "Complete all three assaults and reach Results with at least one living assigned defender.",
+  "lesson": "The Marshal can sustain committed posts, but every assignment needs an independent answer when the command chain is hunted.",
+  "keep_id": "twinwatch_bastion", "recommended_packs": ["ridge_company", "fallback_convoy"], "starting_doctrine": "harrying_fire",
+  "doctrines": ["harrying_fire", "cut_the_chain", "area_pressure"],
+  "wave_plans": [["harrier", "raider"], ["standard_cutter", "outrider"], ["siege_beast", "harrier", "standard_cutter"]],
+  "event_chain": ["ridge_relief"],
+  "variations": [
+    {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": "armory", "preparation_focus": "Pair one assigned specialist with a mobile fallback."},
+    {"id": "white_road", "materials": -2, "morale": 1, "target_room": "gate", "final_wave_plan": ["siege_beast", "harrier", "harrier"], "preparation_focus": "The final pressure favors Harriers over command hunters."},
+    {"id": "silent_ridge", "materials": 2, "morale": -1, "target_room": "north_tower", "final_wave_plan": ["battering_ram", "standard_cutter", "harrier"], "preparation_focus": "The final pressure combines an armored ram with command disruption."}
+  ]
+}

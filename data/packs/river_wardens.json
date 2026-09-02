@@ -1,0 +1,8 @@
+{
+  "id": "river_wardens", "content_version": 1, "status": "active", "name": "River Wardens",
+  "short_role": "Hold a crossing while preserving the lane that makes Ash Ford resilient.", "question": "Which bank needs a line that does not clog the causeway?",
+  "family": "interception", "contents": ["river_guard", "sluice_barrier"], "doctrine": "ford_control", "cost": 5,
+  "strength": "Reliable river-road contact and one compact structural buffer.", "weakness": "Ground-bound pieces lose value when upper or widely separated pressure dominates.",
+  "choice": "Commit one bank to a prepared stop while leaving the central crossing open.", "commander_affinity": ["warden", "marshal"],
+  "spatial_demand": {"preferred_floors": ["ground"], "preferred_zones": ["wall", "courtyard"], "needs_open_lane": true, "needs_adjacency": true}
+}

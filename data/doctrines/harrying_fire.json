@@ -1,0 +1,8 @@
+{
+  "id": "harrying_fire", "content_version": 1, "status": "active", "name": "Harrying Fire",
+  "short_role": "Target the ranged or signal specialist with the least ammunition remaining.",
+  "question": "Can the keep rotate protection before its most depleted specialist is isolated?",
+  "composition": ["harrier", "harrier"], "route_pattern": "ridge_arc_to_depleted_specialist", "target_priority": "lowest_ammunition_ratio_then_condition_then_stable_id",
+  "principal_pressure": "Finite-ammunition specialists and command relays", "likely_target": "a depleted precision, control, recon, or morale defender",
+  "uncertainty": "which defender spends ammunition before contact", "counter_families": ["precision", "morale", "mobile_response"]
+}

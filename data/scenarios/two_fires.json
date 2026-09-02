@@ -1,0 +1,15 @@
+{
+  "id": "two_fires", "content_version": 1, "status": "active", "name": "Two Fires",
+  "short_role": "Test both bastions with different threat families at the same time.", "question": "Can both posts remain staffed when demolition and specialist pressure split the command chain?",
+  "objective": "Keep the paired-bastion protection active through at least two assault phases.",
+  "lesson": "Twinwatch rewards two credible posts; one perfect anchor cannot protect an abandoned opposite side.",
+  "keep_id": "twinwatch_bastion", "recommended_packs": ["ridge_company", "mason_train"], "starting_doctrine": "hammer_road",
+  "doctrines": ["hammer_road", "harrying_fire", "cut_the_chain"],
+  "wave_plans": [["battering_ram"], ["harrier", "harrier"], ["standard_cutter", "battering_ram"]],
+  "event_chain": ["twinwatch_signal"],
+  "variations": [
+    {"id": "standard_bell", "materials": 0, "morale": 0, "target_room": "armory", "preparation_focus": "Staff both posts before specializing either one."},
+    {"id": "west_fire", "materials": -2, "morale": 1, "target_room": "gate", "preparation_focus": "The western post bears the first structural threat."},
+    {"id": "east_fire", "materials": 2, "morale": -1, "target_room": "armory", "preparation_focus": "The eastern post has more supplies but less morale margin."}
+  ]
+}

@@ -943,3 +943,35 @@
 **Reason:** The Early Access strategy adds a multi-release breadth plan whose prose can drift from runtime content. A small machine-readable gate makes Greywatch's completed anchor auditable and prevents existing keeps or partial systems from being misrepresented as the full commercial floor.
 
 **Trade-off:** The gate proves evidence presence, catalog counts, and milestone honesty; it does not prove enjoyment or replace the linked gameplay tests and visual review. Future content slices must update both runtime data and the inventory ledger, adding modest release bookkeeping in exchange for explicit scope control.
+
+## ADR-119: Early Access breadth composes bounded existing rules
+
+**Decision:** Complete PTK-EA-2 through PTK-EA-5 with five additional scenarios, four two-piece packs, two enemy families, four authored events, and one commander lens. Rehome five existing specialist scenarios to the keeps whose spatial questions they now teach, keeping the active scenario inventory at twenty rather than exceeding the approved 20–24 range.
+
+**Reason:** The existing catalog already contains several late Greywatch encounters whose road, signal, command-anchor, and upper-route questions are stronger demonstrations of Ash Ford or Twinwatch. Reusing those complete encounters preserves their mechanics while letting new content fill genuinely missing questions instead of inflating the catalog.
+
+**Trade-off:** Historical scenario names remain stable while their keep context changes. Regression fixtures must therefore validate the new keep-owned geometry and placements rather than assuming every pre-Early-Access scenario belongs to Greywatch.
+
+## ADR-120: The Marshal makes assignments a commander resource
+
+**Decision:** Add the Marshal with an `assigned_command` passive that grants one response damage to assigned combat defenders and a once-per-assault `relief_order` that restores bounded health only to living, damaged assigned defenders.
+
+**Reason:** The fourth commander needs a distinct strategic verb. Assignments already expose commitment, specialist value, and Standard Cutter risk; strengthening and rescuing those posts creates a readable command-network lens without inventing movement, aura simulation, or another resource.
+
+**Trade-off:** The Marshal gains little before the first recovery assignment and can lose concentrated value to assignment hunters. This delayed payoff is intentional and distinct from the Quartermaster's broad reserve economy.
+
+## ADR-121: Harriers select depleted specialists deterministically
+
+**Decision:** Extend unit-hunter preference with `lowest_ammo_ratio`, using current ammunition divided by authored capacity, then condition and stable instance ID. Units without ammunition are ranked after ammunition users.
+
+**Reason:** The Harrier should pressure an exhausted firing network rather than duplicate weakest-unit or assigned-unit hunting. Ammunition is already authoritative, visible, and saved, so the target rule creates new counterplay without adding hidden state.
+
+**Trade-off:** The preference reads current ammunition at contact and may change after defender fire in the same tick. That ordering is deterministic and teaches the player that an emptied specialist becomes exposed.
+
+## ADR-122: Automated Early Access readiness does not approve distribution
+
+**Decision:** When PTK-EA-1 through PTK-EA-6 and every breadth floor pass, mark the machine ledger `candidate` and `early_access_ready: true` while retaining `owner_approval_required_for_distribution: true` and all P16 human observations as pending.
+
+**Reason:** Agents can complete deterministic gameplay, accessibility, persistence, performance, packaging, and evidence requirements. They cannot truthfully perform human comprehension sessions or authorize commercial distribution.
+
+**Trade-off:** The repository can become an automated Early Access candidate while still being explicitly blocked from public/storefront distribution until the owner approves it.

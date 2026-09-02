@@ -1,0 +1,11 @@
+{
+  "id": "stone_screen", "content_version": 1, "status": "active", "name": "Stone Screen",
+  "short_role": "Absorb heavy structural contact beside one room.", "role": "fortifies against demolition", "question": "Which critical room needs the strongest static screen?",
+  "kind": "equipment", "category": "support", "footprint": [2, 1], "allowed_floors": ["ground", "upper"], "allowed_zones": ["wall", "keep"],
+  "cost": 8, "max_health": 18, "placement_question": "Which room edge can justify a large fixed footprint?",
+  "skill": "Dressed Stone: reduces ordinary adjacent room damage by two.",
+  "strength_tags": ["room_protection", "demolition_counter", "high_condition"], "weakness_tags": ["no_direct_stop", "large_footprint", "fixed_position"],
+  "attack_profile": {"style": "fortification", "range": 1, "cooldown_steps": 1, "damage": 0, "defense": 4, "ammo_capacity": 0, "targets": ["all"]},
+  "support_profile": {"kind": "fortification", "target_rooms": [], "condition_restore": 0, "response_modifier": "adjacent_room_guard", "room_damage_reduction": 2},
+  "assignment_rule": null, "availability": "mason_train", "presentation": {"icon": "", "marker_color_role": "support", "radius_scale": 1.05}
+}

@@ -69,7 +69,7 @@ func _initialize() -> void:
 		authored_defender_paths[String(actor.piece.get("sprite_path", ""))] = true
 	_check(authored_defender_paths.size() == 4, "combat defenders should retain four distinct authored role silhouettes")
 	_check(String(ranged.enemy.get("sprite_path", "")).ends_with("enemy_ash_slinger.svg") and String(ranged.enemy.get("asset_status", "")) == "authored_original" and bool(ranged.get("enemy_texture_loaded", false)), "extended ranged enemies should resolve an authored hostile silhouette")
-	_check(bool(board.get("authored_actor_assets", false)) and int(board.get("authored_enemy_count", 0)) == 10 and String(board.get("authored_actor_source", "")).contains("32px"), "the board snapshot should identify complete authored actor provenance")
+	_check(bool(board.get("authored_actor_assets", false)) and int(board.get("authored_enemy_count", 0)) == 12 and String(board.get("authored_actor_source", "")).contains("32px"), "the board snapshot should identify complete authored actor provenance")
 	_check(not bool(board.get("temporary_actor_assets", true)), "the board should no longer depend on temporary actor tiles")
 	var authored_enemy_paths: Dictionary = {}
 	for enemy_id in ["raider", "sapper", "climber", "siege_beast", "shield_guard", "ash_slinger", "shieldbreaker", "standard_cutter", "outrider", "gloam_knife"]:

@@ -15,24 +15,28 @@ SPEC.loader.exec_module(validator)
 
 
 class EarlyAccessProgressValidatorTests(unittest.TestCase):
-    def test_repository_records_only_ea1_as_implemented(self) -> None:
+    def test_repository_records_complete_automated_candidate(self) -> None:
         errors: list[str] = []
         progress = json.loads((ROOT / "content" / "early_access_progress.json").read_text(encoding="utf-8"))
         manifest = json.loads((ROOT / "tools" / "ci_manifest.json").read_text(encoding="utf-8"))
         validator.validate_progress(progress, manifest, ROOT, errors)
         self.assertEqual(errors, [])
-        self.assertFalse(progress["early_access_ready"])
-        self.assertEqual([row["status"] for row in progress["milestones"]], ["implemented", "planned", "planned", "planned", "planned", "planned"])
+        self.assertTrue(progress["early_access_ready"])
+        self.assertEqual(progress["status"], "candidate")
+        self.assertEqual([row["status"] for row in progress["milestones"]], ["implemented"] * 6)
+        self.assertTrue(progress["owner_approval_required_for_distribution"])
 
-    def test_rejects_stale_inventory_false_readiness_and_missing_evidence(self) -> None:
+    def test_rejects_stale_inventory_incomplete_readiness_and_missing_evidence(self) -> None:
         progress = json.loads((ROOT / "content" / "early_access_progress.json").read_text(encoding="utf-8"))
-        progress["early_access_ready"] = True
+        progress["milestones"][4]["status"] = "planned"
+        progress["milestones"][4].pop("requirements")
+        progress["next_milestone"] = "PTK-EA-5"
         progress["current_inventory"]["packs"] = 99
         progress["milestones"][0]["requirements"][0]["evidence"] = ["missing.md"]
         errors: list[str] = []
         validator.validate_progress(progress, {"build_version": progress["build_version"]}, ROOT, errors)
         joined = "\n".join(errors)
-        self.assertIn("not ready", joined)
+        self.assertIn("cannot be ready", joined)
         self.assertIn("inventory is stale", joined)
         self.assertIn("missing evidence", joined)
 

@@ -1,7 +1,7 @@
 # Pack the Keep — Early Access Requirements
 
 **Status:** Active, machine-checked contract for a skeletal but commercially credible Early Access build
-**Current baseline:** `0.50.0-ea1-greywatch-anchor`; PTK-EA-1 is implemented and PTK-EA-2 is next. `content/early_access_progress.json` records the exact inventory, evidence, pending milestones, and non-release boundary.
+**Current baseline:** `0.51.0-early-access-candidate`; PTK-EA-1 through PTK-EA-6 are implemented and machine-checked. `content/early_access_progress.json` records the exact inventory, evidence, automated candidate status, and owner-controlled distribution boundary.
 
 ## Product decision
 
@@ -75,11 +75,16 @@ Every new commander, keep, pack, piece, enemy, doctrine, or event is a vertical 
 ## Recommended order
 
 **PTK-EA-1 — Complete:** Greywatch is the CI-enforced quality anchor, including responsive preparation, the complete multi-wave journey, authored board visuals, bounded semantic foley, deterministic/save evidence, and a versioned capture.
-**PTK-EA-2:** add a second keep with a distinct geometry question and a compact scenario set.  
-**PTK-EA-3:** add a fourth commander or doctrine lens plus the third keep, preserving two viable plans.  
-**PTK-EA-4:** add two enemy families and their counters, including telegraphs and recovery consequences.  
-**PTK-EA-5:** add event breadth, bounded variation, mastery comparisons, and replay goals.  
-**PTK-EA-6:** harden packaging, saves, accessibility, controller focus, performance, audio, and Early Access release documentation.
+
+**PTK-EA-2 — Complete:** Ash Ford has six scenarios, its clear-causeway and shallow-repair identity, two opening plans, and full-flow evidence.
+
+**PTK-EA-3 — Complete:** Twinwatch has six scenarios and the Marshal adds an assignment-led fourth commander lens with two viable plans.
+
+**PTK-EA-4 — Complete:** Battering Rams and Harriers add armored demolition and ammunition-aware specialist pressure with explicit counters and authored silhouettes.
+
+**PTK-EA-5 — Complete:** Four additional events, disclosed bounded variations, mastery comparisons, and replay goals bring the catalog to its approved floors.
+
+**PTK-EA-6 — Complete:** accessibility, controller focus, save/replay, performance, packaging, limitations, and the owner-only distribution boundary are enforced as candidate gates.
 
 ## Non-negotiable boundaries
 

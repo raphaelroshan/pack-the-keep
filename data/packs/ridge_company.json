@@ -1,0 +1,8 @@
+{
+  "id": "ridge_company", "content_version": 1, "status": "active", "name": "Ridge Company",
+  "short_role": "Staff a distant post with disciplined fire and a command relay.", "question": "Which exposed bastion deserves the clearer order?",
+  "family": "precision", "contents": ["ridge_sentinel", "relay_drum"], "doctrine": "posted_crossfire", "cost": 5,
+  "strength": "An assignable sentry and nearby relay reward deliberate split-post command.", "weakness": "The pair concentrates value into a specialist that Harriers and Cutters can identify.",
+  "choice": "Make one remote post decisive while accepting that its command chain becomes visible.", "commander_affinity": ["marshal", "castellan"],
+  "spatial_demand": {"preferred_floors": ["ground", "upper"], "preferred_zones": ["wall", "keep"], "needs_open_lane": false, "needs_adjacency": true}
+}

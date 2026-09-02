@@ -1,0 +1,12 @@
+{
+  "id": "twinwatch_signal", "content_version": 1, "status": "active", "title": "Which Fire Answers",
+  "short_role": "Commit the first signal to one interpretation of the split assault.", "type": "forecast", "scenario": "two_fires",
+  "trigger": {"phase": "preparation", "wave": 0},
+  "selection": {"stream": "two_fires_preparation", "repeat_policy": "once_per_run", "cooldown_waves": 0, "max_occurrences": 1},
+  "setup": "Both ridge fires are lit. The Marshal can reserve command attention or release spare fittings to the builders.",
+  "choices": [
+    {"id": "reserve_relief_signal", "label": "Reserve the relief signal", "requirements": {}, "effects": [{"op": "set_flag", "flag": "relief_signal_reserved", "value": true}], "visible_result": "All command points remain available for live contact."},
+    {"id": "release_ridge_fittings", "label": "Release ridge fittings (+3 materials)", "requirements": {}, "effects": [{"op": "add_materials", "amount": 3}, {"op": "set_flag", "flag": "ridge_fittings_released", "value": true}], "visible_result": "Three materials strengthen setup, but no special command reserve is recorded."}
+  ],
+  "follow_up": ""
+}

@@ -17,8 +17,13 @@ const SCENARIOS: Array[String] = [
 	"before_the_horn",
 	"the_unlit_stair",
 	"the_twilight_road",
+	"flood_mark",
+	"broken_ferry",
+	"millers_debt",
+	"two_fires",
+	"rimebound_relief",
 ]
-const COMMANDERS: Array[String] = ["castellan", "warden", "quartermaster"]
+const COMMANDERS: Array[String] = ["castellan", "warden", "quartermaster", "marshal"]
 const SEEDS: Array[int] = [3307, 3308, 3309]
 
 var failures: Array[String] = []
@@ -32,6 +37,10 @@ func _check_command(result: Dictionary, label: String) -> bool:
 
 func _setup_baseline(state: RefCounted, scenario_id: String) -> bool:
 	if scenario_id == "wrong_wall" and not _check_command(state.choose_event_option("hold_gate_command"), "Wrong Wall warning"):
+		return false
+	if scenario_id == "flood_mark" and not _check_command(state.choose_event_option("release_stone_wagon"), "Flood Mark choice"):
+		return false
+	if scenario_id == "two_fires" and not _check_command(state.choose_event_option("reserve_relief_signal"), "Two Fires choice"):
 		return false
 	if not _check_command(state.place_piece("pike_squad", Vector2i(0, 3), "ground"), "%s starter placement" % scenario_id):
 		return false
@@ -150,6 +159,48 @@ func _setup_baseline(state: RefCounted, scenario_id: String) -> bool:
 			if not _check_command(state.place_piece("dusk_bow", Vector2i(1, 1), "upper"), "The Twilight Road Dusk Bow"):
 				return false
 			return _check_command(state.place_piece("lantern_post", Vector2i(7, 1), "upper"), "The Twilight Road Lantern Post")
+		"flood_mark":
+			if not _check_command(state.open_pack("river_wardens"), "Flood Mark River Wardens"):
+				return false
+			if not _check_command(state.open_pack("mason_train"), "Flood Mark Mason Train"):
+				return false
+			if not _check_command(state.place_piece("river_guard", Vector2i(2, 5), "ground"), "Flood Mark River Guard"):
+				return false
+			return _check_command(state.place_piece("mason_crew", Vector2i(3, 6), "ground"), "Flood Mark Mason Crew")
+		"broken_ferry":
+			if not _check_command(state.open_pack("ferry_network"), "Broken Ferry Network"):
+				return false
+			if not _check_command(state.open_pack("runner_network"), "Broken Ferry Runner Network"):
+				return false
+			if not _check_command(state.place_piece("ferry_scouts", Vector2i(2, 5), "ground"), "Broken Ferry Scouts"):
+				return false
+			if not _check_command(state.place_piece("signal_buoy", Vector2i(9, 1), "upper"), "Broken Ferry Signal Buoy"):
+				return false
+			return _check_command(state.place_piece("runner_pair", Vector2i(9, 3), "ground"), "Broken Ferry Runner Pair")
+		"millers_debt":
+			if not _check_command(state.open_pack("mason_train"), "Miller's Debt Mason Train"):
+				return false
+			if not _check_command(state.open_pack("ferry_network"), "Miller's Debt Ferry Network"):
+				return false
+			if not _check_command(state.place_piece("mason_crew", Vector2i(2, 5), "ground"), "Miller's Debt Mason Crew"):
+				return false
+			return _check_command(state.place_piece("ferry_scouts", Vector2i(9, 1), "upper"), "Miller's Debt Ferry Scouts")
+		"two_fires":
+			if not _check_command(state.open_pack("ridge_company"), "Two Fires Ridge Company"):
+				return false
+			if not _check_command(state.open_pack("mason_train"), "Two Fires Mason Train"):
+				return false
+			if not _check_command(state.place_piece("ridge_sentinel", Vector2i(9, 3), "ground"), "Two Fires Ridge Sentinel"):
+				return false
+			return _check_command(state.place_piece("mason_crew", Vector2i(2, 6), "ground"), "Two Fires Mason Crew")
+		"rimebound_relief":
+			if not _check_command(state.open_pack("ridge_company"), "Rimebound Relief Ridge Company"):
+				return false
+			if not _check_command(state.open_pack("fallback_convoy"), "Rimebound Relief Fallback Convoy"):
+				return false
+			if not _check_command(state.place_piece("ridge_sentinel", Vector2i(9, 3), "ground"), "Rimebound Relief Ridge Sentinel"):
+				return false
+			return _check_command(state.place_piece("rear_guard", Vector2i(8, 6), "ground"), "Rimebound Relief Rear Guard")
 	failures.append("unknown scenario fixture: %s" % scenario_id)
 	return false
 
@@ -173,6 +224,10 @@ func _resolve_event(state: RefCounted, label: String) -> bool:
 			return _check_command(state.choose_event_option("seal_old_drain"), "%s Old Drain" % label)
 		"twilight_crossroads":
 			return _check_command(state.choose_event_option("carry_lamp_oil"), "%s Twilight Crossroads" % label)
+		"ferry_reckoning":
+			return _check_command(state.choose_event_option("unload_repair_timber"), "%s Ferry Reckoning" % label)
+		"ridge_relief":
+			return _check_command(state.choose_event_option("steady_both_posts"), "%s Ridge Relief" % label)
 	failures.append("%s reached unhandled event %s" % [label, state.active_event_id])
 	return false
 
@@ -227,7 +282,7 @@ func _run_case(seed: int, commander_id: String, scenario_id: String, checkpoint_
 				break
 			continue
 		if state.wave_active:
-			if state.battle_step == 0 and commander_id != "quartermaster":
+			if state.battle_step == 0 and bool(state.commander_ability_preview().get("ok", false)):
 				_check_command(state.use_commander_ability(), "%s wave %d commander ability" % [label, state.wave_index])
 			state.advance_wave(1.0)
 			continue

@@ -14,7 +14,7 @@ func _initialize() -> void:
 	var loaded: Dictionary = catalog.load_default(PackKeepState.ROOMS.keys())
 	_check(bool(loaded.get("ok", false)), "active runtime catalog did not load cleanly: %s" % "; ".join(loaded.get("errors", [])))
 	var known_doctrines: Array = catalog.doctrine_ids()
-	_check(known_doctrines == ["gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach", "shielded_advance", "smoke_and_signal", "break_the_line", "cut_the_chain", "rapid_breakthrough", "veiled_entry", "twilight_crossing"], "doctrine catalog order or active IDs changed")
+	_check(known_doctrines == ["gate_assault", "distributed_sabotage", "feint_and_flank", "area_pressure", "rolling_breach", "shielded_advance", "smoke_and_signal", "break_the_line", "cut_the_chain", "rapid_breakthrough", "veiled_entry", "twilight_crossing", "hammer_road", "harrying_fire"], "doctrine catalog order or active IDs changed")
 	var expected_doctrines: Dictionary = {
 		"gate_assault": {"composition": ["raider", "raider"], "target": "gate", "pressure": "Gate concentration"},
 		"distributed_sabotage": {"composition": ["raider", "sapper"], "target": "workshop or supply_room", "pressure": "Workshop and Supply Room support chain"},
@@ -27,7 +27,9 @@ func _initialize() -> void:
 		"cut_the_chain": {"composition": ["standard_cutter", "standard_cutter"], "target": "an assigned specialist or exposed precision/support unit", "pressure": "Assigned specialists and the room benefits they enable"},
 		"rapid_breakthrough": {"composition": ["outrider", "raider"], "target": "an exposed precision, recon, or support defender", "pressure": "Preparation tempo and exposed specialist survival"},
 		"veiled_entry": {"composition": ["gloam_knife", "climber"], "target": "an exposed upper precision, recon, morale, or support defender", "pressure": "Visibility coverage and upper specialist survival"},
-		"twilight_crossing": {"composition": ["outrider", "gloam_knife"], "target": "exposed precision, recon, morale, or support defenders across both approaches", "pressure": "Route tempo, visibility coverage, and divided unit protection"}
+		"twilight_crossing": {"composition": ["outrider", "gloam_knife"], "target": "exposed precision, recon, morale, or support defenders across both approaches", "pressure": "Route tempo, visibility coverage, and divided unit protection"},
+		"hammer_road": {"composition": ["battering_ram"], "target": "gate, armory, or workshop", "pressure": "Critical room protection and anti-siege response"},
+		"harrying_fire": {"composition": ["harrier", "harrier"], "target": "a depleted precision, control, recon, or morale defender", "pressure": "Finite-ammunition specialists and command relays"}
 	}
 	for doctrine_id in expected_doctrines.keys():
 		var doctrine: Dictionary = catalog.doctrine_definition(String(doctrine_id))
@@ -45,8 +47,8 @@ func _initialize() -> void:
 	_check(doctrine_errors.size() >= 4, "catalog validator did not reject missing fields, ID mismatch, enemy references, and incomplete counters")
 	_check(catalog.keep_ids() == ["greywatch_keep", "ash_ford_redoubt", "twinwatch_bastion"], "keep catalog order or active IDs changed")
 	_check(catalog.region_ids() == ["low_mill"], "regional catalog order or active IDs changed")
-	_check(catalog.scenario_ids() == ["gatehouse_lock", "wrong_wall", "open_yard_net", "relief_road", "red_banner_road", "ash_at_the_bell", "the_splintered_gate", "three_bells_at_dusk", "ash_ford_crossing", "the_cut_standard", "the_divided_bell", "before_the_horn", "the_unlit_stair", "the_twilight_road", "last_stand"], "scenario catalog order or active IDs changed")
-	_check(catalog.event_ids() == ["relief_road_warning", "relief_road_recovery", "relief_road_report", "workshop_can_wait", "mara_second_door", "old_drain_opens", "the_bell_has_a_pattern", "the_gate_is_not_the_keep", "wrong_wall_report", "twilight_crossroads"], "event catalog order or active IDs changed")
+	_check(catalog.scenario_ids() == ["gatehouse_lock", "wrong_wall", "open_yard_net", "relief_road", "red_banner_road", "ash_at_the_bell", "the_splintered_gate", "three_bells_at_dusk", "ash_ford_crossing", "the_cut_standard", "the_divided_bell", "before_the_horn", "the_unlit_stair", "the_twilight_road", "last_stand", "flood_mark", "broken_ferry", "millers_debt", "two_fires", "rimebound_relief"], "scenario catalog order or active IDs changed")
+	_check(catalog.event_ids() == ["relief_road_warning", "relief_road_recovery", "relief_road_report", "workshop_can_wait", "mara_second_door", "old_drain_opens", "the_bell_has_a_pattern", "the_gate_is_not_the_keep", "wrong_wall_report", "twilight_crossroads", "flood_mark_choice", "ferry_reckoning", "twinwatch_signal", "ridge_relief"], "event catalog order or active IDs changed")
 	_check(catalog.modifier_ids() == ["roadside_intelligence", "hardened_vanguard"], "modifier catalog order or active IDs changed")
 	var intelligence: Dictionary = catalog.modifier_definition("roadside_intelligence")
 	_check(String(intelligence.get("unlock_event", "")) == "relief_road_report" and int(intelligence.get("starting_morale_cost", 0)) == 1, "Roadside Intelligence did not load its unlock source and tradeoff")
@@ -91,7 +93,7 @@ func _initialize() -> void:
 	malformed_scenario.variations = [{"id": "bad variation", "materials": 0.5, "morale": 0, "target_room": "missing_room"}]
 	var scenario_errors: Array[String] = catalog.validate_scenario_definition(malformed_scenario, "wrong_filename", PackKeepState.ROOMS.keys())
 	_check(scenario_errors.size() >= 6, "catalog validator did not reject missing fields, ID mismatch, wave shape, variation ID/value, and room references")
-	_check(catalog.enemy_ids() == ["raider", "sapper", "climber", "siege_beast", "shield_guard", "ash_slinger", "shieldbreaker", "standard_cutter", "outrider", "gloam_knife"], "enemy catalog order or active IDs changed")
+	_check(catalog.enemy_ids() == ["raider", "sapper", "climber", "siege_beast", "shield_guard", "ash_slinger", "shieldbreaker", "standard_cutter", "outrider", "gloam_knife", "battering_ram", "harrier"], "enemy catalog order or active IDs changed")
 	var expected_enemies: Dictionary = {
 		"raider": {"health": 8, "damage": 2, "arrival": 2, "route": "gate_road", "targets": ["gate"], "doctrine": "gate_assault", "counter": "pike_squad"},
 		"sapper": {"health": 5, "damage": 3, "arrival": 3, "route": "service_lane", "targets": ["workshop", "supply_room", "armory"], "doctrine": "distributed_sabotage", "counter": "scout_post"},
@@ -102,7 +104,9 @@ func _initialize() -> void:
 		"shieldbreaker": {"health": 14, "damage": 3, "arrival": 2, "route": "gate_road", "targets": ["gate", "barracks", "inner_yard"], "doctrine": "break_the_line", "counter": "shield_wardens"},
 		"standard_cutter": {"health": 9, "damage": 3, "arrival": 3, "route": "command_lane", "targets": ["barracks", "workshop", "inner_yard", "north_tower"], "doctrine": "cut_the_chain", "counter": "crossbow_patrol"},
 		"outrider": {"health": 8, "damage": 3, "arrival": 2, "route": "ridge_road", "targets": ["gate", "inner_yard", "north_tower"], "doctrine": "rapid_breakthrough", "counter": "hook_guard"},
-		"gloam_knife": {"health": 8, "damage": 3, "arrival": 3, "route": "unlit_stair", "targets": ["north_tower", "old_chapel", "outer_wall"], "doctrine": "veiled_entry", "counter": "lantern_post"}
+		"gloam_knife": {"health": 8, "damage": 3, "arrival": 3, "route": "unlit_stair", "targets": ["north_tower", "old_chapel", "outer_wall"], "doctrine": "veiled_entry", "counter": "lantern_post"},
+		"battering_ram": {"health": 15, "damage": 4, "arrival": 4, "route": "hammer_road", "targets": ["gate", "armory", "workshop"], "doctrine": "hammer_road", "counter": "mason_crew"},
+		"harrier": {"health": 9, "damage": 2, "arrival": 3, "route": "ridge_arc", "targets": ["north_tower", "outer_wall", "armory"], "doctrine": "harrying_fire", "counter": "ridge_sentinel"}
 	}
 	for enemy_id in expected_enemies.keys():
 		var enemy: Dictionary = catalog.enemy_definition(String(enemy_id))
@@ -126,7 +130,7 @@ func _initialize() -> void:
 	for doctrine in known_doctrines:
 		if not known_piece_targets.has(doctrine):
 			known_piece_targets.append(doctrine)
-	_check(catalog.piece_ids() == ["pike_squad", "repair_station", "fire_team", "scout_post", "narrow_gate", "brace", "fire_brazier", "signal_beacon", "runner_pair", "supply_cache", "rear_guard", "breakaway_barricade", "crossbow_patrol", "watch_banner", "bellkeepers", "shield_wardens", "emergency_shutters", "hook_guard", "stake_line", "dusk_bow", "lantern_post"], "piece catalog order or active IDs changed")
+	_check(catalog.piece_ids() == ["pike_squad", "repair_station", "fire_team", "scout_post", "narrow_gate", "brace", "fire_brazier", "signal_beacon", "runner_pair", "supply_cache", "rear_guard", "breakaway_barricade", "crossbow_patrol", "watch_banner", "bellkeepers", "shield_wardens", "emergency_shutters", "hook_guard", "stake_line", "dusk_bow", "lantern_post", "river_guard", "sluice_barrier", "ferry_scouts", "signal_buoy", "ridge_sentinel", "relay_drum", "mason_crew", "stone_screen"], "piece catalog order or active IDs changed")
 	var expected_pieces: Dictionary = {
 		"pike_squad": {"size": Vector2i(2, 1), "cost": 8, "health": 14, "ammo": 0, "attack": 4, "availability": "starter", "assignment": "gate"},
 		"repair_station": {"size": Vector2i(2, 1), "cost": 10, "health": 10, "ammo": 0, "attack": 0, "availability": "field_engineers", "assignment": "workshop"},
@@ -144,7 +148,15 @@ func _initialize() -> void:
 		"hook_guard": {"size": Vector2i(2, 1), "cost": 8, "health": 11, "ammo": 0, "attack": 3, "availability": "road_wardens", "assignment": ""},
 		"stake_line": {"size": Vector2i(2, 1), "cost": 5, "health": 10, "ammo": 0, "attack": 0, "availability": "road_wardens", "assignment": ""},
 		"dusk_bow": {"size": Vector2i(2, 1), "cost": 8, "health": 9, "ammo": 5, "attack": 4, "availability": "lantern_watch", "assignment": ""},
-		"lantern_post": {"size": Vector2i(1, 1), "cost": 5, "health": 8, "ammo": 0, "attack": 0, "availability": "lantern_watch", "assignment": ""}
+		"lantern_post": {"size": Vector2i(1, 1), "cost": 5, "health": 8, "ammo": 0, "attack": 0, "availability": "lantern_watch", "assignment": ""},
+		"river_guard": {"size": Vector2i(2, 1), "cost": 8, "health": 13, "ammo": 0, "attack": 3, "availability": "river_wardens", "assignment": "gate"},
+		"sluice_barrier": {"size": Vector2i(1, 1), "cost": 6, "health": 14, "ammo": 0, "attack": 0, "availability": "river_wardens", "assignment": ""},
+		"ferry_scouts": {"size": Vector2i(1, 1), "cost": 7, "health": 9, "ammo": 4, "attack": 3, "availability": "ferry_network", "assignment": "barracks"},
+		"signal_buoy": {"size": Vector2i(1, 1), "cost": 5, "health": 8, "ammo": 0, "attack": 0, "availability": "ferry_network", "assignment": ""},
+		"ridge_sentinel": {"size": Vector2i(2, 1), "cost": 9, "health": 11, "ammo": 5, "attack": 4, "availability": "ridge_company", "assignment": "armory"},
+		"relay_drum": {"size": Vector2i(1, 1), "cost": 6, "health": 10, "ammo": 0, "attack": 0, "availability": "ridge_company", "assignment": ""},
+		"mason_crew": {"size": Vector2i(2, 1), "cost": 8, "health": 12, "ammo": 0, "attack": 4, "availability": "mason_train", "assignment": "workshop"},
+		"stone_screen": {"size": Vector2i(2, 1), "cost": 8, "health": 18, "ammo": 0, "attack": 0, "availability": "mason_train", "assignment": ""}
 	}
 	for piece_id in expected_pieces.keys():
 		var piece: Dictionary = catalog.piece_definition(String(piece_id))
@@ -167,11 +179,12 @@ func _initialize() -> void:
 	malformed_piece.assignment_rule = {"room": "missing_room", "effect": "bad reference"}
 	var piece_errors: Array[String] = catalog.validate_piece_definition(malformed_piece, "wrong_filename", PackKeepState.ROOMS.keys(), known_piece_targets)
 	_check(piece_errors.size() >= 8, "catalog validator did not reject missing fields, ID mismatch, footprint, floor, zone, availability, enemy, and room references")
-	_check(catalog.commander_ids() == ["castellan", "warden", "quartermaster"], "commander catalog order or active IDs changed")
+	_check(catalog.commander_ids() == ["castellan", "warden", "quartermaster", "marshal"], "commander catalog order or active IDs changed")
 	var expected_commanders: Dictionary = {
 		"castellan": {"materials": 60, "morale": 6, "ability": "lockdown"},
 		"warden": {"materials": 52, "morale": 7, "ability": "rally"},
-		"quartermaster": {"materials": 48, "morale": 5, "ability": "resupply"}
+		"quartermaster": {"materials": 48, "morale": 5, "ability": "resupply"},
+		"marshal": {"materials": 54, "morale": 6, "ability": "relief_order"}
 	}
 	for commander_id in expected_commanders.keys():
 		var commander: Dictionary = catalog.commander_definition(String(commander_id))
@@ -188,7 +201,7 @@ func _initialize() -> void:
 	malformed_commander.favored_pack_families = ["missing_family"]
 	var commander_errors: Array[String] = catalog.validate_commander_definition(malformed_commander, "wrong_filename")
 	_check(commander_errors.size() >= 4, "catalog validator did not reject missing fields, ID mismatch, invalid morale, and unknown pack families")
-	_check(catalog.pack_ids() == ["pike_line", "field_engineers", "firekeepers", "scouts", "runner_network", "fallback_convoy", "crossbow_watch", "bell_guard", "shieldwall", "road_wardens", "lantern_watch"], "pack catalog order or active IDs changed")
+	_check(catalog.pack_ids() == ["pike_line", "field_engineers", "firekeepers", "scouts", "runner_network", "fallback_convoy", "crossbow_watch", "bell_guard", "shieldwall", "road_wardens", "lantern_watch", "river_wardens", "ferry_network", "ridge_company", "mason_train"], "pack catalog order or active IDs changed")
 	var expected: Dictionary = {
 		"pike_line": {"cost": 4, "contents": ["pike_squad", "narrow_gate"], "doctrine": "compact_corridors"},
 		"field_engineers": {"cost": 4, "contents": ["repair_station", "brace"], "doctrine": "redundancy"},
@@ -200,7 +213,11 @@ func _initialize() -> void:
 		"bell_guard": {"cost": 4, "contents": ["bellkeepers", "signal_beacon"], "doctrine": "coordinated_response"},
 		"shieldwall": {"cost": 5, "contents": ["shield_wardens", "emergency_shutters"], "doctrine": "anchored_gates"},
 		"road_wardens": {"cost": 5, "contents": ["hook_guard", "stake_line"], "doctrine": "prepared_interception"},
-		"lantern_watch": {"cost": 5, "contents": ["dusk_bow", "lantern_post"], "doctrine": "lit_crossfire"}
+		"lantern_watch": {"cost": 5, "contents": ["dusk_bow", "lantern_post"], "doctrine": "lit_crossfire"},
+		"river_wardens": {"cost": 5, "contents": ["river_guard", "sluice_barrier"], "doctrine": "ford_control"},
+		"ferry_network": {"cost": 4, "contents": ["ferry_scouts", "signal_buoy"], "doctrine": "crossing_relief"},
+		"ridge_company": {"cost": 5, "contents": ["ridge_sentinel", "relay_drum"], "doctrine": "posted_crossfire"},
+		"mason_train": {"cost": 5, "contents": ["mason_crew", "stone_screen"], "doctrine": "counter_siege"}
 	}
 	for pack_id in expected.keys():
 		var definition: Dictionary = catalog.pack_definition(String(pack_id))
@@ -219,12 +236,12 @@ func _initialize() -> void:
 
 	var first: PackKeepState = PackKeepState.new(3307)
 	var second: PackKeepState = PackKeepState.new(3307)
-	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("keep_count", 0)) == 3 and int(first.content_catalog_status().get("region_count", 0)) == 1 and int(first.content_catalog_status().get("pack_count", 0)) == 11 and int(first.content_catalog_status().get("commander_count", 0)) == 3 and int(first.content_catalog_status().get("piece_count", 0)) == 21 and int(first.content_catalog_status().get("enemy_count", 0)) == 10 and int(first.content_catalog_status().get("doctrine_count", 0)) == 12 and int(first.content_catalog_status().get("scenario_count", 0)) == 15 and int(first.content_catalog_status().get("event_count", 0)) == 10 and int(first.content_catalog_status().get("modifier_count", 0)) == 2, "KeepState did not expose the complete P52 runtime catalog")
+	_check(bool(first.content_catalog_status().get("ok", false)) and int(first.content_catalog_status().get("keep_count", 0)) == 3 and int(first.content_catalog_status().get("region_count", 0)) == 1 and int(first.content_catalog_status().get("pack_count", 0)) == 15 and int(first.content_catalog_status().get("commander_count", 0)) == 4 and int(first.content_catalog_status().get("piece_count", 0)) == 29 and int(first.content_catalog_status().get("enemy_count", 0)) == 12 and int(first.content_catalog_status().get("doctrine_count", 0)) == 14 and int(first.content_catalog_status().get("scenario_count", 0)) == 20 and int(first.content_catalog_status().get("event_count", 0)) == 14 and int(first.content_catalog_status().get("modifier_count", 0)) == 2, "KeepState did not expose the complete Early Access runtime catalog")
 	_check(first.piece_ids() == catalog.piece_ids(), "KeepState did not preserve stable piece order")
 	_check(first.enemy_ids() == catalog.enemy_ids(), "KeepState did not preserve stable enemy order")
 	_check(first.doctrine_ids() == catalog.doctrine_ids(), "KeepState did not preserve stable doctrine order")
 	_check(first.scenario_ids() == catalog.scenario_ids(), "KeepState did not preserve stable scenario order")
-	_check(first.commander_ids() == ["castellan", "warden", "quartermaster"], "KeepState did not preserve stable commander order")
+	_check(first.commander_ids() == ["castellan", "warden", "quartermaster", "marshal"], "KeepState did not preserve stable commander order")
 	var selected_warden: Dictionary = first.select_commander("warden")
 	_check(bool(selected_warden.get("ok", false)) and first.materials == 52 and first.morale == 7, "externalized Warden did not preserve starting resources")
 	_check(String(first.commander_definition("warden").get("ability", "")) == "rally", "externalized Warden did not preserve Rally")

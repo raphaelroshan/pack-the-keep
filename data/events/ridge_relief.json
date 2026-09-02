@@ -1,0 +1,12 @@
+{
+  "id": "ridge_relief", "content_version": 1, "status": "active", "title": "The Relief Roster",
+  "short_role": "Choose recovery capacity or confidence before Twinwatch's final pressure.", "type": "recovery", "scenario": "rimebound_relief",
+  "trigger": {"phase": "recovery", "wave": 2},
+  "selection": {"stream": "rimebound_recovery", "repeat_policy": "once_per_run", "cooldown_waves": 0, "max_occurrences": 1},
+  "setup": "The relief roster is short. Masons can bring supplies up the ridge, or veterans can steady the two posts.",
+  "choices": [
+    {"id": "haul_ridge_stone", "label": "Haul ridge stone (+4 materials)", "requirements": {}, "effects": [{"op": "add_materials", "amount": 4}, {"op": "set_flag", "flag": "ridge_stone_hauled", "value": true}], "visible_result": "Four materials become available for the last repair decision."},
+    {"id": "steady_both_posts", "label": "Steady both posts (+1 morale)", "requirements": {}, "effects": [{"op": "add_morale", "amount": 1}, {"op": "set_flag", "flag": "twinwatch_posts_steadied", "value": true}], "visible_result": "Morale rises by one while the structural budget stays fixed."}
+  ],
+  "follow_up": ""
+}
