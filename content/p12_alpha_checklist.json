@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.54.0-plan-coherence",
+  "build_version": "0.55.0-phase-framing",
   "status": "candidate",
   "checks": [
     {"id": "windows_launch", "status": "implemented", "evidence": ["tests/test_release_identity.py", "tools/run_packaged_smoke.py", ".github/workflows/ci.yml"]},

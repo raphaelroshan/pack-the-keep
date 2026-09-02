@@ -1,7 +1,7 @@
 # Pack the Keep — Early Access Requirements
 
 **Status:** Active, machine-checked contract for a skeletal but commercially credible Early Access build
-**Current baseline:** `0.54.0-plan-coherence`; PTK-I1 through PTK-I6 and PTK-EA-1 through PTK-EA-6 are implemented and machine-checked, first plans remain synchronized with doctrine cards, and all active presentation assets are original. The progress ledgers record exact evidence, automated candidate status, and the owner-controlled distribution boundary.
+**Current baseline:** `0.55.0-phase-framing`; all investment and Early Access gates are machine-checked, first plans remain synchronized with doctrine cards, each phase has truthful decision framing, and all active presentation assets are original. The progress ledgers record exact evidence, automated candidate status, and the owner-controlled distribution boundary.
 
 ## Product decision
 

@@ -3,6 +3,7 @@ extends SceneTree
 const WarCouncilSnapshot = preload("res://src/ui/war_council_presentation_snapshot.gd")
 const RecoverySnapshot = preload("res://src/ui/recovery_presentation_snapshot.gd")
 const ResultsSnapshot = preload("res://src/ui/results_presentation_snapshot.gd")
+const PhaseHeaderSnapshot = preload("res://src/ui/phase_header_snapshot.gd")
 
 var failures: Array[String] = []
 
@@ -48,6 +49,14 @@ func _initialize() -> void:
 	_check(JSON.stringify(ui.war_council_presentation_snapshot) == JSON.stringify(council_first), "War Council UI should retain the exact snapshot it renders")
 	_check(String(ui.war_council_choice_panel.commander_name_label.text) == String(council_first.get("commander", {}).get("name", "")), "commander card should render from the snapshot")
 	_check(String(ui.war_council_choice_panel.scenario_name_label.text) == String(council_first.get("scenario", {}).get("name", "")), "scenario card should render from the snapshot")
+	var setup_header: Dictionary = PhaseHeaderSnapshot.build(ui.keep, "setup", true, "")
+	var preparation_header: Dictionary = PhaseHeaderSnapshot.build(ui.keep, "preparation", true, "")
+	var ready_header: Dictionary = PhaseHeaderSnapshot.build(ui.keep, "battle", true, "First contact waits at the gate.")
+	var paused_header: Dictionary = PhaseHeaderSnapshot.build(ui.keep, "battle", true, "")
+	var live_header: Dictionary = PhaseHeaderSnapshot.build(ui.keep, "battle", false, "")
+	_check(String(setup_header.get("subtitle", "")).contains("Choose who leads") and String(preparation_header.get("subtitle", "")).contains("before entering the assault"), "War Council and Preparation should expose distinct phase purposes")
+	_check(String(ready_header.get("subtitle", "")).contains("sound the bell") and String(paused_header.get("subtitle", "")).contains("paused") and String(live_header.get("subtitle", "")).contains("live"), "Battle framing should distinguish readiness, paused inspection, and live resolution")
+	_check(JSON.stringify(ui.keep.serialize()) == before_war_council, "phase header projections should not mutate authoritative state")
 
 	ui.keep.reset_run(3307)
 	ui.keep.place_piece("pike_squad", Vector2i(3, 3), "ground")
@@ -68,6 +77,8 @@ func _initialize() -> void:
 	ui._refresh_recovery_action_cards()
 	ui._refresh_recovery_brief()
 	ui._refresh_recovery_priorities()
+	var recovery_header: Dictionary = PhaseHeaderSnapshot.build(ui.keep, "results", true, "")
+	_check(String(recovery_header.get("title", "")).contains("RECOVERY") and String(recovery_header.get("subtitle", "")).contains("2 recovery actions"), "Recovery framing should state its remaining decision budget")
 	_check(JSON.stringify(ui.recovery_presentation_snapshot) == JSON.stringify(recovery_first), "Recovery UI should retain the exact snapshot it renders")
 	_check(String(ui.recovery_stage_label.text) == String(recovery_first.get("stage_text", "")), "Recovery stage should render from the snapshot")
 	_check(String(ui.recovery_room_card_title.text) == String(recovery_first.get("cards", {}).get("room", {}).get("title", "")), "Recovery room card should render from the snapshot")
@@ -80,6 +91,8 @@ func _initialize() -> void:
 	_check(JSON.stringify(results_first) == JSON.stringify(results_second), "Results projection should be deterministic")
 	_check(JSON.stringify(ui.keep.serialize()) == before_results, "Results projection should not mutate authoritative state")
 	ui._refresh_terminal_debrief()
+	var terminal_header: Dictionary = PhaseHeaderSnapshot.build(ui.keep, "results", true, "")
+	_check(String(terminal_header.get("title", "")).contains("FINAL DEBRIEF") and String(terminal_header.get("subtitle", "")).contains("cost, the cause"), "terminal framing should direct causal review and replay")
 	_check(JSON.stringify(ui.results_presentation_snapshot) == JSON.stringify(results_first), "Results UI should retain the exact snapshot it renders")
 	_check(String(ui.terminal_debrief_panel.outcome_label.text) == String(results_first.get("outcome_title", "")), "terminal outcome should render from the snapshot")
 	_check(String(ui.terminal_debrief_panel.primary_button.text) == String(results_first.get("primary_label", "")), "terminal primary action should render from the snapshot")
