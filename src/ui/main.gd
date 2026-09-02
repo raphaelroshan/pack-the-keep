@@ -4401,6 +4401,73 @@ class KeepCanvas extends Control:
 		var remaining: float = _enemy_contact_remaining(index)
 		return remaining > 0.0 and remaining <= 1.0
 
+	func enemy_status_badge_snapshot(index: int) -> Dictionary:
+		if keep == null or not keep.wave_active or index < 0 or index >= keep.enemies.size():
+			return {"visible": false}
+		var enemy: Dictionary = keep.enemies[index]
+		if bool(enemy.get("defeated", false)):
+			return {"visible": false}
+		var focused: bool = index == focused_enemy_index
+		var arrival_step: int = maxi(1, int(enemy.get("arrival_step", 1)))
+		var in_contact: bool = keep.battle_step >= arrival_step
+		var imminent: bool = _enemy_contact_is_imminent(index)
+		if not focused and not imminent:
+			return {"visible": false}
+		var tokens: Array[String] = []
+		if focused:
+			tokens.append("FOCUS")
+		if in_contact:
+			tokens.append("CONTACT")
+		else:
+			tokens.append("T%d" % arrival_step)
+		var text_value: String = " · ".join(tokens)
+		var enemy_id: String = String(enemy.get("enemy_id", ""))
+		var marker_radius: float = 10.0 * float(BoardVisuals.enemy_profile(enemy_id, String(keep.enemy_definition(enemy_id).get("attack_style", "melee"))).scale)
+		var origin: Vector2 = _enemy_origin(index) + _enemy_reaction_offset(index)
+		var health_bar_width: float = 34.0 if enemy_id == "siege_beast" else 28.0
+		return {
+			"visible": true,
+			"text": text_value,
+			"focused": focused,
+			"in_contact": in_contact,
+			"imminent": imminent,
+			"arrival_step": arrival_step,
+			"rect": _enemy_status_badge_rect(origin, marker_radius, text_value),
+			"actor_rect": Rect2(origin - Vector2.ONE * marker_radius, Vector2.ONE * marker_radius * 2.0),
+			"health_rect": Rect2(origin + Vector2(-health_bar_width * 0.5, -marker_radius - 10.0), Vector2(health_bar_width, 5.0)),
+		}
+
+	func _enemy_status_badge_rect(origin: Vector2, marker_radius: float, text_value: String) -> Rect2:
+		var font_size: int = 8
+		var text_size: Vector2 = ThemeDB.fallback_font.get_string_size(text_value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
+		var badge_size: Vector2 = text_size + Vector2(10.0, 7.0)
+		var health_bar_top: float = origin.y - marker_radius - 10.0
+		var rect := Rect2(Vector2(origin.x - badge_size.x * 0.5, health_bar_top - badge_size.y - 4.0), badge_size)
+		if rect.position.y < 2.0:
+			rect.position = Vector2(origin.x - badge_size.x * 0.5, origin.y + marker_radius + 6.0)
+		rect.position.x = clampf(rect.position.x, 4.0, BASE_CANVAS_SIZE.x - badge_size.x - 4.0)
+		rect.position.y = clampf(rect.position.y, 2.0, ASSAULT_TIMELINE_TOP - badge_size.y - 4.0)
+		return rect
+
+	func spatial_rule_badge_snapshot(floor_name: String = "ground") -> Dictionary:
+		if keep == null or floor_name != "ground":
+			return {"visible": false}
+		var rule: Dictionary = keep.spatial_rule_state()
+		var rule_id: String = String(rule.get("id", ""))
+		if rule_id not in ["clear_causeway", "paired_bastions"]:
+			return {"visible": false}
+		var active: bool = bool(rule.get("active", false))
+		var text_value: String = "CLEAR CAUSEWAY" if rule_id == "clear_causeway" and active else "CAUSEWAY BLOCKED" if rule_id == "clear_causeway" else "BOTH POSTS STAFFED" if active else "STAFF BOTH POSTS"
+		var text_size: Vector2 = ThemeDB.fallback_font.get_string_size(text_value, HORIZONTAL_ALIGNMENT_LEFT, -1, 8)
+		var badge_size: Vector2 = text_size + Vector2(14.0, 9.0)
+		return {
+			"visible": true,
+			"rule_id": rule_id,
+			"active": active,
+			"text": text_value,
+			"rect": Rect2(MAP_ORIGIN + Vector2(MAP_SIZE.x - badge_size.x - 7.0, 6.0), badge_size),
+		}
+
 	func assault_timeline_snapshot() -> Dictionary:
 		var arrivals: Dictionary = {}
 		var next_arrival_step: int = -1
@@ -4960,21 +5027,23 @@ class KeepCanvas extends Control:
 				var lane_rect: Rect2 = Rect2(origin + Vector2(lane_cell.x * CELL_X, lane_cell.y * CELL_Y), Vector2(CELL_X, CELL_Y)).grow(-2)
 				draw_rect(lane_rect, Color(0.71, 0.49, 0.25, 0.38) if bool(rule.get("active", false)) else Color(0.61, 0.25, 0.28, 0.46), true)
 				draw_rect(lane_rect, Color("#e6c98b"), false, 1.0)
-			draw_string(ThemeDB.fallback_font, origin + Vector2(58, 108), "CLEAR CAUSEWAY" if bool(rule.get("active", false)) else "CAUSEWAY BLOCKED", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#f3d39c"))
 		elif String(rule.get("id", "")) == "paired_bastions":
 			var active: bool = bool(rule.get("active", false))
 			for room_id_value in rule.get("anchor_rooms", []):
 				var anchor_rect: Rect2 = _room_rect(String(room_id_value), origin).grow(3.0)
 				draw_rect(anchor_rect, Color("#9be1c1") if active else Color("#f0a06f"), false, 3.0)
-			var status_text: String = "BOTH POSTS STAFFED" if active else "STAFF BOTH POSTS"
-			var status_size: Vector2 = ThemeDB.fallback_font.get_string_size(status_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 10)
-			var status_plate: Rect2 = Rect2(
-				origin + Vector2((MAP_SIZE.x - status_size.x) * 0.5 - 7.0, 54.0),
-				status_size + Vector2(14.0, 10.0)
-			)
-			draw_rect(status_plate, Color(0.08, 0.07, 0.1, 0.88), true)
-			draw_rect(status_plate, Color("#9be1c1") if active else Color("#f0a06f"), false, 1.0)
-			draw_string(ThemeDB.fallback_font, status_plate.position + Vector2(7.0, status_size.y + 3.0), status_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("#bdebd6") if active else Color("#ffd19d"))
+		_draw_spatial_rule_badge(floor_name)
+
+	func _draw_spatial_rule_badge(floor_name: String) -> void:
+		var badge: Dictionary = spatial_rule_badge_snapshot(floor_name)
+		if not bool(badge.get("visible", false)):
+			return
+		var rect: Rect2 = badge.get("rect", Rect2())
+		var active: bool = bool(badge.get("active", false))
+		var accent: Color = Color("#fff4df") if high_contrast_mode else Color("#9be1c1") if active else Color("#f0a06f")
+		draw_rect(rect, Color(0.08, 0.07, 0.1, 0.92), true)
+		draw_rect(rect, accent, false, 1.0)
+		draw_string(ThemeDB.fallback_font, rect.position + Vector2(7.0, rect.size.y - 4.0), String(badge.get("text", "")), HORIZONTAL_ALIGNMENT_LEFT, rect.size.x - 12.0, 8, accent)
 
 	func _draw_floor(label_text: String, floor_name: String, origin: Vector2) -> void:
 		var terrain: String = String(keep.keep_definition().get("visual", {}).get("terrain", "fort"))
@@ -5237,7 +5306,6 @@ class KeepCanvas extends Control:
 			if index == focused_enemy_index:
 				draw_circle(enemy_origin, marker_radius + 5.0, Color("#fff4df"), false, 2.5)
 				draw_circle(enemy_origin, marker_radius + 9.0, Color("#e2bd84"), false, 1.5)
-				draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(-18, 28), "FOCUSED", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#fff4df"))
 			if enemy_id == "siege_beast":
 				draw_circle(enemy_origin, marker_radius + 5.0, Color(0.7, 0.3, 0.15, 0.35), false, 2.0)
 				draw_circle(enemy_origin, marker_radius + 18.0, Color(0.86, 0.35, 0.18, 0.22), false, 2.0)
@@ -5275,6 +5343,17 @@ class KeepCanvas extends Control:
 			var doctrine_initial: String = _enemy_marker_initial(enemy_id)
 			if not enemy_actor_drawn:
 				draw_string(ThemeDB.fallback_font, enemy_origin + Vector2(-3, 4), doctrine_initial, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#271b22"))
+			_draw_enemy_status_badge(index)
+
+	func _draw_enemy_status_badge(index: int) -> void:
+		var badge: Dictionary = enemy_status_badge_snapshot(index)
+		if not bool(badge.get("visible", false)):
+			return
+		var rect: Rect2 = badge.get("rect", Rect2())
+		var accent: Color = Color("#fff4df") if high_contrast_mode or bool(badge.get("focused", false)) else Color("#efb878")
+		draw_rect(rect, Color(0.08, 0.07, 0.1, 0.94), true)
+		draw_rect(rect, accent, false, 1.0)
+		draw_string(ThemeDB.fallback_font, rect.position + Vector2(5.0, rect.size.y - 3.0), String(badge.get("text", "")), HORIZONTAL_ALIGNMENT_LEFT, rect.size.x - 8.0, 8, accent)
 
 	func _draw_assault_timeline() -> void:
 		if keep == null or not keep.wave_active:
@@ -5331,7 +5410,6 @@ class KeepCanvas extends Control:
 			var origin: Vector2 = _enemy_origin(index)
 			var color: Color = Color("#fff4df") if high_contrast_mode else Color("#ef8d62")
 			draw_circle(origin, 14.0 + urgency * 5.0 + pulse, Color(color, 0.28 + urgency * 0.42), false, 2.0)
-			draw_string(ThemeDB.fallback_font, origin + Vector2(13, 3), "CONTACT", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, color)
 
 	func _battle_beat_color(beat_id: String) -> Color:
 		if beat_id in ["hostile_impact", "consequence"]:

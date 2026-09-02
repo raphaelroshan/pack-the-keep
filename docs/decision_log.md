@@ -1023,3 +1023,11 @@
 **Reason:** The live Assault capture still displayed Preparation-era instruction, weakening phase identity despite correct battle controls below it. A small projection gives every phase one truthful sentence and prevents stateful wording from scattering further through the main controller.
 
 **Trade-off:** The header summarizes the current decision rather than every mechanic or event. Detailed forecast, response, recovery, and debrief panels remain the source for exact consequences.
+
+## ADR-129: Tactical annotations use bounded, composed badges
+
+**Decision:** Compose threat focus and arrival state into one read-only badge with deterministic bounds, and render keep-specific spatial-rule status in a backed board plate. Remove the equivalent free-floating words from tactical cells while retaining rings, routes, health bars, and timeline markers.
+
+**Reason:** The v0.55 Assault capture showed `CONTACT`, `FOCUSED`, room names, and the Clear Causeway label competing around the same small tactical region. The facts were correct but their independent placement weakened the map-first hierarchy.
+
+**Trade-off:** The board carries fewer simultaneous words. Exact threat timing, traits, targets, and counters remain available in the timeline, response preview, hover tooltip, and inspection card.

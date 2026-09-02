@@ -30,6 +30,8 @@ func _initialize() -> void:
 	_check(room_names.has("West Gatehouse") and room_names.has("East Arsenal") and room_names.has("Bell Court"), "room controls should use Twinwatch labels")
 	_check(String(ui.status_label.text).contains("Twinwatch Bastion"), "status header should expose Twinwatch")
 	_check(String(ui.layout_lens_label.text).contains("Spatial rule [INACTIVE]") and String(ui.layout_lens_label.text).contains("both marked bastions"), "Preparation should explain the inactive paired-watch rule")
+	var inactive_badge: Dictionary = ui.keep_canvas.spatial_rule_badge_snapshot()
+	_check(bool(inactive_badge.get("visible", false)) and not bool(inactive_badge.get("active", true)) and String(inactive_badge.get("text", "")) == "STAFF BOTH POSTS", "Twinwatch should expose one compact inactive spatial-rule badge")
 
 	ui.keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
 	ui.keep.open_pack("runner_network")
@@ -37,6 +39,8 @@ func _initialize() -> void:
 	ui._refresh_ui()
 	await process_frame
 	_check(String(ui.layout_lens_label.text).contains("Spatial rule [ACTIVE]"), "Preparation should show when both bastions are staffed")
+	var active_badge: Dictionary = ui.keep_canvas.spatial_rule_badge_snapshot()
+	_check(bool(active_badge.get("active", false)) and String(active_badge.get("text", "")) == "BOTH POSTS STAFFED", "Twinwatch's board badge should confirm the active paired-post rule")
 	_check(String(ui.keep.keep_definition().get("visual", {}).get("terrain", "")) == "ridge", "Twinwatch board should select the ridge visual grammar")
 	var serialized_before: String = JSON.stringify(ui.keep.serialize())
 	ui.keep_canvas.queue_redraw()

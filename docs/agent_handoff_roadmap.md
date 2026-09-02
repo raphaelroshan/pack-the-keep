@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
 **Document status:** Early Access roadmap and P66 authored-foley follow-up implemented
-**Current development baseline:** `0.55.0-phase-framing`; all investment and Early Access gates are implemented, keep plans and doctrine cards remain synchronized, navigation and phase-specific headers truthfully frame the current decision, every major phase has save/resume evidence, and all prior gates remain enforced; optional human evidence and owner distribution approval remain pending
+**Current development baseline:** `0.56.0-tactical-labels`; all investment and Early Access gates are implemented, keep plans and doctrine cards remain synchronized, navigation and phase-specific headers truthfully frame the current decision, tactical board labels use bounded composed badges, every major phase has save/resume evidence, and all prior gates remain enforced; optional human evidence and owner distribution approval remain pending
 **Release posture:** CI-verified public repository with owner-controlled merges; no public alpha release or storefront claim yet
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store
@@ -143,6 +143,9 @@ Milestones must be completed in order. An agent may split a milestone into small
 | P64 | Implemented | Seven original 32×32 silhouettes replace every active Greywatch Tiny Dungeon room prop while preserving low opacity, fitted labels, tactical overlays, and quiet yard/wall space. | Preserve this bounded room vocabulary; replace temporary effects and foley only through separate reviewed passes. |
 | P65 | Implemented | Eight original 48×48 marks replace active Particle Pack combat, room-damage, breach, and repair textures while preserving effect timing, tint, reduced-motion behavior, and procedural fallback. | Preserve the presentation-only boundary. |
 | P66 | Implemented | Fourteen reproducible original mono WAV cues replace active temporary Interface Sounds/RPG Audio samples while preserving semantic IDs, pooling, mute/volume behavior, headless operation, and generated-tone fallback. | Use human P16 listening evidence to tune the mix without changing simulation authority. |
+| P67 | Implemented | Preparation enters on the keep-authored first-plan doctrine, manual pack browsing remains stable, and top navigation distinguishes the current phase from Settings. | Preserve plan/card synchronization and navigation truthfulness. |
+| P68 | Implemented | One read-only projection gives War Council, Preparation, ready/paused/live Assault, Recovery, and terminal Results distinct decision framing. | Keep phase wording derived from authoritative state. |
+| P69 | Implemented | Focus and contact timing compose into one bounded threat badge; keep-specific spatial rules occupy a backed upper-board plate instead of tactical cells. | Preserve map-first legibility as combat effects and content evolve. |
 | PTK-EA-1 | Implemented | A machine-readable gate inventories the Early Access floor and proves Greywatch's room graph, approach breadth, recovery identity, viable plans, contextual tutorial, full multi-wave journey, responsive/input/save coverage, presentation evidence, and asset provenance. | Begin PTK-EA-2 as a complete Ash Ford keep slice; do not claim the overall Early Access floor yet. |
 
 P13 onward are planning identifiers, not permission to release automatically. Every milestone still requires local validation, CI, visual review, and explicit human approval before external distribution. The existing P5–P12 sections below remain useful as acceptance contracts, but agents must not re-implement them unless a regression or refactor explicitly requires it.

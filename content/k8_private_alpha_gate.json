@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.55.0-phase-framing",
+  "build_version": "0.56.0-tactical-labels",
   "status": "automated_candidate",
   "release_ready": false,
   "public_alpha_ready": false,
