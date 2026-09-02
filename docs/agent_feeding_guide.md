@@ -185,3 +185,10 @@ Before adding broader content, read [`early_access_requirements.md`](early_acces
 Do not make human testing a prerequisite. Use headless state tests, deterministic replay, complete-flow launches, 1280×720 and 1600×900 layout checks, large-text/controller/reduced-motion checks, save boundaries, screenshots, and known-limitations notes as the active gates. No new unit or enemy should be a cosmetic reskin with no distinct defensive question.
 
 The recommended feeds are **PTK-EA-1** Greywatch completion, **PTK-EA-2** second keep, **PTK-EA-3** third keep and commander lens, **PTK-EA-4** enemy/counter breadth, **PTK-EA-5** events and mastery, and **PTK-EA-6** release hardening.
+
+
+## Investment-evaluation feed
+
+Read [`investment_evaluation_roadmap.md`](investment_evaluation_roadmap.md) before adding further breadth. The investment standard requires a complete Greywatch creative vertical: commander/keep choice, doctrine pack, visible placement plan, forecast, live auto-battle, one intervention, recoverable damage, and causal Results. The game must then prove that a second keep changes spatial priorities rather than merely changing labels.
+
+Issue the feeds in order: **PTK-I1** lock Greywatch as the creative vertical; **PTK-I2** add a mechanically distinct second keep; **PTK-I3** expand commander and pack expression; **PTK-I4** add enemy questions with visible counters; **PTK-I5** complete the campaign loop; **PTK-I6** harden the Early Access package. Do not add more enemies, packs, or decorative density while the first defense plan is hard to read. Human testing is optional and must not block implementation.
