@@ -61,6 +61,25 @@ func _initialize() -> void:
 		failures.append("primary readiness action should begin continuous playback")
 	if ui.focused_enemy_index != ui._priority_enemy_index() or ui.focused_enemy_index < 0 or not String(ui.response_preview_label.text).contains("FOCUSED"):
 		failures.append("live battle did not begin with the highest-priority threat and a populated response preview")
+	var badge_state_before: String = JSON.stringify(ui.keep.serialize())
+	var badge_step_before: int = ui.keep.battle_step
+	var badge_clock_before: float = ui.keep.battle_clock
+	var approach_badge: Dictionary = ui.keep_canvas.enemy_status_badge_snapshot(ui.focused_enemy_index)
+	if not bool(approach_badge.get("visible", false)) or not String(approach_badge.get("text", "")).begins_with("FOCUS · T"):
+		failures.append("focused approaching threat did not compose focus and contact timing into one badge")
+	var badge_rect: Rect2 = approach_badge.get("rect", Rect2())
+	if badge_rect.intersects(approach_badge.get("actor_rect", Rect2())) or badge_rect.intersects(approach_badge.get("health_rect", Rect2())) or badge_rect.end.y > ui.keep_canvas.ASSAULT_TIMELINE_TOP - 4.0:
+		failures.append("focused threat badge overlapped its actor, health bar, or assault timeline")
+	var badge_arrival_step: int = int(ui.keep.enemies[ui.focused_enemy_index].get("arrival_step", 1))
+	ui.keep.battle_step = badge_arrival_step
+	ui.keep.battle_clock = 0.0
+	var contact_badge: Dictionary = ui.keep_canvas.enemy_status_badge_snapshot(ui.focused_enemy_index)
+	if String(contact_badge.get("text", "")) != "FOCUS · CONTACT" or not bool(contact_badge.get("in_contact", false)):
+		failures.append("focused contact threat did not collapse to one FOCUS · CONTACT badge")
+	ui.keep.battle_step = badge_step_before
+	ui.keep.battle_clock = badge_clock_before
+	if JSON.stringify(ui.keep.serialize()) != badge_state_before:
+		failures.append("threat badge projection mutated authoritative state")
 	if ui.enemy_option.selected < 0 or int(ui.enemy_option.get_item_metadata(ui.enemy_option.selected)) != ui.focused_enemy_index:
 		failures.append("automatic threat focus did not synchronize the enemy dropdown")
 	var watch_state_before: String = JSON.stringify(ui.keep.serialize())

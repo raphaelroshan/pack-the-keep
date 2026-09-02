@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.55.0-phase-framing` — all investment and Early Access gates remain enforced; first plans, doctrine cards, active navigation, and phase-specific decision framing stay coherent while all-phase save/replay, cross-keep continuation, accessibility, package, forced-close, and original-asset evidence remain green; human sessions and owner distribution approval remain pending
+**Current build identity:** `0.56.0-tactical-labels` — all investment and Early Access gates remain enforced; first plans, doctrine cards, active navigation, phase-specific decision framing, and bounded tactical labels stay coherent while all-phase save/replay, cross-keep continuation, accessibility, package, forced-close, and original-asset evidence remain green; human sessions and owner distribution approval remain pending
 
 ## Purpose
 
