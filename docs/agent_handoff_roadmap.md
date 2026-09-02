@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
 **Document status:** Early Access roadmap and P66 authored-foley follow-up implemented
-**Current development baseline:** `0.54.0-plan-coherence`; PTK-I1 through PTK-I6 and PTK-EA-1 through PTK-EA-6 are implemented, each keep owns a distinct visible first plan whose doctrine card stays synchronized, the active screen is explicit in navigation, every major phase has save/resume evidence, cross-keep consequence continuation is verified, and all prior gates remain enforced; optional human evidence and owner distribution approval remain pending
+**Current development baseline:** `0.55.0-phase-framing`; all investment and Early Access gates are implemented, keep plans and doctrine cards remain synchronized, navigation and phase-specific headers truthfully frame the current decision, every major phase has save/resume evidence, and all prior gates remain enforced; optional human evidence and owner distribution approval remain pending
 **Release posture:** CI-verified public repository with owner-controlled merges; no public alpha release or storefront claim yet
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store

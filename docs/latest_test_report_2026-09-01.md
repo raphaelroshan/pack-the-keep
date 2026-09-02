@@ -2,13 +2,13 @@
 
 | Field | Result |
 | --- | --- |
-| Build | `0.54.0-plan-coherence` |
+| Build | `0.55.0-phase-framing` |
 | Local engine | Godot 4.7.2, headless Dummy audio |
 | Complete verification | PASS |
 | Runtime catalog | PASS: 3 keeps, 1 region, 29 pieces, 15 packs, 4 commanders, 12 enemies, 14 doctrines, 20 scenarios, 14 events, 2 modifiers |
 | Scenario matrix | PASS: 228 viable cases and 456 uninterrupted/resumed simulations |
 | Outcome distribution | 216 held, 12 partial breach, 0 collapse |
-| Performance budget | PASS: 40 runs in 5824 ms; 120 large-text UI refreshes in 259 ms |
+| Performance budget | PASS: 40 runs in 3391 ms; 120 large-text UI refreshes in 268 ms |
 | Responsive decision follow-up | PASS: 1280×720 at 125% keeps Enter Keep and both next-choice controls in the first viewport; 1600×900 at 100% retains the full overview and two-column rail; 1280×720 at 150% keeps focused primary actions visible; Preparation carries the commander/defense/keep relationship and authored question without state mutation |
 | Actor readability | PASS: all active defender and enemy profiles resolve original board-scale silhouettes; role identity and tactical overlays remain in the read-only presentation; unknown profiles retain procedural fallback |
 | Authored audio feedback | PASS: all fourteen semantic cues resolve distinct reproducible original WAV assets; output uses a bounded four-player pool; mute/zero-volume suppression, generated-tone fallback, and simulation non-mutation remain covered |

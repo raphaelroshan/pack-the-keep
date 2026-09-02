@@ -17,6 +17,7 @@ const PreparationPresentationSnapshotView = preload("res://src/ui/preparation_pr
 const WarCouncilPresentationSnapshotView = preload("res://src/ui/war_council_presentation_snapshot.gd")
 const RecoveryPresentationSnapshotView = preload("res://src/ui/recovery_presentation_snapshot.gd")
 const ResultsPresentationSnapshotView = preload("res://src/ui/results_presentation_snapshot.gd")
+const PhaseHeaderSnapshotView = preload("res://src/ui/phase_header_snapshot.gd")
 const PresentationAuditOverlayView = preload("res://src/ui/presentation_audit_overlay.gd")
 
 const PackKeepState = preload("res://src/core/keep_state.gd")
@@ -156,6 +157,7 @@ var preparation_presentation_snapshot: Dictionary = {}
 var war_council_presentation_snapshot: Dictionary = {}
 var recovery_presentation_snapshot: Dictionary = {}
 var results_presentation_snapshot: Dictionary = {}
+var phase_header_snapshot: Dictionary = {}
 var presentation_audit_overlay: PresentationAuditOverlay
 var navigation_confirm_layer: Control
 var navigation_confirm_label: Label
@@ -2103,18 +2105,6 @@ func _set_screen(next_screen: String) -> void:
 	_set_group_visibility(run_controls, gameplay_screen)
 	_set_group_visibility(settings_controls, screen == "settings")
 	_set_group_visibility(event_controls, screen in ["preparation", "results"] and keep != null and not keep.active_event_id.is_empty())
-	if screen_label:
-		screen_label.text = "PACK THE KEEP / %s" % ({"title": "Main Menu", "setup": "War Council", "preparation": "Fortress", "battle": "Assault", "results": "Aftermath", "settings": "Settings"}.get(screen, screen.capitalize()))
-	if main_title_label:
-		if screen == "setup":
-			main_title_label.text = "WAR COUNCIL"
-			main_subtitle_label.text = "Choose who leads, what pressure approaches, and what the keep must preserve."
-		elif screen == "settings":
-			main_title_label.text = "SETTINGS & ACCESSIBILITY"
-			main_subtitle_label.text = "Tune readability and input without touching the simulation."
-		else:
-			main_title_label.text = "%s — %s" % [String(keep.keep_definition().get("name", "The Keep")).to_upper(), {"preparation": "FORTRESS", "battle": "ASSAULT", "results": "AFTERMATH"}.get(screen, screen.to_upper())]
-			main_subtitle_label.text = "Build a visible answer, read the pressure, and preserve a way to recover."
 	if command_panel_title:
 		command_panel_title.text = "MAKE THE RECOVERY CHOICE" if screen == "results" and keep != null and not keep.active_event_id.is_empty() else {
 			"setup": "WAR COUNCIL", "preparation": "BUILD & ASSIGN",
@@ -2129,22 +2119,7 @@ func _set_screen(next_screen: String) -> void:
 			"results": "Use the two recovery actions deliberately. The next assault phase resumes only after explicit confirmation.",
 			"settings": "Every option here is presentation-only and remains separate from authoritative run state."
 		}.get(screen, "Tab/D-pad moves focus. Enter/A confirms.")
-	if screen_hint:
-		if screen == "setup":
-			screen_hint.text = "WAR COUNCIL  ›  FORTRESS  ›  ASSAULT  ›  AFTERMATH"
-		elif screen == "preparation":
-			screen_hint.text = "Spend materials, place defenders, and read the forecast."
-		elif screen == "battle":
-			screen_hint.text = "The assault is live. Pause to inspect before spending command."
-		elif screen == "results":
-			if keep and keep.repair_interval_active and keep.has_next_wave():
-				screen_hint.text = "Repair or assign during the lull, then release the next assault phase."
-			else:
-				screen_hint.text = "Read why the keep held or failed, then choose the next defense."
-		elif screen == "settings":
-			screen_hint.text = "Presentation settings are saved separately from the run."
-		else:
-			screen_hint.text = "A compact two-floor defense about pressure and recovery."
+	_refresh_phase_header()
 	_refresh_ui()
 	_refresh_navigation()
 	_apply_responsive_layout()
@@ -2247,6 +2222,19 @@ func _refresh_navigation() -> void:
 		menu_buttons[target].disabled = target != "settings" or target == screen
 		menu_buttons[target].modulate = Color.WHITE
 		_style_navigation_button(menu_buttons[target], target == screen, target == "settings")
+
+func _refresh_phase_header() -> void:
+	if keep == null:
+		return
+	phase_header_snapshot = PhaseHeaderSnapshotView.build(keep, screen, battle_paused, assault_ready_reason)
+	if main_title_label != null:
+		main_title_label.text = String(phase_header_snapshot.get("title", "PACK THE KEEP"))
+	if main_subtitle_label != null:
+		main_subtitle_label.text = String(phase_header_snapshot.get("subtitle", ""))
+	if screen_label != null:
+		screen_label.text = String(phase_header_snapshot.get("screen_label", "PACK THE KEEP"))
+	if screen_hint != null:
+		screen_hint.text = String(phase_header_snapshot.get("hint", ""))
 
 func _on_navigation_requested(target: String) -> void:
 	if target == "settings":
@@ -3788,14 +3776,6 @@ func _refresh_terminal_debrief() -> void:
 	_apply_responsive_layout()
 	if tutorial.active and tutorial.expected_action() in ["finish_tutorial", "retry_phase"]:
 		tutorial_continue_button.visible = false
-	if main_title_label != null:
-		main_title_label.text = "%s — FINAL DEBRIEF" % String(keep.keep_definition().get("name", "The Keep")).to_upper()
-	if main_subtitle_label != null:
-		main_subtitle_label.text = "The fort remains beside the report: read the cost, the cause, and the next experiment."
-	if screen_label != null:
-		screen_label.text = "PACK THE KEEP / Final Debrief"
-	if screen_hint != null:
-		screen_hint.text = "The defense is complete. Review the evidence before choosing the next attempt."
 	if became_visible:
 		call_deferred("_focus_terminal_debrief")
 
@@ -3848,6 +3828,7 @@ func _refresh_war_council_cards() -> void:
 	war_council_choice_panel.render(war_council_presentation_snapshot)
 
 func _refresh_ui() -> void:
+	_refresh_phase_header()
 	_refresh_tutorial_panel()
 	_refresh_room_options()
 	_refresh_preparation_presentation()

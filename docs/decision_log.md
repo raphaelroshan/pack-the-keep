@@ -1015,3 +1015,11 @@
 **Reason:** The investment captures showed Ash Ford's completed Runner Network plan beside a Pike Line offer and made the always-actionable Settings button look like the current phase. Both contradictions weaken trust in otherwise correct information.
 
 **Trade-off:** Phase entry chooses a sensible initial card, but subsequent player browsing remains untouched by refreshes. The top phase labels remain breadcrumbs rather than arbitrary navigation, preserving the existing unsaved-run safety model.
+
+## ADR-128: Phase framing is a read-only screen projection
+
+**Decision:** Derive the main gameplay title and subtitle from a dedicated `PhaseHeaderSnapshot` using only current screen and authoritative state. Refresh it alongside other presentation snapshots; retain the terminal debrief as a specialized result of the same projection.
+
+**Reason:** The live Assault capture still displayed Preparation-era instruction, weakening phase identity despite correct battle controls below it. A small projection gives every phase one truthful sentence and prevents stateful wording from scattering further through the main controller.
+
+**Trade-off:** The header summarizes the current decision rather than every mechanic or event. Detailed forecast, response, recovery, and debrief panels remain the source for exact consequences.
