@@ -18,6 +18,8 @@ func _initialize() -> void:
 	ui.save_backup_path = "user://p46_navigation.save.bak"
 
 	ui._on_start_quick_playtest()
+	_check(ui.menu_buttons.setup.disabled and ui.menu_buttons.setup.get_theme_color("font_disabled_color") == Color("#f1d28e"), "War Council should have the distinct active navigation treatment")
+	_check(not ui.menu_buttons.settings.disabled and ui.menu_buttons.settings.get_theme_stylebox("normal").bg_color.a < 0.01, "Settings should remain available without appearing selected")
 	ui._on_back_requested()
 	_check(ui.screen == "title" and not ui.navigation_confirm_layer.visible, "War Council back should return directly to Main Menu")
 
@@ -42,7 +44,9 @@ func _initialize() -> void:
 	_check(ui.screen == "setup" and not ui.keep.scenario_active, "confirmed leave should reset the in-memory run and return to War Council")
 
 	ui._on_confirm_setup()
+	_check(ui.menu_buttons.preparation.get_theme_color("font_disabled_color") == Color("#f1d28e"), "Fortress should become the active navigation phase")
 	ui._on_open_settings()
+	_check(ui.menu_buttons.settings.disabled and ui.menu_buttons.settings.get_theme_color("font_disabled_color") == Color("#f1d28e"), "Settings should receive the active treatment only on its own screen")
 	ui._on_back_requested()
 	_check(ui.screen == "preparation" and not ui.navigation_confirm_layer.visible, "Settings back should return directly to its originating screen")
 	ui._on_save()
