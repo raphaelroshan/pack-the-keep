@@ -4,11 +4,12 @@ extends PanelContainer
 var question_label: Label
 var answer_label: Label
 var weakness_label: Label
+var plan_label: Label
 var summary_row: BoxContainer
 
 func _init() -> void:
 	name = "PreparationBriefPanel"
-	custom_minimum_size = Vector2(800, 104)
+	custom_minimum_size = Vector2(800, 158)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = Color("#20252c")
@@ -20,17 +21,26 @@ func _init() -> void:
 	style.content_margin_top = 9
 	style.content_margin_bottom = 9
 	add_theme_stylebox_override("panel", style)
+	var stack: VBoxContainer = VBoxContainer.new()
+	stack.add_theme_constant_override("separation", 8)
+	add_child(stack)
 	summary_row = BoxContainer.new()
 	summary_row.add_theme_constant_override("separation", 12)
-	add_child(summary_row)
+	stack.add_child(summary_row)
 	question_label = _column(summary_row, "CURRENT QUESTION", Color("#8fc6d1"))
 	answer_label = _column(summary_row, "VISIBLE ANSWER", Color("#bfe8cf"))
 	weakness_label = _column(summary_row, "OPEN WEAKNESS", Color("#e7bd72"))
+	plan_label = Label.new()
+	plan_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	plan_label.add_theme_font_size_override("font_size", 12)
+	plan_label.add_theme_color_override("font_color", Color("#f1d6a3"))
+	stack.add_child(plan_label)
 
 func render(view_model: Dictionary) -> void:
 	question_label.text = "CURRENT QUESTION\n%s" % String(view_model.get("question", "Read the next pressure."))
 	answer_label.text = "VISIBLE ANSWER\n%s" % String(view_model.get("answer", "No defense placed yet."))
 	weakness_label.text = "OPEN WEAKNESS\n%s" % String(view_model.get("weakness", "The keep still needs a committed answer."))
+	plan_label.text = String(view_model.get("plan", "FIRST PLAN — Choose one readable opening."))
 
 func set_responsive_layout(compact: bool, available_width: float) -> void:
 	custom_minimum_size.x = minf(800.0, maxf(0.0, available_width))
@@ -39,6 +49,7 @@ func set_responsive_layout(compact: bool, available_width: float) -> void:
 	for label in [question_label, answer_label, weakness_label]:
 		label.custom_minimum_size.x = column_width
 		label.custom_minimum_size.y = 0.0 if compact else 76.0
+	plan_label.custom_minimum_size.y = 0.0 if compact else 48.0
 
 func _column(row: BoxContainer, heading: String, color: Color) -> Label:
 	var label: Label = Label.new()

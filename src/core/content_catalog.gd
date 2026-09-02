@@ -246,7 +246,7 @@ const REQUIRED_DOCTRINE_FIELDS: Array[String] = [
 	"counter_families"
 ]
 
-const REQUIRED_KEEP_FIELDS: Array[String] = ["id", "content_version", "status", "name", "short_role", "question", "grid_size", "rooms", "connections", "spatial_rule", "recovery_profile", "visual"]
+const REQUIRED_KEEP_FIELDS: Array[String] = ["id", "content_version", "status", "name", "short_role", "question", "grid_size", "rooms", "connections", "spatial_rule", "starter_plan", "recovery_profile", "visual"]
 const REQUIRED_ROOM_FIELDS: Array[String] = ["name", "floor", "origin", "size", "critical", "role"]
 const REQUIRED_REGION_FIELDS: Array[String] = ["id", "content_version", "status", "name", "need", "route", "consequences"]
 const REQUIRED_REGION_CONSEQUENCE_FIELDS: Array[String] = ["id", "settlement_status", "route_status", "minimum_anchor_condition", "requires_non_collapse", "next_run_materials", "summary"]
@@ -314,6 +314,7 @@ func load_default(known_room_ids: Array = []) -> Dictionary:
 		_load_piece(path, runtime_room_ids, _known_piece_targets())
 	for path in PACK_PATHS:
 		_load_pack(path, piece_ids())
+	_validate_keep_starter_plan_references()
 	for path in COMMANDER_PATHS:
 		_load_commander(path)
 	for path in ENEMY_PATHS:
@@ -798,6 +799,34 @@ func validate_keep_definition(keep: Dictionary, expected_id: String) -> Array[St
 		if not anchors is Array or anchors.size() != 2 or String(anchors[0]) == String(anchors[1]) or not rooms.has(String(anchors[0])) or not rooms.has(String(anchors[1])) or int(spatial_rule.get("room_damage_reduction", 0)) < 1:
 			validation_errors.append("keep %s paired_bastions needs two distinct known anchor rooms and positive room damage reduction" % keep_id)
 	var recovery: Variant = keep.get("recovery_profile")
+	var starter_plan: Variant = keep.get("starter_plan")
+	if not starter_plan is Dictionary:
+		validation_errors.append("keep %s has an invalid starter_plan" % keep_id)
+	else:
+		for field in ["title", "pack_id", "intent", "tradeoff"]:
+			if not starter_plan.get(field) is String or String(starter_plan.get(field, "")).strip_edges().is_empty():
+				validation_errors.append("keep %s starter_plan needs non-empty %s" % [keep_id, field])
+		var placements: Variant = starter_plan.get("placements")
+		if not placements is Array or placements.size() < 2:
+			validation_errors.append("keep %s starter_plan needs at least two placements" % keep_id)
+		else:
+			var planned_piece_ids: Array[String] = []
+			for placement in placements:
+				if not placement is Dictionary:
+					validation_errors.append("keep %s starter_plan has a malformed placement" % keep_id)
+					continue
+				var piece_id: String = String(placement.get("piece_id", ""))
+				if not _is_snake_case_id(piece_id) or planned_piece_ids.has(piece_id):
+					validation_errors.append("keep %s starter_plan has an invalid or duplicate piece: %s" % [keep_id, piece_id])
+				else:
+					planned_piece_ids.append(piece_id)
+				var plan_origin: Variant = placement.get("origin")
+				if not plan_origin is Array or plan_origin.size() != 2 or not _is_integer_number(plan_origin[0]) or not _is_integer_number(plan_origin[1]) or int(plan_origin[0]) < 0 or int(plan_origin[0]) >= 12 or int(plan_origin[1]) < 0 or int(plan_origin[1]) >= 8:
+					validation_errors.append("keep %s starter_plan placement %s has an invalid origin" % [keep_id, piece_id])
+				if not ["ground", "upper"].has(String(placement.get("floor", ""))):
+					validation_errors.append("keep %s starter_plan placement %s has an invalid floor" % [keep_id, piece_id])
+				if not placement.get("reason") is String or String(placement.get("reason", "")).strip_edges().is_empty():
+					validation_errors.append("keep %s starter_plan placement %s needs a reason" % [keep_id, piece_id])
 	if not recovery is Dictionary or not _is_integer_number(recovery.get("room_repair_materials")) or int(recovery.get("room_repair_materials", 0)) < 1 or not _is_integer_number(recovery.get("room_repair_condition")) or int(recovery.get("room_repair_condition", 0)) < 1 or int(recovery.get("room_repair_condition", 0)) > 100 or not recovery.get("question") is String or String(recovery.get("question", "")).strip_edges().is_empty():
 		validation_errors.append("keep %s has an invalid recovery_profile" % keep_id)
 	var visual: Variant = keep.get("visual")
@@ -1568,6 +1597,33 @@ func _validate_scenario_event_references() -> void:
 				if String(_events[event_id].get("follow_up", "")) != expected_follow_up:
 					errors.append("scenario %s event %s follow_up does not match chain order" % [scenario_id, event_id])
 
+func _validate_keep_starter_plan_references() -> void:
+	for keep_id_value in _keeps.keys():
+		var keep_id: String = String(keep_id_value)
+		var plan: Dictionary = _keeps[keep_id].get("starter_plan", {})
+		var pack_id: String = String(plan.get("pack_id", ""))
+		if not _packs.has(pack_id):
+			errors.append("keep %s starter_plan references unknown pack: %s" % [keep_id, pack_id])
+			continue
+		var pack_contents: Array = _packs[pack_id].get("contents", [])
+		for placement in plan.get("placements", []):
+			var piece_id: String = String(placement.get("piece_id", ""))
+			if not _pieces.has(piece_id):
+				errors.append("keep %s starter_plan references unknown piece: %s" % [keep_id, piece_id])
+				continue
+			var piece: Dictionary = _pieces[piece_id]
+			if String(piece.get("availability", "")) != "starter" and not pack_contents.has(piece_id):
+				errors.append("keep %s starter_plan piece %s is not starter or in pack %s" % [keep_id, piece_id, pack_id])
+			var floor_id: String = String(placement.get("floor", ""))
+			if not piece.get("allowed_floors", []).has(floor_id):
+				errors.append("keep %s starter_plan piece %s cannot use floor %s" % [keep_id, piece_id, floor_id])
+			var origin_value: Variant = placement.get("origin", Vector2i.ZERO)
+			var origin: Vector2i = origin_value if origin_value is Vector2i else Vector2i(int(origin_value[0]), int(origin_value[1]))
+			var footprint_value: Variant = piece.get("footprint", Vector2i.ONE)
+			var footprint: Vector2i = footprint_value if footprint_value is Vector2i else Vector2i(int(footprint_value[0]), int(footprint_value[1]))
+			if origin.x + footprint.x > 12 or origin.y + footprint.y > 8:
+				errors.append("keep %s starter_plan piece %s exceeds the board" % [keep_id, piece_id])
+
 func _validate_modifier_unlock_events() -> void:
 	for modifier_id in modifier_ids():
 		var unlock_event: String = String(_modifiers[modifier_id].get("unlock_event", ""))
@@ -1639,6 +1695,15 @@ func _normalize_keep(authored: Dictionary) -> Dictionary:
 		lane_cells.append(Vector2i(int(cell[0]), int(cell[1])))
 	spatial_rule.lane_cells = lane_cells
 	runtime.spatial_rule = spatial_rule
+	var starter_plan: Dictionary = authored.get("starter_plan", {}).duplicate(true)
+	var normalized_placements: Array[Dictionary] = []
+	for placement_value in starter_plan.get("placements", []):
+		var placement: Dictionary = placement_value.duplicate(true)
+		var plan_origin: Array = placement.get("origin", [0, 0])
+		placement.origin = Vector2i(int(plan_origin[0]), int(plan_origin[1]))
+		normalized_placements.append(placement)
+	starter_plan.placements = normalized_placements
+	runtime.starter_plan = starter_plan
 	return runtime
 
 func _is_integer_number(value: Variant) -> bool:

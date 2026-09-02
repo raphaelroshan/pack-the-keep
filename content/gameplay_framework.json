@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.52.0-authored-foley",
+  "framework_version": "0.53.0-investment-vertical",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -54,7 +54,7 @@
   "v082_testability": {
     "status": "implemented",
     "first_run_guidance": ["preparation_steps", "battle_readability", "results_recovery"],
-    "recommended_layout": "fixed_explainable_starter_placements_through_authoritative_place_piece_api",
+    "recommended_layout": "keep_authored_first_plan_through_authoritative_pack_opening_and_place_piece_apis",
     "combat_readability": ["newest_first_event_feed", "causal_result_metrics", "outcome_interpretation"],
     "determinism_rule": "guidance_event_feed_and_result_explanation_read_state_without_mutating_authoritative_outcomes"
   },

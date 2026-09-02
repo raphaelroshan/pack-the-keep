@@ -983,3 +983,27 @@
 **Reason:** Audio is the last active borrowed presentation family. A small purpose-built palette can make warning, contact, combat, repair, command, and terminal outcomes feel like one keep while remaining reproducible, reviewable, and independent of simulation authority.
 
 **Trade-off:** Deterministic synthesis provides a coherent first-party baseline rather than a final professionally recorded mix. Human listening and device review remain pending, and the archived CC0 kit stays available as historical provenance without being referenced by current cue profiles.
+
+## ADR-124: Each keep owns an optional first-plan recipe
+
+**Decision:** Add a validated `starter_plan` to every keep definition. The recipe names one recommended pack and ordered placements, while the existing pack-opening and placement methods remain the only way the UI may apply it.
+
+**Reason:** The investment review found that Preparation's first complete answer was difficult to discover and the existing helper used one hard-coded Greywatch layout everywhere. Keep-owned recipes let Greywatch teach adjacency, Ash Ford preserve its causeway, and Twinwatch staff both posts through the same authoritative rules.
+
+**Trade-off:** One-click application spends normal materials and a pack opening, so it is an explicit player action and may partially apply if the player has already occupied a planned cell. It is a reversible opening suggestion, not a hidden bonus or guaranteed solution.
+
+## ADR-125: Investment completion composes existing proof
+
+**Decision:** Add an ordered `investment_progress.json` ledger whose validator references the existing Early Access fixtures, captures, matrices, package checks, and the new first-plan and phase-boundary tests.
+
+**Reason:** PR #108 reframes the shipped breadth as six investment gates. Re-running or duplicating every proven mechanic would create drift; a strict composition ledger makes each requirement traceable while adding targeted coverage only where the audit found a real gap.
+
+**Trade-off:** The ledger proves repository evidence and deterministic behavior, not enjoyment or market fit. Human review stays pending and owner approval remains a separate distribution requirement.
+
+## ADR-126: Campaign continuation preserves bounded regional state
+
+**Decision:** Treat the existing terminal return, clean run reset, scenario selection, and one-shot Low Mill support as the campaign continuation seam. Verify that a completed Greywatch result can start a different keep with its consequence applied once, without adding a parallel campaign economy.
+
+**Reason:** PTK-I5 asks for consequence and another keep without grind. Those behaviors already exist in authoritative state; the missing piece is an end-to-end contract proving that the UI flow preserves and consumes them correctly.
+
+**Trade-off:** This remains a compact scenario campaign rather than a branching world map. Broader persistence and progression can extend the same regional state only after the vertical is validated.

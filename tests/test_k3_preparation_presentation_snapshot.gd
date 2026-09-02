@@ -28,7 +28,7 @@ func _initialize() -> void:
 
 	var offer: Dictionary = first.get("pack_offer", {})
 	_check(bool(offer.get("ok", false)) and String(offer.get("name", "")) == "Pike Line", "snapshot should expose the selected doctrine pack identity")
-	_check(String(offer.get("state", "")) == "AVAILABLE" and bool(offer.get("can_open", false)), "initial Pike Line offer should expose its authoritative available action")
+	_check(String(offer.get("state", "")) == "OPENED" and not bool(offer.get("can_open", true)), "guided Preparation should show that the first plan opened Pike Line authoritatively")
 	_check(String(offer.get("pieces", "")).contains("Pike Squad") and String(offer.get("strength", "")).contains("Gate pressure"), "pack snapshot should retain contents and strategic strength")
 
 	var brief: Dictionary = first.get("brief", {})

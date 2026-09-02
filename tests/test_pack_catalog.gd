@@ -46,6 +46,14 @@ func _initialize() -> void:
 	var doctrine_errors: Array[String] = catalog.validate_doctrine_definition(malformed_doctrine, "wrong_filename", catalog.enemy_ids())
 	_check(doctrine_errors.size() >= 4, "catalog validator did not reject missing fields, ID mismatch, enemy references, and incomplete counters")
 	_check(catalog.keep_ids() == ["greywatch_keep", "ash_ford_redoubt", "twinwatch_bastion"], "keep catalog order or active IDs changed")
+	var greywatch_keep: Dictionary = catalog.keep_definition("greywatch_keep")
+	_check(String(greywatch_keep.get("starter_plan", {}).get("title", "")) == "Layer the gate road" and greywatch_keep.get("starter_plan", {}).get("placements", []).size() == 2, "Greywatch should expose its complete authored first plan")
+	var malformed_keep: Dictionary = greywatch_keep.duplicate(true)
+	malformed_keep.starter_plan.title = ""
+	malformed_keep.starter_plan.placements[1].piece_id = "pike_squad"
+	malformed_keep.starter_plan.placements[1].origin = [-1, 99]
+	var keep_errors: Array[String] = catalog.validate_keep_definition(malformed_keep, "greywatch_keep")
+	_check(keep_errors.size() >= 3, "keep validator did not reject empty plan text, duplicate pieces, and invalid plan origins")
 	_check(catalog.region_ids() == ["low_mill"], "regional catalog order or active IDs changed")
 	_check(catalog.scenario_ids() == ["gatehouse_lock", "wrong_wall", "open_yard_net", "relief_road", "red_banner_road", "ash_at_the_bell", "the_splintered_gate", "three_bells_at_dusk", "ash_ford_crossing", "the_cut_standard", "the_divided_bell", "before_the_horn", "the_unlit_stair", "the_twilight_road", "last_stand", "flood_mark", "broken_ferry", "millers_debt", "two_fires", "rimebound_relief"], "scenario catalog order or active IDs changed")
 	_check(catalog.event_ids() == ["relief_road_warning", "relief_road_recovery", "relief_road_report", "workshop_can_wait", "mara_second_door", "old_drain_opens", "the_bell_has_a_pattern", "the_gate_is_not_the_keep", "wrong_wall_report", "twilight_crossroads", "flood_mark_choice", "ferry_reckoning", "twinwatch_signal", "ridge_relief"], "event catalog order or active IDs changed")

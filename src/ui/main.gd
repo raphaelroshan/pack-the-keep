@@ -1506,8 +1506,8 @@ func _build_ui() -> void:
 	map_place_button.pressed.connect(_arm_selected_piece)
 	preparation_section.add_child(map_place_button)
 	var recommended_layout_button: Button = Button.new()
-	recommended_layout_button.text = "Use recommended starter layout"
-	recommended_layout_button.tooltip_text = "Places Pike Squad and Narrow Gate in a readable first-battle arrangement; each placement remains authoritative."
+	recommended_layout_button.text = "Apply this keep's first plan"
+	recommended_layout_button.tooltip_text = "Opens the named pack and places the authored opening through the normal material, pack, and placement rules."
 	recommended_layout_button.pressed.connect(_on_recommended_layout)
 	preparation_section.add_child(recommended_layout_button)
 	var remove_piece_button: Button = Button.new()
@@ -2355,7 +2355,7 @@ func _on_select_scenario() -> void:
 		_select_option_metadata(scenario_option, "gatehouse_lock")
 		_set_event("First Watch follows the Gatehouse Lock defense.")
 		return
-	var result: Dictionary = keep.select_scenario(_selected_id(scenario_option))
+	var result: Dictionary = keep.select_scenario(_selected_id(scenario_option), setup_confirmed)
 	_run_result(result, "Scenario")
 	_refresh_room_options()
 	_refresh_scenario_preview()
@@ -2592,6 +2592,12 @@ func _has_piece_id(piece_id: String) -> bool:
 			return true
 	return false
 
+func _has_piece_at_plan_location(piece_id: String, origin: Vector2i, floor_id: String) -> bool:
+	for instance in keep.pieces.values():
+		if String(instance.get("piece_id", "")) == piece_id and instance.get("origin", Vector2i(-1, -1)) == origin and String(instance.get("floor", "")) == floor_id:
+			return true
+	return false
+
 func _on_recommended_layout() -> void:
 	if not _tutorial_allows("recommended_layout"):
 		return
@@ -2601,27 +2607,41 @@ func _on_recommended_layout() -> void:
 	if keep.repair_interval_active:
 		_set_event("Recommended layout is locked during recovery. Finish the repair interval first.")
 		return
-	var placements: Array[Dictionary] = [
-		{"piece_id": "pike_squad", "origin": Vector2i(4, 5), "floor": "ground"},
-		{"piece_id": "narrow_gate", "origin": Vector2i(2, 5), "floor": "ground"}
-	]
+	var plan: Dictionary = keep.keep_definition().get("starter_plan", {})
+	if plan.is_empty():
+		_set_event("This keep has no authored first plan. Place a defense directly on the map.")
+		_refresh_ui()
+		return
+	var pack_id: String = String(plan.get("pack_id", ""))
+	var pack_result: Dictionary = {"ok": true}
+	if not keep.owned_packs.has(pack_id):
+		pack_result = keep.open_pack(pack_id)
+	var placements: Array = plan.get("placements", [])
 	var added: Array[String] = []
 	var blocked: Array[String] = []
 	for placement in placements:
 		var piece_id: String = String(placement.get("piece_id", ""))
-		if _has_piece_id(piece_id):
+		var origin_value: Variant = placement.get("origin", Vector2i.ZERO)
+		var origin: Vector2i = origin_value if origin_value is Vector2i else Vector2i(int(origin_value[0]), int(origin_value[1]))
+		var floor_id: String = String(placement.get("floor", "ground"))
+		if _has_piece_at_plan_location(piece_id, origin, floor_id):
 			continue
-		var result: Dictionary = keep.place_piece(piece_id, placement.get("origin", Vector2i.ZERO), String(placement.get("floor", "ground")))
+		if _has_piece_id(piece_id):
+			blocked.append("%s: already placed elsewhere" % String(keep.piece_definition(piece_id).get("name", piece_id)))
+			continue
+		var result: Dictionary = keep.place_piece(piece_id, origin, floor_id)
 		if bool(result.get("ok", false)):
 			added.append(String(keep.piece_definition(piece_id).get("name", piece_id)))
 		else:
 			blocked.append("%s: %s" % [String(keep.piece_definition(piece_id).get("name", piece_id)), String(result.get("reason", "blocked"))])
+	if not bool(pack_result.get("ok", false)):
+		blocked.push_front("%s: %s" % [String(keep.pack_definition(pack_id).get("name", pack_id)), String(pack_result.get("reason", "cannot open"))])
 	if added.is_empty() and blocked.is_empty():
-		_set_event("Recommended layout already placed. Modify it freely, then start the invasion when ready.")
+		_set_event("%s is already in place. Modify it freely, then start the invasion when ready." % String(plan.get("title", "The first plan")))
 	elif blocked.is_empty():
-		_set_event("Recommended layout placed: %s. You can modify it with direct map placement." % ", ".join(added))
+		_set_event("%s applied: %s. The stated trade-off remains yours to accept or revise." % [String(plan.get("title", "First plan")), ", ".join(added)])
 	else:
-		_set_event("Recommended layout partly applied: %s. Blocked: %s" % [", ".join(added) if not added.is_empty() else "none", "; ".join(blocked)])
+		_set_event("%s partly applied: %s. Blocked: %s" % [String(plan.get("title", "First plan")), ", ".join(added) if not added.is_empty() else "none", "; ".join(blocked)])
 	_refresh_ui()
 
 func _on_map_hovered(floor: String, cell: Vector2i) -> void:
@@ -3236,7 +3256,7 @@ func _start_tutorial() -> void:
 	_select_option_metadata(commander_option, "castellan")
 	keep.select_commander("castellan")
 	_select_option_metadata(scenario_option, "gatehouse_lock")
-	keep.select_scenario("gatehouse_lock")
+	keep.select_scenario("gatehouse_lock", false)
 	_select_option_metadata(doctrine_option, "gate_assault")
 	_set_screen("title")
 	_prepare_tutorial_step()
@@ -3524,7 +3544,7 @@ func _on_start_quick_playtest() -> void:
 	_select_option_metadata(commander_option, "castellan")
 	keep.select_commander("castellan")
 	_select_option_metadata(scenario_option, "gatehouse_lock")
-	keep.select_scenario("gatehouse_lock")
+	keep.select_scenario("gatehouse_lock", false)
 	_select_option_metadata(doctrine_option, "gate_assault")
 	_set_screen("setup")
 	_refresh_ui()
@@ -3534,7 +3554,7 @@ func _on_start_custom_setup() -> void:
 	_reset_for_setup()
 	guided_setup = false
 	keep.select_commander(_selected_id(commander_option))
-	keep.select_scenario(_selected_id(scenario_option))
+	keep.select_scenario(_selected_id(scenario_option), false)
 	_set_screen("setup")
 	_refresh_ui()
 
