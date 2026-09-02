@@ -36,8 +36,15 @@ func _initialize() -> void:
 	ui._refresh_result_explanation()
 	_check(JSON.stringify(ui.keep.serialize()) == before, "regional report inspection should not mutate or consume pending support")
 
-	ui.keep.reset_run(8201)
-	ui.keep.select_scenario("ash_ford_crossing")
+	ui.keep.pack_openings_this_preparation = 2
+	ui._on_start_custom_setup()
+	_check(ui.screen == "setup" and bool(ui.keep.regional_state.get("pending_support", false)), "returning to War Council should preserve pending support without spending it on the default preview")
+	_check(ui.keep.pack_openings_this_preparation == 0, "a clean campaign continuation should restore the new Preparation pack budget")
+	ui._select_option_metadata(ui.scenario_option, "ash_ford_crossing")
+	ui._on_select_scenario()
+	_check(ui.keep.keep_id == "ash_ford_redoubt" and bool(ui.keep.regional_state.get("pending_support", false)), "browsing another keep should update its board without consuming support")
+	ui._on_confirm_setup()
+	_check(ui.screen == "preparation" and not bool(ui.keep.regional_state.get("pending_support", true)), "entering the chosen keep should consume support exactly once")
 	ui._refresh_campaign_ledger()
 	_check(String(ui.campaign_ledger_label.text).contains("Support applied to Ash Ford Crossing: +3 starting materials"), "Ledger should show where one-shot support was consumed")
 

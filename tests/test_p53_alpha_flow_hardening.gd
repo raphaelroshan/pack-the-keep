@@ -85,12 +85,19 @@ func _initialize() -> void:
 	ui._refresh_ui()
 	await process_frame
 	_check(ui.screen == "preparation" and _inside_horizontal_viewport(ui.keep_canvas), "large-text Preparation should keep the fortress horizontally contained")
+	_save_reload_parity(ui, "preparation")
+	ui._refresh_ui()
 
 	ui._on_start_wave()
 	await process_frame
 	_check(ui.screen == "battle" and ui.battle_paused and not ui.assault_ready_reason.is_empty(), "Battle should open at the explicit readiness beat")
 	_check(root.gui_get_focus_owner() == ui.pause_button, "Battle readiness should focus the primary controller action")
 	_check(ui.last_cue_id == "warning" and String(ui.feedback_cue_label.text).contains("WARNING"), "muted assault start should retain a visible semantic warning")
+	ui._toggle_battle_pause()
+	ui._on_advance_wave()
+	_check(ui.keep.wave_active and ui.keep.battle_step == 1, "battle save boundary should use a live post-contact tick")
+	_save_reload_parity(ui, "live battle")
+	ui._refresh_ui()
 	_resolve_wave(ui)
 	await process_frame
 	_check(ui.screen == "results" and ui.keep.repair_interval_active and ui.keep.wave_index == 1, "phase one should enter ordinary Recovery")
@@ -125,13 +132,16 @@ func _initialize() -> void:
 	var replay_rect: Rect2 = ui.terminal_debrief_panel.primary_button.get_global_rect()
 	_check(root.gui_get_focus_owner() == ui.terminal_debrief_panel.primary_button, "terminal replay should own controller focus")
 	_check(replay_rect.position.y >= page_rect.position.y and replay_rect.end.y <= page_rect.end.y, "terminal replay action should be visible after focus scrolling")
+	_save_reload_parity(ui, "terminal results")
+	ui._refresh_ui()
+	_check(ui._is_terminal_result() and ui.terminal_debrief_panel.visible, "terminal save should restore the causal debrief")
 
 	root.content_scale_factor = 1.0
 	ui.queue_free()
 	await process_frame
 	_remove_test_files()
 	if failures.is_empty():
-		print("P53 alpha flow hardening: PASS (large text, accessibility, focus, audio, and two save boundaries)")
+		print("P53 alpha flow hardening: PASS (large text, accessibility, focus, audio, and all phase save boundaries)")
 		quit(0)
 	else:
 		for failure in failures:

@@ -18,7 +18,7 @@ func _initialize() -> void:
 	ui._on_recommended_layout()
 	if ui.keep.pieces.size() != 2:
 		failures.append("recommended layout did not place both starter pieces")
-	if not ui.event_label.text.contains("Recommended layout placed"):
+	if not ui.event_label.text.contains("Layer the gate road applied"):
 		failures.append("recommended layout did not report the applied placement")
 	if JSON.stringify(ui.keep.serialize()) == before_recommendation:
 		failures.append("recommended layout did not commit its authoritative placement command")

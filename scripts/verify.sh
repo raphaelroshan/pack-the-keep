@@ -16,6 +16,8 @@ python3 tools/validate_k8_private_alpha.py
 python3 tests/test_k8_private_alpha_validator.py
 python3 tools/validate_early_access_progress.py
 python3 tests/test_early_access_progress.py
+python3 tools/validate_investment_progress.py
+python3 tests/test_investment_progress.py
 python3 tools/validate_p16_playtests.py --protocol content/p16_playtest_protocol.json --sessions playtests/sessions --ci-manifest tools/ci_manifest.json --alpha-checklist content/p12_alpha_checklist.json
 python3 tests/test_p16_playtest_protocol.py
 python3 tools/summarize_p16_playtests.py --protocol content/p16_playtest_protocol.json --sessions playtests/sessions --ci-manifest tools/ci_manifest.json --alpha-checklist content/p12_alpha_checklist.json

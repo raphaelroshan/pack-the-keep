@@ -168,6 +168,7 @@ func reset_run(new_seed: int = 3307) -> void:
 	available_pieces.clear()
 	for piece_id in STARTER_PIECES:
 		available_pieces.append(String(piece_id))
+	pack_openings_this_preparation = 0
 	reserved_pack_id = ""
 	enemies.clear()
 	_reset_rooms()
@@ -278,7 +279,7 @@ func _scenario_wave_plans(id: String, variation: Dictionary) -> Array:
 		plans[plans.size() - 1] = final_wave_plan.duplicate()
 	return plans
 
-func select_scenario(id: String) -> Dictionary:
+func select_scenario(id: String, apply_regional_support: bool = true) -> Dictionary:
 	if not _scenario_definitions.has(id):
 		return {"ok": false, "reason": "unknown defensive scenario"}
 	if wave_active or repair_interval_active:
@@ -300,7 +301,7 @@ func select_scenario(id: String) -> Dictionary:
 	variation_materials = int(variation.get("materials", 0))
 	variation_morale = int(variation.get("morale", 0))
 	var regional_materials: int = 0
-	if bool(regional_state.get("pending_support", false)):
+	if apply_regional_support and bool(regional_state.get("pending_support", false)):
 		regional_materials = int(regional_state.get("next_run_materials", 0))
 		regional_state.pending_support = false
 		regional_state.applied_to_scenario_id = id

@@ -19,6 +19,16 @@
   },
   "connections": [["gate", "inner_yard"], ["inner_yard", "armory"], ["inner_yard", "workshop"], ["armory", "barracks"], ["workshop", "barracks"], ["barracks", "supply_room"], ["outer_wall", "north_tower"], ["north_tower", "old_chapel"]],
   "spatial_rule": {"id": "compact_adjacency", "lane_cells": [], "room_damage_reduction": 0, "label": "Compact rooms reward layered adjacency."},
+  "starter_plan": {
+    "title": "Layer the gate road",
+    "pack_id": "pike_line",
+    "intent": "Put a living melee line behind a deliberate choke so the compact rooms reinforce one readable approach.",
+    "tradeoff": "The upper wall and distant supply room remain lightly covered.",
+    "placements": [
+      {"piece_id": "pike_squad", "origin": [4, 5], "floor": "ground", "reason": "holds the inner response line"},
+      {"piece_id": "narrow_gate", "origin": [2, 5], "floor": "ground", "reason": "concentrates contact before the yard"}
+    ]
+  },
   "recovery_profile": {"room_repair_materials": 8, "room_repair_condition": 30, "question": "Which damaged function is worth a deep repair?"},
   "visual": {"terrain": "fort", "ground_label": "GROUND FLOOR", "upper_label": "UPPER WALL", "board_label": "KEEP ROOMS / DEFENSE BOARD"}
 }

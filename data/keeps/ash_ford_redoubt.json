@@ -19,6 +19,17 @@
   },
   "connections": [["gate", "inner_yard"], ["inner_yard", "armory"], ["inner_yard", "workshop"], ["inner_yard", "barracks"], ["armory", "supply_room"], ["workshop", "barracks"], ["barracks", "supply_room"], ["outer_wall", "north_tower"], ["north_tower", "old_chapel"]],
   "spatial_rule": {"id": "clear_causeway", "lane_cells": [[3, 3], [4, 3], [5, 3], [6, 3], [7, 3], [8, 3]], "room_damage_reduction": 1, "label": "Keep the marked causeway clear to reduce room damage by 1."},
+  "starter_plan": {
+    "title": "Guard both banks, preserve the crossing",
+    "pack_id": "runner_network",
+    "intent": "Anchor the west bridgehead and use a mobile reserve on the east bank without blocking the marked causeway.",
+    "tradeoff": "The raised posts remain exposed to upper-route pressure.",
+    "placements": [
+      {"piece_id": "pike_squad", "origin": [0, 3], "floor": "ground", "reason": "anchors the western approach"},
+      {"piece_id": "runner_pair", "origin": [9, 3], "floor": "ground", "reason": "covers the eastern bank while preserving the lane"},
+      {"piece_id": "supply_cache", "origin": [6, 6], "floor": "ground", "reason": "supports a mobile reserve near the ferry barracks"}
+    ]
+  },
   "recovery_profile": {"room_repair_materials": 5, "room_repair_condition": 20, "question": "Which exposed bank needs a shallow repair before pressure shifts?"},
   "visual": {"terrain": "river", "ground_label": "FORD LEVEL", "upper_label": "RAISED POSTS", "board_label": "ASH FORD / CROSSING DEFENSE"}
 }
