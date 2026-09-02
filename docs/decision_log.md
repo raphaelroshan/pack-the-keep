@@ -1039,3 +1039,11 @@
 **Reason:** The v0.56 visual review showed the same commander/scenario choice simultaneously as finished cards and always-visible catalogue controls. Progressive disclosure preserves expert access while making the normal path feel like a briefing rather than a debug form.
 
 **Trade-off:** Direct catalogue jumps and campaign modifier controls require one extra reveal action. Their authoritative handlers and all keyboard/controller access remain unchanged.
+
+## ADR-131: Recovery cards sort by current legality
+
+**Decision:** Keep all four Recovery commands visible, but stably move ready cards ahead of blocked cards on each presentation refresh. Preserve the authored order within each group and keep Finish Recovery last.
+
+**Reason:** The v0.57 full-flow capture showed two blocked repair cards before the legal assignment action. With only two recovery actions, the rail should surface viable decisions before diagnostics while retaining every explanation.
+
+**Trade-off:** Card position can change after an action alters legality. The card titles remain explicit, and controller focus is recalculated through the existing first-legal-control path.

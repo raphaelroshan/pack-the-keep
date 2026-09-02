@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.57.0-war-council-disclosure",
+  "build_version": "0.58.0-recovery-action-order",
   "status": "ready_for_human_sessions",
   "release_ready": false,
   "minimum_completed_sessions": 4,
