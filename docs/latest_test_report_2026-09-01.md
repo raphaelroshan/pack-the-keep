@@ -2,13 +2,13 @@
 
 | Field | Result |
 | --- | --- |
-| Build | `0.56.0-tactical-labels` |
+| Build | `0.57.0-war-council-disclosure` |
 | Local engine | Godot 4.7.2, headless Dummy audio |
 | Complete verification | PASS |
 | Runtime catalog | PASS: 3 keeps, 1 region, 29 pieces, 15 packs, 4 commanders, 12 enemies, 14 doctrines, 20 scenarios, 14 events, 2 modifiers |
 | Scenario matrix | PASS: 228 viable cases and 456 uninterrupted/resumed simulations |
 | Outcome distribution | 216 held, 12 partial breach, 0 collapse |
-| Performance budget | PASS: 40 runs in 3563 ms; 120 large-text UI refreshes in 262 ms |
+| Performance budget | PASS: 40 runs in 2322 ms; 120 large-text UI refreshes in 252 ms |
 | Responsive decision follow-up | PASS: 1280×720 at 125% keeps Enter Keep and both next-choice controls in the first viewport; 1600×900 at 100% retains the full overview and two-column rail; 1280×720 at 150% keeps focused primary actions visible; Preparation carries the commander/defense/keep relationship and authored question without state mutation |
 | Actor readability | PASS: all active defender and enemy profiles resolve original board-scale silhouettes; role identity and tactical overlays remain in the read-only presentation; unknown profiles retain procedural fallback |
 | Authored audio feedback | PASS: all fourteen semantic cues resolve distinct reproducible original WAV assets; output uses a bounded four-player pool; mute/zero-volume suppression, generated-tone fallback, and simulation non-mutation remain covered |
@@ -23,6 +23,7 @@
 | P67 plan/navigation coherence | PASS: keep-authored plan doctrine is selected on Preparation entry and after application; manual pack browsing remains stable; active phase treatment and quiet Settings affordance verified across normal and compact navigation |
 | P68 phase framing | PASS: War Council, Preparation, ready/paused/live Assault, Recovery, and terminal Results expose distinct read-only title, subtitle, breadcrumb, and hint projections without mutating run state |
 | P69 tactical labels | PASS: focused threat and contact timing compose into one bounded badge; Ash Ford and Twinwatch spatial rules use reserved upper-board plates; actor, health-bar, and timeline bounds remain clear |
+| P70 War Council disclosure | PASS: game-facing cards own the default choice path; a synchronized pairing summary remains visible; direct selectors, scenario detail, and campaign modifiers reveal on request without state mutation |
 | P51/P52 focused tests | PASS: all P51 content plus 18 mixed-plan Twilight Crossroads runs across balanced, Gloam-heavy, and Outrider-heavy seeds; exact preview/spawn parity; active-event save/load parity; one-shot route effects; branch-aware terminal mastery; concise player-facing seed guidance; controller focus; and responsive layout |
 | P53 integrated flow | PASS: 2560×1440 at 150% UI scale with high contrast, reduced motion, muted semantic cues, controller-first focus, Preparation/live-Battle/Recovery/terminal-Results save/load, authored-decision save/load, and reachable terminal replay |
 | Human sessions | 0 completed; pending and not inferred |

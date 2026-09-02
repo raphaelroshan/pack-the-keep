@@ -1,6 +1,6 @@
 # Pack the Keep — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.56.0-tactical-labels` and later
+**Applies to:** `v0.57.0-war-council-disclosure` and later
 
 **Purpose:** Turn the First Watch prototype into a readable, tactile, game-quality keep-defense vertical slice. Automated verification, deterministic simulation checks, scripted flow coverage, and screenshot review are the active gates. Human testing remains useful for later confidence and tuning, but it is not a prerequisite for execution.
 
@@ -51,7 +51,7 @@ A task is incomplete if it hides the fort behind a menu, adds a unit before its 
 
 ## Recommended next prompt
 
-> The automated investment and Early Access roadmaps are complete at `0.56.0-tactical-labels`. Preserve PTK-I1 through PTK-I6, PTK-EA-1 through PTK-EA-6, P67–P69, K1–K8, P51–P66, P54, responsive-decision, room-label, authored-actor, authored-room, authored-audio, combat-effect, and repair-feedback gates. The Kenney kit is archived and no active presentation profile references it. Do not invent human findings or distribution approval.
+> The automated investment and Early Access roadmaps are complete at `0.57.0-war-council-disclosure`. Preserve PTK-I1 through PTK-I6, PTK-EA-1 through PTK-EA-6, P67–P70, K1–K8, P51–P66, P54, responsive-decision, room-label, authored-actor, authored-room, authored-audio, combat-effect, and repair-feedback gates. The Kenney kit is archived and no active presentation profile references it. Do not invent human findings or distribution approval.
 
 ## Definition of game-quality readiness
 

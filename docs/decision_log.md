@@ -1031,3 +1031,11 @@
 **Reason:** The v0.55 Assault capture showed `CONTACT`, `FOCUSED`, room names, and the Clear Causeway label competing around the same small tactical region. The facts were correct but their independent placement weakened the map-first hierarchy.
 
 **Trade-off:** The board carries fewer simultaneous words. Exact threat timing, traits, targets, and counters remain available in the timeline, response preview, hover tooltip, and inspection card.
+
+## ADR-130: War Council cards own the default choice hierarchy
+
+**Decision:** Keep commander and defense cards as the default War Council interaction, summarize their current pairing in the command rail, and place raw dropdowns, long scenario detail, and campaign modifiers inside an explicit collapsed advanced panel.
+
+**Reason:** The v0.56 visual review showed the same commander/scenario choice simultaneously as finished cards and always-visible catalogue controls. Progressive disclosure preserves expert access while making the normal path feel like a briefing rather than a debug form.
+
+**Trade-off:** Direct catalogue jumps and campaign modifier controls require one extra reveal action. Their authoritative handlers and all keyboard/controller access remain unchanged.
