@@ -30,6 +30,12 @@
       {"piece_id": "supply_cache", "origin": [5, 6], "floor": "ground", "reason": "keeps reserves central between the posts"}
     ]
   },
+  "doctrine_geometry": [
+    {"commander_id": "castellan", "recommended_pack_id": "shieldwall", "opening": "Reinforce each bastion locally and accept a thin transfer corridor.", "fit": "Layered Masonry hardens the two post clusters without pretending they form one Greywatch core.", "risk": "Pressure through Bell Court can separate the clusters."},
+    {"commander_id": "warden", "recommended_pack_id": "runner_network", "opening": "Staff both anchors while keeping Bell Court open for relief movement.", "fit": "Open Lanes preserves the transfer space between Twinwatch's distant posts.", "risk": "The central magazine has no permanent guard."},
+    {"commander_id": "quartermaster", "recommended_pack_id": "fallback_convoy", "opening": "Keep the supply cache central and hold one reserve behind the weaker post.", "fit": "Measured Stores makes the shared magazine a real reserve instead of a third front.", "risk": "A simultaneous two-post attack can spend the reserve too early."},
+    {"commander_id": "marshal", "recommended_pack_id": "ridge_company", "opening": "Assign one combat specialist to each bastion and hold Relief Order for the first split.", "fit": "Posted Orders directly rewards the paired staffed anchors Twinwatch requires.", "risk": "Command hunters can punish the same assignments that activate the keep."}
+  ],
   "recovery_profile": {"room_repair_materials": 7, "room_repair_condition": 25, "question": "Which post can be restored without abandoning the other?"},
   "visual": {"terrain": "ridge", "ground_label": "TWIN BASTIONS", "upper_label": "RIDGE WATCH", "board_label": "TWINWATCH / SPLIT DEFENSE"}
 }

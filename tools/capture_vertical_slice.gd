@@ -16,6 +16,7 @@ var capture_starting_defender: bool = false
 var capture_battle_exchange: bool = false
 var capture_battle_exchange_progress: float = 0.28
 var capture_repair_feedback: bool = false
+var capture_intervention: bool = false
 
 func _initialize() -> void:
 	if DisplayServer.get_name() == "headless":
@@ -37,6 +38,7 @@ func _initialize() -> void:
 	capture_starting_defender = OS.get_cmdline_user_args().has("--inspect-starting-defender")
 	capture_battle_exchange = OS.get_cmdline_user_args().has("--capture-battle-exchange")
 	capture_repair_feedback = OS.get_cmdline_user_args().has("--capture-repair-feedback")
+	capture_intervention = OS.get_cmdline_user_args().has("--capture-intervention")
 	if not _argument_value("--battle-exchange-progress=").is_empty():
 		capture_battle_exchange_progress = clampf(float(_argument_value("--battle-exchange-progress=")), 0.0, 0.99)
 	if output_dir.is_empty():
@@ -139,6 +141,13 @@ func _run_capture() -> void:
 		ui.keep_canvas.set_process(false)
 		ui.keep_canvas.queue_redraw()
 	await _capture("04_assault_phase_1", ui)
+	if capture_intervention:
+		if not ui.assault_ready_reason.is_empty():
+			ui._toggle_battle_pause()
+		ui.battle_paused = true
+		ui._on_advance_wave()
+		ui._on_use_ability()
+		await _capture("04b_emergency_intervention", ui)
 	if capture_battle_exchange:
 		ui.keep_canvas.set_process(true)
 		ui.keep_canvas._process(ui.keep_canvas.engagement_duration)
@@ -228,6 +237,7 @@ func _write_manifest() -> void:
 		"battle_exchange_staged": capture_battle_exchange,
 		"battle_exchange_progress": capture_battle_exchange_progress if capture_battle_exchange else null,
 		"repair_feedback_captured": capture_repair_feedback,
+		"intervention_captured": capture_intervention,
 		"files": captured_files,
 		"debug_ui": OS.get_cmdline_user_args().has("--debug-ui"),
 		"human_evidence": false,

@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.58.0-recovery-action-order` — all investment and Early Access gates remain enforced; first plans, doctrine cards, active navigation, phase-specific decision framing, bounded tactical labels, progressive War Council selection, and actionable-first Recovery stay coherent while all-phase save/replay, cross-keep continuation, accessibility, package, forced-close, and original-asset evidence remain green; human sessions and owner distribution approval remain pending
+**Current build identity:** `0.59.0-gpt56-packet-completion` — PTK-GPT56-1 through PTK-GPT56-5 and all prior gates remain enforced; War Council exposes the selected commander's geometry fit, recommended opening, and accepted risk while all-phase save/replay, cross-keep continuation, accessibility, package, forced-close, and original-asset evidence remain green; human sessions and owner distribution approval remain pending
 
 ## Purpose
 

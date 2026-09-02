@@ -30,6 +30,12 @@
       {"piece_id": "supply_cache", "origin": [6, 6], "floor": "ground", "reason": "supports a mobile reserve near the ferry barracks"}
     ]
   },
+  "doctrine_geometry": [
+    {"commander_id": "castellan", "recommended_pack_id": "river_wardens", "opening": "Build two small bank anchors without filling the marked crossing.", "fit": "Layered Masonry strengthens each bank, but cannot copy Greywatch's single packed core across the river.", "risk": "The two anchors do not reinforce one another."},
+    {"commander_id": "warden", "recommended_pack_id": "runner_network", "opening": "Hold the west bridgehead and keep a mobile answer free on the east bank.", "fit": "Open Lanes preserves the causeway that activates Ash Ford's damage reduction.", "risk": "Raised posts remain exposed to upper-route pressure."},
+    {"commander_id": "quartermaster", "recommended_pack_id": "ferry_network", "opening": "Stage a reserve on each bank and spend shallow repairs only where pressure lands.", "fit": "Measured Stores sustains split reserves through Ash Ford's frequent low-cost repairs.", "risk": "Neither bank begins with a heavy contact line."},
+    {"commander_id": "marshal", "recommended_pack_id": "mason_train", "opening": "Post structural specialists beside the bridgehead and Sluice House.", "fit": "Posted Orders converts the river's separated assignments into two deliberate command posts.", "risk": "Harriers can isolate whichever posted specialist spends its reserve first."}
+  ],
   "recovery_profile": {"room_repair_materials": 5, "room_repair_condition": 20, "question": "Which exposed bank needs a shallow repair before pressure shifts?"},
   "visual": {"terrain": "river", "ground_label": "FORD LEVEL", "upper_label": "RAISED POSTS", "board_label": "ASH FORD / CROSSING DEFENSE"}
 }

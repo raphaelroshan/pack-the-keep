@@ -8,6 +8,8 @@ static func build(keep: Object, commander_id: String, scenario_id: String, tutor
 	var commander_ids: Array[String] = keep.commander_ids()
 	var scenario_definition: Dictionary = keep.scenario_definition(scenario_id)
 	var scenario_preview: Dictionary = keep.scenario_preview(scenario_id)
+	var keep_definition: Dictionary = keep.keep_definition(String(scenario_definition.get("keep_id", "")))
+	var geometry_fit: Dictionary = _geometry_fit(keep_definition, commander_id)
 	var variation: Dictionary = scenario_preview.get("variation", {})
 	var modifier_name: String = "None"
 	if not keep.equipped_modifier_id.is_empty():
@@ -42,12 +44,21 @@ static func build(keep: Object, commander_id: String, scenario_id: String, tutor
 			"keep": String(scenario_preview.get("keep_name", "Keep")),
 			"identity": String(scenario_definition.get("short_role", "Authored pressure")),
 			"question": String(scenario_definition.get("question", "What must this defense preserve?")),
+			"geometry": "%s %s" % [String(keep_definition.get("spatial_rule", {}).get("label", "Read the keep geometry.")), String(geometry_fit.get("fit", "Choose a doctrine that answers it."))],
+			"geometry_opening": "%s Recommended pack: %s. Accepted risk: %s" % [String(geometry_fit.get("opening", "Build one legible answer.")), String(keep.pack_definition(String(geometry_fit.get("recommended_pack_id", ""))).get("name", "Any coherent pack")), String(geometry_fit.get("risk", "Another route remains exposed."))],
 			"objective": String(scenario_preview.get("objective", "")),
 			"arc": " → ".join(scenario_preview.get("doctrine_names", [])),
 			"risk": "%s; peak pressure %d; %s." % [String(scenario_preview.get("difficulty", "standard")).capitalize(), int(scenario_preview.get("peak_wave_size", 0)), end_state_summary],
 			"fixed": "%s, %d authored phases; selected variation remains fixed." % [String(scenario_preview.get("keep_name", "Keep")), int(scenario_preview.get("wave_count", 0))],
 		},
 	}
+
+static func _geometry_fit(keep_definition: Dictionary, commander_id: String) -> Dictionary:
+	for row_value in keep_definition.get("doctrine_geometry", []):
+		var row: Dictionary = row_value
+		if String(row.get("commander_id", "")) == commander_id:
+			return row
+	return {}
 
 static func _seed_pressure(keep: Object, variation: Dictionary) -> String:
 	var parts: Array[String] = []
