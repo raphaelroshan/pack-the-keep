@@ -140,6 +140,9 @@ var settings_overview_panel: PanelContainer
 var command_panel_title: Label
 var setup_confirm_button: Button
 var setup_back_button: Button
+var setup_pairing_summary_label: Label
+var setup_advanced_button: Button
+var setup_advanced_panel: VBoxContainer
 var settings_back_button: Button
 var title_custom_button: Button
 var title_settings_button: Button
@@ -1358,13 +1361,27 @@ func _build_ui() -> void:
 		commander_option.add_item(String(keep.commander_definition(commander_id).get("name", commander_id)))
 		commander_option.set_item_metadata(commander_option.item_count - 1, commander_id)
 	commander_option.item_selected.connect(func(_index: int) -> void: _on_select_commander())
+	setup_pairing_summary_label = Label.new()
+	setup_pairing_summary_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	setup_pairing_summary_label.add_theme_font_size_override("font_size", 12)
+	setup_pairing_summary_label.add_theme_color_override("font_color", Color("#bfe8cf"))
+	setup_section.add_child(setup_pairing_summary_label)
+	setup_advanced_button = Button.new()
+	setup_advanced_button.text = "Show advanced selection"
+	setup_advanced_button.tooltip_text = "Show direct catalogue selectors, full scenario detail, and campaign modifiers."
+	setup_advanced_button.pressed.connect(_toggle_setup_advanced)
+	setup_section.add_child(setup_advanced_button)
+	setup_advanced_panel = VBoxContainer.new()
+	setup_advanced_panel.add_theme_constant_override("separation", 6)
+	setup_advanced_panel.visible = false
+	setup_section.add_child(setup_advanced_panel)
 	var advanced_heading: Label = Label.new()
 	advanced_heading.text = "ADVANCED SELECTION"
 	advanced_heading.add_theme_font_size_override("font_size", 13)
 	advanced_heading.add_theme_color_override("font_color", Color("#8fc6d1"))
-	setup_section.add_child(advanced_heading)
+	setup_advanced_panel.add_child(advanced_heading)
 	var commander_group: VBoxContainer = _labeled_control("Commander list", commander_option)
-	setup_section.add_child(commander_group)
+	setup_advanced_panel.add_child(commander_group)
 
 	scenario_option = OptionButton.new()
 	scenario_option.item_selected.connect(func(_index: int) -> void: _on_select_scenario())
@@ -1372,10 +1389,10 @@ func _build_ui() -> void:
 		scenario_option.add_item(String(keep.scenario_definition(scenario_id).get("name", scenario_id)))
 		scenario_option.set_item_metadata(scenario_option.item_count - 1, scenario_id)
 	var scenario_group: VBoxContainer = _labeled_control("Scenario list", scenario_option)
-	setup_section.add_child(scenario_group)
+	setup_advanced_panel.add_child(scenario_group)
 	var scenario_navigation: HBoxContainer = HBoxContainer.new()
 	scenario_navigation.add_theme_constant_override("separation", 8)
-	setup_section.add_child(scenario_navigation)
+	setup_advanced_panel.add_child(scenario_navigation)
 	scenario_previous_button = Button.new()
 	scenario_previous_button.text = "← Previous"
 	scenario_previous_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1390,7 +1407,7 @@ func _build_ui() -> void:
 	scenario_preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	scenario_preview_label.custom_minimum_size = Vector2(292, 168)
 	scenario_preview_label.add_theme_color_override("font_color", Color("#d8c389"))
-	setup_section.add_child(scenario_preview_label)
+	setup_advanced_panel.add_child(scenario_preview_label)
 	authored_event_panel = AuthoredEventPanelView.new()
 	authored_event_panel.build(2)
 	authored_event_panel.choice_requested.connect(_on_authored_event_choice_id)
@@ -1401,7 +1418,7 @@ func _build_ui() -> void:
 	authored_event_choice_buttons = authored_event_panel.choice_buttons
 	campaign_ledger_panel = VBoxContainer.new()
 	campaign_ledger_panel.add_theme_constant_override("separation", 4)
-	setup_section.add_child(campaign_ledger_panel)
+	setup_advanced_panel.add_child(campaign_ledger_panel)
 	campaign_ledger_label = Label.new()
 	campaign_ledger_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	campaign_ledger_label.add_theme_color_override("font_color", Color("#bfe8cf"))
@@ -2033,7 +2050,11 @@ func _is_terminal_result() -> bool:
 	return String(keep.scenario_report().get("status", "in_progress")) == "complete"
 
 func _set_screen(next_screen: String) -> void:
+	var previous_screen: String = screen
 	screen = next_screen
+	if screen == "setup" and previous_screen != "setup" and setup_advanced_panel != null:
+		setup_advanced_panel.visible = false
+		setup_advanced_button.text = "Show advanced selection"
 	if local_playtest_observer != null:
 		local_playtest_observer.record_screen(screen)
 	if presentation_audit_overlay != null:
@@ -2536,6 +2557,13 @@ func _toggle_preparation_advanced() -> void:
 	preparation_advanced_panel.visible = not preparation_advanced_panel.visible
 	preparation_advanced_button.text = "Hide advanced preparation" if preparation_advanced_panel.visible else "Show advanced preparation"
 	_set_event("Advanced preparation details shown." if preparation_advanced_panel.visible else "Advanced preparation details collapsed.")
+
+func _toggle_setup_advanced() -> void:
+	if setup_advanced_panel == null:
+		return
+	setup_advanced_panel.visible = not setup_advanced_panel.visible
+	setup_advanced_button.text = "Hide advanced selection" if setup_advanced_panel.visible else "Show advanced selection"
+	_set_event("Direct catalogue and campaign controls shown." if setup_advanced_panel.visible else "Advanced selection collapsed; use the commander and defense cards.")
 
 func _toggle_battle_tactical_controls() -> void:
 	if battle_tactical_panel == null:
@@ -3826,6 +3854,8 @@ func _refresh_war_council_cards() -> void:
 	var scenario_id: String = _selected_id(scenario_option)
 	war_council_presentation_snapshot = WarCouncilPresentationSnapshotView.build(keep, commander_id, scenario_id, tutorial.active, guided_setup)
 	war_council_choice_panel.render(war_council_presentation_snapshot)
+	if setup_pairing_summary_label != null:
+		setup_pairing_summary_label.text = "CURRENT DEFENSE\n%s\n%s\nSEED — %s" % [String(war_council_presentation_snapshot.get("pairing", "Choose a commander and defense.")), String(war_council_presentation_snapshot.get("run_frame", "")), String(war_council_presentation_snapshot.get("seed_pressure", "Baseline pressure."))]
 
 func _refresh_ui() -> void:
 	_refresh_phase_header()
