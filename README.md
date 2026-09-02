@@ -210,3 +210,10 @@ Run `python3 tools/validate_early_access_progress.py` to compare the tracked mil
 ## Investment evaluation roadmap
 
 The full creative vertical and skeletal Early Access campaign requirements are defined in [`docs/investment_evaluation_roadmap.md`](docs/investment_evaluation_roadmap.md). The dated build audit and screenshots are in [`docs/investment_evaluation_review_2026-09-02.md`](docs/investment_evaluation_review_2026-09-02.md). The current investment gate is PTK-I1: lock Greywatch as a complete creative vertical before adding more breadth.
+
+
+## GPT-5.6 investment execution packets
+
+For a complete Greywatch creative vertical and differentiated Early Access skeleton, issue the larger dependency-aware tasks in [`docs/gpt56_investment_execution_packets.md`](docs/gpt56_investment_execution_packets.md). The current first gate is PTK-GPT56-1 after the latest automated and visual audit.
+| `docs/gpt56_investment_execution_packets.md` | Larger dependency-aware tasks for a complete Greywatch creative vertical and differentiated Early Access campaign skeleton. |
+| `docs/latest_gpt56_improvement_review_2026-09-03.md` | Latest post-change verification, visual evidence, corrected title status, and next GPT-5.6 task. |

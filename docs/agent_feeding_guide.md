@@ -192,3 +192,13 @@ The recommended feeds are **PTK-EA-1** Greywatch completion, **PTK-EA-2** second
 Read [`investment_evaluation_roadmap.md`](investment_evaluation_roadmap.md) before adding further breadth. The investment standard requires a complete Greywatch creative vertical: commander/keep choice, doctrine pack, visible placement plan, forecast, live auto-battle, one intervention, recoverable damage, and causal Results. The game must then prove that a second keep changes spatial priorities rather than merely changing labels.
 
 Issue the feeds in order: **PTK-I1** lock Greywatch as the creative vertical; **PTK-I2** add a mechanically distinct second keep; **PTK-I3** expand commander and pack expression; **PTK-I4** add enemy questions with visible counters; **PTK-I5** complete the campaign loop; **PTK-I6** harden the Early Access package. Do not add more enemies, packs, or decorative density while the first defense plan is hard to read. Human testing is optional and must not block implementation.
+
+
+## GPT-5.6 investment execution feed
+
+For the current investment-evaluation phase, read [`gpt56_investment_execution_packets.md`](gpt56_investment_execution_packets.md) and issue the packets in order. Start with **PTK-GPT56-1**, which must complete Greywatch from commander/keep choice through doctrine, placement, forecast, live auto-battle, intervention, damage, recovery, and causal Results. Then issue PTK-GPT56-2 for a genuinely distinct second keep, PTK-GPT56-3 for commander/pack/enemy expression, PTK-GPT56-4 for the campaign skeleton, and PTK-GPT56-5 for alpha hardening. Use deterministic seeded plans, complete-flow fixtures, screenshots, and controller/scaling checks; do not wait for human testing.
+
+
+## GPT-5.6 investment execution feed
+
+For the current investment-evaluation phase, read [`gpt56_investment_execution_packets.md`](gpt56_investment_execution_packets.md) and issue the packets in order. Start with **PTK-GPT56-1**, which must complete Greywatch from commander/keep choice through doctrine, placement, forecast, live auto-battle, intervention, damage, recovery, and causal Results. Then issue PTK-GPT56-2 for a genuinely distinct second keep, PTK-GPT56-3 for commander/pack/enemy expression, PTK-GPT56-4 for the campaign skeleton, and PTK-GPT56-5 for alpha hardening. Use deterministic seeded plans, complete-flow fixtures, screenshots, and controller/scaling checks; do not wait for human testing.

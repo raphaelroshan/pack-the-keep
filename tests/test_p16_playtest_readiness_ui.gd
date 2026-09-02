@@ -17,7 +17,7 @@ func _initialize() -> void:
 	_check(ui.build_identity_label != null and ui.build_identity_label.visible, "title should expose a visible build identity")
 	_check(String(ui.build_identity_label.text).contains(build_version), "title build identity should match project metadata")
 	_check(String(ui.build_identity_label.text).contains("PRE-ALPHA"), "title should preserve the pre-alpha release boundary")
-	_check(String(ui.build_identity_label.text).contains("HUMAN PLAYTEST PENDING"), "title should not imply completed human playtesting")
+	_check(String(ui.build_identity_label.text).contains("AUTOMATED BASELINE VERIFIED"), "title should expose the automated baseline without implying human validation")
 	_check(JSON.stringify(ui.keep.serialize()) == before, "reading build identity should not mutate authoritative state")
 
 	ui.queue_free()
