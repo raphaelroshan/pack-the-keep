@@ -975,3 +975,11 @@
 **Reason:** Agents can complete deterministic gameplay, accessibility, persistence, performance, packaging, and evidence requirements. They cannot truthfully perform human comprehension sessions or authorize commercial distribution.
 
 **Trade-off:** The repository can become an automated Early Access candidate while still being explicitly blocked from public/storefront distribution until the owner approves it.
+
+## ADR-123: Semantic cues use a reproducible original foley palette
+
+**Decision:** Replace every active Kenney Interface Sounds and RPG Audio cue with a short original mono WAV generated from documented oscillators, deterministic noise, and amplitude envelopes. Preserve the semantic cue IDs, bounded four-player pool, mute and volume behavior, headless boundary, and generated-tone fallback.
+
+**Reason:** Audio is the last active borrowed presentation family. A small purpose-built palette can make warning, contact, combat, repair, command, and terminal outcomes feel like one keep while remaining reproducible, reviewable, and independent of simulation authority.
+
+**Trade-off:** Deterministic synthesis provides a coherent first-party baseline rather than a final professionally recorded mix. Human listening and device review remain pending, and the archived CC0 kit stays available as historical provenance without being referenced by current cue profiles.

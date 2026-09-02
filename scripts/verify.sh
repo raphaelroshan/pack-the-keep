@@ -6,6 +6,7 @@ cd "$ROOT"
 
 python3 tools/validate_runtime_content.py --keeps data/keeps --regions data/regions --pieces data/pieces --packs data/packs --commanders data/commanders --enemies data/enemies --doctrines data/doctrines --scenarios data/scenarios --events data/events --modifiers data/modifiers --manifest content/content_manifest.json --event-schema content/event_schema.json
 python3 tests/test_runtime_content_validator.py
+python3 tests/test_authored_foley.py
 python3 tools/validate_offline_boundary.py
 python3 tests/test_packaged_smoke_runner.py
 python3 tests/test_release_identity.py

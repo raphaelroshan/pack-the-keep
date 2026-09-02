@@ -1,6 +1,7 @@
 {
-  "status": "temporary-testing-kit",
+  "status": "archived-testing-kit",
   "game": "pack-the-keep",
+  "active_runtime_references": [],
   "sources": [
     {
       "id": "kenney-tiny-dungeon",

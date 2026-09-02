@@ -1,6 +1,6 @@
 # Pack the Keep — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.51.0-early-access-candidate` and later
+**Applies to:** `v0.52.0-authored-foley` and later
 
 **Purpose:** Turn the First Watch prototype into a readable, tactile, game-quality keep-defense vertical slice. Automated verification, deterministic simulation checks, scripted flow coverage, and screenshot review are the active gates. Human testing remains useful for later confidence and tuning, but it is not a prerequisite for execution.
 
@@ -41,6 +41,7 @@ The game is a spatial defensive puzzle, not a rarity treadmill or a command spre
 | **P63 — Complete** | Complete the authored enemy set | Shield Guard, Ash Slinger, Shieldbreaker, Standard Cutter, Outrider, and Gloam Knife gain distinct original silhouettes; current actor profiles no longer use Tiny Battle. |
 | **P64 — Complete** | Replace Greywatch room props | Seven original 32×32 functional silhouettes replace current Tiny Dungeon room props without adding density to the open yard or structural wall. |
 | **P65 — Complete** | Replace temporary board effects | Eight original 48×48 marks replace active combat, room-damage, breach, and repair textures while preserving established timing and fallbacks. |
+| **P66 — Complete** | Replace temporary semantic foley | Fourteen reproducible original WAV cues replace the active CC0 samples while preserving semantic IDs, bounded playback, mute/volume, headless behavior, and generated-tone fallback. |
 
 ## Acceptance tests for every AI task
 
@@ -50,7 +51,7 @@ A task is incomplete if it hides the fort behind a menu, adds a unit before its 
 
 ## Recommended next prompt
 
-> The automated Early Access roadmap is complete at `0.51.0-early-access-candidate`. Preserve PTK-EA-1 through PTK-EA-6, K1–K8, P51–P65, P54, responsive-decision, room-label, authored-actor, authored-room, semantic-audio, combat-effect, and repair-feedback gates. Treat remaining Kenney foley as temporary testing audio, not a final mix. Do not invent human findings or distribution approval.
+> The automated Early Access roadmap is complete at `0.52.0-authored-foley`. Preserve PTK-EA-1 through PTK-EA-6, K1–K8, P51–P66, P54, responsive-decision, room-label, authored-actor, authored-room, authored-audio, combat-effect, and repair-feedback gates. The Kenney kit is archived and no active presentation profile references it. Do not invent human findings or distribution approval.
 
 ## Definition of game-quality readiness
 

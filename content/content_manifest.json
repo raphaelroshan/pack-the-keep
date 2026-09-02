@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.51.0",
+  "content_version": "0.52.0",
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",
@@ -1739,6 +1739,16 @@
       "character_note": "Neither commander calls the loss inevitable; the report names the choice that made it likely."
     }
   ],
+  "p66_authored_semantic_foley": {
+    "status": "implemented",
+    "cue_count": 14,
+    "format": "mono_16_bit_pcm_44100_hz",
+    "runtime_root": "res://assets/audio/semantic/",
+    "generator": "tools/generate_authored_foley.py",
+    "temporary_runtime_dependencies": [],
+    "fallback": "generated_semantic_tones",
+    "human_listening_review": "pending"
+  },
   "ptk_early_access_campaign": {
     "status": "candidate",
     "milestones": ["PTK-EA-1", "PTK-EA-2", "PTK-EA-3", "PTK-EA-4", "PTK-EA-5", "PTK-EA-6"],

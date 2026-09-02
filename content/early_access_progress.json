@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "build_version": "0.51.0-early-access-candidate",
+  "build_version": "0.52.0-authored-foley",
   "status": "candidate",
   "early_access_ready": true,
   "breadth_floor": {"keeps": 3, "commanders": 4, "packs_min": 15, "packs_max": 18, "pieces_min": 24, "pieces_max": 30, "enemies_min": 12, "enemies_max": 14, "scenarios_min": 20, "scenarios_max": 24, "events_min": 14, "events_max": 18, "viable_commander_keep_starts": 12},
   "current_inventory": {"keeps": 3, "commanders": 4, "packs": 15, "pieces": 29, "enemies": 12, "doctrines": 14, "scenarios": 20, "events": 14, "commander_keep_starts": 12},
-  "active_temporary_asset_families": ["semantic_foley"],
+  "active_temporary_asset_families": [],
   "milestones": [
     {
       "id": "PTK-EA-1", "status": "implemented", "keep_id": "greywatch_keep",

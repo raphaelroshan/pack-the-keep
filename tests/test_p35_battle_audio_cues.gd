@@ -28,7 +28,8 @@ func _initialize() -> void:
 	}
 	var semantic: Dictionary = ui.battle_audio_cues.semantic_snapshot()
 	_check(semantic.get("battle_beats", {}) == expected, "battle-loop beats should map to one stable cue vocabulary")
-	_check(bool(semantic.get("temporary_sample_assets", false)) and String(semantic.get("sample_source", "")).contains("CC0"), "semantic cues should disclose temporary CC0 sample provenance")
+	_check(bool(semantic.get("authored_sample_assets", false)) and not bool(semantic.get("temporary_sample_assets", true)), "semantic cues should disclose original authored sample provenance")
+	_check(String(semantic.get("sample_source", "")).contains("Pack the Keep original"), "semantic cues should name the original Pack the Keep sound source")
 	_check(int(semantic.get("sample_pool_size", -1)) == 0, "headless startup should not allocate sample players")
 	var signatures: Dictionary = {}
 	var sample_signatures: Dictionary = {}
@@ -36,16 +37,17 @@ func _initialize() -> void:
 		var cue_id: String = ui.battle_audio_cues.cue_for_beat(String(beat_id))
 		var profile: Dictionary = ui.battle_audio_cues.profile(cue_id)
 		_check(not profile.is_empty() and String(profile.get("beat", "")) == String(beat_id), "%s should resolve to a complete semantic cue profile" % beat_id)
-		_check(ui.battle_audio_cues.sample_available(cue_id), "%s should resolve to a loadable temporary sample" % beat_id)
+		_check(ui.battle_audio_cues.sample_available(cue_id), "%s should resolve to a loadable authored sample" % beat_id)
+		_check(String(profile.get("sample_path", "")).begins_with("res://assets/audio/semantic/"), "%s should not depend on the temporary asset tree" % beat_id)
 		signatures[String(beat_id)] = JSON.stringify(profile.get("frequencies", []))
 		sample_signatures[String(beat_id)] = String(profile.get("sample_path", ""))
 	_check(signatures.contact != signatures.defender_response and signatures.defender_response != signatures.hostile_impact, "contact, defender response, and hostile impact should sound distinct")
 	_check(signatures.breach != signatures.terminal_partial_breach and signatures.terminal_hold != signatures.terminal_collapse, "breach and terminal outcomes should retain distinct signatures")
-	_check(sample_signatures.contact != sample_signatures.defender_response and sample_signatures.defender_response != sample_signatures.hostile_impact, "contact, response, and impact should use distinct temporary samples")
-	_check(sample_signatures.breach != sample_signatures.terminal_partial_breach and sample_signatures.terminal_hold != sample_signatures.terminal_collapse, "breach and terminal outcomes should use distinct temporary samples")
+	_check(sample_signatures.contact != sample_signatures.defender_response and sample_signatures.defender_response != sample_signatures.hostile_impact, "contact, response, and impact should use distinct authored samples")
+	_check(sample_signatures.breach != sample_signatures.terminal_partial_breach and sample_signatures.terminal_hold != sample_signatures.terminal_collapse, "breach and terminal outcomes should use distinct authored samples")
 	for cue_variant in BattleAudioCueService.CUE_PROFILES.keys():
 		var cue_id := String(cue_variant)
-		_check(ui.battle_audio_cues.sample_available(cue_id), "%s should resolve to a loadable temporary sample" % cue_id)
+		_check(ui.battle_audio_cues.sample_available(cue_id), "%s should resolve to a loadable authored sample" % cue_id)
 
 	var state_before: String = JSON.stringify(ui.keep.serialize())
 	var step_before: int = ui.keep.battle_step
