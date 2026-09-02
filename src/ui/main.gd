@@ -1110,7 +1110,7 @@ func _build_ui() -> void:
 		var menu_button: Button = Button.new()
 		menu_button.text = String(navigation_labels[menu_item])
 		menu_button.pressed.connect(func() -> void: _on_navigation_requested(String(menu_item)))
-		_style_button(menu_button, false)
+		_style_navigation_button(menu_button, false, menu_item == "settings")
 		menu_bar.add_child(menu_button)
 		menu_buttons[menu_item] = menu_button
 	screen_hint = Label.new()
@@ -2003,6 +2003,28 @@ func _style_buttons_recursive(node: Node) -> void:
 			_style_button(child, false)
 		_style_buttons_recursive(child)
 
+func _style_navigation_button(button: Button, active: bool, actionable: bool) -> void:
+	var normal: StyleBoxFlat = StyleBoxFlat.new()
+	normal.bg_color = Color("#3b3022") if active else Color(0.0, 0.0, 0.0, 0.0)
+	normal.border_color = Color("#e2bd84") if active else Color(0.0, 0.0, 0.0, 0.0)
+	normal.border_width_bottom = 2 if active else 0
+	normal.set_corner_radius_all(5)
+	normal.content_margin_left = 8
+	normal.content_margin_right = 8
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("disabled", normal)
+	var hover: StyleBoxFlat = normal.duplicate()
+	if actionable and not active:
+		hover.bg_color = Color("#302838")
+		hover.border_color = Color("#5c4e65")
+		hover.border_width_bottom = 1
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", hover)
+	button.add_theme_color_override("font_color", Color("#d3c9d6") if actionable else Color("#77717c"))
+	button.add_theme_color_override("font_hover_color", Color("#fff4df"))
+	button.add_theme_color_override("font_pressed_color", Color("#fff4df"))
+	button.add_theme_color_override("font_disabled_color", Color("#f1d28e") if active else Color("#77717c"))
+
 func _is_terminal_result() -> bool:
 	if screen != "results" or keep == null or keep.last_outcome.is_empty():
 		return false
@@ -2223,7 +2245,8 @@ func _refresh_navigation() -> void:
 	for target in menu_buttons.keys():
 		menu_buttons[target].visible = screen != "title" and (not compact_navigation or target == "settings")
 		menu_buttons[target].disabled = target != "settings" or target == screen
-		menu_buttons[target].modulate = Color.WHITE if target == screen else Color("#77717c") if target != "settings" else Color.WHITE
+		menu_buttons[target].modulate = Color.WHITE
+		_style_navigation_button(menu_buttons[target], target == screen, target == "settings")
 
 func _on_navigation_requested(target: String) -> void:
 	if target == "settings":
@@ -2598,6 +2621,13 @@ func _has_piece_at_plan_location(piece_id: String, origin: Vector2i, floor_id: S
 			return true
 	return false
 
+func _select_starter_plan_pack() -> void:
+	if pack_option == null or keep == null:
+		return
+	var pack_id: String = String(keep.keep_definition().get("starter_plan", {}).get("pack_id", ""))
+	if not pack_id.is_empty():
+		_select_option_metadata(pack_option, pack_id)
+
 func _on_recommended_layout() -> void:
 	if not _tutorial_allows("recommended_layout"):
 		return
@@ -2613,6 +2643,7 @@ func _on_recommended_layout() -> void:
 		_refresh_ui()
 		return
 	var pack_id: String = String(plan.get("pack_id", ""))
+	_select_starter_plan_pack()
 	var pack_result: Dictionary = {"ok": true}
 	if not keep.owned_packs.has(pack_id):
 		pack_result = keep.open_pack(pack_id)
@@ -3578,6 +3609,7 @@ func _on_confirm_setup() -> void:
 		return
 	keep.select_commander(_selected_id(commander_option))
 	keep.select_scenario(_selected_id(scenario_option))
+	_select_starter_plan_pack()
 	if guided_setup and keep.pieces.is_empty():
 		_on_recommended_layout()
 	setup_confirmed = true

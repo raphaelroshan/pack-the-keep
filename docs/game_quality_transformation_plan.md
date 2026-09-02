@@ -1,7 +1,7 @@
 # Pack the Keep — Game-Quality Transformation Plan
 
 **Audience:** GPT coding agents, art/UX agents, test agents, and the human owner
-**Current baseline:** `0.53.0-investment-vertical`
+**Current baseline:** `0.54.0-plan-coherence`
 **Current status:** PTK-I1 through PTK-I6 and PTK-EA-1 through PTK-EA-6 are implemented: all three keeps expose distinct visible first plans, meet the scenario contract, and preserve the approved content breadth and candidate hardening. Human validation and owner distribution approval remain pending.
 **Primary objective:** Turn the existing deterministic fortress-defense systems into a coherent, attractive, immediately understandable game-quality private alpha without rewriting the simulation core.
 

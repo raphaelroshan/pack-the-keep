@@ -1007,3 +1007,11 @@
 **Reason:** PTK-I5 asks for consequence and another keep without grind. Those behaviors already exist in authoritative state; the missing piece is an end-to-end contract proving that the UI flow preserves and consumes them correctly.
 
 **Trade-off:** This remains a compact scenario campaign rather than a branching world map. Broader persistence and progression can extend the same regional state only after the vertical is validated.
+
+## ADR-127: Authored openings synchronize presentation selection at phase entry
+
+**Decision:** When a scenario is committed, select its keep-owned starter-plan pack in the Preparation card carousel. Applying the plan also returns the carousel to that pack. Separately style the active navigation phase instead of relying on the disabled-button theme, while keeping non-Settings phase tabs non-interactive.
+
+**Reason:** The investment captures showed Ash Ford's completed Runner Network plan beside a Pike Line offer and made the always-actionable Settings button look like the current phase. Both contradictions weaken trust in otherwise correct information.
+
+**Trade-off:** Phase entry chooses a sensible initial card, but subsequent player browsing remains untouched by refreshes. The top phase labels remain breadcrumbs rather than arbitrary navigation, preserving the existing unsaved-run safety model.

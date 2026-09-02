@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.53.0-investment-vertical` — PTK-I1 through PTK-I6 and PTK-EA-1 through PTK-EA-6 enforce the three-keep, four-commander campaign, distinct visible first plans, all-phase save/replay, cross-keep consequence continuation, accessibility, package, forced-close evidence, and original active presentation assets; human sessions and owner distribution approval remain pending
+**Current build identity:** `0.54.0-plan-coherence` — all investment and Early Access gates remain enforced; each keep's visible first plan now agrees with the selected doctrine card, active navigation is explicit, and all-phase save/replay, cross-keep continuation, accessibility, package, forced-close, and original-asset evidence remain green; human sessions and owner distribution approval remain pending
 
 ## Purpose
 

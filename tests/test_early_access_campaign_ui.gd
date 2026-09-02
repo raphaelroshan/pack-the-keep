@@ -43,6 +43,7 @@ func _initialize() -> void:
 	await process_frame
 	await process_frame
 	_check(ui.screen == "preparation" and ui.keep.keep_id == "twinwatch_bastion", "the selected Twinwatch defense should enter Preparation")
+	_check(ui._selected_id(ui.pack_option) == "runner_network" and String(ui.preparation_pack_offer_panel.name_label.text) == "Runner Network", "Preparation should align the doctrine card with Twinwatch's authored first plan")
 	_check(ui.keep.active_event_id == "twinwatch_signal", "Twinwatch's authored forecast decision should appear in Preparation")
 	_check(ui.authored_event_panel.visible and String(ui.authored_event_panel.title_label.text).contains("Which Fire Answers"), "the keep event should render as a game-facing choice")
 	ui.keep.choose_event_option("reserve_relief_signal")
