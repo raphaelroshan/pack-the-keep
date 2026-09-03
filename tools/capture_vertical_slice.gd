@@ -17,6 +17,7 @@ var capture_battle_exchange: bool = false
 var capture_battle_exchange_progress: float = 0.28
 var capture_repair_feedback: bool = false
 var capture_intervention: bool = false
+var capture_setup_only: bool = false
 
 func _initialize() -> void:
 	if DisplayServer.get_name() == "headless":
@@ -39,6 +40,7 @@ func _initialize() -> void:
 	capture_battle_exchange = OS.get_cmdline_user_args().has("--capture-battle-exchange")
 	capture_repair_feedback = OS.get_cmdline_user_args().has("--capture-repair-feedback")
 	capture_intervention = OS.get_cmdline_user_args().has("--capture-intervention")
+	capture_setup_only = OS.get_cmdline_user_args().has("--capture-setup-only")
 	if not _argument_value("--battle-exchange-progress=").is_empty():
 		capture_battle_exchange_progress = clampf(float(_argument_value("--battle-exchange-progress=")), 0.0, 0.99)
 	if output_dir.is_empty():
@@ -106,6 +108,13 @@ func _run_capture() -> void:
 	elif capture_starting_defender:
 		ui._on_map_clicked("ground", Vector2i(4, 5))
 	await _capture("03_preparation", ui)
+	if capture_setup_only:
+		_write_manifest()
+		ui.queue_free()
+		await process_frame
+		print("Vertical-slice capture: PASS (%d setup screens at %s)" % [captured_files.size(), output_dir])
+		quit(0)
+		return
 	if capture_spatial_transition and capture_scenario_id == "the_divided_bell":
 		ui.keep.open_pack("runner_network")
 		ui.keep.place_piece("runner_pair", Vector2i(9, 3), "ground")
@@ -238,6 +247,7 @@ func _write_manifest() -> void:
 		"battle_exchange_progress": capture_battle_exchange_progress if capture_battle_exchange else null,
 		"repair_feedback_captured": capture_repair_feedback,
 		"intervention_captured": capture_intervention,
+		"setup_only": capture_setup_only,
 		"files": captured_files,
 		"debug_ui": OS.get_cmdline_user_args().has("--debug-ui"),
 		"human_evidence": false,

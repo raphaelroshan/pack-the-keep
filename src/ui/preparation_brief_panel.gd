@@ -6,6 +6,9 @@ var answer_label: Label
 var weakness_label: Label
 var plan_label: Label
 var summary_row: BoxContainer
+var full_plan_text: String = ""
+var compact_plan_text: String = ""
+var board_first_mode: bool = false
 
 func _init() -> void:
 	name = "PreparationBriefPanel"
@@ -40,16 +43,25 @@ func render(view_model: Dictionary) -> void:
 	question_label.text = "CURRENT QUESTION\n%s" % String(view_model.get("question", "Read the next pressure."))
 	answer_label.text = "VISIBLE ANSWER\n%s" % String(view_model.get("answer", "No defense placed yet."))
 	weakness_label.text = "OPEN WEAKNESS\n%s" % String(view_model.get("weakness", "The keep still needs a committed answer."))
-	plan_label.text = String(view_model.get("plan", "FIRST PLAN — Choose one readable opening."))
+	full_plan_text = String(view_model.get("plan", "FIRST PLAN — Choose one readable opening."))
+	compact_plan_text = String(view_model.get("compact_plan", full_plan_text))
+	_render_plan()
 
-func set_responsive_layout(compact: bool, available_width: float) -> void:
+func set_responsive_layout(compact: bool, available_width: float, board_first: bool = false) -> void:
+	board_first_mode = board_first
 	custom_minimum_size.x = minf(800.0, maxf(0.0, available_width))
 	summary_row.vertical = compact
 	var column_width: float = 0.0 if compact else minf(245.0, maxf(180.0, (available_width - 48.0) / 3.0))
 	for label in [question_label, answer_label, weakness_label]:
 		label.custom_minimum_size.x = column_width
 		label.custom_minimum_size.y = 0.0 if compact else 76.0
-	plan_label.custom_minimum_size.y = 0.0 if compact else 48.0
+	plan_label.custom_minimum_size.y = 0.0 if compact else 42.0 if board_first else 48.0
+	_render_plan()
+
+func _render_plan() -> void:
+	if plan_label == null:
+		return
+	plan_label.text = compact_plan_text if board_first_mode and not compact_plan_text.is_empty() else full_plan_text
 
 func _column(row: BoxContainer, heading: String, color: Color) -> Label:
 	var label: Label = Label.new()

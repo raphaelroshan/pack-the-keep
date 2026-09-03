@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.59.0-gpt56-packet-completion",
+  "build_version": "0.60.0-board-first-preparation",
   "status": "ready_for_human_sessions",
   "release_ready": false,
   "minimum_completed_sessions": 4,

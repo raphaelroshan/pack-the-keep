@@ -56,6 +56,18 @@ class InvestmentProgressValidatorTests(unittest.TestCase):
         self.assertIn("missing evidence", joined)
         self.assertIn("owner approval", joined)
 
+    def test_rejects_stale_or_non_setup_board_first_capture(self) -> None:
+        progress, _manifest, _early_access = self._load()
+        relative = "docs/visual_evidence/v0.60.0-board-first-greywatch-1280x720/capture-manifest.json"
+        capture = json.loads((ROOT / relative).read_text(encoding="utf-8"))
+        capture["resolution"] = {"width": 1024, "height": 768}
+        capture["setup_only"] = False
+        errors: list[str] = []
+        validator.validate_preparation_capture(capture, relative, progress["build_version"], "gatehouse_lock", {"width": 1280, "height": 720}, ROOT, errors, True)
+        joined = "\n".join(errors)
+        self.assertIn("1280x720", joined)
+        self.assertIn("setup-only", joined)
+
 
 if __name__ == "__main__":
     unittest.main()

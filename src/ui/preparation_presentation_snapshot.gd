@@ -106,7 +106,26 @@ static func _brief(keep: Object) -> Dictionary:
 		answer = "%s; %s. This is visible coverage, not a guaranteed hold." % [", ".join(coverage), commander_answer]
 	var warnings: Array = summary.get("duplicate_role_warnings", [])
 	var weakness: String = String(warnings[0]) if not warnings.is_empty() else "No immediate coverage warning; compare the layout against the forecast."
-	return {"question": question, "answer": answer, "weakness": weakness, "plan": _starter_plan_text(keep)}
+	return {"question": question, "answer": answer, "weakness": weakness, "plan": _starter_plan_text(keep), "compact_plan": _starter_plan_compact_text(keep)}
+
+static func _starter_plan_compact_text(keep: Object) -> String:
+	var plan: Dictionary = keep.keep_definition().get("starter_plan", {})
+	if plan.is_empty():
+		return "PLAN — No authored opening is available for this keep."
+	var placements: Array = plan.get("placements", [])
+	var placed_count: int = 0
+	for placement in placements:
+		var piece_id: String = String(placement.get("piece_id", ""))
+		var origin_value: Variant = placement.get("origin", Vector2i.ZERO)
+		var expected_origin: Vector2i = origin_value if origin_value is Vector2i else Vector2i(int(origin_value[0]), int(origin_value[1]))
+		var expected_floor: String = String(placement.get("floor", "ground"))
+		for instance in keep.pieces.values():
+			if String(instance.get("piece_id", "")) == piece_id and instance.get("origin", Vector2i(-1, -1)) == expected_origin and String(instance.get("floor", "")) == expected_floor:
+				placed_count += 1
+				break
+	var pack_id: String = String(plan.get("pack_id", ""))
+	var pack_name: String = String(keep.pack_definition(pack_id).get("name", pack_id))
+	return "FIRST PLAN — %s [%d/%d placed] • %s%s\nPURPOSE — %s  •  ACCEPT — %s" % [String(plan.get("title", "Authored opening")).to_upper(), placed_count, placements.size(), pack_name, " [done]" if keep.owned_packs.has(pack_id) else "", String(plan.get("intent", "Build one legible answer.")), String(plan.get("tradeoff", "Another route remains exposed."))]
 
 static func _starter_plan_text(keep: Object) -> String:
 	var plan: Dictionary = keep.keep_definition().get("starter_plan", {})

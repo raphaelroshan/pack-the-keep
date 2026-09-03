@@ -67,3 +67,9 @@ The current `0.59.0-gpt56-packet-completion` main build passes the full automate
 The 1280×720 War Council reaches a genuine Build & Assign decision, but the preparation surface is vertically dense. The primary action remains visible while the selected commander, selected doctrine, forecast, and board context compete for attention and require scrolling. Therefore **PTK-I1 is not complete for investment-evaluation scope**. The next agent must make the fortress and the selected plan simultaneously legible, without removing tactical detail or reducing the simulation to a static presentation.
 
 After PTK-I1, execute PTK-I2: a second keep that changes room connectivity, preferred placement, invasion pressure, repair priority, and recovery trade-offs. Do not count a color swap, larger roster, or stat-only enemy as campaign breadth. The dated evidence is in `docs/latest_review_2026-09-03.md` and `docs/visual_evidence/v0.59.0-gpt56-packet-completion-review-2026-09-03/`.
+
+## 2026-09-03 execution checkpoint — board-first gate complete
+
+Build `0.60.0-board-first-preparation` closes the mandatory preparation finding. At 1280×720, Preparation now uses a phase-specific two-column composition that keeps the current question, visible answer, compact plan/risk, Ready Defense action, complete two-floor fortress, and selected pack in the first viewport. War Council retains its deliberate stacked briefing, while 150% large text retains the full stacked placement rationale.
+
+Fresh Greywatch and Ash Ford captures re-prove PTK-I1 and PTK-I2 at 1280×720, with complete 1600×900 flow sequences preserving intervention, recovery, and causal Results. Runtime rules remain unchanged. See `docs/p72_board_first_preparation_verification.md`.

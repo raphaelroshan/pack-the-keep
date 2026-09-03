@@ -17,6 +17,11 @@ GATE_REQUIREMENTS = {
     "PTK-I6": {"full_verification", "seeded_balance", "package_launch_and_recovery", "input_and_scaling", "release_manifest", "distribution_boundary"},
 }
 GATE_IDS = [f"PTK-I{index}" for index in range(1, 7)]
+BOARD_FIRST_CAPTURES = [
+    ("docs/visual_evidence/v0.60.0-board-first-greywatch-1280x720/capture-manifest.json", "gatehouse_lock", {"width": 1280, "height": 720}, True),
+    ("docs/visual_evidence/v0.60.0-board-first-ash-ford-1280x720/capture-manifest.json", "ash_ford_crossing", {"width": 1280, "height": 720}, True),
+    ("docs/visual_evidence/v0.60.0-board-first-ash-ford-1600x900/capture-manifest.json", "ash_ford_crossing", {"width": 1600, "height": 900}, False),
+]
 
 
 def _load(path: Path, errors: list[str]) -> dict[str, Any]:
@@ -41,6 +46,32 @@ def _evidence_exists(root: Path, relative: str) -> bool:
     except (OSError, ValueError):
         return False
     return resolved.is_file()
+
+
+def validate_preparation_capture(
+    manifest: dict[str, Any], relative: str, build_version: str, scenario_id: str,
+    resolution: dict[str, int], root: Path, errors: list[str], setup_only: bool,
+) -> None:
+    if manifest.get("build_version") != build_version or manifest.get("scenario") != scenario_id:
+        errors.append(f"{relative}: board-first capture identity is stale")
+    if manifest.get("resolution") != resolution:
+        errors.append(f"{relative}: board-first capture resolution must be {resolution['width']}x{resolution['height']}")
+    files = manifest.get("files")
+    required = {"01_title.png", "02_war_council.png", "03_preparation.png"}
+    if setup_only:
+        if manifest.get("setup_only") is not True:
+            errors.append(f"{relative}: board-first evidence must use the bounded setup-only capture")
+        if not isinstance(files, list) or set(files) != required:
+            errors.append(f"{relative}: board-first capture must contain exactly title, War Council, and Preparation")
+            return
+    elif not isinstance(files, list) or not required.union({"04_assault_phase_1.png", "05_recovery_phase_1.png", "06_assault_phase_2.png", "07_recovery_phase_2.png", "08_assault_phase_3.png", "09_terminal_results.png"}).issubset(set(files)):
+        errors.append(f"{relative}: wide evidence must contain the complete three-wave flow")
+        return
+    if manifest.get("human_evidence") is not False or manifest.get("debug_ui") is not False:
+        errors.append(f"{relative}: board-first capture must remain automated and debug-free")
+    for filename in files:
+        if not _evidence_exists(root, str(Path(relative).parent / filename)):
+            errors.append(f"{relative}: missing captured image {filename}")
 
 
 def validate_progress(progress: dict[str, Any], manifest: dict[str, Any], early_access: dict[str, Any], root: Path, errors: list[str]) -> None:
@@ -121,6 +152,10 @@ def validate_progress(progress: dict[str, Any], manifest: dict[str, Any], early_
         if signature in plan_signatures:
             errors.append(f"{keep_path.name} duplicates another keep starter plan")
         plan_signatures.add(signature)
+
+    for relative, scenario_id, resolution, setup_only in BOARD_FIRST_CAPTURES:
+        capture = _load(root / relative, errors)
+        validate_preparation_capture(capture, relative, str(progress.get("build_version", "")), scenario_id, resolution, root, errors, setup_only)
 
 
 def main() -> int:

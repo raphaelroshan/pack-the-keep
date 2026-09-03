@@ -196,8 +196,8 @@ def validate_progress(
         errors.append("GPT56 asset report must distinguish no active temporary assets from the archive")
 
     if validate_captures:
-        _validate_capture(root, "docs/visual_evidence/v0.59.0-gpt56-greywatch-1600x900/capture-manifest.json", "gatehouse_lock", str(progress.get("build_version", "")), errors, True)
-        _validate_capture(root, "docs/visual_evidence/v0.59.0-gpt56-ash-ford-1600x900/capture-manifest.json", "ash_ford_crossing", str(progress.get("build_version", "")), errors)
+        _validate_capture(root, "docs/visual_evidence/v0.60.0-board-first-greywatch-1600x900/capture-manifest.json", "gatehouse_lock", str(progress.get("build_version", "")), errors, True)
+        _validate_capture(root, "docs/visual_evidence/v0.60.0-board-first-ash-ford-1600x900/capture-manifest.json", "ash_ford_crossing", str(progress.get("build_version", "")), errors)
     if progress.get("human_evidence_required_for_implementation") is not False or progress.get("human_evidence_status") != "pending":
         errors.append("human evidence must remain pending and non-blocking")
     if progress.get("owner_approval_required_for_distribution") is not True:
