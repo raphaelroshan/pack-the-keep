@@ -4,7 +4,7 @@
 **Build target:** Archived prototype support
 **Purpose:** Give AI agents usable temporary defenders, enemies, rooms, VFX, audio, and animation ingredients while Greywatch’s final authored art is developed.
 
-**Current integration:** `0.61.0-battle-first-assault` uses original small-scale SVG silhouettes for every active actor, Greywatch room-function props, combat/room/recovery effects, and fourteen original semantic WAV cues. Earlier visual and audio kits remain archived as licensed historical material, but no current presentation profile references them. Stable fitted room labels, room fills, health bars, bounded status badges, procedural combat marks, and generated tones remain the fallbacks.
+**Current integration:** `0.62.0-board-first-recovery` uses original small-scale SVG silhouettes for every active actor, Greywatch room-function props, combat/room/recovery effects, and fourteen original semantic WAV cues. Earlier visual and audio kits remain archived as licensed historical material, but no current presentation profile references them. Stable fitted room labels, room fills, health bars, bounded status badges, procedural combat marks, and generated tones remain the fallbacks.
 
 ## Included sources
 

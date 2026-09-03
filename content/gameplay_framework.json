@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.61.0-battle-first-assault",
+  "framework_version": "0.62.0-board-first-recovery",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -2014,5 +2014,14 @@
     "tutorial_fallback": "first_watch_retains_tutorial_owned_primary_action",
     "large_text_fallback": "stacked_with_main_primary_action",
     "determinism_rule": "responsive_layout_never_mutates_combat_state"
+  },
+  "board_first_recovery": {
+    "status": "implemented",
+    "minimum_effective_width": 1120,
+    "wide_composition": ["causal_brief_and_damaged_fortress", "legality_sorted_recovery_actions"],
+    "priority_selection": "select_highest_damaged_brief_subject_without_applying_an_action",
+    "excluded_states": ["blocking_authored_event", "terminal_results"],
+    "large_text_fallback": "stacked_with_main_continuation_action",
+    "determinism_rule": "layout_and_selection_never_mutate_pack_keep_state"
   }
 }

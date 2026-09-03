@@ -1071,3 +1071,11 @@
 **Reason:** At 1280×720 the existing global breakpoint stacked the command rail below the fortress, forcing the player to leave the live board to control time or inspect the focused threat. The same 810-pixel board and compact rail already fit safely in Preparation, and Assault benefits even more from simultaneous board and control visibility.
 
 **Trade-off:** The normal board-first Assault is more compact and relies on the command rail for exact live guidance. Large-text and narrow layouts retain the fuller stacked presentation, and tutorial steps keep their explicit primary action so the authored teaching path and focus contract do not change.
+
+## ADR-135: Recovery pairs visible damage with the first legal action
+
+**Decision:** Let ordinary inter-wave Recovery use a two-column composition at 1120 effective pixels or more. Keep the compact causal brief above the fortress, place legality-sorted action cards beside it, select the brief's highest damaged priority on entry, and suppress repeated main-column instructions and the duplicate End Lull action. Exclude blocking authored events, terminal Results, and tutorial-owned actions from this compact mode.
+
+**Reason:** The 1280×720 P73 evidence showed Recovery scrolling away from its heading while the command rail remained below the damaged fortress. Recovery is a compare-and-commit decision: the player needs the board condition and exact legal repair or assignment together more than repeated continuation copy.
+
+**Trade-off:** The command rail remains independently scrollable, so later blocked diagnostics and End Lull may require rail scrolling. Large-text layouts preserve the complete stacked flow, and authored event choices keep their existing composition because they temporarily replace ordinary recovery actions.
