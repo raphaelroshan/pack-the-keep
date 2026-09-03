@@ -1,0 +1,12 @@
+{
+  "game": "Pack the Keep",
+  "build": "0.59.0-gpt56-packet-completion",
+  "main_commit": "e030fdc",
+  "review_date": "2026-09-03",
+  "engine": "Godot 4.4.1",
+  "viewport": {"width": 1280, "height": 720},
+  "states": ["title", "war_council", "build_and_assign"],
+  "files": ["01_title.png", "02_first_action.png", "03_followup.png"],
+  "result": "automated verification passed; visual review found preparation surface is vertically dense",
+  "source": "xvfb-run visual smoke capture from current main checkout"
+}

@@ -218,3 +218,5 @@ The dependency-aware tasks in [`docs/gpt56_investment_execution_packets.md`](doc
 | `docs/gpt56_investment_execution_packets.md` | Larger dependency-aware tasks for a complete Greywatch creative vertical and differentiated Early Access campaign skeleton. |
 | `docs/latest_gpt56_improvement_review_2026-09-03.md` | Latest post-change verification, visual evidence, corrected title status, and next GPT-5.6 task. |
 | `content/gpt56_progress.json` | Machine-checked completion evidence for PTK-GPT56-1 through PTK-GPT56-5. |
+| `docs/latest_review_2026-09-03.md` | Current main-branch review, verification result, War Council findings, and next mandatory Greywatch/second-keep gates. |
+| `docs/visual_evidence/v0.59.0-gpt56-packet-completion-review-2026-09-03/` | Fresh 1280×720 title, War Council, and Build & Assign captures from the current review. |

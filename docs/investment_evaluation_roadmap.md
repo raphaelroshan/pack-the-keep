@@ -58,3 +58,12 @@ The active sequence is **PTK-I1 Creative vertical**, **PTK-I2 Second keep**, **P
 ## Decision
 
 The investment target is a compact fortress-defense game with one excellent keep and enough mechanically distinct adjacent content to prove continuation. We prefer three keeps with real spatial identities over a dozen reskinned maps, and a small set of readable enemy questions over a large list of stat variants.
+
+
+## 2026-09-03 review checkpoint — preparation gate
+
+The current `0.59.0-gpt56-packet-completion` main build passes the full automated suite, including Early Access campaign, campaign UI, playtest readiness, real-time auto-battle, recovery, accessibility, controller, scaling, save-boundary, audio, and packaging checks. The title and War Council now communicate a credible product proposition.
+
+The 1280×720 War Council reaches a genuine Build & Assign decision, but the preparation surface is vertically dense. The primary action remains visible while the selected commander, selected doctrine, forecast, and board context compete for attention and require scrolling. Therefore **PTK-I1 is not complete for investment-evaluation scope**. The next agent must make the fortress and the selected plan simultaneously legible, without removing tactical detail or reducing the simulation to a static presentation.
+
+After PTK-I1, execute PTK-I2: a second keep that changes room connectivity, preferred placement, invasion pressure, repair priority, and recovery trade-offs. Do not count a color swap, larger roster, or stat-only enemy as campaign breadth. The dated evidence is in `docs/latest_review_2026-09-03.md` and `docs/visual_evidence/v0.59.0-gpt56-packet-completion-review-2026-09-03/`.
