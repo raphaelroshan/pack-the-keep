@@ -48,6 +48,7 @@ const WINDOW_SIZE_PRESETS := [Vector2i(1280, 720), Vector2i(1600, 900), Vector2i
 const EFFECTS_VOLUME_PRESETS := [0.25, 0.5, 0.75, 1.0]
 const EVENT_FEED_RETENTION_PRESETS := [4, 8, 16, 32]
 const TWO_COLUMN_EFFECTIVE_WIDTH := 1420.0
+const PREPARATION_TWO_COLUMN_EFFECTIVE_WIDTH := 1120.0
 const COMPACT_CARD_EFFECTIVE_WIDTH := 920.0
 const PAGE_HORIZONTAL_MARGIN := 48.0
 const RESERVED_CONTROLLER_NAVIGATION_BUTTONS := [0, 11, 12, 13, 14]
@@ -161,6 +162,7 @@ var war_council_presentation_snapshot: Dictionary = {}
 var recovery_presentation_snapshot: Dictionary = {}
 var results_presentation_snapshot: Dictionary = {}
 var phase_header_snapshot: Dictionary = {}
+var preparation_board_first_active: bool = false
 var presentation_audit_overlay: PresentationAuditOverlay
 var navigation_confirm_layer: Control
 var navigation_confirm_label: Label
@@ -738,12 +740,13 @@ func _apply_responsive_layout() -> void:
 	var ui_factor: float = maxf(0.01, float(get_window().content_scale_factor))
 	var effective_width: float = maxf(float(get_window().size.x), size.x) / ui_factor
 	var terminal_large_text: bool = terminal_debrief_panel != null and terminal_debrief_panel.visible and ui_factor >= 1.5
-	var stacked: bool = effective_width < TWO_COLUMN_EFFECTIVE_WIDTH or terminal_large_text
+	preparation_board_first_active = screen == "preparation" and effective_width >= PREPARATION_TWO_COLUMN_EFFECTIVE_WIDTH and not terminal_large_text
+	var stacked: bool = (effective_width < TWO_COLUMN_EFFECTIVE_WIDTH and not preparation_board_first_active) or terminal_large_text
 	var compact_cards: bool = effective_width < COMPACT_CARD_EFFECTIVE_WIDTH
 	var stacked_width: float = maxf(520.0, size.x - PAGE_HORIZONTAL_MARGIN)
 	var main_width: float = minf(810.0, stacked_width) if stacked else 810.0
 	var large_text_compact: bool = ui_factor >= 1.5 and effective_width < TWO_COLUMN_EFFECTIVE_WIDTH
-	var prioritized_decision_flow: bool = stacked and screen in ["setup", "preparation"]
+	var prioritized_decision_flow: bool = (stacked and screen in ["setup", "preparation"]) or preparation_board_first_active
 	if screen_hint != null:
 		screen_hint.visible = screen == "title" or effective_width >= 1800.0
 	gameplay_columns.vertical = stacked
@@ -754,7 +757,7 @@ func _apply_responsive_layout() -> void:
 	if war_council_choice_panel != null:
 		war_council_choice_panel.set_responsive_layout(compact_cards, main_width)
 	if preparation_brief_panel != null:
-		preparation_brief_panel.set_responsive_layout(compact_cards, main_width)
+		preparation_brief_panel.set_responsive_layout(compact_cards, main_width, preparation_board_first_active)
 	if setup_overview_panel != null:
 		setup_overview_panel.visible = screen == "setup" and not prioritized_decision_flow
 	if main_subtitle_label != null:
@@ -778,6 +781,8 @@ func _apply_responsive_layout() -> void:
 		keep_canvas.custom_minimum_size.y = 488.0 if not stacked and size.y >= 900.0 else 382.0
 		keep_canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		keep_canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	if playtest_status_label != null and screen == "preparation" and not tutorial.active:
+		playtest_status_label.visible = not preparation_board_first_active
 	_refresh_navigation()
 
 func _responsive_layout_snapshot() -> Dictionary:
@@ -788,6 +793,7 @@ func _responsive_layout_snapshot() -> Dictionary:
 		"ui_scale": ui_factor,
 		"effective_width": maxf(float(get_window().size.x), size.x) / ui_factor,
 		"stacked": gameplay_columns != null and gameplay_columns.vertical,
+		"preparation_board_first": preparation_board_first_active,
 		"main_minimum_width": gameplay_main_column.custom_minimum_size.x if gameplay_main_column != null else 0.0,
 		"command_minimum_width": command_panel.custom_minimum_size.x if command_panel != null else 0.0,
 	}
@@ -2105,7 +2111,7 @@ func _set_screen(next_screen: String) -> void:
 	if playtest_button:
 		playtest_button.visible = gameplay_screen and not terminal_result
 	if playtest_status_label:
-		playtest_status_label.visible = gameplay_screen and not terminal_result
+		playtest_status_label.visible = gameplay_screen and not terminal_result and not (screen == "preparation" and preparation_board_first_active)
 	if keep_canvas:
 		keep_canvas.set_placement_guides(screen == "preparation")
 		keep_canvas.visible = gameplay_screen
@@ -3488,7 +3494,7 @@ func _refresh_tutorial_panel() -> void:
 	if main_title_label != null:
 		main_title_label.visible = screen != "title" and not (tutorial.active and gameplay_screen)
 	if main_subtitle_label != null:
-		var prioritized_preparation: bool = screen == "preparation" and gameplay_columns != null and gameplay_columns.vertical
+		var prioritized_preparation: bool = screen == "preparation" and ((gameplay_columns != null and gameplay_columns.vertical) or preparation_board_first_active)
 		main_subtitle_label.visible = screen != "title" and not (tutorial.active and gameplay_screen) and not prioritized_preparation
 	if guidance_label != null:
 		guidance_label.visible = gameplay_screen and screen != "preparation" and not tutorial.active
@@ -3496,7 +3502,7 @@ func _refresh_tutorial_panel() -> void:
 	if playtest_button != null:
 		playtest_button.visible = gameplay_screen and (not tutorial.active or tutorial_primary_action)
 	if playtest_status_label != null:
-		playtest_status_label.visible = gameplay_screen and (not tutorial.active or tutorial_primary_action)
+		playtest_status_label.visible = gameplay_screen and (not tutorial.active or tutorial_primary_action) and not (screen == "preparation" and preparation_board_first_active)
 	if not tutorial.active:
 		return
 	var step: Dictionary = tutorial.current_step()
@@ -3824,7 +3830,7 @@ func _refresh_terminal_debrief() -> void:
 	if playtest_button != null:
 		playtest_button.visible = screen in ["preparation", "battle", "results"] and not terminal_result
 	if playtest_status_label != null:
-		playtest_status_label.visible = screen in ["preparation", "battle", "results"] and not terminal_result
+		playtest_status_label.visible = screen in ["preparation", "battle", "results"] and not terminal_result and not (screen == "preparation" and preparation_board_first_active)
 	if recovery_actions_panel != null and terminal_result:
 		recovery_actions_panel.visible = false
 	if recovery_brief_panel != null and terminal_result:

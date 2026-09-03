@@ -1,7 +1,14 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.59.0",
+  "content_version": "0.60.0",
+  "p72_board_first_preparation": {
+    "status": "implemented",
+    "breakpoint": "preparation_uses_two_columns_at_1120_effective_pixels_while_war_council_retains_its_1420_breakpoint",
+    "first_view": ["current_question", "visible_answer", "plan_and_risk", "ready_defense", "two_floor_board", "selected_pack"],
+    "fallback": "stacked_large_text_retains_full_placement_rationale",
+    "authority": "responsive_composition_and_compact_text_are_read_only"
+  },
   "p4_vertical_slice": {
     "status": "implemented",
     "scorecard": "each_resolved_wave_records_doctrine_outcome_damage_defeated_enemies_and_recovery_actions",

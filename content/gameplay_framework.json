@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.59.0-gpt56-packet-completion",
+  "framework_version": "0.60.0-board-first-preparation",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -1997,5 +1997,13 @@
       "defeated_enemies"
     ],
     "resolution": "one eligible deterministic attack per unit per battle step"
+  },
+  "board_first_preparation": {
+    "status": "implemented",
+    "minimum_effective_width": 1120,
+    "wide_composition": ["fortress_and_plan", "selected_pack_and_commands"],
+    "compact_plan": ["identity", "placed_progress", "pack", "purpose", "accepted_risk"],
+    "large_text_fallback": "stacked_with_full_plan_rationale",
+    "determinism_rule": "layout_and_text_projection_never_mutate_pack_keep_state"
   }
 }

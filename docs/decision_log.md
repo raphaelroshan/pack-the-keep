@@ -1055,3 +1055,11 @@
 **Reason:** The runtime already meets the GPT56 roster floor, but the relationship between commander doctrine and keep geometry is easier to infer after entering Preparation than while choosing the defense. Making that relationship explicit turns an existing mechanical distinction into a player-facing decision and avoids adding redundant content merely to increase counts.
 
 **Trade-off:** The authored row is guidance, not an optimality score or guarantee. Players may choose any pack and placement, simulation outcomes remain authoritative, and future commanders or keeps must add a matrix row before runtime content validation passes.
+
+## ADR-133: Preparation owns a phase-specific board-first breakpoint
+
+**Decision:** Let Preparation use the existing two-column fortress/command composition at effective widths of 1120 pixels or more, even when War Council remains stacked below the general 1420-pixel breakpoint. In that mode, project the authored first plan as a compact live summary; retain the full rationale in stacked and large-text layouts.
+
+**Reason:** The 1280×720 investment review showed that a global breakpoint placed Build & Assign below the fortress, separating the selected doctrine from the board it changes. The existing 810-pixel board plus 292-pixel rail fits safely at this width, so a phase-specific composition restores simultaneous context without introducing another screen or hiding commands.
+
+**Trade-off:** Preparation and War Council can use different compositions at the same viewport, because their information hierarchy differs. The narrower rail remains independently scrollable, and 125%/150% scale falls back to stacking whenever effective width cannot safely contain both columns.

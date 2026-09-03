@@ -73,6 +73,7 @@ func _initialize() -> void:
 	await process_frame
 	await process_frame
 	_check(ui.screen == "preparation", "responsive flow should still enter Preparation through the authoritative setup command")
+	_check(not ui.gameplay_columns.vertical and ui.preparation_board_first_active, "1600x900 at 125 percent should use the phase-specific board-first Preparation composition")
 	_check(_inside_viewport(ui.gameplay_main_column, Vector2(root.size)), "Preparation main content should remain horizontally inside the viewport")
 	_check(_inside_viewport(ui.command_panel, Vector2(root.size)), "Preparation command rail should remain horizontally inside the viewport")
 	_check(ui.playtest_button.is_visible_in_tree() and ui.preparation_pack_offer_panel.is_visible_in_tree(), "Preparation should retain pack context and its primary commit action")
@@ -85,8 +86,24 @@ func _initialize() -> void:
 	_check(_inside_scroll_view(ui.playtest_button, ui.page_scroll), "stacked Preparation should keep Ready Defense visible in the first viewport")
 	_check(ui.keep_canvas.get_global_rect().position.y < ui.page_scroll.get_global_rect().end.y, "stacked Preparation should keep the fort reachable at the bottom of the first viewport")
 
+	await _apply_layout(ui, Vector2i(1280, 720), 1)
+	var preparation_snapshot: Dictionary = ui._responsive_layout_snapshot()
+	_check(not ui.gameplay_columns.vertical and bool(preparation_snapshot.get("preparation_board_first", false)), "1280x720 Preparation should use its board-first two-column composition: %s" % JSON.stringify(preparation_snapshot))
+	_check(String(ui.preparation_brief_panel.plan_label.text).contains("FIRST PLAN") and String(ui.preparation_brief_panel.plan_label.text).contains("PURPOSE") and String(ui.preparation_brief_panel.plan_label.text).contains("ACCEPT"), "board-first Preparation should retain plan identity, purpose, and accepted risk")
+	_check(_inside_viewport(ui.keep_canvas, Vector2(root.size)) and _inside_viewport(ui.command_panel, Vector2(root.size)), "board-first Preparation should keep both fortress and command rail horizontally visible")
+	var board_rect: Rect2 = ui.keep_canvas.get_global_rect()
+	var preparation_viewport: Rect2 = ui.page_scroll.get_global_rect()
+	var pack_rect: Rect2 = ui.preparation_pack_offer_panel.get_global_rect()
+	var visible_board: Rect2 = board_rect.intersection(preparation_viewport)
+	_check(visible_board.size.y >= board_rect.size.y * 0.75, "board-first Preparation should expose at least three quarters of the fortress in the initial viewport")
+	_check(pack_rect.position.y < preparation_viewport.end.y - 96.0 and pack_rect.end.y > preparation_viewport.position.y, "board-first Preparation should expose the selected pack beside the fortress")
+	_check(ui.page_scroll.scroll_vertical == 0 and root.gui_get_focus_owner() == ui.playtest_button, "board-first Preparation should open at the top with Ready Defense focused")
+	ui._refresh_ui()
+	_check(not ui.playtest_status_label.visible, "board-first Preparation should remove the redundant readiness sentence below the primary action")
+
 	await _apply_layout(ui, Vector2i(1280, 720), 3)
 	_check(ui.gameplay_columns.vertical and ui.preparation_brief_panel.summary_row.vertical, "large-text Preparation should use the deliberate single-column brief")
+	_check(not ui.preparation_board_first_active and String(ui.preparation_brief_panel.plan_label.text).contains("holds the inner response line"), "large-text stacked Preparation should retain the full placement rationale")
 	_check(_inside_viewport(ui.preparation_brief_panel, Vector2(root.size)), "large-text Preparation should remain horizontally inside the viewport")
 	_check(_inside_scroll_view(ui.playtest_button, ui.page_scroll), "large-text Preparation should keep the focused Ready Defense action visible")
 
