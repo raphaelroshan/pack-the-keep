@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.62.0-board-first-recovery",
+  "framework_version": "0.63.0-board-first-results",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -2023,5 +2023,13 @@
     "excluded_states": ["blocking_authored_event", "terminal_results"],
     "large_text_fallback": "stacked_with_main_continuation_action",
     "determinism_rule": "layout_and_selection_never_mutate_pack_keep_state"
+  },
+  "board_first_terminal_results": {
+    "status": "implemented",
+    "minimum_effective_width": 1120,
+    "wide_composition": ["final_fortress_evidence", "outcome_cause_and_replay_debrief"],
+    "suppressed_duplicates": ["main_title", "main_subtitle", "main_status"],
+    "large_text_fallback": "stacked_with_complete_main_heading",
+    "determinism_rule": "responsive_layout_and_debrief_rendering_never_mutate_pack_keep_state"
   }
 }

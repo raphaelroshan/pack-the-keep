@@ -51,6 +51,7 @@ const TWO_COLUMN_EFFECTIVE_WIDTH := 1420.0
 const PREPARATION_TWO_COLUMN_EFFECTIVE_WIDTH := 1120.0
 const BATTLE_TWO_COLUMN_EFFECTIVE_WIDTH := 1120.0
 const RECOVERY_TWO_COLUMN_EFFECTIVE_WIDTH := 1120.0
+const TERMINAL_TWO_COLUMN_EFFECTIVE_WIDTH := 1120.0
 const COMPACT_CARD_EFFECTIVE_WIDTH := 920.0
 const PAGE_HORIZONTAL_MARGIN := 48.0
 const RESERVED_CONTROLLER_NAVIGATION_BUTTONS := [0, 11, 12, 13, 14]
@@ -167,6 +168,7 @@ var phase_header_snapshot: Dictionary = {}
 var preparation_board_first_active: bool = false
 var battle_board_first_active: bool = false
 var recovery_board_first_active: bool = false
+var terminal_board_first_active: bool = false
 var presentation_audit_overlay: PresentationAuditOverlay
 var navigation_confirm_layer: Control
 var navigation_confirm_label: Label
@@ -747,7 +749,8 @@ func _apply_responsive_layout() -> void:
 	preparation_board_first_active = screen == "preparation" and effective_width >= PREPARATION_TWO_COLUMN_EFFECTIVE_WIDTH and not terminal_large_text
 	battle_board_first_active = screen == "battle" and effective_width >= BATTLE_TWO_COLUMN_EFFECTIVE_WIDTH and not terminal_large_text
 	recovery_board_first_active = screen == "results" and keep != null and keep.repair_interval_active and keep.active_event_id.is_empty() and not _is_terminal_result() and effective_width >= RECOVERY_TWO_COLUMN_EFFECTIVE_WIDTH
-	var phase_board_first: bool = preparation_board_first_active or battle_board_first_active or recovery_board_first_active
+	terminal_board_first_active = screen == "results" and _is_terminal_result() and effective_width >= TERMINAL_TWO_COLUMN_EFFECTIVE_WIDTH and not terminal_large_text
+	var phase_board_first: bool = preparation_board_first_active or battle_board_first_active or recovery_board_first_active or terminal_board_first_active
 	var stacked: bool = (effective_width < TWO_COLUMN_EFFECTIVE_WIDTH and not phase_board_first) or terminal_large_text
 	var compact_cards: bool = effective_width < COMPACT_CARD_EFFECTIVE_WIDTH
 	var stacked_width: float = maxf(520.0, size.x - PAGE_HORIZONTAL_MARGIN)
@@ -768,7 +771,11 @@ func _apply_responsive_layout() -> void:
 	if setup_overview_panel != null:
 		setup_overview_panel.visible = screen == "setup" and not prioritized_decision_flow
 	if main_subtitle_label != null:
-		main_subtitle_label.visible = screen != "title" and not (screen == "preparation" and prioritized_decision_flow) and not battle_board_first_active and not recovery_board_first_active and not (tutorial.active and screen in ["preparation", "battle", "results"])
+		main_subtitle_label.visible = screen != "title" and not (screen == "preparation" and prioritized_decision_flow) and not battle_board_first_active and not recovery_board_first_active and not terminal_board_first_active and not (tutorial.active and screen in ["preparation", "battle", "results"])
+	if main_title_label != null and screen == "results" and _is_terminal_result():
+		main_title_label.visible = not terminal_board_first_active and not tutorial.active
+	if status_label != null and screen == "results" and _is_terminal_result():
+		status_label.visible = not terminal_board_first_active
 	if screen == "battle":
 		var tutorial_primary_action: bool = tutorial.active and tutorial.expected_action() in ["resume_battle", "observe_wave", "retry_phase"]
 		var show_main_battle_action: bool = (not tutorial.active or tutorial_primary_action) and not (battle_board_first_active and not tutorial.active)
@@ -799,8 +806,10 @@ func _apply_responsive_layout() -> void:
 		if recovery_stage_label != null:
 			recovery_stage_label.custom_minimum_size.x = maxf(220.0, command_width - 20.0)
 	if terminal_debrief_panel != null:
-		terminal_debrief_panel.custom_minimum_size.x = main_width if stacked else 430.0 if effective_width >= 1500.0 else 340.0
+		var terminal_width: float = main_width if stacked else 430.0 if effective_width >= 1500.0 else 340.0
+		terminal_debrief_panel.custom_minimum_size.x = terminal_width
 		terminal_debrief_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL if stacked else Control.SIZE_SHRINK_BEGIN
+		terminal_debrief_panel.set_responsive_layout(not stacked and effective_width < 1500.0, terminal_width)
 	if keep_canvas != null:
 		keep_canvas.custom_minimum_size.x = main_width
 		keep_canvas.custom_minimum_size.y = 488.0 if not stacked and size.y >= 900.0 else 382.0
@@ -823,6 +832,7 @@ func _responsive_layout_snapshot() -> Dictionary:
 		"preparation_board_first": preparation_board_first_active,
 		"battle_board_first": battle_board_first_active,
 		"recovery_board_first": recovery_board_first_active,
+		"terminal_board_first": terminal_board_first_active,
 		"main_minimum_width": gameplay_main_column.custom_minimum_size.x if gameplay_main_column != null else 0.0,
 		"command_minimum_width": command_panel.custom_minimum_size.x if command_panel != null else 0.0,
 	}
@@ -2120,9 +2130,9 @@ func _set_screen(next_screen: String) -> void:
 		art_banner.visible = screen in ["title", "setup"]
 		art_banner.custom_minimum_size.y = 100 if screen == "setup" else 150
 	if main_title_label:
-		main_title_label.visible = screen != "title"
+		main_title_label.visible = screen != "title" and not terminal_board_first_active
 	if main_subtitle_label:
-		main_subtitle_label.visible = screen != "title" and not battle_board_first_active and not recovery_board_first_active
+		main_subtitle_label.visible = screen != "title" and not battle_board_first_active and not recovery_board_first_active and not terminal_board_first_active
 	if setup_overview_panel:
 		setup_overview_panel.visible = screen == "setup"
 	if setup_overview_label:
@@ -2132,7 +2142,7 @@ func _set_screen(next_screen: String) -> void:
 	if settings_overview_panel:
 		settings_overview_panel.visible = screen == "settings"
 	if status_label:
-		status_label.visible = gameplay_screen
+		status_label.visible = gameplay_screen and not terminal_board_first_active
 	if preparation_brief_panel:
 		preparation_brief_panel.visible = screen == "preparation" and not tutorial.active
 	if recovery_brief_panel:
@@ -3540,10 +3550,10 @@ func _refresh_tutorial_panel() -> void:
 		title_card.visible = screen == "title" and not tutorial.active
 	var gameplay_screen: bool = screen in ["preparation", "battle", "results"]
 	if main_title_label != null:
-		main_title_label.visible = screen != "title" and not (tutorial.active and gameplay_screen)
+		main_title_label.visible = screen != "title" and not (tutorial.active and gameplay_screen) and not terminal_board_first_active
 	if main_subtitle_label != null:
 		var prioritized_preparation: bool = screen == "preparation" and ((gameplay_columns != null and gameplay_columns.vertical) or preparation_board_first_active)
-		main_subtitle_label.visible = screen != "title" and not (tutorial.active and gameplay_screen) and not prioritized_preparation and not battle_board_first_active and not recovery_board_first_active
+		main_subtitle_label.visible = screen != "title" and not (tutorial.active and gameplay_screen) and not prioritized_preparation and not battle_board_first_active and not recovery_board_first_active and not terminal_board_first_active
 	if guidance_label != null:
 		guidance_label.visible = gameplay_screen and screen != "preparation" and not tutorial.active and not (screen == "battle" and battle_board_first_active) and not (screen == "results" and recovery_board_first_active)
 	var tutorial_primary_action: bool = tutorial.active and tutorial.expected_action() in ["start_wave", "resume_battle", "observe_wave", "finish_interval", "finish_tutorial", "retry_phase"]
@@ -3895,7 +3905,9 @@ func _refresh_terminal_debrief() -> void:
 func _focus_terminal_debrief() -> void:
 	if terminal_debrief_panel != null:
 		terminal_debrief_panel.focus_primary()
-		if terminal_debrief_panel.primary_button != null:
+		if terminal_board_first_active and page_scroll != null:
+			page_scroll.scroll_vertical = 0
+		elif terminal_debrief_panel.primary_button != null:
 			_scroll_page_to_control(terminal_debrief_panel.primary_button)
 
 func _refresh_inspection_card() -> void:

@@ -1079,3 +1079,11 @@
 **Reason:** The 1280×720 P73 evidence showed Recovery scrolling away from its heading while the command rail remained below the damaged fortress. Recovery is a compare-and-commit decision: the player needs the board condition and exact legal repair or assignment together more than repeated continuation copy.
 
 **Trade-off:** The command rail remains independently scrollable, so later blocked diagnostics and End Lull may require rail scrolling. Large-text layouts preserve the complete stacked flow, and authored event choices keep their existing composition because they temporarily replace ordinary recovery actions.
+
+## ADR-136: Terminal Results pairs fortress evidence with its verdict
+
+**Decision:** Let completed Results use the existing two-column fortress/debrief composition at 1120 effective pixels or more, except at the 150% large-text fallback. In that mode, the dedicated debrief owns outcome and identity while the main column suppresses repeated terminal title, subtitle, and status.
+
+**Reason:** The v0.62 1280×720 evidence showed the complete fortress above a debrief whose verdict and replay action began below the fold. A terminal decision needs simultaneous evidence and interpretation: what survived on the board, why the defense ended that way, and the next replay choice.
+
+**Trade-off:** The debrief remains independently scrollable, so detailed phase rows and fortress diagnostics may require rail scrolling. Large text retains the established stacked composition, and inter-wave Recovery remains governed by its separate board-first rule.

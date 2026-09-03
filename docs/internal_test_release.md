@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.62.0-board-first-recovery` — PTK-GPT56-1 through PTK-GPT56-5 and all prior gates remain enforced; Preparation, Assault, and ordinary Recovery keep the tactical board beside their immediate decisions at 1280×720 while all-phase save/replay, cross-keep continuation, accessibility, package, forced-close, and original-asset evidence remain green; human sessions and owner distribution approval remain pending
+**Current build identity:** `0.63.0-board-first-results` — PTK-GPT56-1 through PTK-GPT56-5 and all prior gates remain enforced; Preparation, Assault, Recovery, and terminal Results keep the tactical board beside their immediate decision or verdict at 1280×720 while all-phase save/replay, cross-keep continuation, accessibility, package, forced-close, and original-asset evidence remain green; human sessions and owner distribution approval remain pending
 
 ## Purpose
 

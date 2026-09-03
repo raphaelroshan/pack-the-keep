@@ -10,6 +10,21 @@ func _check(condition: bool, message: String) -> void:
 	if not condition:
 		failures.append(message)
 
+func _inside_viewport(control: Control, viewport_size: Vector2) -> bool:
+	var rect: Rect2 = control.get_global_rect()
+	return rect.position.x >= -1.0 and rect.end.x <= viewport_size.x + 1.0
+
+func _intersects_scroll_view(control: Control, scroll: ScrollContainer) -> bool:
+	return control.get_global_rect().intersects(scroll.get_global_rect())
+
+func _apply_layout(ui: Control, viewport_size: Vector2i, scale_index: int) -> void:
+	root.content_scale_factor = 1.0
+	root.size = viewport_size
+	ui.ui_scale_index = scale_index
+	ui._apply_ui_scale()
+	await process_frame
+	await process_frame
+
 func _find_button(node: Node, target_text: String) -> Button:
 	for child in node.get_children():
 		if child is Button and String(child.text) == target_text:
@@ -84,6 +99,8 @@ func _initialize() -> void:
 	_resolve_wave(ui)
 	_check(ui.screen == "results" and ui.keep.has_next_wave(), "fixture should first reach inter-wave Recovery")
 	_check(not ui.terminal_debrief_panel.visible and ui.recovery_actions_panel.visible, "inter-wave Recovery should retain its action panel instead of showing the terminal debrief")
+	await _apply_layout(ui, Vector2i(1280, 720), 1)
+	_check(ui.recovery_board_first_active and not ui.terminal_board_first_active, "inter-wave Recovery should retain its own responsive composition instead of opting into terminal Results")
 
 	while ui.keep.has_next_wave():
 		ui._on_finish_interval()
@@ -101,6 +118,28 @@ func _initialize() -> void:
 	_check(_find_button(ui.terminal_debrief_panel, "REVIEW SETUP — PLAY AGAIN") != null, "debrief should expose one dominant replay action")
 	_check(_find_button(ui.terminal_debrief_panel, "Save Result") != null and _find_button(ui.terminal_debrief_panel, "Return to Main Menu") != null, "debrief should expose secondary persistence and exit actions")
 	_check(get_root().gui_get_focus_owner() == ui.terminal_debrief_panel.primary_button, "terminal debrief should focus its primary action")
+
+	await _apply_layout(ui, Vector2i(1280, 720), 1)
+	ui._focus_screen_control()
+	await process_frame
+	var terminal_snapshot: Dictionary = ui._responsive_layout_snapshot()
+	_check(not ui.gameplay_columns.vertical and bool(terminal_snapshot.get("terminal_board_first", false)), "1280x720 terminal Results should use its board-first composition: %s" % JSON.stringify(terminal_snapshot))
+	_check(_inside_viewport(ui.keep_canvas, Vector2(root.size)) and _inside_viewport(ui.terminal_debrief_panel, Vector2(root.size)), "board-first terminal Results should keep fortress and debrief horizontally visible")
+	var board_rect: Rect2 = ui.keep_canvas.get_global_rect()
+	var page_rect: Rect2 = ui.page_scroll.get_global_rect()
+	_check(board_rect.intersection(page_rect).size.y >= board_rect.size.y * 0.95, "board-first terminal Results should expose at least 95 percent of the final fortress")
+	_check(ui.terminal_debrief_panel.outcome_label.is_visible_in_tree() and _intersects_scroll_view(ui.terminal_debrief_panel.causal_label, ui.terminal_debrief_panel.detail_scroll), "terminal outcome and causal summary should begin inside the initial debrief viewport")
+	_check(ui.terminal_debrief_panel.primary_button.is_visible_in_tree() and _inside_viewport(ui.terminal_debrief_panel.primary_button, Vector2(root.size)), "the dominant replay action should remain visible beside the final fortress")
+	_check(get_root().gui_get_focus_owner() == ui.terminal_debrief_panel.primary_button and ui.page_scroll.scroll_vertical == 0, "terminal focus should land on replay without scrolling the fortress away")
+	_check(not ui.main_title_label.visible and not ui.main_subtitle_label.visible and not ui.status_label.visible, "board-first terminal Results should remove repeated main-column verdict chrome")
+
+	var authoritative_before_layout: String = JSON.stringify(ui.keep.serialize())
+	await _apply_layout(ui, Vector2i(1600, 900), 2)
+	_check(not ui.gameplay_columns.vertical and ui.terminal_board_first_active, "1600x900 at 125 percent should retain board-first terminal Results")
+	await _apply_layout(ui, Vector2i(1280, 720), 3)
+	_check(ui.gameplay_columns.vertical and not ui.terminal_board_first_active, "1280x720 at 150 percent should return terminal Results to the stacked composition")
+	_check(_inside_viewport(ui.terminal_debrief_panel, Vector2(root.size)) and ui.main_title_label.visible, "large-text terminal Results should remain horizontally visible and restore its main heading")
+	_check(JSON.stringify(ui.keep.serialize()) == authoritative_before_layout, "responsive terminal transitions must not mutate authoritative run state")
 
 	var before_refresh: String = JSON.stringify(ui.keep.serialize())
 	ui._refresh_terminal_debrief()

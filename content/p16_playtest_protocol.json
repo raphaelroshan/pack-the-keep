@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.62.0-board-first-recovery",
+  "build_version": "0.63.0-board-first-results",
   "status": "ready_for_human_sessions",
   "release_ready": false,
   "minimum_completed_sessions": 4,

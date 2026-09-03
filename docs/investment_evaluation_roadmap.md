@@ -85,3 +85,9 @@ Fresh Greywatch and Ash Ford captures preserve the complete three-phase flow at 
 Build `0.62.0-board-first-recovery` keeps ordinary inter-wave Recovery beside the damaged fortress at 1280×720. The causal brief selects its highest damaged priority on entry without spending an action, legality-sorted cards place the resulting useful repair first, and duplicate main-column continuation copy is removed. Blocking authored events, tutorial actions, terminal Results, and large-text fallbacks retain their dedicated flows.
 
 Fresh Greywatch and Ash Ford evidence covers the complete three-phase loop at 1280×720 and 1600×900. Recovery costs, repair values, action budgets, assignments, events, and save state remain authoritative and unchanged. See `docs/p74_board_first_recovery_verification.md`.
+
+## 2026-09-04 execution checkpoint — board-first terminal Results complete
+
+Build `0.63.0-board-first-results` closes the remaining 1280×720 phase-flow gap. Terminal Results now keeps the final fortress beside its outcome, causal summary, and dominant replay action instead of placing the debrief below the fold. The debrief compacts safely inside its own rail, while 150% large text retains the established stacked composition.
+
+Fresh Greywatch and Ash Ford evidence covers the complete loop at 1280×720 and 1600×900. Outcomes, phase history, fortress state, replay recommendations, campaign consequences, and save state remain authoritative and unchanged. See `docs/p75_board_first_terminal_results_verification.md`.
