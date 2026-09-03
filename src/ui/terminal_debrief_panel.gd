@@ -9,6 +9,8 @@ var eyebrow_label: Label
 var outcome_label: Label
 var identity_label: Label
 var resource_label: Label
+var detail_scroll: ScrollContainer
+var detail_body: VBoxContainer
 var timeline_box: VBoxContainer
 var causal_label: Label
 var fortress_label: Label
@@ -28,52 +30,52 @@ func _init() -> void:
 	var frame: VBoxContainer = VBoxContainer.new()
 	frame.add_theme_constant_override("separation", 8)
 	add_child(frame)
-	var scroll: ScrollContainer = ScrollContainer.new()
-	scroll.name = "TerminalDebriefScroll"
-	scroll.custom_minimum_size = Vector2(410, 430)
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	frame.add_child(scroll)
+	detail_scroll = ScrollContainer.new()
+	detail_scroll.name = "TerminalDebriefScroll"
+	detail_scroll.custom_minimum_size = Vector2(410, 430)
+	detail_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	detail_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	frame.add_child(detail_scroll)
 
-	var body: VBoxContainer = VBoxContainer.new()
-	body.custom_minimum_size = Vector2(394, 0)
-	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 9)
-	scroll.add_child(body)
+	detail_body = VBoxContainer.new()
+	detail_body.custom_minimum_size = Vector2(394, 0)
+	detail_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail_body.add_theme_constant_override("separation", 9)
+	detail_scroll.add_child(detail_body)
 
 	eyebrow_label = _label("FINAL DEFENSE", 12, Color("#8fc6d1"))
-	body.add_child(eyebrow_label)
+	detail_body.add_child(eyebrow_label)
 	outcome_label = _label("DEFENSE COMPLETE", 28, Color("#f1d28e"))
-	body.add_child(outcome_label)
+	detail_body.add_child(outcome_label)
 	identity_label = _label("", 14, Color("#c9bfd0"))
-	body.add_child(identity_label)
+	detail_body.add_child(identity_label)
 
 	resource_label = _label("", 14, Color("#f0dca8"))
 	resource_label.add_theme_stylebox_override("normal", _panel_style(Color("#292331"), Color("#55495f"), 7))
 	resource_label.add_theme_constant_override("outline_size", 0)
-	body.add_child(resource_label)
+	detail_body.add_child(resource_label)
 
-	body.add_child(_section_heading("WHY THIS DEFENSE ENDED THIS WAY"))
+	detail_body.add_child(_section_heading("WHY THIS DEFENSE ENDED THIS WAY"))
 	causal_label = _label("", 13, Color("#ded4c4"))
-	body.add_child(causal_label)
+	detail_body.add_child(causal_label)
 
-	body.add_child(_section_heading("ASSAULT TIMELINE"))
+	detail_body.add_child(_section_heading("ASSAULT TIMELINE"))
 	timeline_box = VBoxContainer.new()
 	timeline_box.add_theme_constant_override("separation", 5)
-	body.add_child(timeline_box)
+	detail_body.add_child(timeline_box)
 
-	body.add_child(_section_heading("FORTRESS CONDITION"))
+	detail_body.add_child(_section_heading("FORTRESS CONDITION"))
 	fortress_label = _label("", 13, Color("#d8c389"))
-	body.add_child(fortress_label)
+	detail_body.add_child(fortress_label)
 
 	consequence_label = _label("", 12, Color("#aab1b2"))
-	body.add_child(consequence_label)
+	detail_body.add_child(consequence_label)
 
 	var replay_panel: PanelContainer = PanelContainer.new()
 	replay_panel.add_theme_stylebox_override("panel", _panel_style(Color("#252d2d"), Color("#5d9b82"), 8))
 	replay_label = _label("", 14, Color("#bfe8cf"))
 	replay_panel.add_child(replay_label)
-	body.add_child(replay_panel)
+	detail_body.add_child(replay_panel)
 
 	primary_button = Button.new()
 	primary_button.name = "TerminalPrimaryAction"
@@ -99,6 +101,18 @@ func _init() -> void:
 	menu_button.pressed.connect(func() -> void: menu_requested.emit())
 	_style_button(menu_button, false)
 	secondary_actions.add_child(menu_button)
+
+func set_responsive_layout(compact: bool, panel_width: float) -> void:
+	var inner_width: float = maxf(260.0, panel_width - 28.0)
+	detail_scroll.custom_minimum_size.x = inner_width
+	detail_body.custom_minimum_size.x = maxf(244.0, inner_width - 16.0)
+	detail_body.add_theme_constant_override("separation", 7 if compact else 9)
+	outcome_label.add_theme_font_size_override("font_size", 23 if compact else 28)
+	identity_label.add_theme_font_size_override("font_size", 12 if compact else 14)
+	resource_label.add_theme_font_size_override("font_size", 12 if compact else 14)
+	causal_label.add_theme_font_size_override("font_size", 12 if compact else 13)
+	fortress_label.add_theme_font_size_override("font_size", 12 if compact else 13)
+	replay_label.add_theme_font_size_override("font_size", 12 if compact else 14)
 
 func render(view_model: Dictionary) -> void:
 	var outcome: String = String(view_model.get("outcome", "unknown"))

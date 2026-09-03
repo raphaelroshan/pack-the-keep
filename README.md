@@ -4,7 +4,7 @@ Pack the Keep is an agent-first Godot 4.x prototype for a premium single-player 
 
 ## Current state
 
-The repository contains a playable, deterministic Early Access candidate with a polished main-menu → War Council → Preparation → real-time Battle → Recovery → Results flow. It supports four commanders, three defensive keeps, fifteen coherent packs, twenty-nine pieces, twelve enemy types, fourteen doctrines, twenty authored scenarios, and fourteen events. Save schema 4, settings schema 5, controller navigation, accessibility options, 1280×720 through 2560×1440 layouts, packaged Windows lifecycle checks, deterministic pause/speed behavior, and the complete First Watch tutorial remain covered by automated gates. The all-scenario matrix covers 228 commander/scenario/seed cases and 456 uninterrupted/save-resumed simulations. `0.62.0-board-first-recovery` keeps Preparation, Assault, and ordinary Recovery anchored to the tactical board at 1280×720, with the damaged priority and first legal recovery action visible together while retaining event, tutorial, and large-text fallbacks; human P16 observation and public distribution remain under explicit owner control.
+The repository contains a playable, deterministic Early Access candidate with a polished main-menu → War Council → Preparation → real-time Battle → Recovery → Results flow. It supports four commanders, three defensive keeps, fifteen coherent packs, twenty-nine pieces, twelve enemy types, fourteen doctrines, twenty authored scenarios, and fourteen events. Save schema 4, settings schema 5, controller navigation, accessibility options, 1280×720 through 2560×1440 layouts, packaged Windows lifecycle checks, deterministic pause/speed behavior, and the complete First Watch tutorial remain covered by automated gates. The all-scenario matrix covers 228 commander/scenario/seed cases and 456 uninterrupted/save-resumed simulations. `0.63.0-board-first-results` keeps Preparation, Assault, Recovery, and terminal Results anchored to the tactical board at 1280×720, with each immediate decision or final verdict visible beside the fortress while retaining event, tutorial, and large-text fallbacks; human P16 observation and public distribution remain under explicit owner control.
 
 P51 adds the Quartermaster reserve-economy lens, Twinwatch Bastion's paired-post defense, Road Wardens versus Outriders as a prepared-tempo lesson, and Lantern Watch versus Gloam Knives as a visibility lesson. The Twilight Road completes P51 by teaching those two enemy questions separately, then combining them while preserving prepared-route and flexible-response two-pack plans. Human private-alpha sessions and public distribution approval remain explicitly pending.
 
@@ -209,7 +209,7 @@ Run `python3 tools/validate_early_access_progress.py` to compare the tracked mil
 
 ## Investment evaluation roadmap
 
-The full creative vertical and skeletal Early Access campaign requirements are defined in [`docs/investment_evaluation_roadmap.md`](docs/investment_evaluation_roadmap.md). The dated build audit and screenshots are in [`docs/investment_evaluation_review_2026-09-02.md`](docs/investment_evaluation_review_2026-09-02.md). The current investment gate is PTK-I1: lock Greywatch as a complete creative vertical before adding more breadth.
+The full creative vertical and skeletal Early Access campaign requirements are defined in [`docs/investment_evaluation_roadmap.md`](docs/investment_evaluation_roadmap.md). The dated build audit and screenshots are in [`docs/investment_evaluation_review_2026-09-02.md`](docs/investment_evaluation_review_2026-09-02.md). PTK-I1 through PTK-I6 are implemented and machine-checked; only owner-scheduled P16 human observation and explicit distribution approval remain outside the automated completion boundary.
 
 
 ## GPT-5.6 investment execution packets
@@ -221,5 +221,6 @@ The dependency-aware tasks in [`docs/gpt56_investment_execution_packets.md`](doc
 | `docs/p72_board_first_preparation_verification.md` | Current PTK-I1/PTK-I2 board-first evidence and responsive-layout verification. |
 | `docs/p73_battle_first_assault_verification.md` | Current battle-first Assault evidence and responsive-layout verification. |
 | `docs/p74_board_first_recovery_verification.md` | Current board-first Recovery evidence, priority selection, and responsive verification. |
+| `docs/p75_board_first_terminal_results_verification.md` | Current board-first terminal Results evidence, debrief focus, and responsive verification. |
 | `docs/latest_review_2026-09-03.md` | Current main-branch review, verification result, War Council findings, and next mandatory Greywatch/second-keep gates. |
 | `docs/visual_evidence/v0.59.0-gpt56-packet-completion-review-2026-09-03/` | Fresh 1280×720 title, War Council, and Build & Assign captures from the current review. |
