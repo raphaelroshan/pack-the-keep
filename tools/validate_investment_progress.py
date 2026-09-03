@@ -18,9 +18,9 @@ GATE_REQUIREMENTS = {
 }
 GATE_IDS = [f"PTK-I{index}" for index in range(1, 7)]
 BOARD_FIRST_CAPTURES = [
-    ("docs/visual_evidence/v0.61.0-battle-first-greywatch-1280x720/capture-manifest.json", "gatehouse_lock", {"width": 1280, "height": 720}, False),
-    ("docs/visual_evidence/v0.61.0-battle-first-ash-ford-1280x720/capture-manifest.json", "ash_ford_crossing", {"width": 1280, "height": 720}, False),
-    ("docs/visual_evidence/v0.61.0-battle-first-ash-ford-1600x900/capture-manifest.json", "ash_ford_crossing", {"width": 1600, "height": 900}, False),
+    ("docs/visual_evidence/v0.62.0-board-first-greywatch-1280x720/capture-manifest.json", "gatehouse_lock", {"width": 1280, "height": 720}, False),
+    ("docs/visual_evidence/v0.62.0-board-first-ash-ford-1280x720/capture-manifest.json", "ash_ford_crossing", {"width": 1280, "height": 720}, False),
+    ("docs/visual_evidence/v0.62.0-board-first-ash-ford-1600x900/capture-manifest.json", "ash_ford_crossing", {"width": 1600, "height": 900}, False),
 ]
 
 

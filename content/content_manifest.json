@@ -1,7 +1,14 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.61.0",
+  "content_version": "0.62.0",
+  "p74_board_first_recovery": {
+    "status": "implemented",
+    "breakpoint": "ordinary_recovery_uses_two_columns_at_1120_effective_pixels",
+    "first_view": ["causal_brief", "damaged_fortress", "selected_priority", "first_legal_action", "exact_cost_and_tradeoff"],
+    "fallback": "events_tutorial_and_large_text_retain_explicit_flows",
+    "authority": "selection_and_responsive_composition_do_not_apply_recovery_actions"
+  },
   "p73_battle_first_assault": {
     "status": "implemented",
     "breakpoint": "assault_uses_two_columns_at_1120_effective_pixels",

@@ -79,3 +79,9 @@ Fresh Greywatch and Ash Ford captures re-prove PTK-I1 and PTK-I2 at 1280×720, w
 Build `0.61.0-battle-first-assault` carries the same board-first hierarchy into active combat. At 1280×720, the complete tactical board and contact timeline remain beside battle state, pause/resume, commander intervention, and focused-threat inspection. Repeated main-column instructions and the duplicate pause action are removed in the normal wide composition; First Watch and large-text layouts retain their explicit primary-action fallbacks.
 
 Fresh Greywatch and Ash Ford captures preserve the complete three-phase flow at both supported review resolutions. Combat rules, targets, timing, damage, save state, and the P16 human-evidence boundary remain unchanged. See `docs/p73_battle_first_assault_verification.md`.
+
+## 2026-09-03 execution checkpoint — board-first recovery complete
+
+Build `0.62.0-board-first-recovery` keeps ordinary inter-wave Recovery beside the damaged fortress at 1280×720. The causal brief selects its highest damaged priority on entry without spending an action, legality-sorted cards place the resulting useful repair first, and duplicate main-column continuation copy is removed. Blocking authored events, tutorial actions, terminal Results, and large-text fallbacks retain their dedicated flows.
+
+Fresh Greywatch and Ash Ford evidence covers the complete three-phase loop at 1280×720 and 1600×900. Recovery costs, repair values, action budgets, assignments, events, and save state remain authoritative and unchanged. See `docs/p74_board_first_recovery_verification.md`.

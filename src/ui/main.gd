@@ -50,6 +50,7 @@ const EVENT_FEED_RETENTION_PRESETS := [4, 8, 16, 32]
 const TWO_COLUMN_EFFECTIVE_WIDTH := 1420.0
 const PREPARATION_TWO_COLUMN_EFFECTIVE_WIDTH := 1120.0
 const BATTLE_TWO_COLUMN_EFFECTIVE_WIDTH := 1120.0
+const RECOVERY_TWO_COLUMN_EFFECTIVE_WIDTH := 1120.0
 const COMPACT_CARD_EFFECTIVE_WIDTH := 920.0
 const PAGE_HORIZONTAL_MARGIN := 48.0
 const RESERVED_CONTROLLER_NAVIGATION_BUTTONS := [0, 11, 12, 13, 14]
@@ -165,6 +166,7 @@ var results_presentation_snapshot: Dictionary = {}
 var phase_header_snapshot: Dictionary = {}
 var preparation_board_first_active: bool = false
 var battle_board_first_active: bool = false
+var recovery_board_first_active: bool = false
 var presentation_audit_overlay: PresentationAuditOverlay
 var navigation_confirm_layer: Control
 var navigation_confirm_label: Label
@@ -744,7 +746,8 @@ func _apply_responsive_layout() -> void:
 	var terminal_large_text: bool = terminal_debrief_panel != null and terminal_debrief_panel.visible and ui_factor >= 1.5
 	preparation_board_first_active = screen == "preparation" and effective_width >= PREPARATION_TWO_COLUMN_EFFECTIVE_WIDTH and not terminal_large_text
 	battle_board_first_active = screen == "battle" and effective_width >= BATTLE_TWO_COLUMN_EFFECTIVE_WIDTH and not terminal_large_text
-	var phase_board_first: bool = preparation_board_first_active or battle_board_first_active
+	recovery_board_first_active = screen == "results" and keep != null and keep.repair_interval_active and keep.active_event_id.is_empty() and not _is_terminal_result() and effective_width >= RECOVERY_TWO_COLUMN_EFFECTIVE_WIDTH
+	var phase_board_first: bool = preparation_board_first_active or battle_board_first_active or recovery_board_first_active
 	var stacked: bool = (effective_width < TWO_COLUMN_EFFECTIVE_WIDTH and not phase_board_first) or terminal_large_text
 	var compact_cards: bool = effective_width < COMPACT_CARD_EFFECTIVE_WIDTH
 	var stacked_width: float = maxf(520.0, size.x - PAGE_HORIZONTAL_MARGIN)
@@ -765,7 +768,7 @@ func _apply_responsive_layout() -> void:
 	if setup_overview_panel != null:
 		setup_overview_panel.visible = screen == "setup" and not prioritized_decision_flow
 	if main_subtitle_label != null:
-		main_subtitle_label.visible = screen != "title" and not (screen == "preparation" and prioritized_decision_flow) and not battle_board_first_active and not (tutorial.active and screen in ["preparation", "battle", "results"])
+		main_subtitle_label.visible = screen != "title" and not (screen == "preparation" and prioritized_decision_flow) and not battle_board_first_active and not recovery_board_first_active and not (tutorial.active and screen in ["preparation", "battle", "results"])
 	if screen == "battle":
 		var tutorial_primary_action: bool = tutorial.active and tutorial.expected_action() in ["resume_battle", "observe_wave", "retry_phase"]
 		var show_main_battle_action: bool = (not tutorial.active or tutorial_primary_action) and not (battle_board_first_active and not tutorial.active)
@@ -775,6 +778,15 @@ func _apply_responsive_layout() -> void:
 			playtest_button.visible = show_main_battle_action
 		if playtest_status_label != null:
 			playtest_status_label.visible = show_main_battle_action
+	if screen == "results" and not _is_terminal_result():
+		var tutorial_recovery_action: bool = tutorial.active and tutorial.expected_action() in ["finish_interval", "retry_phase"]
+		var show_main_recovery_action: bool = (not tutorial.active or tutorial_recovery_action) and not (recovery_board_first_active and not tutorial.active)
+		if guidance_label != null:
+			guidance_label.visible = not recovery_board_first_active and not tutorial.active
+		if playtest_button != null:
+			playtest_button.visible = show_main_recovery_action
+		if playtest_status_label != null:
+			playtest_status_label.visible = show_main_recovery_action
 	if art_banner != null and art_banner.visible:
 		art_banner.custom_minimum_size.y = 72.0 if large_text_compact else 100.0 if screen == "setup" else 150.0
 	for control: Control in [status_label, guidance_label, playtest_button, playtest_status_label, forecast_label, enemy_label, metrics_label, result_explain_label, scorecard_label, combat_explain_label, placement_label, event_label, log_label]:
@@ -810,6 +822,7 @@ func _responsive_layout_snapshot() -> Dictionary:
 		"stacked": gameplay_columns != null and gameplay_columns.vertical,
 		"preparation_board_first": preparation_board_first_active,
 		"battle_board_first": battle_board_first_active,
+		"recovery_board_first": recovery_board_first_active,
 		"main_minimum_width": gameplay_main_column.custom_minimum_size.x if gameplay_main_column != null else 0.0,
 		"command_minimum_width": command_panel.custom_minimum_size.x if command_panel != null else 0.0,
 	}
@@ -2082,6 +2095,8 @@ func _is_terminal_result() -> bool:
 func _set_screen(next_screen: String) -> void:
 	var previous_screen: String = screen
 	screen = next_screen
+	if screen == "results" and previous_screen != "results" and keep != null and keep.repair_interval_active and keep.active_event_id.is_empty() and not _is_terminal_result():
+		_select_recovery_priority_target()
 	if screen == "setup" and previous_screen != "setup" and setup_advanced_panel != null:
 		setup_advanced_panel.visible = false
 		setup_advanced_button.text = "Show advanced selection"
@@ -2107,7 +2122,7 @@ func _set_screen(next_screen: String) -> void:
 	if main_title_label:
 		main_title_label.visible = screen != "title"
 	if main_subtitle_label:
-		main_subtitle_label.visible = screen != "title" and not battle_board_first_active
+		main_subtitle_label.visible = screen != "title" and not battle_board_first_active and not recovery_board_first_active
 	if setup_overview_panel:
 		setup_overview_panel.visible = screen == "setup"
 	if setup_overview_label:
@@ -2123,11 +2138,11 @@ func _set_screen(next_screen: String) -> void:
 	if recovery_brief_panel:
 		recovery_brief_panel.visible = screen == "results" and keep.repair_interval_active and not terminal_result and not tutorial.active
 	if guidance_label:
-		guidance_label.visible = gameplay_screen and screen != "preparation" and not terminal_result and not (screen == "battle" and battle_board_first_active)
+		guidance_label.visible = gameplay_screen and screen != "preparation" and not terminal_result and not (screen == "battle" and battle_board_first_active) and not (screen == "results" and recovery_board_first_active)
 	if playtest_button:
-		playtest_button.visible = gameplay_screen and not terminal_result and not (screen == "battle" and battle_board_first_active and not tutorial.active)
+		playtest_button.visible = gameplay_screen and not terminal_result and not (screen == "battle" and battle_board_first_active and not tutorial.active) and not (screen == "results" and recovery_board_first_active and not tutorial.active)
 	if playtest_status_label:
-		playtest_status_label.visible = gameplay_screen and not terminal_result and not (screen == "preparation" and preparation_board_first_active) and not (screen == "battle" and battle_board_first_active and not tutorial.active)
+		playtest_status_label.visible = gameplay_screen and not terminal_result and not (screen == "preparation" and preparation_board_first_active) and not (screen == "battle" and battle_board_first_active and not tutorial.active) and not (screen == "results" and recovery_board_first_active and not tutorial.active)
 	if keep_canvas:
 		keep_canvas.set_placement_guides(screen == "preparation")
 		keep_canvas.visible = gameplay_screen
@@ -2256,7 +2271,11 @@ func _focus_recovery_controls() -> void:
 				command_scroll.scroll_vertical = 0
 		return
 	if command_scroll and recovery_actions_panel and recovery_actions_panel.visible and recovery_stage_label != null:
+		var target: Control = _first_legal_recovery_control()
 		command_scroll.scroll_vertical = 0
+		if target != null and target.is_visible_in_tree() and not target.disabled:
+			target.grab_focus()
+			command_scroll.ensure_control_visible(target)
 
 func _set_group_visibility(nodes: Array[Control], visible: bool) -> void:
 	for node in nodes:
@@ -2475,7 +2494,13 @@ func _on_authored_event_choice(index: int) -> void:
 	_on_authored_event_choice_id(choice_id)
 
 func _on_authored_event_choice_id(choice_id: String) -> void:
-	_run_result(keep.choose_event_option(choice_id), "Event")
+	var result: Dictionary = keep.choose_event_option(choice_id)
+	if bool(result.get("ok", false)) and screen == "results" and keep.active_event_id.is_empty() and keep.repair_interval_active:
+		_select_recovery_priority_target()
+	_run_result(result, "Event")
+	if bool(result.get("ok", false)) and screen == "results":
+		_apply_responsive_layout()
+		call_deferred("_focus_screen_control")
 
 func _refresh_campaign_ledger() -> void:
 	if campaign_ledger_panel == null:
@@ -3488,6 +3513,13 @@ func _select_most_damaged_piece() -> void:
 		selected_instance_id = selected_id
 		_select_option_metadata(piece_option, String(keep.pieces[selected_id].get("piece_id", "")))
 
+func _select_recovery_priority_target() -> void:
+	var priorities: Array[Dictionary] = RecoveryPresentationSnapshotView.priority_rows(keep)
+	if not priorities.is_empty() and int(priorities[0].get("score", 0)) > 0:
+		_select_option_metadata(room_option, String(priorities[0].get("id", "")))
+		return
+	_select_most_damaged_piece()
+
 func _select_most_damaged_room() -> void:
 	var selected_id: String = ""
 	var selected_condition: int = 101
@@ -3511,14 +3543,14 @@ func _refresh_tutorial_panel() -> void:
 		main_title_label.visible = screen != "title" and not (tutorial.active and gameplay_screen)
 	if main_subtitle_label != null:
 		var prioritized_preparation: bool = screen == "preparation" and ((gameplay_columns != null and gameplay_columns.vertical) or preparation_board_first_active)
-		main_subtitle_label.visible = screen != "title" and not (tutorial.active and gameplay_screen) and not prioritized_preparation and not battle_board_first_active
+		main_subtitle_label.visible = screen != "title" and not (tutorial.active and gameplay_screen) and not prioritized_preparation and not battle_board_first_active and not recovery_board_first_active
 	if guidance_label != null:
-		guidance_label.visible = gameplay_screen and screen != "preparation" and not tutorial.active and not (screen == "battle" and battle_board_first_active)
+		guidance_label.visible = gameplay_screen and screen != "preparation" and not tutorial.active and not (screen == "battle" and battle_board_first_active) and not (screen == "results" and recovery_board_first_active)
 	var tutorial_primary_action: bool = tutorial.active and tutorial.expected_action() in ["start_wave", "resume_battle", "observe_wave", "finish_interval", "finish_tutorial", "retry_phase"]
 	if playtest_button != null:
-		playtest_button.visible = gameplay_screen and (not tutorial.active or tutorial_primary_action) and not (screen == "battle" and battle_board_first_active and not tutorial.active)
+		playtest_button.visible = gameplay_screen and (not tutorial.active or tutorial_primary_action) and not (screen == "battle" and battle_board_first_active and not tutorial.active) and not (screen == "results" and recovery_board_first_active and not tutorial.active)
 	if playtest_status_label != null:
-		playtest_status_label.visible = gameplay_screen and (not tutorial.active or tutorial_primary_action) and not (screen == "preparation" and preparation_board_first_active) and not (screen == "battle" and battle_board_first_active and not tutorial.active)
+		playtest_status_label.visible = gameplay_screen and (not tutorial.active or tutorial_primary_action) and not (screen == "preparation" and preparation_board_first_active) and not (screen == "battle" and battle_board_first_active and not tutorial.active) and not (screen == "results" and recovery_board_first_active and not tutorial.active)
 	if not tutorial.active:
 		return
 	var step: Dictionary = tutorial.current_step()
@@ -3842,11 +3874,11 @@ func _refresh_terminal_debrief() -> void:
 	if scorecard_label != null:
 		scorecard_label.visible = screen == "results" and not terminal_result
 	if guidance_label != null:
-		guidance_label.visible = screen in ["battle", "results"] and not terminal_result and not tutorial.active and not (screen == "battle" and battle_board_first_active)
+		guidance_label.visible = screen in ["battle", "results"] and not terminal_result and not tutorial.active and not (screen == "battle" and battle_board_first_active) and not (screen == "results" and recovery_board_first_active)
 	if playtest_button != null:
-		playtest_button.visible = screen in ["preparation", "battle", "results"] and not terminal_result and not (screen == "battle" and battle_board_first_active and not tutorial.active)
+		playtest_button.visible = screen in ["preparation", "battle", "results"] and not terminal_result and not (screen == "battle" and battle_board_first_active and not tutorial.active) and not (screen == "results" and recovery_board_first_active and not tutorial.active)
 	if playtest_status_label != null:
-		playtest_status_label.visible = screen in ["preparation", "battle", "results"] and not terminal_result and not (screen == "preparation" and preparation_board_first_active) and not (screen == "battle" and battle_board_first_active and not tutorial.active)
+		playtest_status_label.visible = screen in ["preparation", "battle", "results"] and not terminal_result and not (screen == "preparation" and preparation_board_first_active) and not (screen == "battle" and battle_board_first_active and not tutorial.active) and not (screen == "results" and recovery_board_first_active and not tutorial.active)
 	if recovery_actions_panel != null and terminal_result:
 		recovery_actions_panel.visible = false
 	if recovery_brief_panel != null and terminal_result:
