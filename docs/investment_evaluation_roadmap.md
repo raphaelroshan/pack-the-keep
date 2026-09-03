@@ -73,3 +73,9 @@ After PTK-I1, execute PTK-I2: a second keep that changes room connectivity, pref
 Build `0.60.0-board-first-preparation` closes the mandatory preparation finding. At 1280×720, Preparation now uses a phase-specific two-column composition that keeps the current question, visible answer, compact plan/risk, Ready Defense action, complete two-floor fortress, and selected pack in the first viewport. War Council retains its deliberate stacked briefing, while 150% large text retains the full stacked placement rationale.
 
 Fresh Greywatch and Ash Ford captures re-prove PTK-I1 and PTK-I2 at 1280×720, with complete 1600×900 flow sequences preserving intervention, recovery, and causal Results. Runtime rules remain unchanged. See `docs/p72_board_first_preparation_verification.md`.
+
+## 2026-09-03 execution checkpoint — battle-first follow-up complete
+
+Build `0.61.0-battle-first-assault` carries the same board-first hierarchy into active combat. At 1280×720, the complete tactical board and contact timeline remain beside battle state, pause/resume, commander intervention, and focused-threat inspection. Repeated main-column instructions and the duplicate pause action are removed in the normal wide composition; First Watch and large-text layouts retain their explicit primary-action fallbacks.
+
+Fresh Greywatch and Ash Ford captures preserve the complete three-phase flow at both supported review resolutions. Combat rules, targets, timing, damage, save state, and the P16 human-evidence boundary remain unchanged. See `docs/p73_battle_first_assault_verification.md`.

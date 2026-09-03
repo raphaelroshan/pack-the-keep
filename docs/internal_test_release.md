@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.60.0-board-first-preparation` — PTK-GPT56-1 through PTK-GPT56-5 and all prior gates remain enforced; Preparation keeps the current question, selected plan, fortress, primary action, and selected pack together at 1280×720 while all-phase save/replay, cross-keep continuation, accessibility, package, forced-close, and original-asset evidence remain green; human sessions and owner distribution approval remain pending
+**Current build identity:** `0.61.0-battle-first-assault` — PTK-GPT56-1 through PTK-GPT56-5 and all prior gates remain enforced; Preparation and Assault keep the tactical board beside their immediate decisions at 1280×720 while all-phase save/replay, cross-keep continuation, accessibility, package, forced-close, and original-asset evidence remain green; human sessions and owner distribution approval remain pending
 
 ## Purpose
 

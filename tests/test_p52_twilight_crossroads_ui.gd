@@ -104,7 +104,7 @@ func _initialize() -> void:
 	_check(ui.terminal_debrief_panel.primary_button.is_visible_in_tree(), "large-text 1440p Results should keep its primary replay action reachable")
 	var page_rect: Rect2 = ui.page_scroll.get_global_rect()
 	var replay_rect: Rect2 = ui.terminal_debrief_panel.primary_button.get_global_rect()
-	_check(replay_rect.position.y >= page_rect.position.y and replay_rect.end.y <= page_rect.end.y, "large-text 1440p Results should scroll the focused replay action into the visible page")
+	_check(replay_rect.position.y >= page_rect.position.y and replay_rect.end.y <= page_rect.end.y, "large-text 1440p Results should scroll the focused replay action into the visible page: replay=%s page=%s scroll=%d focus=%s" % [replay_rect, page_rect, ui.page_scroll.scroll_vertical, root.gui_get_focus_owner().name if root.gui_get_focus_owner() != null else "none"])
 
 	root.content_scale_factor = 1.0
 	ui.queue_free()

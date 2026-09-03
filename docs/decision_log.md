@@ -1063,3 +1063,11 @@
 **Reason:** The 1280×720 investment review showed that a global breakpoint placed Build & Assign below the fortress, separating the selected doctrine from the board it changes. The existing 810-pixel board plus 292-pixel rail fits safely at this width, so a phase-specific composition restores simultaneous context without introducing another screen or hiding commands.
 
 **Trade-off:** Preparation and War Council can use different compositions at the same viewport, because their information hierarchy differs. The narrower rail remains independently scrollable, and 125%/150% scale falls back to stacking whenever effective width cannot safely contain both columns.
+
+## ADR-134: Assault keeps time control beside the tactical board
+
+**Decision:** Let Assault use a phase-specific two-column composition at 1120 effective pixels or more. In that mode, the command rail owns battle state, pause/resume, commander intervention, and threat inspection, while the main column suppresses its duplicate pause action and repeated instructional lines. First Watch continues to expose its tutorial-owned primary action.
+
+**Reason:** At 1280×720 the existing global breakpoint stacked the command rail below the fortress, forcing the player to leave the live board to control time or inspect the focused threat. The same 810-pixel board and compact rail already fit safely in Preparation, and Assault benefits even more from simultaneous board and control visibility.
+
+**Trade-off:** The normal board-first Assault is more compact and relies on the command rail for exact live guidance. Large-text and narrow layouts retain the fuller stacked presentation, and tutorial steps keep their explicit primary action so the authored teaching path and focus contract do not change.

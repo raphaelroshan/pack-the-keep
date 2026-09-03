@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.60.0-board-first-preparation",
+  "framework_version": "0.61.0-battle-first-assault",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -2005,5 +2005,14 @@
     "compact_plan": ["identity", "placed_progress", "pack", "purpose", "accepted_risk"],
     "large_text_fallback": "stacked_with_full_plan_rationale",
     "determinism_rule": "layout_and_text_projection_never_mutate_pack_keep_state"
+  },
+  "battle_first_assault": {
+    "status": "implemented",
+    "minimum_effective_width": 1120,
+    "wide_composition": ["tactical_board_and_timeline", "battle_state_and_commands"],
+    "suppressed_duplicates": ["main_subtitle", "main_guidance", "main_pause_action", "main_pause_status"],
+    "tutorial_fallback": "first_watch_retains_tutorial_owned_primary_action",
+    "large_text_fallback": "stacked_with_main_primary_action",
+    "determinism_rule": "responsive_layout_never_mutates_combat_state"
   }
 }
