@@ -1,7 +1,7 @@
 # Pack the Keep — Early Access Requirements
 
 **Status:** Active, machine-checked contract for a skeletal but commercially credible Early Access build
-**Current baseline:** `0.60.0-board-first-preparation`; GPT56, investment, and Early Access gates are machine-checked, all twelve commander/keep geometry fits are authored, Preparation is board-first at 1280×720, each phase has truthful decision framing, and all active presentation assets are original. The progress ledgers record exact evidence, automated candidate status, and the owner-controlled distribution boundary.
+**Current baseline:** `0.61.0-battle-first-assault`; GPT56, investment, and Early Access gates are machine-checked, all twelve commander/keep geometry fits are authored, Preparation and Assault are board-first at 1280×720, each phase has truthful decision framing, and all active presentation assets are original. The progress ledgers record exact evidence, automated candidate status, and the owner-controlled distribution boundary.
 
 ## Product decision
 

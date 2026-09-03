@@ -1,7 +1,14 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.60.0",
+  "content_version": "0.61.0",
+  "p73_battle_first_assault": {
+    "status": "implemented",
+    "breakpoint": "assault_uses_two_columns_at_1120_effective_pixels",
+    "first_view": ["tactical_board", "contact_timeline", "battle_state", "pause", "commander_ability", "focused_threat"],
+    "fallback": "stacked_large_text_retains_main_primary_action",
+    "authority": "responsive_composition_never_mutates_pack_keep_state"
+  },
   "p72_board_first_preparation": {
     "status": "implemented",
     "breakpoint": "preparation_uses_two_columns_at_1120_effective_pixels_while_war_council_retains_its_1420_breakpoint",

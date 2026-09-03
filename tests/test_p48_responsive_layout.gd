@@ -107,10 +107,37 @@ func _initialize() -> void:
 	_check(_inside_viewport(ui.preparation_brief_panel, Vector2(root.size)), "large-text Preparation should remain horizontally inside the viewport")
 	_check(_inside_scroll_view(ui.playtest_button, ui.page_scroll), "large-text Preparation should keep the focused Ready Defense action visible")
 
-	var serialized_before: String = JSON.stringify(ui.keep.serialize())
 	await _apply_layout(ui, Vector2i(1280, 720), 1)
+	ui._on_start_wave()
+	await process_frame
+	await process_frame
+	var battle_snapshot: Dictionary = ui._responsive_layout_snapshot()
+	_check(ui.screen == "battle" and ui.keep.wave_active, "responsive flow should enter an active Assault through the authoritative start command")
+	_check(not ui.gameplay_columns.vertical and bool(battle_snapshot.get("battle_board_first", false)), "1280x720 Assault should use its board-first two-column composition: %s" % JSON.stringify(battle_snapshot))
+	_check(_inside_viewport(ui.keep_canvas, Vector2(root.size)) and _inside_viewport(ui.command_panel, Vector2(root.size)), "board-first Assault should keep fortress and command rail horizontally visible")
+	var battle_board_rect: Rect2 = ui.keep_canvas.get_global_rect()
+	var battle_viewport: Rect2 = ui.page_scroll.get_global_rect()
+	var visible_battle_board: Rect2 = battle_board_rect.intersection(battle_viewport)
+	_check(visible_battle_board.size.y >= battle_board_rect.size.y * 0.95, "board-first Assault should expose the tactical board and contact timeline in the initial viewport")
+	_check(_inside_scroll_view(ui.pause_button, ui.command_scroll) and _inside_scroll_view(ui.commander_ability_button, ui.command_scroll) and _inside_scroll_view(ui.inspect_enemy_button, ui.command_scroll), "board-first Assault should expose time control, intervention, and focused-threat actions together")
+	_check(root.gui_get_focus_owner() == ui.pause_button and ui.page_scroll.scroll_vertical == 0, "board-first Assault should open at the board with its command-rail pause action focused")
+	ui._refresh_ui()
+	_check(not ui.main_subtitle_label.visible and not ui.guidance_label.visible and not ui.playtest_button.visible and not ui.playtest_status_label.visible, "normal board-first Assault should remove repeated main-column battle copy and the duplicate pause action")
+
+	var battle_serialized_before: String = JSON.stringify(ui.keep.serialize())
 	await _apply_layout(ui, Vector2i(1600, 900), 2)
-	_check(JSON.stringify(ui.keep.serialize()) == serialized_before, "responsive layout changes must not mutate authoritative run state")
+	_check(not ui.gameplay_columns.vertical and ui.battle_board_first_active, "1600x900 at 125 percent should retain the board-first Assault composition")
+	await _apply_layout(ui, Vector2i(1280, 720), 3)
+	_check(ui.gameplay_columns.vertical and not ui.battle_board_first_active, "large-text Assault should return to the stacked composition")
+	_check(ui.playtest_button.visible and _inside_viewport(ui.command_panel, Vector2(root.size)), "large-text Assault should restore the main pause action and keep the stacked command rail unclipped")
+	_check(JSON.stringify(ui.keep.serialize()) == battle_serialized_before, "responsive Assault layout changes must not mutate authoritative run state")
+
+	ui.tutorial.start()
+	ui.tutorial.restore_progress({"tutorial_id": "first_watch", "version": 1, "active": true, "step_id": "resume_first", "failure_active": false, "failure_message": ""})
+	await _apply_layout(ui, Vector2i(1280, 720), 1)
+	ui._refresh_ui()
+	ui._focus_tutorial_target("primary_action")
+	_check(ui.battle_board_first_active and ui.playtest_button.is_visible_in_tree() and root.gui_get_focus_owner() == ui.playtest_button, "First Watch should retain its explicit primary battle action and focus target in board-first mode")
 
 	root.content_scale_factor = 1.0
 	ui.queue_free()
