@@ -44,9 +44,9 @@ static func exchange_stage(progress: float, has_defender_response: bool, has_hos
 			return _beat("consequence", "CONSEQUENCE", "Damage and remaining health are shown without travel animation.")
 		if has_defender_response:
 			return _beat("defender_response", "DEFENDER RESPONSE", "Committed defenders resolve their attacks without travel animation.")
-		return _beat("settle", "SETTLE", "The authoritative combat tick is complete.")
+		return _beat("settle", "SETTLE", "The current combat tick is complete.")
 	if value < 0.10:
-		return _beat("target_lock", "TARGET LOCK", "Targets are committed for this deterministic tick.")
+		return _beat("target_lock", "TARGET LOCK", "Targets stay committed through this combat tick.")
 	if has_defender_response and (value < 0.48 or not has_hostile_impact and value < 0.82):
 		return _beat("defender_response", "DEFENDER RESPONSE", "Ready defenders answer their committed threats.")
 	if has_hostile_impact and value < 0.82:

@@ -3,7 +3,7 @@
   "content_version": 1,
   "status": "active",
   "name": "Roadside Intelligence",
-  "short_role": "Reveal the next authored wave composition before commitment.",
+  "short_role": "Reveal the next assault composition before commitment.",
   "question": "Is exact information worth one point of starting morale?",
   "unlock_event": "relief_road_report",
   "effect": "reveal_wave_composition",

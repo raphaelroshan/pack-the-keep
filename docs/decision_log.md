@@ -1087,3 +1087,11 @@
 **Reason:** The v0.62 1280×720 evidence showed the complete fortress above a debrief whose verdict and replay action began below the fold. A terminal decision needs simultaneous evidence and interpretation: what survived on the board, why the defense ended that way, and the next replay choice.
 
 **Trade-off:** The debrief remains independently scrollable, so detailed phase rows and fortress diagnostics may require rail scrolling. Large text retains the established stacked composition, and inter-wave Recovery remains governed by its separate board-first rule.
+
+## ADR-137: Player-facing copy describes the defense, not its implementation
+
+**Decision:** Remove roadmap, authoring, automation, and determinism vocabulary from normal player-facing data and UI strings. Scenario summaries name their pressure or defensive demand directly, event titles remain unique, and the title keeps its honest pre-alpha boundary plus semantic version without exposing the internal release suffix. Add a narrow validator over player-facing sources.
+
+**Reason:** The writing audit found mechanically accurate copy that still read like design documentation: scenario cards said they “teach” or “test” systems, one scenario named P11, combat text explained determinism, and the title advertised an automated baseline. These phrases weaken immersion and make otherwise polished screens feel like a test harness.
+
+**Trade-off:** Developer documentation, debug-only diagnostics, and test failure messages retain precise engineering vocabulary. The validator targets known player-facing fields and phrases instead of banning useful terms repository-wide.

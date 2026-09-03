@@ -2,7 +2,7 @@
   "id": "relief_road_warning",
   "content_version": 1,
   "status": "active",
-  "title": "The Bell Has a Pattern",
+  "title": "A Warning on the Relief Road",
   "short_role": "Commit command attention before the first warning becomes a crisis.",
   "type": "forecast",
   "scenario": "relief_road",

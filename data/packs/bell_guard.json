@@ -2,7 +2,7 @@
   "id": "bell_guard", "content_version": 1, "status": "active", "name": "Bell Guard",
   "short_role": "Preserve warning and response timing through disrupted sightlines.", "question": "Where should a redundant signal link survive smoke?",
   "family": "morale", "contents": ["bellkeepers", "signal_beacon"], "doctrine": "coordinated_response", "cost": 4,
-  "strength": "A linked Bellkeepers and Signal Beacon preserve forecast detail and authored arrival timing.", "weakness": "Both pieces are non-attacking and the link fails across floors or beyond range.",
+  "strength": "Linked Bellkeepers and a Signal Beacon preserve forecast detail and enemy arrival timing.", "weakness": "Both pieces are non-attacking and the link fails across floors or beyond range.",
   "choice": "Spend two support positions so the keep can keep acting on reliable warnings.", "commander_affinity": ["warden", "castellan"],
   "spatial_demand": {"preferred_floors": ["ground", "upper"], "preferred_zones": ["wall", "keep"], "needs_open_lane": true, "needs_adjacency": true}
 }

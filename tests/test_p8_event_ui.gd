@@ -27,7 +27,7 @@ func _initialize() -> void:
 	ui._on_select_scenario()
 	await process_frame
 	_check(ui.authored_event_panel.visible, "Relief Road preparation did not expose its authored forecast event")
-	_check(String(ui.authored_event_title.text).contains("The Bell Has a Pattern"), "forecast event title was not visible")
+	_check(String(ui.authored_event_title.text).contains("A Warning on the Relief Road"), "forecast event title was not visible")
 	_check(ui.authored_event_choice_buttons[0].visible and not ui.authored_event_choice_buttons[0].disabled, "forecast event did not expose its first legal choice")
 	var command_before: int = ui.keep.command_points
 	ui.authored_event_choice_buttons[0].pressed.emit()
@@ -45,7 +45,7 @@ func _initialize() -> void:
 	ui._set_screen("battle")
 	await _resolve_wave(ui)
 	_check(ui.screen == "results" and ui.authored_event_panel.visible, "wave one Results did not expose the recovery event")
-	_check(String(ui.authored_event_title.text).contains("The Workshop Can Wait"), "recovery event title was not visible")
+	_check(String(ui.authored_event_title.text).contains("The Road Crews Return"), "recovery event title was not visible")
 	_check(ui.finish_interval_button.disabled and ui.recovery_room_button.disabled, "active recovery event did not block competing recovery actions and continuation")
 	var materials_before: int = ui.keep.materials
 	var actions_before: int = ui.keep.repair_actions_remaining

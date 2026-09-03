@@ -1,7 +1,13 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.63.0",
+  "content_version": "0.64.0",
+  "p76_player_facing_language": {
+    "status": "implemented",
+    "scope": ["scenario_cards", "events", "tutorial", "battle_feedback", "shared_ui"],
+    "guardrails": ["no_development_vocabulary", "unique_event_titles", "compact_event_setup"],
+    "authority": "copy_edits_preserve_all_mechanical_values_and_ids"
+  },
   "p75_board_first_terminal_results": {
     "status": "implemented",
     "breakpoint": "terminal_results_uses_two_columns_at_1120_effective_pixels",

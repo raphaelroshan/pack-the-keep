@@ -1,6 +1,6 @@
 {
   "id": "the_divided_bell", "content_version": 1, "status": "active", "name": "The Divided Bell",
-  "short_role": "Teach a split defense whose protection depends on staffing both exposed posts.",
+  "short_role": "Staff both exposed posts to keep their shared protection active.",
   "question": "Can the keep answer the west gate without abandoning the east arsenal?",
   "objective": "Keep living combat defenders beside both bastions while pressure shifts across the ridge.",
   "lesson": "Twinwatch protects every room only while both posts remain staffed; concentration on one side gives up the shared warning chain.",

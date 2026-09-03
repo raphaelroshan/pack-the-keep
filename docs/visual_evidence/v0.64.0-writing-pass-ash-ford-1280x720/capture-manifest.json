@@ -1,0 +1,37 @@
+{
+  "battle_exchange_progress": null,
+  "battle_exchange_staged": false,
+  "build_version": "0.64.0-player-facing-language",
+  "commander": "warden",
+  "debug_ui": false,
+  "files": [
+    "01_title.png",
+    "02_war_council.png",
+    "03_preparation.png",
+    "03b_pack_offer.png",
+    "04_assault_phase_1.png",
+    "05_recovery_phase_1.png",
+    "06_assault_phase_2.png",
+    "07_recovery_phase_2.png",
+    "08_assault_phase_3.png",
+    "09_terminal_results.png"
+  ],
+  "human_evidence": false,
+  "intervention_captured": false,
+  "pack_offer_captured": true,
+  "repair_feedback_captured": false,
+  "resolution": {
+    "height": 720,
+    "width": 1280
+  },
+  "route_delay_captured": false,
+  "route_reveal_captured": false,
+  "scenario": "ash_ford_crossing",
+  "schema_version": 1,
+  "setup_only": false,
+  "spatial_transition_captured": false,
+  "starting_defender_inspected": false,
+  "twilight_choice_captured": false,
+  "twilight_road_captured": false,
+  "ui_scale_percent": 100
+}

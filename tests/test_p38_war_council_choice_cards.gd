@@ -28,7 +28,7 @@ func _initialize() -> void:
 	_check(String(panel.scenario_identity_label.text).contains("GEOMETRY FIT") and String(panel.scenario_identity_label.text).contains("Layered Masonry compounds Greywatch"), "defense card should explain how the selected commander fits the keep geometry")
 	_check(String(panel.scenario_identity_label.text).contains("Recommended pack: Pike Line") and String(panel.scenario_identity_label.text).contains("Accepted risk"), "defense card should name a compatible opening and its risk")
 	_check(String(panel.scenario_arc_label.text).contains("Gate Assault") and String(panel.scenario_arc_label.text).contains("Feint and Flank"), "defense card should expose the authored pressure arc")
-	_check(String(panel.scenario_fixed_label.text).contains("3 authored phases"), "the defense card should explain what becomes fixed on entry")
+	_check(String(panel.scenario_fixed_label.text).contains("3 assault phases"), "the defense card should explain what becomes fixed on entry")
 	_check(String(panel.summary_label.text).contains("PAIRING — The Castellan leads Gatehouse Lock at Greywatch Keep."), "War Council should state the selected commander/defense relationship")
 	_check(String(panel.summary_label.text).contains("SEED —") and String(panel.summary_label.text).contains("FOCUS —"), "War Council should expose concise seeded pressure and preparation focus")
 	_check(not ui.setup_advanced_panel.visible and not ui.commander_option.is_visible_in_tree() and not ui.scenario_option.is_visible_in_tree(), "advanced dropdown selectors should begin collapsed behind the game-facing cards")

@@ -1,10 +1,10 @@
 {
   "id": "lantern_post", "content_version": 1, "status": "active", "name": "Lantern Post",
-  "short_role": "Expose one authored concealed approach before contact.", "role": "reveals veiled routes",
+  "short_role": "Expose one concealed approach before contact.", "role": "reveals veiled routes",
   "question": "Which upper approach must remain visible when the warning lamps fail?", "kind": "equipment", "category": "support",
   "footprint": [1, 1], "allowed_floors": ["upper"], "allowed_zones": ["wall"],
   "cost": 5, "max_health": 8, "placement_question": "Which threatened upper room edge should the lantern illuminate?",
-  "skill": "Route Light: while living beside an authored approach room, reveals Gloam Knives for the full assault so ranged defenders can engage them.",
+  "skill": "Route Light: while standing beside a marked approach room, reveals Gloam Knives for the full assault so ranged defenders can engage them.",
   "strength_tags": ["route_reveal", "visibility", "warning_light"], "weakness_tags": ["no_direct_stop", "upper_only", "route_specific"],
   "attack_profile": {"style": "support", "range": 1, "cooldown_steps": 1, "damage": 0, "defense": 0, "ammo_capacity": 0, "targets": ["all"]},
   "support_profile": {"kind": "visibility", "target_rooms": [], "condition_restore": 0, "response_modifier": "route_reveal"},

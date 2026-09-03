@@ -71,7 +71,7 @@ static func _brief(keep: Object, priorities: Array[Dictionary]) -> Dictionary:
 	else:
 		matters = "%s is %s at %d%% condition." % [String(first_priority.get("name", "The keep")), String(first_priority.get("state", "STABLE")), int(first_priority.get("condition", 100))]
 	var advice: Dictionary = keep.recovery_advice()
-	var next_pressure: String = "%s · %s" % [String(advice.get("next_doctrine", "next doctrine")).replace("_", " ").capitalize(), String(advice.get("target", "Preserve the most important function."))] if bool(advice.get("ok", false)) else "No further authored pressure is forecast."
+	var next_pressure: String = "%s · %s" % [String(advice.get("next_doctrine", "next doctrine")).replace("_", " ").capitalize(), String(advice.get("target", "Preserve the most important function."))] if bool(advice.get("ok", false)) else "No further pressure is forecast."
 	var priority_name: String = String(damaged_piece.get("name", "")) if not damaged_piece.is_empty() and not room_needs_attention else String(first_priority.get("name", advice.get("target", "Preserve the most important function.")))
 	var alternative_name: String = "flexibility before the next pressure"
 	for priority_index in range(priorities.size()):

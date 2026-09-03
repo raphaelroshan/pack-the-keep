@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.63.0-board-first-results",
+  "build_version": "0.64.0-player-facing-language",
   "status": "implemented",
   "all_packets_complete": true,
   "packets": [
@@ -14,7 +14,7 @@
         {"id": "deterministic_three_wave_replay", "status": "automated", "evidence": ["tests/test_p12_alpha_scenario_matrix.gd", "tests/test_multi_wave.gd"]},
         {"id": "all_phase_save_resume", "status": "automated", "evidence": ["tests/test_p53_alpha_flow_hardening.gd", "tests/test_p32_terminal_debrief.gd"]},
         {"id": "accessible_input_motion", "status": "automated", "evidence": ["tests/test_p10_controller_scaling.gd", "tests/test_p10_accessibility_preferences.gd", "tests/test_k4_battle_beat_readability.gd"]},
-        {"id": "greywatch_1600_capture", "status": "documented", "evidence": ["docs/visual_evidence/v0.63.0-board-first-greywatch-1600x900/capture-manifest.json"]},
+        {"id": "greywatch_1600_capture", "status": "documented", "evidence": ["docs/visual_evidence/v0.64.0-writing-pass-greywatch-1600x900/capture-manifest.json"]},
         {"id": "authoritative_state", "status": "automated", "evidence": ["src/core/keep_state.gd", "tests/test_keep_state.gd"]}
       ]
     },
@@ -29,7 +29,7 @@
         {"id": "keep_comparison_and_geometry_matrix", "status": "automated", "evidence": ["src/ui/war_council_presentation_snapshot.gd", "tests/test_p38_war_council_choice_cards.gd"]},
         {"id": "placement_counter_and_failure_forward", "status": "automated", "evidence": ["tests/test_p15_ash_ford_identity.gd", "tests/test_p15_regional_consequence.gd"]},
         {"id": "migration_controller_scaling", "status": "automated", "evidence": ["tests/test_p12_save_recovery.gd", "tests/test_p48_responsive_layout.gd", "tests/test_p53_alpha_flow_hardening.gd"]},
-        {"id": "second_keep_screenshots", "status": "documented", "evidence": ["docs/visual_evidence/v0.63.0-board-first-ash-ford-1600x900/capture-manifest.json", "docs/visual_evidence/v0.63.0-board-first-ash-ford-1280x720/capture-manifest.json"]}
+        {"id": "second_keep_screenshots", "status": "documented", "evidence": ["docs/visual_evidence/v0.64.0-writing-pass-ash-ford-1600x900/capture-manifest.json", "docs/visual_evidence/v0.64.0-writing-pass-ash-ford-1280x720/capture-manifest.json"]}
       ]
     },
     {

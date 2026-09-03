@@ -8,7 +8,7 @@
   "scenario": "the_twilight_road",
   "trigger": {"phase": "recovery", "wave": 2},
   "selection": {"stream": "twilight_crossroads", "repeat_policy": "once_per_run", "cooldown_waves": 0, "max_occurrences": 1},
-  "setup": "The scouts confirm both routes will break at once. The road crews can replant the stakes or carry lamp oil to the stair before nightfall, but there is time for only one preparation.",
+  "setup": "Both routes will break at once. Replant the road stakes or carry lamp oil to the stair; there is time for only one preparation.",
   "choices": [
     {
       "id": "replant_road_stakes",

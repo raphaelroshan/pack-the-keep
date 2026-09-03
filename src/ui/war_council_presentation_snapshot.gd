@@ -42,14 +42,14 @@ static func build(keep: Object, commander_id: String, scenario_id: String, tutor
 			"difficulty": String(scenario_preview.get("difficulty", "standard")),
 			"name": String(scenario_preview.get("name", scenario_id)),
 			"keep": String(scenario_preview.get("keep_name", "Keep")),
-			"identity": String(scenario_definition.get("short_role", "Authored pressure")),
+			"identity": String(scenario_definition.get("short_role", "Known pressure")),
 			"question": String(scenario_definition.get("question", "What must this defense preserve?")),
 			"geometry": "%s %s" % [String(keep_definition.get("spatial_rule", {}).get("label", "Read the keep geometry.")), String(geometry_fit.get("fit", "Choose a doctrine that answers it."))],
 			"geometry_opening": "%s Recommended pack: %s. Accepted risk: %s" % [String(geometry_fit.get("opening", "Build one legible answer.")), String(keep.pack_definition(String(geometry_fit.get("recommended_pack_id", ""))).get("name", "Any coherent pack")), String(geometry_fit.get("risk", "Another route remains exposed."))],
 			"objective": String(scenario_preview.get("objective", "")),
 			"arc": " → ".join(scenario_preview.get("doctrine_names", [])),
 			"risk": "%s; peak pressure %d; %s." % [String(scenario_preview.get("difficulty", "standard")).capitalize(), int(scenario_preview.get("peak_wave_size", 0)), end_state_summary],
-			"fixed": "%s, %d authored phases; selected variation remains fixed." % [String(scenario_preview.get("keep_name", "Keep")), int(scenario_preview.get("wave_count", 0))],
+			"fixed": "%s, %d assault phases; this opening pressure will not change mid-run." % [String(scenario_preview.get("keep_name", "Keep")), int(scenario_preview.get("wave_count", 0))],
 		},
 	}
 
@@ -82,7 +82,7 @@ static func _seed_pressure(keep: Object, variation: Dictionary) -> String:
 			composition.append("%d %s" % [int(counts[enemy_id]), String(keep.enemy_definition(enemy_id).get("name", enemy_id))])
 		parts.append("final pressure %s" % " + ".join(composition))
 	if parts.is_empty():
-		parts.append("baseline stores and authored pressure")
+		parts.append("baseline stores and standard pressure")
 	return "%s: %s." % [String(variation.get("label", variation.get("id", "standard_bell").replace("_", " ").capitalize())), "; ".join(parts)]
 
 static func _concise_focus(value: String) -> String:

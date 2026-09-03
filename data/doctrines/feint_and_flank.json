@@ -4,7 +4,7 @@
   "status": "active",
   "name": "Feint and Flank",
   "short_role": "Pair obvious pressure with a visible upper-floor bypass.",
-  "question": "Has the player left an upper response lane?",
+  "question": "Has the keep preserved an upper response lane?",
   "composition": ["raider", "climber"],
   "route_pattern": "gate_feint_and_north_tower_line",
   "target_priority": "upper_floor_then_gate",

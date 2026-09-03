@@ -3,7 +3,7 @@
   "content_version": 1,
   "status": "active",
   "name": "The Last Bell",
-  "short_role": "Stress-test a prepared Greywatch defense against overwhelming mixed pressure.",
+  "short_role": "Hold a prepared Greywatch defense against overwhelming mixed pressure.",
   "question": "How long can a layered defense keep fighting when every enemy role arrives in force?",
   "objective": "Hold the line as long as possible; if every defender is disabled, the run ends immediately in collapse.",
   "lesson": "A last stand needs several independent fighting lines because there is no recovery after a total defender wipe.",
