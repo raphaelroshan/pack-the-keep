@@ -1,6 +1,6 @@
 {
   "id": "the_unlit_stair", "content_version": 1, "status": "active", "name": "The Unlit Stair",
-  "short_role": "Teach route reveal or close interception against concealed unit hunters.",
+  "short_role": "Reveal or intercept concealed hunters on the upper route.",
   "question": "Can the upper keep expose the Gloam Knife before it reaches a specialist?",
   "objective": "Preserve the upper response line while concealed infiltrators test the dark stair.",
   "lesson": "A Lantern Post opens ranged response; melee interception remains viable without revealing the route.",

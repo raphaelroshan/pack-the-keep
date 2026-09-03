@@ -1,6 +1,6 @@
 {
   "id": "flood_mark", "content_version": 1, "status": "active", "name": "The Flood Mark",
-  "short_role": "Teach an open crossing against armored demolition.", "question": "Can the causeway remain clear while a ram declares one bank as its target?",
+  "short_role": "Keep the causeway clear while armored demolition threatens either bank.", "question": "Can the causeway remain clear while a ram declares one bank as its target?",
   "objective": "Preserve the West Bridgehead and Sluice House through a Hammer Road assault.",
   "lesson": "A clear causeway reduces every room impact, while piercing crews or layered protection stop the ram itself.",
   "keep_id": "ash_ford_redoubt", "recommended_packs": ["river_wardens", "mason_train"], "starting_doctrine": "hammer_road",

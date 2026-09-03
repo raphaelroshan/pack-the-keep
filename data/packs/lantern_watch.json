@@ -2,7 +2,7 @@
   "id": "lantern_watch", "content_version": 1, "status": "active", "name": "Lantern Watch",
   "short_role": "Reveal a concealed approach for a disciplined upper firing line.", "question": "Which dark route is worth lighting before it reaches the specialists?",
   "family": "visibility", "contents": ["dusk_bow", "lantern_post"], "doctrine": "lit_crossfire", "cost": 5,
-  "strength": "A route lantern turns concealed unit hunters into legal ranged targets for a hard-hitting upper defender.", "weakness": "The lantern deals no damage, occupies scarce upper-wall space, and only reveals authored concealed routes.",
+  "strength": "A route lantern reveals concealed hunters for a hard-hitting upper defender.", "weakness": "The lantern deals no damage, occupies scarce upper-wall space, and reveals only marked concealed routes.",
   "choice": "Spend two upper footprints to convert hidden contact risk into an early ranged stop.", "commander_affinity": ["warden", "castellan"],
   "spatial_demand": {"preferred_floors": ["upper"], "preferred_zones": ["wall"], "needs_open_lane": false, "needs_adjacency": true}
 }

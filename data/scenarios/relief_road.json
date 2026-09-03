@@ -1,6 +1,6 @@
 {
   "id": "relief_road", "content_version": 1, "status": "active", "name": "The Relief Road",
-  "short_role": "Teach open-lane relief, bounded reserves, and a deliberate fallback.",
+  "short_role": "Keep an open relief lane, a usable reserve, and a deliberate fallback.",
   "question": "Can the keep answer a second failure without abandoning the first defense?",
   "objective": "Keep Workshop or Supply Room functional while preserving an interior response lane.",
   "lesson": "A reserve only matters when space, supplies, and a fallback survive together.",

@@ -118,11 +118,11 @@ func render(view_model: Dictionary) -> void:
 	summary_label.text = "%s\nPAIRING — %s\nSEED — %s\nFOCUS — %s" % [
 		String(view_model.get("run_frame", "SKIRMISH · STANDARD · defender wipe is recoverable")),
 		String(view_model.get("pairing", "Choose who leads which defense.")),
-		String(view_model.get("seed_pressure", "Standard Bell: baseline stores and authored pressure.")),
+		String(view_model.get("seed_pressure", "Standard Bell: baseline stores and standard pressure.")),
 		String(view_model.get("preparation_focus", "Read the first forecast before placing the defense.")),
 	]
 	lock_label.visible = locked
-	lock_label.text = "FIRST WATCH LOCKED — This lesson uses The Castellan and Gatehouse Lock so every taught command matches the authored defense." if locked else ""
+	lock_label.text = "FIRST WATCH LOCKED — This lesson uses The Castellan and Gatehouse Lock so every command matches the guided defense." if locked else ""
 
 	commander_index_label.text = "COMMANDER %d / %d" % [int(commander.get("index", 0)), int(commander.get("count", 0))]
 	commander_name_label.text = String(commander.get("name", "Commander"))
@@ -134,7 +134,7 @@ func render(view_model: Dictionary) -> void:
 
 	scenario_index_label.text = "DEFENSE %d / %d  •  %s" % [int(scenario.get("index", 0)), int(scenario.get("count", 0)), String(scenario.get("difficulty", "standard")).to_upper()]
 	scenario_name_label.text = String(scenario.get("name", "Defense"))
-	scenario_identity_label.text = "%s  •  %s\nGEOMETRY FIT — %s\nOPENING — %s\nFIRST QUESTION — %s" % [String(scenario.get("keep", "Keep")), String(scenario.get("identity", "Authored pressure")), String(scenario.get("geometry", "Read the keep geometry.")), String(scenario.get("geometry_opening", "Build one legible answer.")), String(scenario.get("question", "What must this defense preserve?"))]
+	scenario_identity_label.text = "%s  •  %s\nGEOMETRY FIT — %s\nOPENING — %s\nFIRST QUESTION — %s" % [String(scenario.get("keep", "Keep")), String(scenario.get("identity", "Known pressure")), String(scenario.get("geometry", "Read the keep geometry.")), String(scenario.get("geometry_opening", "Build one legible answer.")), String(scenario.get("question", "What must this defense preserve?"))]
 	scenario_objective_label.text = "OBJECTIVE\n%s" % String(scenario.get("objective", ""))
 	scenario_arc_label.text = "PRESSURE ARC\n%s" % String(scenario.get("arc", ""))
 	scenario_risk_label.text = "RUN RULE\n%s" % String(scenario.get("risk", ""))
@@ -142,7 +142,7 @@ func render(view_model: Dictionary) -> void:
 
 	for button in [commander_previous_button, commander_next_button, scenario_previous_button, scenario_next_button]:
 		button.disabled = locked
-		button.tooltip_text = "First Watch fixes this choice." if locked else "Browse the authored catalogue through the existing selection command."
+		button.tooltip_text = "First Watch fixes this choice." if locked else "Browse the available choices without committing the defense."
 
 func set_compact_layout(compact: bool) -> void:
 	set_responsive_layout(compact, 800.0)

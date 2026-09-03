@@ -4,7 +4,7 @@
   "question": "Which armored threat deserves the limited bolts?", "kind": "unit", "category": "precision",
   "footprint": [2, 1], "allowed_floors": ["upper"], "allowed_zones": ["wall"],
   "cost": 9, "max_health": 10, "placement_question": "Which upper post commands the shielded route?",
-  "skill": "Piercing Volley: ignores authored armor; gains +1 response near a Watch Banner.",
+  "skill": "Piercing Volley: ignores armor; gains +1 response near a Watch Banner.",
   "strength_tags": ["armor_piercing", "high_ground", "shielded_advance"], "weakness_tags": ["finite_ammunition", "narrow_targets", "isolated_position"],
   "attack_profile": {"style": "ranged", "range": 3, "cooldown_steps": 1, "damage": 3, "defense": 0, "ammo_capacity": 5, "targets": ["shield_guard", "climber", "standard_cutter", "outrider"]},
   "support_profile": null, "assignment_rule": null, "availability": "crossbow_watch",

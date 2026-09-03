@@ -1,6 +1,6 @@
 {
   "id": "the_cut_standard", "content_version": 1, "status": "active", "name": "The Cut Standard",
-  "short_role": "Teach protection of assigned specialists against a dedicated unit hunter.",
+  "short_role": "Protect assigned specialists from a hunter built to sever the command chain.",
   "question": "Can one command anchor remain useful without becoming the keep's single point of failure?",
   "objective": "Preserve at least one specialist response while Standard Cutters pressure the command chain.",
   "lesson": "Precision can stop the Cutter early; a mobile reserve can absorb contact without sacrificing the whole line.",

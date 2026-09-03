@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.63.0-board-first-results",
+  "framework_version": "0.64.0-player-facing-language",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -2031,5 +2031,13 @@
     "suppressed_duplicates": ["main_title", "main_subtitle", "main_status"],
     "large_text_fallback": "stacked_with_complete_main_heading",
     "determinism_rule": "responsive_layout_and_debrief_rendering_never_mutate_pack_keep_state"
+  },
+  "player_facing_language": {
+    "status": "implemented",
+    "voice": "direct_grounded_fortress_language",
+    "removed_meta_language": ["roadmap_milestones", "authored_content", "determinism", "automated_baseline", "test_harness"],
+    "event_title_rule": "active_event_titles_are_unique",
+    "authority": "copy_changes_do_not_change_ids_costs_effects_targets_or_outcomes",
+    "validation": ["tools/validate_player_facing_copy.py", "tests/test_player_facing_copy_validator.py"]
   }
 }

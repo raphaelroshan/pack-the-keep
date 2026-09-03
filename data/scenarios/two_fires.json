@@ -1,6 +1,6 @@
 {
   "id": "two_fires", "content_version": 1, "status": "active", "name": "Two Fires",
-  "short_role": "Test both bastions with different threat families at the same time.", "question": "Can both posts remain staffed when demolition and specialist pressure split the command chain?",
+  "short_role": "Hold both bastions while demolition and specialist pressure strike together.", "question": "Can both posts remain staffed when demolition and specialist pressure split the command chain?",
   "objective": "Keep the paired-bastion protection active through at least two assault phases.",
   "lesson": "Twinwatch rewards two credible posts; one perfect anchor cannot protect an abandoned opposite side.",
   "keep_id": "twinwatch_bastion", "recommended_packs": ["ridge_company", "mason_train"], "starting_doctrine": "hammer_road",

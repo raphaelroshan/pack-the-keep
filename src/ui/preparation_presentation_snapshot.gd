@@ -111,7 +111,7 @@ static func _brief(keep: Object) -> Dictionary:
 static func _starter_plan_compact_text(keep: Object) -> String:
 	var plan: Dictionary = keep.keep_definition().get("starter_plan", {})
 	if plan.is_empty():
-		return "PLAN — No authored opening is available for this keep."
+		return "PLAN — No recommended opening is available for this keep."
 	var placements: Array = plan.get("placements", [])
 	var placed_count: int = 0
 	for placement in placements:
@@ -125,12 +125,12 @@ static func _starter_plan_compact_text(keep: Object) -> String:
 				break
 	var pack_id: String = String(plan.get("pack_id", ""))
 	var pack_name: String = String(keep.pack_definition(pack_id).get("name", pack_id))
-	return "FIRST PLAN — %s [%d/%d placed] • %s%s\nPURPOSE — %s  •  ACCEPT — %s" % [String(plan.get("title", "Authored opening")).to_upper(), placed_count, placements.size(), pack_name, " [done]" if keep.owned_packs.has(pack_id) else "", String(plan.get("intent", "Build one legible answer.")), String(plan.get("tradeoff", "Another route remains exposed."))]
+	return "FIRST PLAN — %s [%d/%d placed] • %s%s\nPURPOSE — %s  •  ACCEPT — %s" % [String(plan.get("title", "Recommended opening")).to_upper(), placed_count, placements.size(), pack_name, " [done]" if keep.owned_packs.has(pack_id) else "", String(plan.get("intent", "Build one legible answer.")), String(plan.get("tradeoff", "Another route remains exposed."))]
 
 static func _starter_plan_text(keep: Object) -> String:
 	var plan: Dictionary = keep.keep_definition().get("starter_plan", {})
 	if plan.is_empty():
-		return "FIRST PLAN — No authored opening is available for this keep."
+		return "FIRST PLAN — No recommended opening is available for this keep."
 	var pack_id: String = String(plan.get("pack_id", ""))
 	var pack_name: String = String(keep.pack_definition(pack_id).get("name", pack_id))
 	var pack_open: bool = keep.owned_packs.has(pack_id)
@@ -150,7 +150,7 @@ static func _starter_plan_text(keep: Object) -> String:
 		if placed:
 			placed_count += 1
 		steps.append("%s%s — %s" % [String(keep.piece_definition(piece_id).get("name", piece_id)), " [done]" if placed else "", String(placement.get("reason", "supports the plan"))])
-	return "FIRST PLAN — %s [%d/%d placed]\n%s\nPURPOSE — %s  ACCEPT — %s" % [String(plan.get("title", "Authored opening")).to_upper(), placed_count, placements.size(), "  →  ".join(steps), String(plan.get("intent", "Build one legible answer.")), String(plan.get("tradeoff", "Another route remains exposed."))]
+	return "FIRST PLAN — %s [%d/%d placed]\n%s\nPURPOSE — %s  ACCEPT — %s" % [String(plan.get("title", "Recommended opening")).to_upper(), placed_count, placements.size(), "  →  ".join(steps), String(plan.get("intent", "Build one legible answer.")), String(plan.get("tradeoff", "Another route remains exposed."))]
 
 static func _layout_lens_text(keep: Object) -> String:
 	var summary: Dictionary = keep.layout_summary()

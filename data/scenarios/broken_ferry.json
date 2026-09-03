@@ -1,6 +1,6 @@
 {
   "id": "broken_ferry", "content_version": 1, "status": "active", "name": "The Broken Ferry",
-  "short_role": "Teach mobile response across separated river approaches.", "question": "Can a reserve answer the far bank after the obvious approach becomes a feint?",
+  "short_role": "Cover both river approaches with one mobile reserve.", "question": "Can a reserve answer the far bank after the obvious approach becomes a feint?",
   "objective": "Preserve the Ferry Barracks and Grain Store through alternating ground and upper pressure.",
   "lesson": "Open lanes and warning coverage let a light response protect both banks without duplicating every defense.",
   "keep_id": "ash_ford_redoubt", "recommended_packs": ["ferry_network", "runner_network"], "starting_doctrine": "feint_and_flank",

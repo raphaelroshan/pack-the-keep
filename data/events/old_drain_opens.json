@@ -9,7 +9,7 @@
   "trigger": {"phase": "recovery", "wave": 2},
   "selection": {"stream": "open_yard_recovery_occurrence", "repeat_policy": "once_per_run", "cooldown_waves": 0, "max_occurrences": 1},
   "eligibility": {"seed_slot": {"mod": 3, "slots": [0]}},
-  "setup": "A loose stone beside the Outer Wall reveals a narrow drain. The wet marks prove where it runs; sealing it preserves certainty, while marking it keeps one visible escape route without removing any current defense.",
+  "setup": "A loose stone beside the Outer Wall reveals a narrow drain. Seal it for certainty, or mark it as an escape route without removing a defense.",
   "choices": [
     {
       "id": "seal_old_drain",

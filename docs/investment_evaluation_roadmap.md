@@ -91,3 +91,9 @@ Fresh Greywatch and Ash Ford evidence covers the complete three-phase loop at 12
 Build `0.63.0-board-first-results` closes the remaining 1280×720 phase-flow gap. Terminal Results now keeps the final fortress beside its outcome, causal summary, and dominant replay action instead of placing the debrief below the fold. The debrief compacts safely inside its own rail, while 150% large text retains the established stacked composition.
 
 Fresh Greywatch and Ash Ford evidence covers the complete loop at 1280×720 and 1600×900. Outcomes, phase history, fortress state, replay recommendations, campaign consequences, and save state remain authoritative and unchanged. See `docs/p75_board_first_terminal_results_verification.md`.
+
+## 2026-09-04 execution checkpoint — player-facing language complete
+
+Build `0.64.0-player-facing-language` removes development vocabulary from normal play. Scenario cards now name the actual pressure and defensive demand, combat and tutorial guidance describe observable actions, event titles remain distinct in history, and the pre-alpha title keeps its honest boundary without advertising the test harness.
+
+A dedicated validator protects player-facing data, high-visibility UI phrases, event-title uniqueness, and compact event setup copy. Fresh Greywatch and Ash Ford evidence covers the complete loop at 1280×720 and 1600×900. IDs, costs, effects, target rules, outcomes, saves, and deterministic ordering remain unchanged. See `docs/p76_player_facing_language_verification.md`.

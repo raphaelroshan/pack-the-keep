@@ -28,7 +28,7 @@ static func build(keep: Object, screen: String, battle_paused: bool, assault_rea
 			result.hint = "WAR COUNCIL  ›  FORTRESS  ›  ASSAULT  ›  AFTERMATH"
 		"settings":
 			result.title = "SETTINGS & ACCESSIBILITY"
-			result.subtitle = "Tune readability and input without touching the simulation."
+			result.subtitle = "Tune readability and input without changing the defense."
 			result.screen_label = "PACK THE KEEP / Settings"
 			result.hint = "Presentation settings are saved separately from the run."
 		"preparation":

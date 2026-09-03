@@ -2,7 +2,7 @@
   "id": "relief_road_recovery",
   "content_version": 1,
   "status": "active",
-  "title": "The Workshop Can Wait",
+  "title": "The Road Crews Return",
   "short_role": "Trade one recovery action for stores or morale before the pressure changes.",
   "type": "recovery",
   "scenario": "relief_road",

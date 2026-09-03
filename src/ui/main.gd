@@ -693,7 +693,7 @@ func _toggle_local_playtest_observation() -> void:
 	if local_playtest_observer == null:
 		return
 	local_playtest_observer.set_enabled(not local_playtest_observer.enabled, screen)
-	_set_event("Local playtest observation enabled for this launch. Nothing is uploaded." if local_playtest_observer.enabled else "Local playtest observation paused. The in-memory snapshot remains available to export.")
+	_set_event("Session notes enabled for this launch. Nothing is uploaded." if local_playtest_observer.enabled else "Session notes paused. The in-memory snapshot remains available to export.")
 	_refresh_ui()
 
 func _export_local_playtest_observation() -> void:
@@ -709,9 +709,9 @@ func _export_local_playtest_observation() -> void:
 		"ui_scale_percent": int(UI_SCALE_PRESETS[ui_scale_index] * 100.0),
 	})
 	if bool(result.get("ok", false)):
-		_set_event("Local observation exported to %s. Share it only if you choose." % local_metrics_path)
+		_set_event("Session notes exported to %s. Share them only if you choose." % local_metrics_path)
 	else:
-		_set_event("Local observation export blocked: %s." % String(result.get("reason", "unknown")))
+		_set_event("Session-note export blocked: %s." % String(result.get("reason", "unknown")))
 	_refresh_ui()
 
 func _window_size_text() -> String:
@@ -1216,7 +1216,7 @@ func _build_ui() -> void:
 
 	setup_overview_panel = _build_overview_panel(
 		"THE DEFENSE BRIEF",
-		"Choose a leader and an authored defense. Together they set the keep, pressure arc, and intervention before the board opens."
+		"Choose a leader and a named defense. Together they set the keep, pressure arc, and intervention before the board opens."
 	)
 	setup_overview_panel.custom_minimum_size.y = 88
 	left.add_child(setup_overview_panel)
@@ -1232,7 +1232,7 @@ func _build_ui() -> void:
 
 	settings_overview_panel = _build_overview_panel(
 		"READABILITY BEFORE PRESSURE",
-		"Display, audio, input, and pacing preferences live on their own screen. Optional playtest observation is local, session-only, and explicitly exported; none of these settings alter battle outcomes."
+		"Display, audio, input, and pacing preferences live on their own screen. Optional session notes stay local until explicitly exported; none of these settings alter battle outcomes."
 	)
 	left.add_child(settings_overview_panel)
 
@@ -1503,7 +1503,7 @@ func _build_ui() -> void:
 	pack_preview_label = preparation_pack_offer_panel.detail_label
 	preparation_advanced_button = Button.new()
 	preparation_advanced_button.text = "Show advanced preparation"
-	preparation_advanced_button.tooltip_text = "Show catalogue, authored doctrine, and full layout analysis without changing the defense."
+	preparation_advanced_button.tooltip_text = "Show the full pack catalogue, doctrine details, and layout analysis without changing the defense."
 	preparation_advanced_button.pressed.connect(_toggle_preparation_advanced)
 	preparation_section.add_child(preparation_advanced_button)
 	preparation_advanced_panel = VBoxContainer.new()
@@ -1575,7 +1575,7 @@ func _build_ui() -> void:
 	preparation_section.add_child(map_place_button)
 	var recommended_layout_button: Button = Button.new()
 	recommended_layout_button.text = "Apply this keep's first plan"
-	recommended_layout_button.tooltip_text = "Opens the named pack and places the authored opening through the normal material, pack, and placement rules."
+	recommended_layout_button.tooltip_text = "Open the named pack and place the recommended opening using the normal material, pack, and placement rules."
 	recommended_layout_button.pressed.connect(_on_recommended_layout)
 	preparation_section.add_child(recommended_layout_button)
 	var remove_piece_button: Button = Button.new()
@@ -1672,7 +1672,7 @@ func _build_ui() -> void:
 
 	battle_tactical_button = Button.new()
 	battle_tactical_button.text = "Show tactical controls"
-	battle_tactical_button.tooltip_text = "Reveal deterministic stepping, timing speed, and the fallback threat list without changing combat state."
+	battle_tactical_button.tooltip_text = "Reveal manual stepping, battle speed, and the full threat list without advancing combat."
 	battle_tactical_button.pressed.connect(_toggle_battle_tactical_controls)
 	battle_section.add_child(battle_tactical_button)
 	battle_tactical_panel = VBoxContainer.new()
@@ -1686,7 +1686,7 @@ func _build_ui() -> void:
 	battle_tactical_panel.add_child(tactical_heading)
 	manual_step_button = Button.new()
 	manual_step_button.text = "Step once while paused (N)"
-	manual_step_button.tooltip_text = "Resolve exactly one deterministic combat tick while the assault is paused."
+	manual_step_button.tooltip_text = "Resolve exactly one combat tick while the assault is paused."
 	manual_step_button.pressed.connect(_on_advance_wave)
 	battle_tactical_panel.add_child(manual_step_button)
 	speed_button = Button.new()
@@ -1733,7 +1733,7 @@ func _build_ui() -> void:
 	settings_section.add_child(contrast_button)
 	reduced_motion_button = Button.new()
 	reduced_motion_button.text = "Reduced motion: OFF"
-	reduced_motion_button.tooltip_text = "Suppress transient board flashes without changing simulation timing or outcomes."
+	reduced_motion_button.tooltip_text = "Suppress transient board flashes without changing combat timing or outcomes."
 	reduced_motion_button.pressed.connect(_toggle_reduced_motion)
 	settings_section.add_child(reduced_motion_button)
 	ui_scale_button = Button.new()
@@ -1763,7 +1763,7 @@ func _build_ui() -> void:
 	settings_section.add_child(feedback_cue_label)
 	event_feed_button = Button.new()
 	event_feed_button.text = "Event feed: newest 4"
-	event_feed_button.tooltip_text = "Change only how many authoritative report entries are shown; the complete report remains saved."
+	event_feed_button.tooltip_text = "Change only how many battle-report entries are shown; the complete report remains saved."
 	event_feed_button.pressed.connect(_cycle_event_feed_retention)
 	settings_section.add_child(event_feed_button)
 	auto_pause_button = Button.new()
@@ -1772,12 +1772,12 @@ func _build_ui() -> void:
 	auto_pause_button.pressed.connect(_toggle_auto_pause_on_threat)
 	settings_section.add_child(auto_pause_button)
 	local_metrics_button = Button.new()
-	local_metrics_button.text = "Local playtest observation: OFF"
+	local_metrics_button.text = "Session notes: OFF"
 	local_metrics_button.tooltip_text = "Opt in for this launch only. Records coarse interaction counts and screen time in memory; nothing is uploaded."
 	local_metrics_button.pressed.connect(_toggle_local_playtest_observation)
 	settings_section.add_child(local_metrics_button)
 	local_metrics_export_button = Button.new()
-	local_metrics_export_button.text = "Export local observation"
+	local_metrics_export_button.text = "Export session notes"
 	local_metrics_export_button.tooltip_text = "Write the current anonymous observation snapshot to the local user data folder."
 	local_metrics_export_button.pressed.connect(_export_local_playtest_observation)
 	settings_section.add_child(local_metrics_export_button)
@@ -1890,7 +1890,8 @@ func _build_title_card() -> PanelContainer:
 	content.add_child(pillars)
 	build_identity_label = Label.new()
 	build_identity_label.name = "BuildIdentityLabel"
-	build_identity_label.text = "PRE-ALPHA • %s • AUTOMATED BASELINE VERIFIED" % String(ProjectSettings.get_setting("application/config/version", "unknown"))
+	var semantic_version: String = String(ProjectSettings.get_setting("application/config/version", "unknown")).split("-", true, 1)[0]
+	build_identity_label.text = "PRE-ALPHA • %s • DEFEND THE INNER MARCH" % semantic_version
 	build_identity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	build_identity_label.add_theme_color_override("font_color", Color("#aab1b2"))
 	content.add_child(build_identity_label)
@@ -2520,7 +2521,7 @@ func _refresh_campaign_ledger() -> void:
 	var ledger_text: String = ""
 	if modifier_id.is_empty():
 		var current_name: String = "None" if keep.equipped_modifier_id.is_empty() else String(keep.modifier_definition(keep.equipped_modifier_id).get("name", keep.equipped_modifier_id))
-		ledger_text = "CAMPAIGN LEDGER — EQUIPPED: %s\nSelected: No modifier\nRun the authored baseline without an information trade-off or challenge rule." % current_name
+		ledger_text = "CAMPAIGN LEDGER — EQUIPPED: %s\nSelected: No modifier\nRun the standard defense without an information trade-off or challenge rule." % current_name
 	else:
 		var definition: Dictionary = keep.modifier_definition(modifier_id)
 		var unlocked: bool = keep.unlocked_modifier_ids.has(modifier_id)
@@ -2541,7 +2542,7 @@ func _refresh_campaign_ledger() -> void:
 func _modifier_effect_text(definition: Dictionary) -> String:
 	var effect: String = String(definition.get("effect", ""))
 	if effect == "reveal_wave_composition":
-		return "Effect: reveal the next authored assault composition. Cost: %d less starting morale." % int(definition.get("starting_morale_cost", 0))
+		return "Effect: reveal the next assault composition. Cost: %d less starting morale." % int(definition.get("starting_morale_cost", 0))
 	if effect == "enemy_health_bonus":
 		return "Challenge: every enemy begins each assault phase with +%d health. Starting morale is unchanged." % int(definition.get("enemy_health_bonus", 0))
 	return String(definition.get("short_role", "Unknown modifier effect."))
@@ -2720,7 +2721,7 @@ func _on_recommended_layout() -> void:
 		return
 	var plan: Dictionary = keep.keep_definition().get("starter_plan", {})
 	if plan.is_empty():
-		_set_event("This keep has no authored first plan. Place a defense directly on the map.")
+		_set_event("This keep has no recommended first plan. Place a defense directly on the map.")
 		_refresh_ui()
 		return
 	var pack_id: String = String(plan.get("pack_id", ""))
@@ -3070,12 +3071,12 @@ func _on_remove_piece() -> void:
 	if bool(removed.get("ok", false)):
 		selected_instance_id = ""
 		inspected_subject.clear()
-		inspected_text = "Piece removed. Use the placement preview to test a different layout."
+		inspected_text = "Piece removed. Use the placement preview to try a different layout."
 	_run_result(removed, "Layout")
 
 func _on_place_piece() -> void:
 	if tutorial.active:
-		_set_event("First Watch teaches direct placement on the highlighted fort position.")
+		_set_event("First Watch requires direct placement on the highlighted fort position.")
 		_play_cue("error")
 		return
 	var piece_id: String = _selected_id(piece_option)
@@ -3774,11 +3775,11 @@ func _on_quick_test_action() -> void:
 		if keep.wave_active:
 			_toggle_battle_pause()
 		else:
-			_set_event("Battle is complete. Review Results or restart the quick playtest.")
+			_set_event("The defense is complete. Review the result or begin another defense.")
 			_refresh_ui()
 		return
 	if keep.wave_active:
-		_set_event("Quick test already active. Press Space to run or use the primary action to advance one step.")
+		_set_event("The assault is already active. Press Space to run or use the primary action to advance one step.")
 		_refresh_ui()
 		return
 	_on_start_wave()
@@ -4057,13 +4058,13 @@ func _refresh_ui() -> void:
 			playtest_button.disabled = keep.pieces.is_empty() or keep.repair_interval_active or not keep.active_event_id.is_empty()
 			playtest_button.tooltip_text = "Enter the selected assault at tick zero, review its opening pressure, then sound the bell."
 			if not keep.active_event_id.is_empty():
-				playtest_status_label.text = "EVENT WAITING — choose an authored response before the invasion can begin."
+				playtest_status_label.text = "EVENT WAITING — choose a response before the invasion can begin."
 			else:
 				playtest_status_label.text = "DEFENSE READY — %d piece(s) placed. Enter the assault, review first contact, then sound the bell." % keep.pieces.size() if not keep.pieces.is_empty() else "DEFENSE WAITING — use the recommended layout or place at least one defender first."
 		elif screen == "battle":
 			playtest_button.text = "SOUND THE BELL — BEGIN PHASE %d" % keep.wave_index if not assault_ready_reason.is_empty() else "RESUME ASSAULT" if battle_paused else "PAUSE — INSPECT"
 			playtest_button.disabled = not keep.wave_active
-			playtest_button.tooltip_text = "Begin continuous combat after reviewing the opening pressure." if not assault_ready_reason.is_empty() else "Resume continuous combat." if battle_paused else "Pause immediately without advancing authoritative combat."
+			playtest_button.tooltip_text = "Begin continuous combat after reviewing the opening pressure." if not assault_ready_reason.is_empty() else "Resume continuous combat." if battle_paused else "Pause immediately without advancing the battle."
 			playtest_status_label.text = "%s TICK 0 · PAUSED — Space or the primary action sounds the bell." % assault_ready_reason if not assault_ready_reason.is_empty() else "ASSAULT PHASE %d/%d · TICK %d · %s — Space toggles pause; N advances one tick while paused." % [keep.wave_index, maxi(1, keep.authored_wave_count()), keep.battle_step, "PAUSED" if battle_paused else "LIVE %.1fx" % _battle_speed()]
 		elif screen == "results":
 			if tutorial.active and tutorial.failure_active:
@@ -4104,7 +4105,7 @@ func _refresh_ui() -> void:
 	feedback_cue_label.text = "Last feedback cue: %s" % last_cue_id.replace("_", " ").to_upper()
 	event_feed_button.text = "Event feed: newest %d" % _event_feed_retention()
 	auto_pause_button.text = "Threat auto-pause: ON" if auto_pause_on_threat else "Threat auto-pause: OFF"
-	local_metrics_button.text = "Local playtest observation: ON" if local_playtest_observer.enabled else "Local playtest observation: OFF"
+	local_metrics_button.text = "Session notes: ON" if local_playtest_observer.enabled else "Session notes: OFF"
 	local_metrics_export_button.disabled = not local_playtest_observer.started
 	var observation_snapshot: Dictionary = local_playtest_observer.snapshot()
 	local_metrics_status_label.text = "SESSION ONLY • LOCAL • NEVER UPLOADED\n%d screen(s) timed • %d pause(s) • %d threat focus action(s)" % [observation_snapshot.screen_durations_seconds.size(), int(observation_snapshot.pause_count), int(observation_snapshot.focus_count)]
@@ -5523,7 +5524,7 @@ class KeepCanvas extends Control:
 		for enemy_name in timeline.get("next_arrival_names", []):
 			next_names.append(String(enemy_name))
 		var summary: String = "ALL ACTIVE THREATS IN CONTACT" if next_step < 0 else "NEXT CONTACT — T%d %s" % [next_step, " + ".join(next_names)]
-		draw_string(ThemeDB.fallback_font, Vector2(left, top + 28.0), "%s | TICKS RESOLVE DETERMINISTICALLY" % summary, HORIZONTAL_ALIGNMENT_LEFT, right - left, 9, Color("#c8b6a0"))
+		draw_string(ThemeDB.fallback_font, Vector2(left, top + 28.0), "%s | READY STRIKES RESOLVE EACH TICK" % summary, HORIZONTAL_ALIGNMENT_LEFT, right - left, 9, Color("#c8b6a0"))
 
 	func _draw_contact_telegraphs() -> void:
 		if keep == null or not keep.wave_active:
