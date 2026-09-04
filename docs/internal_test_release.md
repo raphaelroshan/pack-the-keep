@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.65.0-preparation-first-viewport` — PTK-GPT56-1 through PTK-GPT56-5, PTK-GPT56-1B, and all prior gates remain enforced; 1280×720 Preparation exposes its compact commander/doctrine forecast, selected pack, first plan, and Ready Defense action beside the fortress while all-phase save/replay, cross-keep continuation, accessibility, package, forced-close, and original-asset evidence remain green; human sessions and owner distribution approval remain pending
+**Current build identity:** `0.66.0-choice-first-war-council` — PTK-GPT56-1 through PTK-GPT56-5, PTK-GPT56-1B, and all prior gates remain enforced; 1280×720 War Council exposes the complete commander/defense decision and Preparation exposes its compact commander/doctrine forecast, selected pack, first plan, and Ready Defense action beside the fortress while all-phase save/replay, cross-keep continuation, accessibility, package, forced-close, and original-asset evidence remain green; human sessions and owner distribution approval remain pending
 
 ## Purpose
 

@@ -112,3 +112,9 @@ Evidence is recorded in `docs/latest_review_2026-09-04.md` and `docs/visual_evid
 Build `0.65.0-preparation-first-viewport` closes the repeat-review preparation finding. At 1280×720, the fortress, tactical question, visible answer, accepted weakness, Ready Defense action, commander and pack doctrine, invasion forecast, compact pack answer, and first-plan command now remain visible together without initial page or rail scrolling. The plan transition is explicit: an empty keep offers the existing first-plan command, while a completed opening reads as state rather than a redundant action.
 
 Expanding Advanced restores the full pack question, limitation, spatial demand, and trade-off, while 1600×900 keeps the full card by default. Fresh Greywatch and Ash Ford sequences cover both plan states and the complete three-phase loop; deterministic openings, intervention, damage, Recovery, causal Results, save state, and simulation authority remain unchanged. See `docs/p77_preparation_first_viewport_verification.md`.
+
+## 2026-09-04 execution checkpoint — choice-first War Council complete
+
+Build `0.66.0-choice-first-war-council` closes the next first-viewport hierarchy gap. At 1280×720, the complete commander and defense choice now fits with pairing, seeded pressure, preparation focus, and Enter Keep. Each compact card retains the facts needed to choose—doctrine, intervention, trade-off, keep rule, opening, pressure, objective, and risk—while repeated secondary explanation returns in wider and large-text layouts.
+
+Fresh Greywatch and Ash Ford full-flow captures plus a long-form Twilight Road setup capture verify the composition. Selection, content, combat, save state, controller focus, and all completed roadmap gates remain unchanged. See `docs/p78_war_council_first_viewport_verification.md`.
