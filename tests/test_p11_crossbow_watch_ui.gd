@@ -28,7 +28,7 @@ func _initialize() -> void:
 	ui._select_option_metadata(ui.pack_option, "crossbow_watch")
 	ui._refresh_pack_preview()
 	_check(String(ui.scenario_preview_label.text).contains("Red Banner Road"), "Preparation should expose the Red Banner Road scenario")
-	_check(String(ui.pack_preview_label.text).contains("Crossbow Watch") and String(ui.pack_preview_label.text).contains("Crossbow Patrol") and String(ui.pack_preview_label.text).contains("Watch Banner"), "Preparation should explain the complete Crossbow Watch pack")
+	_check(String(ui.preparation_pack_offer_panel.name_label.text) == "Crossbow Watch" and String(ui.pack_preview_label.text).contains("Crossbow Patrol") and String(ui.pack_preview_label.text).contains("Watch Banner"), "Preparation should explain the complete Crossbow Watch pack")
 
 	ui._on_open_pack()
 	_check(String(ui.availability_label.text).contains("Crossbow Patrol") and String(ui.availability_label.text).contains("Watch Banner"), "Opening Crossbow Watch should expose both pieces")

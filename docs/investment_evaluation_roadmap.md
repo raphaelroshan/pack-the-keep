@@ -106,3 +106,9 @@ The current `0.64.0-player-facing-language` main build passes the complete autom
 The investment-quality gate is not yet closed. At 1280×720, the preparation rail remains dense and scroll-dependent even though the main action and board are available. The next agent must execute **PTK-GPT56-1B**: preserve the current board-first composition while making the fortress, tactical question, selected answer, commander/doctrine, forecast, placement plan, and Begin Assault action simultaneously legible; then prove a deterministic three-wave Greywatch run through pause/inspection, one intervention, damage, Recovery, and causal Results. Do not add the second keep until this complete creative vertical is re-proven at 1280×720 and 1600×900.
 
 Evidence is recorded in `docs/latest_review_2026-09-04.md` and `docs/visual_evidence/v0.64.0-player-facing-language-review-2026-09-04/`.
+
+## 2026-09-04 execution checkpoint — PTK-GPT56-1B complete
+
+Build `0.65.0-preparation-first-viewport` closes the repeat-review preparation finding. At 1280×720, the fortress, tactical question, visible answer, accepted weakness, Ready Defense action, commander and pack doctrine, invasion forecast, compact pack answer, and first-plan command now remain visible together without initial page or rail scrolling. The plan transition is explicit: an empty keep offers the existing first-plan command, while a completed opening reads as state rather than a redundant action.
+
+Expanding Advanced restores the full pack question, limitation, spatial demand, and trade-off, while 1600×900 keeps the full card by default. Fresh Greywatch and Ash Ford sequences cover both plan states and the complete three-phase loop; deterministic openings, intervention, damage, Recovery, causal Results, save state, and simulation authority remain unchanged. See `docs/p77_preparation_first_viewport_verification.md`.

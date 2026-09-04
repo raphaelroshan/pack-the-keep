@@ -1,7 +1,15 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.64.0",
+  "content_version": "0.65.0",
+  "p77_preparation_first_viewport": {
+    "status": "implemented",
+    "roadmap_gate": "PTK-GPT56-1B",
+    "breakpoint": "compact_preparation_rail_below_1500_effective_pixels",
+    "first_view": ["fortress", "tactical_question", "visible_answer", "commander_and_pack_doctrine", "forecast", "first_plan", "ready_defense"],
+    "fallback": "advanced_wide_and_stacked_layouts_retain_full_pack_detail",
+    "authority": "responsive_projection_and_plan_status_do_not_change_pack_or_placement_rules"
+  },
   "p76_player_facing_language": {
     "status": "implemented",
     "scope": ["scenario_cards", "events", "tutorial", "battle_feedback", "shared_ui"],

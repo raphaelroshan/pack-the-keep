@@ -28,7 +28,7 @@ func _initialize() -> void:
 	await process_frame
 	await process_frame
 	_check(ui.screen == "preparation", "Quartermaster setup should enter Preparation through the ordinary flow")
-	_check(String(ui.preparation_pack_offer_panel.detail_label.text).contains("OPEN COST — 2") and String(ui.preparation_pack_offer_panel.detail_label.text).contains("Measured Stores"), "Preparation should show the discounted first-pack price before purchase")
+	_check(String(ui.preparation_pack_offer_panel.detail_label.text).contains("COST — 2") and String(ui.preparation_pack_offer_panel.detail_label.text).contains("Measured Stores"), "Preparation should show the discounted first-pack price before purchase")
 	var before_refresh: String = JSON.stringify(ui.keep.serialize())
 	ui._refresh_preparation_presentation()
 	_check(JSON.stringify(ui.keep.serialize()) == before_refresh, "Quartermaster presentation refresh should not mutate authoritative state")

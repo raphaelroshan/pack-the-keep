@@ -28,7 +28,7 @@ func _initialize() -> void:
 	ui._select_option_metadata(ui.pack_option, "bell_guard")
 	ui._refresh_pack_preview()
 	_check(String(ui.scenario_preview_label.text).contains("Ash at the Bell"), "Preparation should expose the Ash at the Bell scenario")
-	_check(String(ui.pack_preview_label.text).contains("Bell Guard") and String(ui.pack_preview_label.text).contains("Bellkeepers") and String(ui.pack_preview_label.text).contains("Signal Beacon"), "Preparation should explain the complete Bell Guard pack")
+	_check(String(ui.preparation_pack_offer_panel.name_label.text) == "Bell Guard" and String(ui.pack_preview_label.text).contains("Bellkeepers") and String(ui.pack_preview_label.text).contains("Signal Beacon"), "Preparation should explain the complete Bell Guard pack")
 
 	ui._on_open_pack()
 	_check(String(ui.availability_label.text).contains("Bellkeepers") and String(ui.availability_label.text).contains("Signal Beacon"), "Opening Bell Guard should expose both signal pieces")

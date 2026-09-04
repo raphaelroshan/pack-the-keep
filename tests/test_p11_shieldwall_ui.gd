@@ -19,7 +19,7 @@ func _initialize() -> void:
 	ui._select_option_metadata(ui.pack_option, "shieldwall")
 	ui._refresh_pack_preview()
 	_check(String(ui.scenario_preview_label.text).contains("The Splintered Gate"), "Preparation should expose The Splintered Gate")
-	_check(String(ui.pack_preview_label.text).contains("Shield Wardens") and String(ui.pack_preview_label.text).contains("Emergency Shutters"), "Preparation should explain the Shieldwall pack")
+	_check(String(ui.preparation_pack_offer_panel.name_label.text) == "Shieldwall" and String(ui.pack_preview_label.text).contains("Shield Wardens") and String(ui.pack_preview_label.text).contains("Emergency Shutters"), "Preparation should explain the Shieldwall pack")
 	ui._on_open_pack()
 	ui.keep.place_piece("shield_wardens", Vector2i(3, 3), "ground")
 	ui.keep.place_piece("emergency_shutters", Vector2i(6, 2), "ground")

@@ -84,7 +84,9 @@ var reserve_button: Button
 var preparation_advanced_button: Button
 var preparation_advanced_panel: VBoxContainer
 var preparation_pack_stage_label: Label
+var preparation_context_label: Label
 var preparation_placement_stage_label: Label
+var recommended_layout_button: Button
 var inspector_label: Label
 var inspection_panel: InspectionPanel
 var placement_label: Label
@@ -166,6 +168,7 @@ var recovery_presentation_snapshot: Dictionary = {}
 var results_presentation_snapshot: Dictionary = {}
 var phase_header_snapshot: Dictionary = {}
 var preparation_board_first_active: bool = false
+var preparation_rail_compact_active: bool = false
 var battle_board_first_active: bool = false
 var recovery_board_first_active: bool = false
 var terminal_board_first_active: bool = false
@@ -747,6 +750,7 @@ func _apply_responsive_layout() -> void:
 	var effective_width: float = maxf(float(get_window().size.x), size.x) / ui_factor
 	var terminal_large_text: bool = terminal_debrief_panel != null and terminal_debrief_panel.visible and ui_factor >= 1.5
 	preparation_board_first_active = screen == "preparation" and effective_width >= PREPARATION_TWO_COLUMN_EFFECTIVE_WIDTH and not terminal_large_text
+	preparation_rail_compact_active = preparation_board_first_active and effective_width < 1500.0
 	battle_board_first_active = screen == "battle" and effective_width >= BATTLE_TWO_COLUMN_EFFECTIVE_WIDTH and not terminal_large_text
 	recovery_board_first_active = screen == "results" and keep != null and keep.repair_interval_active and keep.active_event_id.is_empty() and not _is_terminal_result() and effective_width >= RECOVERY_TWO_COLUMN_EFFECTIVE_WIDTH
 	terminal_board_first_active = screen == "results" and _is_terminal_result() and effective_width >= TERMINAL_TWO_COLUMN_EFFECTIVE_WIDTH and not terminal_large_text
@@ -768,6 +772,12 @@ func _apply_responsive_layout() -> void:
 		war_council_choice_panel.set_responsive_layout(compact_cards, main_width)
 	if preparation_brief_panel != null:
 		preparation_brief_panel.set_responsive_layout(compact_cards, main_width, preparation_board_first_active)
+	if preparation_pack_offer_panel != null:
+		preparation_pack_offer_panel.set_compact(preparation_rail_compact_active and (preparation_advanced_panel == null or not preparation_advanced_panel.visible))
+	if preparation_context_label != null:
+		preparation_context_label.visible = preparation_rail_compact_active
+	if input_help_label != null:
+		input_help_label.visible = not preparation_rail_compact_active
 	if setup_overview_panel != null:
 		setup_overview_panel.visible = screen == "setup" and not prioritized_decision_flow
 	if main_subtitle_label != null:
@@ -830,6 +840,7 @@ func _responsive_layout_snapshot() -> Dictionary:
 		"effective_width": maxf(float(get_window().size.x), size.x) / ui_factor,
 		"stacked": gameplay_columns != null and gameplay_columns.vertical,
 		"preparation_board_first": preparation_board_first_active,
+		"preparation_rail_compact": preparation_rail_compact_active,
 		"battle_board_first": battle_board_first_active,
 		"recovery_board_first": recovery_board_first_active,
 		"terminal_board_first": terminal_board_first_active,
@@ -1398,6 +1409,12 @@ func _build_ui() -> void:
 	layout_lens_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	layout_lens_label.custom_minimum_size = Vector2(292, 142)
 	layout_lens_label.add_theme_color_override("font_color", Color("#d8c389"))
+	preparation_context_label = Label.new()
+	preparation_context_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	preparation_context_label.add_theme_font_size_override("font_size", 11)
+	preparation_context_label.add_theme_color_override("font_color", Color("#bfe8cf"))
+	preparation_context_label.visible = false
+	preparation_section.add_child(preparation_context_label)
 
 	preparation_pack_stage_label = Label.new()
 	preparation_pack_stage_label.text = "1  CHOOSE A DOCTRINE PACK"
@@ -1530,6 +1547,11 @@ func _build_ui() -> void:
 	preparation_placement_stage_label.add_theme_font_size_override("font_size", 14)
 	preparation_placement_stage_label.add_theme_color_override("font_color", Color("#e2bd84"))
 	preparation_section.add_child(preparation_placement_stage_label)
+	recommended_layout_button = Button.new()
+	recommended_layout_button.text = "Apply this keep's first plan"
+	recommended_layout_button.tooltip_text = "Open the named pack and place the recommended opening using the normal material, pack, and placement rules."
+	recommended_layout_button.pressed.connect(_on_recommended_layout)
+	preparation_section.add_child(recommended_layout_button)
 	preparation_section.add_child(availability_label)
 	var asset_strip: VBoxContainer = VBoxContainer.new()
 	for asset_row in [[PIKE_ICON, REPAIR_ICON, FIRE_ICON, SCOUT_ICON, GATE_ICON], [RAIDER_ICON, SAPPER_ICON, CLIMBER_ICON]]:
@@ -1573,11 +1595,6 @@ func _build_ui() -> void:
 	map_place_button.tooltip_text = "Select a cell on either keep floor. The green footprint is authoritative; red means the state will reject it."
 	map_place_button.pressed.connect(_arm_selected_piece)
 	preparation_section.add_child(map_place_button)
-	var recommended_layout_button: Button = Button.new()
-	recommended_layout_button.text = "Apply this keep's first plan"
-	recommended_layout_button.tooltip_text = "Open the named pack and place the recommended opening using the normal material, pack, and placement rules."
-	recommended_layout_button.pressed.connect(_on_recommended_layout)
-	preparation_section.add_child(recommended_layout_button)
 	var remove_piece_button: Button = Button.new()
 	remove_piece_button.text = "Remove selected piece"
 	remove_piece_button.tooltip_text = "Preparation-only: remove the inspected piece so you can test a different layout. Materials are not refunded."
@@ -2604,6 +2621,12 @@ func _refresh_preparation_presentation() -> void:
 	else:
 		pack_preview_label.text = String(pack_offer.get("error_text", "PACK PREVIEW — unavailable"))
 	pack_option.disabled = bool(pack_offer.get("selection_locked", tutorial.active))
+	if preparation_context_label != null:
+		preparation_context_label.text = String(preparation_presentation_snapshot.get("rail_context", ""))
+	if recommended_layout_button != null:
+		var first_plan_action: Dictionary = preparation_presentation_snapshot.get("first_plan_action", {})
+		recommended_layout_button.text = String(first_plan_action.get("label", "Apply this keep's first plan"))
+		recommended_layout_button.disabled = not bool(first_plan_action.get("enabled", true))
 	if layout_lens_label != null:
 		layout_lens_label.text = String(preparation_presentation_snapshot.get("layout_lens_text", ""))
 	if preparation_brief_panel != null:
@@ -2622,6 +2645,7 @@ func _toggle_preparation_advanced() -> void:
 		return
 	preparation_advanced_panel.visible = not preparation_advanced_panel.visible
 	preparation_advanced_button.text = "Hide advanced preparation" if preparation_advanced_panel.visible else "Show advanced preparation"
+	preparation_pack_offer_panel.set_compact(preparation_rail_compact_active and not preparation_advanced_panel.visible)
 	_set_event("Advanced preparation details shown." if preparation_advanced_panel.visible else "Advanced preparation details collapsed.")
 
 func _toggle_setup_advanced() -> void:

@@ -29,7 +29,7 @@ func _initialize() -> void:
 	ui._refresh_pack_preview()
 	_check(String(ui.scenario_preview_label.text).contains("Before the Horn"), "Preparation should expose the isolated Outrider scenario")
 	_check(String(ui.scenario_preview_label.text).contains("Road Wardens + Crossbow Watch"), "scenario preview should expose both tested answers")
-	_check(String(ui.pack_preview_label.text).contains("Road Wardens") and String(ui.pack_preview_label.text).contains("Hook Guard") and String(ui.pack_preview_label.text).contains("Stake Line"), "Preparation should explain the complete Road Wardens pack")
+	_check(String(ui.preparation_pack_offer_panel.name_label.text) == "Road Wardens" and String(ui.pack_preview_label.text).contains("Hook Guard") and String(ui.pack_preview_label.text).contains("Stake Line"), "Preparation should explain the complete Road Wardens pack")
 
 	ui._on_open_pack()
 	_check(String(ui.availability_label.text).contains("Hook Guard") and String(ui.availability_label.text).contains("Stake Line"), "opening Road Wardens should expose both pieces")

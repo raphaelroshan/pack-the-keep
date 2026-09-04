@@ -18,6 +18,7 @@ var capture_battle_exchange_progress: float = 0.28
 var capture_repair_feedback: bool = false
 var capture_intervention: bool = false
 var capture_setup_only: bool = false
+var capture_first_plan_transition: bool = false
 
 func _initialize() -> void:
 	if DisplayServer.get_name() == "headless":
@@ -41,6 +42,7 @@ func _initialize() -> void:
 	capture_repair_feedback = OS.get_cmdline_user_args().has("--capture-repair-feedback")
 	capture_intervention = OS.get_cmdline_user_args().has("--capture-intervention")
 	capture_setup_only = OS.get_cmdline_user_args().has("--capture-setup-only")
+	capture_first_plan_transition = OS.get_cmdline_user_args().has("--capture-first-plan-transition")
 	if not _argument_value("--battle-exchange-progress=").is_empty():
 		capture_battle_exchange_progress = clampf(float(_argument_value("--battle-exchange-progress=")), 0.0, 0.99)
 	if output_dir.is_empty():
@@ -72,6 +74,8 @@ func _run_capture() -> void:
 	if ui.keep.scenario_ids().has(capture_scenario_id):
 		ui._select_option_metadata(ui.scenario_option, capture_scenario_id)
 		ui.keep.select_scenario(capture_scenario_id)
+	if capture_first_plan_transition:
+		ui.guided_setup = false
 	if capture_spatial_transition or capture_route_delay or capture_route_reveal or capture_twilight_road or capture_twilight_choice:
 		ui.guided_setup = false
 	ui._refresh_ui()
@@ -108,6 +112,9 @@ func _run_capture() -> void:
 	elif capture_starting_defender:
 		ui._on_map_clicked("ground", Vector2i(4, 5))
 	await _capture("03_preparation", ui)
+	if capture_first_plan_transition:
+		ui._on_recommended_layout()
+		await _capture("03a_first_plan_ready", ui)
 	if capture_setup_only:
 		_write_manifest()
 		ui.queue_free()
@@ -248,6 +255,7 @@ func _write_manifest() -> void:
 		"repair_feedback_captured": capture_repair_feedback,
 		"intervention_captured": capture_intervention,
 		"setup_only": capture_setup_only,
+		"first_plan_transition_captured": capture_first_plan_transition,
 		"files": captured_files,
 		"debug_ui": OS.get_cmdline_user_args().has("--debug-ui"),
 		"human_evidence": false,

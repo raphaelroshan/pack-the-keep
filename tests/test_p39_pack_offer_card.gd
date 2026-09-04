@@ -21,11 +21,11 @@ func _initialize() -> void:
 	var panel: PackOfferPanel = ui.preparation_pack_offer_panel
 	_check(panel.visible and String(panel.name_label.text) == "Pike Line", "Preparation should lead with the selected pack offer")
 	_check(String(panel.detail_label.text).contains("ADDS — Pike Squad") and String(panel.detail_label.text).contains("Narrow Gate"), "pack card should expose every granted piece")
-	_check(String(panel.detail_label.text).contains("SOLVES") and String(panel.detail_label.text).contains("LIMITATION") and String(panel.detail_label.text).contains("SPACE"), "pack card should expose strength, weakness, and spatial demand")
-	_check(String(panel.role_label.text).contains("QUESTION"), "pack card should expose its strategic question")
+	_check(String(panel.detail_label.text).contains("SOLVES"), "compact pack card should expose the problem it answers")
 	_check(ui.pack_option.is_inside_tree() and not ui.preparation_advanced_panel.visible, "advanced pack dropdown should remain available but collapsed by default")
 	ui._toggle_preparation_advanced()
 	_check(ui.pack_option.is_visible_in_tree() and not ui.pack_option.disabled, "advanced pack dropdown should be reachable outside First Watch")
+	_check(String(panel.detail_label.text).contains("LIMITATION") and String(panel.detail_label.text).contains("SPACE") and String(panel.role_label.text).contains("QUESTION"), "advanced Preparation should restore the pack question, weakness, and spatial demand")
 	ui._toggle_preparation_advanced()
 	var before_refresh: String = JSON.stringify(ui.keep.serialize())
 	ui._refresh_pack_preview()

@@ -21,7 +21,7 @@ func _initialize() -> void:
 	ui._refresh_pack_preview()
 	_check(String(ui.scenario_preview_label.text).contains("The Unlit Stair"), "Preparation should expose the isolated concealment scenario")
 	_check(String(ui.scenario_preview_label.text).contains("Lantern Watch + Road Wardens"), "scenario preview should expose both tested answers")
-	_check(String(ui.pack_preview_label.text).contains("Lantern Watch") and String(ui.pack_preview_label.text).contains("Dusk Bow") and String(ui.pack_preview_label.text).contains("Lantern Post"), "Preparation should explain the complete Lantern Watch pack")
+	_check(String(ui.preparation_pack_offer_panel.name_label.text) == "Lantern Watch" and String(ui.pack_preview_label.text).contains("Dusk Bow") and String(ui.pack_preview_label.text).contains("Lantern Post"), "Preparation should explain the complete Lantern Watch pack")
 
 	ui._on_open_pack()
 	_check(bool(ui.keep.place_piece("dusk_bow", Vector2i(1, 1), "upper").get("ok", false)), "UI fixture should place Dusk Bow")
