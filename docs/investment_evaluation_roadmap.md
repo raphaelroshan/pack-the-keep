@@ -97,3 +97,12 @@ Fresh Greywatch and Ash Ford evidence covers the complete loop at 1280×720 and 
 Build `0.64.0-player-facing-language` removes development vocabulary from normal play. Scenario cards now name the actual pressure and defensive demand, combat and tutorial guidance describe observable actions, event titles remain distinct in history, and the pre-alpha title keeps its honest boundary without advertising the test harness.
 
 A dedicated validator protects player-facing data, high-visibility UI phrases, event-title uniqueness, and compact event setup copy. Fresh Greywatch and Ash Ford evidence covers the complete loop at 1280×720 and 1600×900. IDs, costs, effects, target rules, outcomes, saves, and deterministic ordering remain unchanged. See `docs/p76_player_facing_language_verification.md`.
+
+
+## 2026-09-04 repeat-test checkpoint — PTK-I1 evidence refresh
+
+The current `0.64.0-player-facing-language` main build passes the complete automated suite. The repeat visual run confirms that the board-first and player-facing-language work is visible: the title is authored and legible, War Council presents a real commander/defense choice, and Fortress/Build & Assign shows the two-floor boards, current question, visible answer, open weakness, first plan, accepted risk, and selected Pike Line doctrine.
+
+The investment-quality gate is not yet closed. At 1280×720, the preparation rail remains dense and scroll-dependent even though the main action and board are available. The next agent must execute **PTK-GPT56-1B**: preserve the current board-first composition while making the fortress, tactical question, selected answer, commander/doctrine, forecast, placement plan, and Begin Assault action simultaneously legible; then prove a deterministic three-wave Greywatch run through pause/inspection, one intervention, damage, Recovery, and causal Results. Do not add the second keep until this complete creative vertical is re-proven at 1280×720 and 1600×900.
+
+Evidence is recorded in `docs/latest_review_2026-09-04.md` and `docs/visual_evidence/v0.64.0-player-facing-language-review-2026-09-04/`.

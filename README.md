@@ -225,3 +225,5 @@ The dependency-aware tasks in [`docs/gpt56_investment_execution_packets.md`](doc
 | `docs/p76_player_facing_language_verification.md` | Current player-facing writing audit, vocabulary guardrails, and responsive visual evidence. |
 | `docs/latest_review_2026-09-03.md` | Current main-branch review, verification result, War Council findings, and next mandatory Greywatch/second-keep gates. |
 | `docs/visual_evidence/v0.59.0-gpt56-packet-completion-review-2026-09-03/` | Fresh 1280×720 title, War Council, and Build & Assign captures from the current review. |
+| `docs/latest_review_2026-09-04.md` | Repeat current-main verification and visual review; confirms the board-first Fortress state and remaining preparation density. |
+| `docs/visual_evidence/v0.64.0-player-facing-language-review-2026-09-04/` | Fresh 1280×720 title, War Council, and Fortress captures with machine-readable manifest. |
