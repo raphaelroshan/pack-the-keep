@@ -1,7 +1,14 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.65.0",
+  "content_version": "0.66.0",
+  "p78_war_council_first_viewport": {
+    "status": "implemented",
+    "breakpoint": "compact_war_council_between_1120_and_1499_effective_pixels",
+    "first_view": ["pairing", "seed_pressure", "preparation_focus", "enter_keep", "commander_choice", "defense_choice"],
+    "fallback": "wide_and_large_text_layouts_retain_full_card_detail",
+    "authority": "responsive_projection_does_not_change_commander_or_scenario_selection"
+  },
   "p77_preparation_first_viewport": {
     "status": "implemented",
     "roadmap_gate": "PTK-GPT56-1B",

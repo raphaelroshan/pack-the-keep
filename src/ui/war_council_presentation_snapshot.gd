@@ -19,6 +19,7 @@ static func build(keep: Object, commander_id: String, scenario_id: String, tutor
 	var setup_mode: String = "FIRST WATCH" if tutorial_active else "GUIDED DEFENSE" if guided_setup else "SKIRMISH"
 	var modifier_summary: String = "" if modifier_name == "None" else " · %s" % modifier_name
 	var preparation_focus: String = _concise_focus(String(variation.get("preparation_focus", "Read the first forecast before placing the defense.")))
+	var recommended_pack_name: String = String(keep.pack_definition(String(geometry_fit.get("recommended_pack_id", ""))).get("name", "Any coherent pack"))
 	return {
 		"run_frame": "%s%s · %s · %s" % [setup_mode, modifier_summary, String(scenario_preview.get("difficulty", "standard")).to_upper(), end_state_summary],
 		"pairing": "%s leads %s at %s." % [String(commander_definition.get("name", commander_id)), String(scenario_preview.get("name", scenario_id)), String(scenario_preview.get("keep_name", "the keep"))],
@@ -44,10 +45,18 @@ static func build(keep: Object, commander_id: String, scenario_id: String, tutor
 			"keep": String(scenario_preview.get("keep_name", "Keep")),
 			"identity": String(scenario_definition.get("short_role", "Known pressure")),
 			"question": String(scenario_definition.get("question", "What must this defense preserve?")),
+			"geometry_rule": String(keep_definition.get("spatial_rule", {}).get("label", "Read the keep geometry.")),
+			"geometry_fit": String(geometry_fit.get("fit", "Choose a doctrine that answers it.")),
+			"opening": String(geometry_fit.get("opening", "Build one legible answer.")),
+			"recommended_pack": recommended_pack_name,
+			"accepted_risk": String(geometry_fit.get("risk", "Another route remains exposed.")),
 			"geometry": "%s %s" % [String(keep_definition.get("spatial_rule", {}).get("label", "Read the keep geometry.")), String(geometry_fit.get("fit", "Choose a doctrine that answers it."))],
-			"geometry_opening": "%s Recommended pack: %s. Accepted risk: %s" % [String(geometry_fit.get("opening", "Build one legible answer.")), String(keep.pack_definition(String(geometry_fit.get("recommended_pack_id", ""))).get("name", "Any coherent pack")), String(geometry_fit.get("risk", "Another route remains exposed."))],
+			"geometry_opening": "%s Recommended pack: %s. Accepted risk: %s" % [String(geometry_fit.get("opening", "Build one legible answer.")), recommended_pack_name, String(geometry_fit.get("risk", "Another route remains exposed."))],
 			"objective": String(scenario_preview.get("objective", "")),
 			"arc": " → ".join(scenario_preview.get("doctrine_names", [])),
+			"peak_pressure": int(scenario_preview.get("peak_wave_size", 0)),
+			"wave_count": int(scenario_preview.get("wave_count", 0)),
+			"collapse_rule": collapse_rule,
 			"risk": "%s; peak pressure %d; %s." % [String(scenario_preview.get("difficulty", "standard")).capitalize(), int(scenario_preview.get("peak_wave_size", 0)), end_state_summary],
 			"fixed": "%s, %d assault phases; this opening pressure will not change mid-run." % [String(scenario_preview.get("keep_name", "Keep")), int(scenario_preview.get("wave_count", 0))],
 		},

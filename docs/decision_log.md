@@ -1103,3 +1103,11 @@
 **Reason:** The v0.64 repeat review showed that the fortress, tactical brief, and Ready Defense action were visible at 1280×720, but the full pack card consumed most of the adjacent rail and pushed the actionable placement plan below the fold. The first viewport should connect the problem, chosen doctrine, and fastest valid response without removing expert detail.
 
 **Trade-off:** The compact card omits the pack question, limitation, spatial demand, and trade-off from its default 1280×720 rendering. Expanding advanced preparation restores the full card, and wider/stacked layouts retain it by default; all pack commands and authoritative values are unchanged.
+
+## ADR-139: The 1280 War Council prioritizes one complete choice
+
+**Decision:** At 1120–1499 effective pixels and below the 150% text fallback, render War Council from the existing read-only snapshot as two compact cards. Keep commander doctrine, intervention, and trade-off beside the defense's keep rule, opening, pressure, objective, and accepted risk; defer repeated questions and fixed-entry detail while retaining them in the snapshot and wider layouts.
+
+**Reason:** The v0.65 repeat capture showed the primary commit action and both card selectors, but cut the actual decisions off mid-card at 1280×720. A setup screen must let the player compare the complete strategic shape before committing, not make the choice controls visible while hiding their consequences.
+
+**Trade-off:** The compact card does not repeat the commander's first question or the defense's fixed-entry sentence. Those remain in the read-only snapshot and return in the 1600×900 and large-text detailed layouts; commander/scenario rules and selection commands are unchanged.

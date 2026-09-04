@@ -31,6 +31,8 @@ var lock_label: Label
 var confirm_button: Button
 var commander_card: PanelContainer
 var scenario_card: PanelContainer
+var first_viewport_mode: bool = false
+var current_view_model: Dictionary = {}
 
 func _init() -> void:
 	name = "WarCouncilChoicePanel"
@@ -112,33 +114,56 @@ func _init() -> void:
 	scenario_next_button.pressed.connect(func() -> void: scenario_next_requested.emit())
 
 func render(view_model: Dictionary) -> void:
+	current_view_model = view_model.duplicate(true)
+	_render_labels()
+
+func _render_labels() -> void:
+	var view_model: Dictionary = current_view_model
 	var commander: Dictionary = view_model.get("commander", {})
 	var scenario: Dictionary = view_model.get("scenario", {})
 	var locked: bool = bool(view_model.get("locked", false))
-	summary_label.text = "%s\nPAIRING — %s\nSEED — %s\nFOCUS — %s" % [
-		String(view_model.get("run_frame", "SKIRMISH · STANDARD · defender wipe is recoverable")),
-		String(view_model.get("pairing", "Choose who leads which defense.")),
-		String(view_model.get("seed_pressure", "Standard Bell: baseline stores and standard pressure.")),
-		String(view_model.get("preparation_focus", "Read the first forecast before placing the defense.")),
-	]
+	if first_viewport_mode:
+		summary_label.text = "PAIRING — %s\n%s  •  SEED — %s\nFOCUS — %s" % [
+			String(view_model.get("pairing", "Choose who leads which defense.")),
+			String(view_model.get("run_frame", "SKIRMISH · STANDARD · defender wipe is recoverable")),
+			String(view_model.get("seed_pressure", "Standard Bell: baseline stores and standard pressure.")),
+			String(view_model.get("preparation_focus", "Read the first forecast before placing the defense.")),
+		]
+	else:
+		summary_label.text = "%s\nPAIRING — %s\nSEED — %s\nFOCUS — %s" % [
+			String(view_model.get("run_frame", "SKIRMISH · STANDARD · defender wipe is recoverable")),
+			String(view_model.get("pairing", "Choose who leads which defense.")),
+			String(view_model.get("seed_pressure", "Standard Bell: baseline stores and standard pressure.")),
+			String(view_model.get("preparation_focus", "Read the first forecast before placing the defense.")),
+		]
 	lock_label.visible = locked
 	lock_label.text = "FIRST WATCH LOCKED — This lesson uses The Castellan and Gatehouse Lock so every command matches the guided defense." if locked else ""
 
 	commander_index_label.text = "COMMANDER %d / %d" % [int(commander.get("index", 0)), int(commander.get("count", 0))]
 	commander_name_label.text = String(commander.get("name", "Commander"))
 	commander_identity_label.text = String(commander.get("identity", "Choose a strategic lens."))
-	commander_strength_label.text = "STRENGTH\n%s" % String(commander.get("strength", ""))
-	commander_ability_label.text = "INTERVENTION\n%s — %s" % [String(commander.get("ability_name", "Ability")), String(commander.get("ability", ""))]
-	commander_limitation_label.text = "LIMITATION\n%s" % String(commander.get("limitation", ""))
+	commander_strength_label.text = "%s%s" % ["DOCTRINE — " if first_viewport_mode else "STRENGTH\n", String(commander.get("strength", ""))]
+	commander_ability_label.text = "%s%s — %s" % ["INTERVENTION — " if first_viewport_mode else "INTERVENTION\n", String(commander.get("ability_name", "Ability")), String(commander.get("ability", ""))]
+	commander_limitation_label.text = "%s%s" % ["TRADE-OFF — " if first_viewport_mode else "LIMITATION\n", String(commander.get("limitation", ""))]
 	commander_question_label.text = "FIRST QUESTION\n%s" % String(commander.get("question", ""))
+	commander_question_label.visible = not first_viewport_mode
 
 	scenario_index_label.text = "DEFENSE %d / %d  •  %s" % [int(scenario.get("index", 0)), int(scenario.get("count", 0)), String(scenario.get("difficulty", "standard")).to_upper()]
 	scenario_name_label.text = String(scenario.get("name", "Defense"))
-	scenario_identity_label.text = "%s  •  %s\nGEOMETRY FIT — %s\nOPENING — %s\nFIRST QUESTION — %s" % [String(scenario.get("keep", "Keep")), String(scenario.get("identity", "Known pressure")), String(scenario.get("geometry", "Read the keep geometry.")), String(scenario.get("geometry_opening", "Build one legible answer.")), String(scenario.get("question", "What must this defense preserve?"))]
-	scenario_objective_label.text = "OBJECTIVE\n%s" % String(scenario.get("objective", ""))
-	scenario_arc_label.text = "PRESSURE ARC\n%s" % String(scenario.get("arc", ""))
-	scenario_risk_label.text = "RUN RULE\n%s" % String(scenario.get("risk", ""))
+	var geometry: String = "%s %s" % [String(scenario.get("geometry_rule", "Read the keep geometry.")), String(scenario.get("geometry_fit", "Choose a doctrine that answers it."))]
+	var opening: String = "%s Recommended pack: %s. Accepted risk: %s" % [String(scenario.get("opening", "Build one legible answer.")), String(scenario.get("recommended_pack", "Any coherent pack")), String(scenario.get("accepted_risk", "Another route remains exposed."))]
+	if first_viewport_mode:
+		scenario_identity_label.text = "%s  •  %s" % [String(scenario.get("keep", "Keep")), String(scenario.get("identity", "Known pressure"))]
+		scenario_objective_label.text = "KEEP RULE — %s" % geometry
+		scenario_arc_label.text = "OPENING — %s Pack: %s." % [String(scenario.get("opening", "Build one legible answer.")), String(scenario.get("recommended_pack", "Any coherent pack"))]
+		scenario_risk_label.text = "PRESSURE — %s · peak %d\nOBJECTIVE — %s\nRISK — %s" % [String(scenario.get("arc", "")), int(scenario.get("peak_pressure", 0)), String(scenario.get("objective", "")), String(scenario.get("accepted_risk", "Another route remains exposed."))]
+	else:
+		scenario_identity_label.text = "%s  •  %s\nGEOMETRY FIT — %s\nOPENING — %s\nFIRST QUESTION — %s" % [String(scenario.get("keep", "Keep")), String(scenario.get("identity", "Known pressure")), geometry, opening, String(scenario.get("question", "What must this defense preserve?"))]
+		scenario_objective_label.text = "OBJECTIVE\n%s" % String(scenario.get("objective", ""))
+		scenario_arc_label.text = "PRESSURE ARC\n%s" % String(scenario.get("arc", ""))
+		scenario_risk_label.text = "RUN RULE\n%s" % String(scenario.get("risk", ""))
 	scenario_fixed_label.text = "FIXED ON ENTRY\n%s" % String(scenario.get("fixed", ""))
+	scenario_fixed_label.visible = not first_viewport_mode
 
 	for button in [commander_previous_button, commander_next_button, scenario_previous_button, scenario_next_button]:
 		button.disabled = locked
@@ -147,14 +172,20 @@ func render(view_model: Dictionary) -> void:
 func set_compact_layout(compact: bool) -> void:
 	set_responsive_layout(compact, 800.0)
 
-func set_responsive_layout(compact: bool, available_width: float) -> void:
+func set_responsive_layout(compact: bool, available_width: float, first_viewport: bool = false) -> void:
 	choice_row.vertical = compact
+	var mode_changed: bool = first_viewport_mode != first_viewport
+	first_viewport_mode = first_viewport
 	custom_minimum_size.x = minf(800.0, maxf(0.0, available_width))
 	var card_width: float = 0.0 if compact else minf(380.0, maxf(300.0, (available_width - 34.0) * 0.5))
 	if commander_card != null:
 		commander_card.custom_minimum_size.x = card_width
+		commander_card.custom_minimum_size.y = 232.0 if first_viewport else 248.0
 	if scenario_card != null:
 		scenario_card.custom_minimum_size.x = card_width
+		scenario_card.custom_minimum_size.y = 232.0 if first_viewport else 248.0
+	if mode_changed and not current_view_model.is_empty():
+		_render_labels()
 
 func focus_primary() -> void:
 	if commander_next_button != null and commander_next_button.is_visible_in_tree() and not commander_next_button.disabled:
