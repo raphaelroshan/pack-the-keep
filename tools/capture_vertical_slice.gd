@@ -19,6 +19,8 @@ var capture_repair_feedback: bool = false
 var capture_intervention: bool = false
 var capture_setup_only: bool = false
 var capture_first_plan_transition: bool = false
+var capture_settings_only: bool = false
+var capture_tutorial_intro_only: bool = false
 
 func _initialize() -> void:
 	if DisplayServer.get_name() == "headless":
@@ -43,6 +45,8 @@ func _initialize() -> void:
 	capture_intervention = OS.get_cmdline_user_args().has("--capture-intervention")
 	capture_setup_only = OS.get_cmdline_user_args().has("--capture-setup-only")
 	capture_first_plan_transition = OS.get_cmdline_user_args().has("--capture-first-plan-transition")
+	capture_settings_only = OS.get_cmdline_user_args().has("--capture-settings-only")
+	capture_tutorial_intro_only = OS.get_cmdline_user_args().has("--capture-tutorial-intro-only")
 	if not _argument_value("--battle-exchange-progress=").is_empty():
 		capture_battle_exchange_progress = clampf(float(_argument_value("--battle-exchange-progress=")), 0.0, 0.99)
 	if output_dir.is_empty():
@@ -67,6 +71,30 @@ func _run_capture() -> void:
 	root.size = capture_size
 	ui._apply_responsive_layout()
 	await _capture("01_title", ui)
+	if capture_settings_only:
+		ui._on_open_settings()
+		await _capture("02_settings", ui)
+		_write_manifest()
+		ui.queue_free()
+		await process_frame
+		print("Vertical-slice capture: PASS (%d settings screens at %s)" % [captured_files.size(), output_dir])
+		quit(0)
+		return
+	if capture_tutorial_intro_only:
+		ui._start_tutorial()
+		await _capture("02_tutorial_keep", ui)
+		ui._on_tutorial_continue()
+		await _capture("03_tutorial_resources", ui)
+		ui._on_tutorial_continue()
+		await _capture("04_tutorial_cycle", ui)
+		ui._on_tutorial_continue()
+		await _capture("05_tutorial_war_council", ui)
+		_write_manifest()
+		ui.queue_free()
+		await process_frame
+		print("Vertical-slice capture: PASS (%d tutorial screens at %s)" % [captured_files.size(), output_dir])
+		quit(0)
+		return
 	ui._on_start_quick_playtest()
 	if ui.keep.commander_ids().has(capture_commander_id):
 		ui._select_option_metadata(ui.commander_option, capture_commander_id)
@@ -256,6 +284,8 @@ func _write_manifest() -> void:
 		"intervention_captured": capture_intervention,
 		"setup_only": capture_setup_only,
 		"first_plan_transition_captured": capture_first_plan_transition,
+		"settings_only": capture_settings_only,
+		"tutorial_intro_only": capture_tutorial_intro_only,
 		"files": captured_files,
 		"debug_ui": OS.get_cmdline_user_args().has("--debug-ui"),
 		"human_evidence": false,

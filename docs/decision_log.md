@@ -1111,3 +1111,11 @@
 **Reason:** The v0.65 repeat capture showed the primary commit action and both card selectors, but cut the actual decisions off mid-card at 1280×720. A setup screen must let the player compare the complete strategic shape before committing, not make the choice controls visible while hiding their consequences.
 
 **Trade-off:** The compact card does not repeat the commander's first question or the defense's fixed-entry sentence. Those remain in the read-only snapshot and return in the 1600×900 and large-text detailed layouts; commander/scenario rules and selection commands are unchanged.
+
+## ADR-140: Settings owns a grouped main surface and First Watch owns its briefing frame
+
+**Decision:** Move the existing presentation preferences from the generic command rail into a dedicated, responsive Settings surface grouped by player purpose. At ordinary desktop widths, use three balanced columns; at large text, stack the same groups. Give title-screen First Watch steps a centered briefing treatment with stage and lesson-scope context, while retaining the compact tutorial card over active gameplay.
+
+**Reason:** The v0.66 audit showed Settings as an unstructured list whose initial focus hid its first control and pushed input below the fold, while the tutorial introduction occupied a shallow strip above a largely empty screen. Both states were functionally complete but looked like utility overlays rather than authored game screens.
+
+**Trade-off:** Settings no longer shares the gameplay command rail, so its grouping is a dedicated presentation composition. Preference handlers, persistence, input actions, tutorial step data, checkpoints, and authoritative game state remain unchanged.

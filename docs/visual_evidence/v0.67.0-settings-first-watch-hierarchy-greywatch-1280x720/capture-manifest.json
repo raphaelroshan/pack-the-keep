@@ -1,0 +1,43 @@
+{
+  "battle_exchange_progress": null,
+  "battle_exchange_staged": false,
+  "build_version": "0.67.0-settings-first-watch-hierarchy",
+  "commander": "castellan",
+  "debug_ui": false,
+  "files": [
+    "01_title.png",
+    "02_war_council.png",
+    "03_preparation.png",
+    "03a_first_plan_ready.png",
+    "03b_pack_offer.png",
+    "04_assault_phase_1.png",
+    "04b_emergency_intervention.png",
+    "05_recovery_phase_1.png",
+    "06_assault_phase_2.png",
+    "07_recovery_phase_2.png",
+    "07c_room_repair_feedback.png",
+    "08_assault_phase_3.png",
+    "09_terminal_results.png"
+  ],
+  "first_plan_transition_captured": true,
+  "human_evidence": false,
+  "intervention_captured": true,
+  "pack_offer_captured": true,
+  "repair_feedback_captured": true,
+  "resolution": {
+    "height": 720,
+    "width": 1280
+  },
+  "route_delay_captured": false,
+  "route_reveal_captured": false,
+  "scenario": "gatehouse_lock",
+  "schema_version": 1,
+  "settings_only": false,
+  "setup_only": false,
+  "spatial_transition_captured": false,
+  "starting_defender_inspected": false,
+  "tutorial_intro_only": false,
+  "twilight_choice_captured": false,
+  "twilight_road_captured": false,
+  "ui_scale_percent": 100
+}

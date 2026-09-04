@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.66.0-choice-first-war-council",
+  "build_version": "0.67.0-settings-first-watch-hierarchy",
   "status": "ready_for_human_sessions",
   "release_ready": false,
   "minimum_completed_sessions": 4,

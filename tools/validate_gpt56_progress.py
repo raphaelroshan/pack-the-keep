@@ -13,7 +13,7 @@ PACKET_REQUIREMENTS = {
     "PTK-GPT56-2": {"distinct_keep_geometry", "teaching_and_combined_scenarios", "recovery_rule_and_signature_pack", "two_seeded_openings", "keep_comparison_and_geometry_matrix", "placement_counter_and_failure_forward", "migration_controller_scaling", "second_keep_screenshots"},
     "PTK-GPT56-3": {"commander_lens", "four_high_signal_packs", "two_enemy_families", "commander_keep_matrix", "pack_interactions_and_teaching", "deterministic_balance_no_dominance", "doctrine_pressure_replay_report"},
     "PTK-GPT56-4": {"campaign_content_floor", "progression_and_recovery", "reserve_open_decisions", "bounded_variation", "failure_forward_consequences", "terminal_campaign_memory"},
-    "PTK-GPT56-5": {"clean_install_and_migration", "backup_recovery_and_rollback", "controller_and_scaling", "audio_and_reduced_motion", "offline_operation", "package_provenance", "known_limitations"},
+    "PTK-GPT56-5": {"clean_install_and_migration", "backup_recovery_and_rollback", "controller_and_scaling", "audio_and_reduced_motion", "offline_operation", "package_provenance", "known_limitations", "settings_tutorial_hierarchy"},
 }
 PACKET_IDS = list(PACKET_REQUIREMENTS)
 
@@ -196,8 +196,8 @@ def validate_progress(
         errors.append("GPT56 asset report must distinguish no active temporary assets from the archive")
 
     if validate_captures:
-        _validate_capture(root, "docs/visual_evidence/v0.66.0-choice-first-war-council-greywatch-1600x900/capture-manifest.json", "gatehouse_lock", str(progress.get("build_version", "")), errors, True)
-        _validate_capture(root, "docs/visual_evidence/v0.66.0-choice-first-war-council-ash-ford-1600x900/capture-manifest.json", "ash_ford_crossing", str(progress.get("build_version", "")), errors)
+        _validate_capture(root, "docs/visual_evidence/v0.67.0-settings-first-watch-hierarchy-greywatch-1600x900/capture-manifest.json", "gatehouse_lock", str(progress.get("build_version", "")), errors, True)
+        _validate_capture(root, "docs/visual_evidence/v0.67.0-settings-first-watch-hierarchy-ash-ford-1600x900/capture-manifest.json", "ash_ford_crossing", str(progress.get("build_version", "")), errors)
     if progress.get("human_evidence_required_for_implementation") is not False or progress.get("human_evidence_status") != "pending":
         errors.append("human evidence must remain pending and non-blocking")
     if progress.get("owner_approval_required_for_distribution") is not True:
