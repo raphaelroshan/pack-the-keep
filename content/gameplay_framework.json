@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "framework_version": "0.64.0-player-facing-language",
+  "framework_version": "0.65.0-preparation-first-viewport",
   "design_promise": "Choose a commander, open a coherent pack, arrange a readable keep, and adapt when a forecasted invasion tests the doctrine you chose.",
   "p0_alpha_foundation": {
     "status": "implemented",
@@ -2039,5 +2039,13 @@
     "event_title_rule": "active_event_titles_are_unique",
     "authority": "copy_changes_do_not_change_ids_costs_effects_targets_or_outcomes",
     "validation": ["tools/validate_player_facing_copy.py", "tests/test_player_facing_copy_validator.py"]
+  },
+  "preparation_first_viewport": {
+    "status": "implemented",
+    "roadmap_gate": "PTK-GPT56-1B",
+    "compact_breakpoint": 1500,
+    "first_view": ["fortress", "tactical_question", "visible_answer", "commander_and_pack_doctrine", "forecast", "first_plan", "ready_defense"],
+    "detail_recovery": "expanding_advanced_preparation_restores_full_pack_card",
+    "authority": "read_only_presentation_snapshot_and_responsive_layout"
   }
 }

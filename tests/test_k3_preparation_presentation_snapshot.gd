@@ -30,6 +30,8 @@ func _initialize() -> void:
 	_check(bool(offer.get("ok", false)) and String(offer.get("name", "")) == "Pike Line", "snapshot should expose the selected doctrine pack identity")
 	_check(String(offer.get("state", "")) == "OPENED" and not bool(offer.get("can_open", true)), "guided Preparation should show that the first plan opened Pike Line authoritatively")
 	_check(String(offer.get("pieces", "")).contains("Pike Squad") and String(offer.get("strength", "")).contains("Gate pressure"), "pack snapshot should retain contents and strategic strength")
+	_check(String(first.get("rail_context", "")).contains("CASTELLAN") and String(first.get("rail_context", "")).contains("COMPACT CORRIDORS") and String(first.get("rail_context", "")).contains("Gate Assault"), "snapshot should join commander, selected doctrine, and immediate forecast for the compact rail")
+	_check(String(first.get("first_plan_action", {}).get("progress", "")) == "2/2" and not bool(first.get("first_plan_action", {}).get("enabled", true)), "snapshot should expose the completed guided first plan as state rather than another action")
 
 	var brief: Dictionary = first.get("brief", {})
 	_check(String(brief.get("question", "")).contains("Gate Assault"), "Preparation snapshot should expose the current doctrine question")

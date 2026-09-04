@@ -1095,3 +1095,11 @@
 **Reason:** The writing audit found mechanically accurate copy that still read like design documentation: scenario cards said they “teach” or “test” systems, one scenario named P11, combat text explained determinism, and the title advertised an automated baseline. These phrases weaken immersion and make otherwise polished screens feel like a test harness.
 
 **Trade-off:** Developer documentation, debug-only diagnostics, and test failure messages retain precise engineering vocabulary. The validator targets known player-facing fields and phrases instead of banning useful terms repository-wide.
+
+## ADR-138: Narrow board-first Preparation uses a compact command rail
+
+**Decision:** At board-first effective widths below 1500 pixels, render the selected pack from the existing read-only offer model as a compact decision card, add a concise commander/doctrine/forecast context line, and place the existing first-plan command at the start of the placement stage. Wider and stacked layouts retain the full pack explanation.
+
+**Reason:** The v0.64 repeat review showed that the fortress, tactical brief, and Ready Defense action were visible at 1280×720, but the full pack card consumed most of the adjacent rail and pushed the actionable placement plan below the fold. The first viewport should connect the problem, chosen doctrine, and fastest valid response without removing expert detail.
+
+**Trade-off:** The compact card omits the pack question, limitation, spatial demand, and trade-off from its default 1280×720 rendering. Expanding advanced preparation restores the full card, and wider/stacked layouts retain it by default; all pack commands and authoritative values are unchanged.

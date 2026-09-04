@@ -9,7 +9,7 @@ from typing import Any
 
 
 PACKET_REQUIREMENTS = {
-    "PTK-GPT56-1": {"greywatch_normal_flow", "two_seeded_openings", "visible_plan_rationale", "deterministic_three_wave_replay", "all_phase_save_resume", "accessible_input_motion", "greywatch_1600_capture", "authoritative_state"},
+    "PTK-GPT56-1": {"greywatch_normal_flow", "two_seeded_openings", "visible_plan_rationale", "preparation_first_viewport", "deterministic_three_wave_replay", "all_phase_save_resume", "accessible_input_motion", "greywatch_1600_capture", "authoritative_state"},
     "PTK-GPT56-2": {"distinct_keep_geometry", "teaching_and_combined_scenarios", "recovery_rule_and_signature_pack", "two_seeded_openings", "keep_comparison_and_geometry_matrix", "placement_counter_and_failure_forward", "migration_controller_scaling", "second_keep_screenshots"},
     "PTK-GPT56-3": {"commander_lens", "four_high_signal_packs", "two_enemy_families", "commander_keep_matrix", "pack_interactions_and_teaching", "deterministic_balance_no_dominance", "doctrine_pressure_replay_report"},
     "PTK-GPT56-4": {"campaign_content_floor", "progression_and_recovery", "reserve_open_decisions", "bounded_variation", "failure_forward_consequences", "terminal_campaign_memory"},
@@ -196,8 +196,8 @@ def validate_progress(
         errors.append("GPT56 asset report must distinguish no active temporary assets from the archive")
 
     if validate_captures:
-        _validate_capture(root, "docs/visual_evidence/v0.64.0-writing-pass-greywatch-1600x900/capture-manifest.json", "gatehouse_lock", str(progress.get("build_version", "")), errors, True)
-        _validate_capture(root, "docs/visual_evidence/v0.64.0-writing-pass-ash-ford-1600x900/capture-manifest.json", "ash_ford_crossing", str(progress.get("build_version", "")), errors)
+        _validate_capture(root, "docs/visual_evidence/v0.65.0-preparation-first-viewport-greywatch-1600x900/capture-manifest.json", "gatehouse_lock", str(progress.get("build_version", "")), errors, True)
+        _validate_capture(root, "docs/visual_evidence/v0.65.0-preparation-first-viewport-ash-ford-1600x900/capture-manifest.json", "ash_ford_crossing", str(progress.get("build_version", "")), errors)
     if progress.get("human_evidence_required_for_implementation") is not False or progress.get("human_evidence_status") != "pending":
         errors.append("human evidence must remain pending and non-blocking")
     if progress.get("owner_approval_required_for_distribution") is not True:
@@ -225,7 +225,7 @@ def main() -> int:
         for error in errors:
             print(f"ERROR: {error}")
         return 1
-    print("GPT56 investment packets: PASS (PTK-GPT56-1 through PTK-GPT56-5 implemented; PTK-P16 remains human-owned)")
+    print("GPT56 investment packets: PASS (PTK-GPT56-1 through PTK-GPT56-5 plus PTK-GPT56-1B implemented; PTK-P16 remains human-owned)")
     return 0
 
 

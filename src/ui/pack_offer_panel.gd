@@ -14,6 +14,8 @@ var previous_button: Button
 var next_button: Button
 var open_button: Button
 var reserve_button: Button
+var compact_mode: bool = false
+var current_view_model: Dictionary = {}
 
 func _init() -> void:
 	name = "PackOfferPanel"
@@ -56,16 +58,39 @@ func _init() -> void:
 	reserve_button.pressed.connect(func() -> void: reserve_requested.emit())
 
 func render(view_model: Dictionary) -> void:
-	status_label.text = "PACK %d / %d  •  %d OPENING(S)  •  %d MATERIALS  •  %s" % [int(view_model.get("index", 0)), int(view_model.get("count", 0)), int(view_model.get("openings", 0)), int(view_model.get("materials", 0)), String(view_model.get("state", "AVAILABLE"))]
+	current_view_model = view_model.duplicate(true)
+	_render_current()
+
+func set_compact(compact: bool) -> void:
+	if compact_mode == compact:
+		return
+	compact_mode = compact
+	if not current_view_model.is_empty():
+		_render_current()
+
+func _render_current() -> void:
+	var view_model: Dictionary = current_view_model
+	if compact_mode:
+		status_label.text = "PACK %d / %d  •  %d OPENING(S)  •  %s" % [int(view_model.get("index", 0)), int(view_model.get("count", 0)), int(view_model.get("openings", 0)), String(view_model.get("state", "AVAILABLE"))]
+	else:
+		status_label.text = "PACK %d / %d  •  %d OPENING(S)  •  %d MATERIALS  •  %s" % [int(view_model.get("index", 0)), int(view_model.get("count", 0)), int(view_model.get("openings", 0)), int(view_model.get("materials", 0)), String(view_model.get("state", "AVAILABLE"))]
 	name_label.text = String(view_model.get("name", "Pack"))
 	role_label.text = "%s\nQUESTION — %s" % [String(view_model.get("role", "Choose a defensive doctrine.")), String(view_model.get("question", "What does this pack ask of the keep?"))]
-	detail_label.text = "PACK PREVIEW — %s\nDOCTRINE — %s  •  OPEN COST — %s\nADDS — %s\nSOLVES — %s\nLIMITATION — %s\nSPACE — %s\nTRADE-OFF — %s" % [String(view_model.get("name", "Pack")), String(view_model.get("doctrine", "")), String(view_model.get("cost_text", view_model.get("cost", 0))), String(view_model.get("pieces", "")), String(view_model.get("strength", "")), String(view_model.get("weakness", "")), String(view_model.get("space", "")), String(view_model.get("choice", ""))]
+	role_label.visible = not compact_mode
+	if compact_mode:
+		detail_label.text = "DOCTRINE — %s  •  COST — %s\nADDS — %s\nSOLVES — %s" % [String(view_model.get("doctrine", "")), String(view_model.get("cost_text", view_model.get("cost", 0))), String(view_model.get("pieces", "")), String(view_model.get("strength", ""))]
+	else:
+		detail_label.text = "PACK PREVIEW — %s\nDOCTRINE — %s  •  OPEN COST — %s\nADDS — %s\nSOLVES — %s\nLIMITATION — %s\nSPACE — %s\nTRADE-OFF — %s" % [String(view_model.get("name", "Pack")), String(view_model.get("doctrine", "")), String(view_model.get("cost_text", view_model.get("cost", 0))), String(view_model.get("pieces", "")), String(view_model.get("strength", "")), String(view_model.get("weakness", "")), String(view_model.get("space", "")), String(view_model.get("choice", ""))]
 	previous_button.disabled = bool(view_model.get("selection_locked", false))
 	next_button.disabled = previous_button.disabled
 	open_button.disabled = not bool(view_model.get("can_open", false))
 	reserve_button.disabled = not bool(view_model.get("can_reserve", false))
-	open_button.text = "Pack already opened" if bool(view_model.get("owned", false)) else "Open pack — %d materials" % int(view_model.get("cost", 0))
-	reserve_button.text = "Clear reserved pack" if bool(view_model.get("reserved", false)) else "Reserve selected pack"
+	if compact_mode:
+		open_button.text = "Opened" if bool(view_model.get("owned", false)) else "Open — %d materials" % int(view_model.get("cost", 0))
+		reserve_button.text = "Clear reserve" if bool(view_model.get("reserved", false)) else "Reserve for later"
+	else:
+		open_button.text = "Pack already opened" if bool(view_model.get("owned", false)) else "Open pack — %d materials" % int(view_model.get("cost", 0))
+		reserve_button.text = "Clear reserved pack" if bool(view_model.get("reserved", false)) else "Reserve selected pack"
 	open_button.tooltip_text = String(view_model.get("open_reason", "Open this pack through the authoritative preparation command."))
 	reserve_button.tooltip_text = String(view_model.get("reserve_reason", "Hold this offer for the next Preparation without granting its pieces."))
 

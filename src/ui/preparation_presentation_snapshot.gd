@@ -4,10 +4,45 @@ extends RefCounted
 static func build(keep: Object, pack_id: String, pack_index: int, pack_count: int, tutorial_active: bool, tutorial_expected_action: String) -> Dictionary:
 	if keep == null:
 		return {}
+	var pack_offer: Dictionary = _pack_offer(keep, pack_id, pack_index, pack_count, tutorial_active, tutorial_expected_action)
 	return {
-		"pack_offer": _pack_offer(keep, pack_id, pack_index, pack_count, tutorial_active, tutorial_expected_action),
+		"pack_offer": pack_offer,
+		"rail_context": _rail_context(keep, pack_offer),
+		"first_plan_action": _first_plan_action(keep),
 		"brief": _brief(keep),
 		"layout_lens_text": _layout_lens_text(keep),
+	}
+
+static func _rail_context(keep: Object, pack_offer: Dictionary) -> String:
+	var commander_name: String = String(keep.commander_definition(keep.commander_id).get("name", keep.commander_id)).replace("The ", "")
+	var forecast: Dictionary = keep.forecast()
+	var pack_doctrine: String = String(pack_offer.get("doctrine", "No pack doctrine selected"))
+	var invasion_doctrine: String = String(forecast.get("doctrine", "next pressure")).replace("_", " ").capitalize()
+	var likely_target: String = String(forecast.get("likely_target", "the keep")).capitalize()
+	var uncertainty: String = String(forecast.get("uncertainty", "secondary timing"))
+	return "%s  •  %s\nFORECAST — %s → %s  •  %s" % [commander_name.to_upper(), pack_doctrine.to_upper(), invasion_doctrine, likely_target, uncertainty]
+
+static func _first_plan_action(keep: Object) -> Dictionary:
+	var plan: Dictionary = keep.keep_definition().get("starter_plan", {})
+	if plan.is_empty():
+		return {"label": "No first plan available", "enabled": false, "progress": "0/0"}
+	var placements: Array = plan.get("placements", [])
+	var placed_count: int = 0
+	for placement in placements:
+		var piece_id: String = String(placement.get("piece_id", ""))
+		var origin_value: Variant = placement.get("origin", Vector2i.ZERO)
+		var expected_origin: Vector2i = origin_value if origin_value is Vector2i else Vector2i(int(origin_value[0]), int(origin_value[1]))
+		var expected_floor: String = String(placement.get("floor", "ground"))
+		for instance in keep.pieces.values():
+			if String(instance.get("piece_id", "")) == piece_id and instance.get("origin", Vector2i(-1, -1)) == expected_origin and String(instance.get("floor", "")) == expected_floor:
+				placed_count += 1
+				break
+	var pack_id: String = String(plan.get("pack_id", ""))
+	var complete: bool = not placements.is_empty() and placed_count == placements.size() and keep.owned_packs.has(pack_id)
+	return {
+		"label": "First plan in place — modify freely" if complete else "Apply first plan — %d/%d placed" % [placed_count, placements.size()],
+		"enabled": not complete,
+		"progress": "%d/%d" % [placed_count, placements.size()],
 	}
 
 static func _pack_offer(keep: Object, pack_id: String, pack_index: int, pack_count: int, tutorial_active: bool, tutorial_expected_action: String) -> Dictionary:
