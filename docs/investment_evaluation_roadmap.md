@@ -118,3 +118,9 @@ Expanding Advanced restores the full pack question, limitation, spatial demand, 
 Build `0.66.0-choice-first-war-council` closes the next first-viewport hierarchy gap. At 1280×720, the complete commander and defense choice now fits with pairing, seeded pressure, preparation focus, and Enter Keep. Each compact card retains the facts needed to choose—doctrine, intervention, trade-off, keep rule, opening, pressure, objective, and risk—while repeated secondary explanation returns in wider and large-text layouts.
 
 Fresh Greywatch and Ash Ford full-flow captures plus a long-form Twilight Road setup capture verify the composition. Selection, content, combat, save state, controller focus, and all completed roadmap gates remain unchanged. See `docs/p78_war_council_first_viewport_verification.md`.
+
+## 2026-09-04 execution checkpoint — Settings and First Watch hierarchy complete
+
+Build `0.67.0-settings-first-watch-hierarchy` gives Settings a dedicated game-facing surface instead of a long command rail. Readability, Display & Sound, Battle Pace, Session Notes, and Input form three balanced desktop columns, keeping every control and Back visible together at 1280×720. The 150% text fallback stacks the same groups without changing preference behavior.
+
+First Watch now opens with a centered three-step briefing, named stage progress, and a concise preview of the keep/pressure/recovery lesson. Passive briefing steps remove the redundant objective helper; interactive steps retain a truthful Refocus Objective action. Fresh settings, tutorial, Greywatch, and Ash Ford captures cover both review resolutions. See `docs/p79_settings_tutorial_hierarchy_verification.md`.

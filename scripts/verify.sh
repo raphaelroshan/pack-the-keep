@@ -101,6 +101,7 @@ if command -v godot >/dev/null 2>&1; then
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p40_preparation_command_hierarchy.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p77_preparation_first_viewport.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p78_war_council_first_viewport.gd
+  godot --headless --audio-driver Dummy --path . --script res://tests/test_p79_settings_tutorial_hierarchy.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p41_inspector_action_hierarchy.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p42_battle_command_hierarchy.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p43_local_playtest_observer.gd
@@ -206,6 +207,7 @@ elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p40_preparation_command_hierarchy.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p77_preparation_first_viewport.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p78_war_council_first_viewport.gd
+  godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p79_settings_tutorial_hierarchy.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p41_inspector_action_hierarchy.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p42_battle_command_hierarchy.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p43_local_playtest_observer.gd

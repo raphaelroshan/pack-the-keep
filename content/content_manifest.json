@@ -1,7 +1,13 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.66.0",
+  "content_version": "0.67.0",
+  "p79_settings_tutorial_hierarchy": {
+    "status": "implemented",
+    "settings_groups": ["readability", "display_and_sound", "battle_pace", "input", "session_notes"],
+    "tutorial_briefing": ["stage", "speaker", "lesson", "objective", "scope", "actions"],
+    "authority": "presentation_grouping_does_not_change_preferences_tutorial_progress_or_simulation"
+  },
   "p78_war_council_first_viewport": {
     "status": "implemented",
     "breakpoint": "compact_war_council_between_1120_and_1499_effective_pixels",

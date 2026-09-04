@@ -144,6 +144,16 @@ var setup_summary_panel: PanelContainer
 var setup_overview_label: Label
 var war_council_choice_panel: WarCouncilChoicePanel
 var settings_overview_panel: PanelContainer
+var settings_hub_panel: PanelContainer
+var settings_columns: BoxContainer
+var settings_primary_column: VBoxContainer
+var settings_secondary_column: VBoxContainer
+var settings_tertiary_column: VBoxContainer
+var settings_readability_group: PanelContainer
+var settings_display_group: PanelContainer
+var settings_battle_group: PanelContainer
+var settings_input_group: PanelContainer
+var settings_session_group: PanelContainer
 var command_panel_title: Label
 var setup_confirm_button: Button
 var setup_back_button: Button
@@ -282,6 +292,8 @@ var tutorial_objective_label: Label
 var tutorial_continue_button: Button
 var tutorial_skip_button: Button
 var tutorial_help_button: Button
+var tutorial_stage_label: Label
+var tutorial_scope_row: HBoxContainer
 var tutorial_checkpoint: Dictionary = {}
 var tutorial_completed: bool = false
 var tutorial_dismissed: bool = false
@@ -773,6 +785,8 @@ func _apply_responsive_layout() -> void:
 		gameplay_main_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	if war_council_choice_panel != null:
 		war_council_choice_panel.set_responsive_layout(compact_cards, main_width, war_council_first_viewport_active)
+	if settings_columns != null:
+		settings_columns.vertical = effective_width < PREPARATION_TWO_COLUMN_EFFECTIVE_WIDTH or ui_factor >= 1.5
 	if preparation_brief_panel != null:
 		preparation_brief_panel.set_responsive_layout(compact_cards, main_width, preparation_board_first_active)
 	if preparation_pack_offer_panel != null:
@@ -808,7 +822,12 @@ func _apply_responsive_layout() -> void:
 		if playtest_status_label != null:
 			playtest_status_label.visible = show_main_recovery_action
 	if art_banner != null and art_banner.visible:
-		art_banner.custom_minimum_size.y = 72.0 if large_text_compact or war_council_first_viewport_active else 100.0 if screen == "setup" else 150.0
+		art_banner.custom_minimum_size.y = 190.0 if tutorial.active and screen == "title" else 72.0 if large_text_compact or war_council_first_viewport_active else 100.0 if screen == "setup" else 150.0
+	if tutorial_panel != null:
+		var tutorial_briefing: bool = tutorial.active and screen == "title"
+		tutorial_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER if tutorial_briefing else Control.SIZE_EXPAND_FILL
+		tutorial_panel.custom_minimum_size.x = minf(920.0, maxf(520.0, effective_width - 48.0)) if tutorial_briefing else 0.0
+		tutorial_panel.custom_minimum_size.y = 246.0 if tutorial_briefing else 142.0
 	for control: Control in [status_label, guidance_label, playtest_button, playtest_status_label, forecast_label, enemy_label, metrics_label, result_explain_label, scorecard_label, combat_explain_label, placement_label, event_label, log_label]:
 		if control != null:
 			control.custom_minimum_size.x = main_width - 10.0
@@ -1247,9 +1266,31 @@ func _build_ui() -> void:
 
 	settings_overview_panel = _build_overview_panel(
 		"READABILITY BEFORE PRESSURE",
-		"Display, audio, input, and pacing preferences live on their own screen. Optional session notes stay local until explicitly exported; none of these settings alter battle outcomes."
+		"Set how the keep reads, sounds, and responds. These preferences never change battle outcomes; session notes stay local unless you export them."
 	)
+	settings_overview_panel.custom_minimum_size.y = 92
 	left.add_child(settings_overview_panel)
+	settings_hub_panel = PanelContainer.new()
+	settings_hub_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_style_panel(settings_hub_panel, Color("#18151f"), Color("#55495f"), 10)
+	settings_columns = BoxContainer.new()
+	settings_columns.add_theme_constant_override("separation", 10)
+	settings_columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	settings_hub_panel.add_child(settings_columns)
+	settings_primary_column = VBoxContainer.new()
+	settings_primary_column.add_theme_constant_override("separation", 10)
+	settings_primary_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	settings_columns.add_child(settings_primary_column)
+	settings_secondary_column = VBoxContainer.new()
+	settings_secondary_column.add_theme_constant_override("separation", 10)
+	settings_secondary_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	settings_columns.add_child(settings_secondary_column)
+	settings_tertiary_column = VBoxContainer.new()
+	settings_tertiary_column.add_theme_constant_override("separation", 10)
+	settings_tertiary_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	settings_columns.add_child(settings_tertiary_column)
+	left.add_child(settings_hub_panel)
+	settings_controls.append(settings_hub_panel)
 
 	status_label = Label.new()
 	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1392,9 +1433,26 @@ func _build_ui() -> void:
 	var run_section: VBoxContainer = _build_command_section("RUN")
 	controls.add_child(run_section)
 	run_controls.append(run_section)
-	var settings_section: VBoxContainer = _build_command_section("SETTINGS & ACCESSIBILITY")
-	controls.add_child(settings_section)
-	settings_controls.append(settings_section)
+	var readability_group: Dictionary = _build_settings_group("READABILITY")
+	settings_readability_group = readability_group.panel
+	settings_primary_column.add_child(readability_group.panel)
+	var readability_settings: VBoxContainer = readability_group.body
+	var display_group: Dictionary = _build_settings_group("DISPLAY & SOUND")
+	settings_display_group = display_group.panel
+	settings_primary_column.add_child(display_group.panel)
+	var display_settings: VBoxContainer = display_group.body
+	var battle_group: Dictionary = _build_settings_group("BATTLE PACE")
+	settings_battle_group = battle_group.panel
+	settings_secondary_column.add_child(battle_group.panel)
+	var battle_settings: VBoxContainer = battle_group.body
+	var input_group: Dictionary = _build_settings_group("INPUT")
+	settings_input_group = input_group.panel
+	settings_tertiary_column.add_child(input_group.panel)
+	var input_settings: VBoxContainer = input_group.body
+	var session_group: Dictionary = _build_settings_group("SESSION NOTES")
+	settings_session_group = session_group.panel
+	settings_secondary_column.add_child(session_group.panel)
+	var session_settings: VBoxContainer = session_group.body
 	commander_portrait = TextureRect.new()
 	commander_portrait.texture = CASTELLAN_PORTRAIT
 	commander_portrait.custom_minimum_size = Vector2(0, 92)
@@ -1746,87 +1804,87 @@ func _build_ui() -> void:
 	mute_button = Button.new()
 	mute_button.text = "Feedback tones: ON"
 	mute_button.pressed.connect(_toggle_mute)
-	settings_section.add_child(mute_button)
+	display_settings.add_child(mute_button)
 	contrast_button = Button.new()
 	contrast_button.text = "High-contrast cues: OFF"
 	contrast_button.pressed.connect(_toggle_contrast)
 	contrast_button.tooltip_text = "Adds shape/text cues so doctrine and damage are not color-dependent."
-	settings_section.add_child(contrast_button)
+	readability_settings.add_child(contrast_button)
 	reduced_motion_button = Button.new()
 	reduced_motion_button.text = "Reduced motion: OFF"
 	reduced_motion_button.tooltip_text = "Suppress transient board flashes without changing combat timing or outcomes."
 	reduced_motion_button.pressed.connect(_toggle_reduced_motion)
-	settings_section.add_child(reduced_motion_button)
+	readability_settings.add_child(reduced_motion_button)
 	ui_scale_button = Button.new()
 	ui_scale_button.text = "UI scale: 100%"
-	ui_scale_button.tooltip_text = "Cycle 80%, 100%, 125%, and 150% interface scaling; the command rail remains scrollable."
+	ui_scale_button.tooltip_text = "Cycle 80%, 100%, 125%, and 150% interface scaling; menus reflow and remain scrollable."
 	ui_scale_button.pressed.connect(_cycle_ui_scale)
-	settings_section.add_child(ui_scale_button)
+	readability_settings.add_child(ui_scale_button)
 	window_mode_button = Button.new()
 	window_mode_button.text = "Window mode: Windowed"
 	window_mode_button.tooltip_text = "Toggle fullscreen without forgetting the selected windowed resolution."
 	window_mode_button.pressed.connect(_toggle_fullscreen)
-	settings_section.add_child(window_mode_button)
+	display_settings.add_child(window_mode_button)
 	resolution_button = Button.new()
 	resolution_button.text = "Window size: 1280×720"
 	resolution_button.tooltip_text = "Cycle the windowed resolution; fullscreen keeps this value for later restoration."
 	resolution_button.pressed.connect(_cycle_window_size)
-	settings_section.add_child(resolution_button)
+	display_settings.add_child(resolution_button)
 	effects_volume_button = Button.new()
 	effects_volume_button.text = "Effects volume: 100%"
 	effects_volume_button.tooltip_text = "Adjust generated feedback tones independently from the mute preference."
 	effects_volume_button.pressed.connect(_cycle_effects_volume)
-	settings_section.add_child(effects_volume_button)
+	display_settings.add_child(effects_volume_button)
 	feedback_cue_label = Label.new()
 	feedback_cue_label.text = "Last feedback cue: NONE"
 	feedback_cue_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	feedback_cue_label.add_theme_color_override("font_color", Color("#aab1b2"))
-	settings_section.add_child(feedback_cue_label)
+	display_settings.add_child(feedback_cue_label)
 	event_feed_button = Button.new()
 	event_feed_button.text = "Event feed: newest 4"
 	event_feed_button.tooltip_text = "Change only how many battle-report entries are shown; the complete report remains saved."
 	event_feed_button.pressed.connect(_cycle_event_feed_retention)
-	settings_section.add_child(event_feed_button)
+	battle_settings.add_child(event_feed_button)
 	auto_pause_button = Button.new()
 	auto_pause_button.text = "Threat auto-pause: OFF"
 	auto_pause_button.tooltip_text = "Pause after first contact in each assault phase and after a new breach; resume manually when ready."
 	auto_pause_button.pressed.connect(_toggle_auto_pause_on_threat)
-	settings_section.add_child(auto_pause_button)
+	battle_settings.add_child(auto_pause_button)
 	local_metrics_button = Button.new()
 	local_metrics_button.text = "Session notes: OFF"
 	local_metrics_button.tooltip_text = "Opt in for this launch only. Records coarse interaction counts and screen time in memory; nothing is uploaded."
 	local_metrics_button.pressed.connect(_toggle_local_playtest_observation)
-	settings_section.add_child(local_metrics_button)
+	session_settings.add_child(local_metrics_button)
 	local_metrics_export_button = Button.new()
 	local_metrics_export_button.text = "Export session notes"
 	local_metrics_export_button.tooltip_text = "Write the current anonymous observation snapshot to the local user data folder."
 	local_metrics_export_button.pressed.connect(_export_local_playtest_observation)
-	settings_section.add_child(local_metrics_export_button)
+	session_settings.add_child(local_metrics_export_button)
 	local_metrics_status_label = Label.new()
 	local_metrics_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	local_metrics_status_label.add_theme_font_size_override("font_size", 10)
 	local_metrics_status_label.add_theme_color_override("font_color", Color("#aab1b2"))
-	settings_section.add_child(local_metrics_status_label)
+	session_settings.add_child(local_metrics_status_label)
 	rebind_action_option = OptionButton.new()
 	for action in REMAPPABLE_ACTIONS:
 		rebind_action_option.add_item(String(ACTION_LABELS.get(action, action)))
 		rebind_action_option.set_item_metadata(rebind_action_option.item_count - 1, action)
 	rebind_action_option.item_selected.connect(func(_index: int) -> void: _refresh_binding_controls())
 	var rebind_group: VBoxContainer = _labeled_control("Input action", rebind_action_option)
-	settings_section.add_child(rebind_group)
+	input_settings.add_child(rebind_group)
 	binding_summary_label = Label.new()
 	binding_summary_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	binding_summary_label.add_theme_color_override("font_color", Color("#c9bfd0"))
-	settings_section.add_child(binding_summary_label)
+	input_settings.add_child(binding_summary_label)
 	rebind_button = Button.new()
 	rebind_button.text = "Rebind selected action"
 	rebind_button.tooltip_text = "Capture one keyboard key or controller button while preserving the other device path."
 	rebind_button.pressed.connect(func() -> void: _begin_rebind())
-	settings_section.add_child(rebind_button)
+	input_settings.add_child(rebind_button)
 	reset_bindings_button = Button.new()
 	reset_bindings_button.text = "Reset input bindings"
 	reset_bindings_button.pressed.connect(_reset_input_bindings)
-	settings_section.add_child(reset_bindings_button)
+	input_settings.add_child(reset_bindings_button)
 	settings_back_button = Button.new()
 	settings_back_button.text = "Back"
 	settings_back_button.pressed.connect(_on_close_settings)
@@ -1972,14 +2030,23 @@ func _build_tutorial_panel() -> PanelContainer:
 	panel.mouse_filter = Control.MOUSE_FILTER_PASS
 	_style_panel(panel, Color("#231d28"), Color("#d3a860"), 10)
 	var body: VBoxContainer = VBoxContainer.new()
-	body.add_theme_constant_override("separation", 5)
+	body.add_theme_constant_override("separation", 7)
 	panel.add_child(body)
+	var heading_row: HBoxContainer = HBoxContainer.new()
+	heading_row.add_theme_constant_override("separation", 8)
+	body.add_child(heading_row)
 	tutorial_speaker_label = Label.new()
+	tutorial_speaker_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tutorial_speaker_label.add_theme_font_size_override("font_size", 12)
 	tutorial_speaker_label.add_theme_color_override("font_color", Color("#8fc6d1"))
-	body.add_child(tutorial_speaker_label)
+	heading_row.add_child(tutorial_speaker_label)
+	tutorial_stage_label = Label.new()
+	tutorial_stage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	tutorial_stage_label.add_theme_font_size_override("font_size", 12)
+	tutorial_stage_label.add_theme_color_override("font_color", Color("#d8c389"))
+	heading_row.add_child(tutorial_stage_label)
 	tutorial_title_label = Label.new()
-	tutorial_title_label.add_theme_font_size_override("font_size", 22)
+	tutorial_title_label.add_theme_font_size_override("font_size", 24)
 	tutorial_title_label.add_theme_color_override("font_color", Color("#f1d28e"))
 	body.add_child(tutorial_title_label)
 	tutorial_body_label = Label.new()
@@ -1991,6 +2058,17 @@ func _build_tutorial_panel() -> PanelContainer:
 	tutorial_objective_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	tutorial_objective_label.add_theme_color_override("font_color", Color("#9fe0bd"))
 	body.add_child(tutorial_objective_label)
+	tutorial_scope_row = HBoxContainer.new()
+	tutorial_scope_row.add_theme_constant_override("separation", 8)
+	for scope in [
+		["READ THE KEEP", "Rooms, routes, and defender roles."],
+		["READ THE PRESSURE", "Forecasts, targets, and counters."],
+		["RECOVER", "Repair, assign, and adapt between phases."],
+	]:
+		var scope_card: PanelContainer = _build_small_info_card(String(scope[0]), String(scope[1]))
+		scope_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tutorial_scope_row.add_child(scope_card)
+	body.add_child(tutorial_scope_row)
 	var actions: HBoxContainer = HBoxContainer.new()
 	actions.add_theme_constant_override("separation", 8)
 	body.add_child(actions)
@@ -2000,7 +2078,7 @@ func _build_tutorial_panel() -> PanelContainer:
 	_style_button(tutorial_continue_button, true)
 	actions.add_child(tutorial_continue_button)
 	tutorial_help_button = Button.new()
-	tutorial_help_button.text = "Show Objective"
+	tutorial_help_button.text = "Refocus Objective"
 	tutorial_help_button.pressed.connect(_on_tutorial_help)
 	_style_button(tutorial_help_button, false)
 	actions.add_child(tutorial_help_button)
@@ -2061,6 +2139,20 @@ func _build_command_section(title_text: String) -> VBoxContainer:
 	heading.add_theme_color_override("font_color", Color("#e2bd84"))
 	section.add_child(heading)
 	return section
+
+func _build_settings_group(title_text: String) -> Dictionary:
+	var panel: PanelContainer = PanelContainer.new()
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_style_panel(panel, Color("#231e2a"), Color("#51475b"), 8)
+	var body: VBoxContainer = VBoxContainer.new()
+	body.add_theme_constant_override("separation", 5)
+	panel.add_child(body)
+	var heading: Label = Label.new()
+	heading.text = title_text
+	heading.add_theme_font_size_override("font_size", 15)
+	heading.add_theme_color_override("font_color", Color("#e2bd84"))
+	body.add_child(heading)
+	return {"panel": panel, "body": body}
 
 func _style_panel(panel: PanelContainer, background: Color, border: Color, radius: int = 10) -> void:
 	var style: StyleBoxFlat = StyleBoxFlat.new()
@@ -2141,7 +2233,7 @@ func _set_screen(next_screen: String) -> void:
 	if gameplay_columns:
 		gameplay_columns.visible = screen != "title"
 	if command_panel:
-		command_panel.visible = screen != "title" and not terminal_result
+		command_panel.visible = screen != "title" and screen != "settings" and not terminal_result
 	if terminal_debrief_panel:
 		terminal_debrief_panel.visible = terminal_result
 	if title_card:
@@ -2263,6 +2355,9 @@ func _focus_screen_control() -> void:
 			command_scroll.ensure_control_visible(target)
 	if page_scroll != null:
 		if screen == "preparation" and target == playtest_button:
+			page_scroll.scroll_horizontal = 0
+			page_scroll.scroll_vertical = 0
+		elif screen == "settings":
 			page_scroll.scroll_horizontal = 0
 			page_scroll.scroll_vertical = 0
 		elif ui_scale_index >= 2 or gameplay_columns.vertical:
@@ -3594,6 +3689,7 @@ func _refresh_tutorial_panel() -> void:
 		return
 	var step: Dictionary = tutorial.current_step()
 	tutorial_speaker_label.text = String(step.get("speaker", "FIRST WATCH"))
+	tutorial_stage_label.text = _tutorial_stage_text(String(step.get("id", "")), String(step.get("screen", screen)))
 	tutorial_title_label.text = String(step.get("title", "Learn to Play"))
 	tutorial_body_label.text = tutorial.failure_message if tutorial.failure_active else String(step.get("body", ""))
 	tutorial_objective_label.text = "CURRENT OBJECTIVE — %s" % ("Retry the current phase." if tutorial.failure_active else String(step.get("objective", "")))
@@ -3601,7 +3697,21 @@ func _refresh_tutorial_panel() -> void:
 	tutorial_continue_button.visible = action in ["continue", "finish_tutorial", "retry_phase"]
 	tutorial_continue_button.text = "Retry Phase" if action == "retry_phase" else "Finish Tutorial" if action == "finish_tutorial" else "Continue"
 	tutorial_skip_button.visible = action != "finish_tutorial"
+	tutorial_help_button.visible = not action in ["continue", "finish_tutorial"]
+	tutorial_scope_row.visible = screen == "title"
 	_update_tutorial_board_target(String(step.get("focus", "")))
+
+func _tutorial_stage_text(step_id: String, step_screen: String) -> String:
+	var intro_ids: Array[String] = ["intro_keep", "intro_resources", "intro_cycle"]
+	var intro_index: int = intro_ids.find(step_id)
+	if intro_index >= 0:
+		return "FIRST WATCH · BRIEFING %d OF 3" % (intro_index + 1)
+	return "FIRST WATCH · %s" % {
+		"setup": "WAR COUNCIL",
+		"preparation": "FORTRESS",
+		"battle": "ASSAULT",
+		"results": "AFTERMATH",
+	}.get(step_screen, "LESSON")
 
 func _update_tutorial_board_target(focus_id: String) -> void:
 	if keep_canvas == null:
@@ -3907,7 +4017,7 @@ func _refresh_terminal_debrief() -> void:
 	var became_visible: bool = terminal_result and not terminal_debrief_panel.visible
 	terminal_debrief_panel.visible = terminal_result
 	if command_panel != null:
-		command_panel.visible = screen != "title" and not terminal_result
+		command_panel.visible = screen != "title" and screen != "settings" and not terminal_result
 	if result_explain_label != null:
 		result_explain_label.visible = screen == "results" and not terminal_result
 	if scorecard_label != null:
