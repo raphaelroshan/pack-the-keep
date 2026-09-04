@@ -1,0 +1,12 @@
+{
+  "game": "Pack the Keep",
+  "build": "0.64.0-player-facing-language",
+  "main_commit": "2725b9d",
+  "review_date": "2026-09-04",
+  "engine": "Godot 4.4.1",
+  "viewport": {"width": 1280, "height": 720},
+  "states": ["title", "war_council", "fortress_build_and_assign"],
+  "files": ["01_title.png", "02_first_action.png", "03_followup.png"],
+  "result": "automated verification passed; board-first preparation is visible but the right rail remains dense and scroll-dependent",
+  "source": "xvfb-run visual smoke capture from current origin/main checkout"
+}
