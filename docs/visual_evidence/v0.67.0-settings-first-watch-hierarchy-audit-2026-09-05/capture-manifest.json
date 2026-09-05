@@ -1,0 +1,13 @@
+{
+  "game": "Pack the Keep",
+  "build": "0.67.0-settings-first-watch-hierarchy",
+  "main_commit": "bc5d690",
+  "review_date": "2026-09-05",
+  "engine": "Godot 4.4.1",
+  "viewport": {"width": 1280, "height": 720},
+  "states": ["title", "war_council", "fortress_build_and_assign"],
+  "files": ["01_title.png", "02_first_action.png", "03_followup.png"],
+  "verification": "passed",
+  "finding": "War Council top briefing is clear but lower secondary content begins below the fold; next task must preserve one authoritative preparation explanation",
+  "source": "xvfb-run visual smoke capture from origin/main"
+}
