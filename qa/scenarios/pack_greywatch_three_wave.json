@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "game": "pack-the-keep",
+  "scenario_id": "pack_greywatch_three_wave",
+  "purpose": "Prove the Greywatch investment vertical from preparation through causal battle results.",
+  "status": "planned",
+  "seed": 5207,
+  "initial_save": "fresh",
+  "expected_states": [
+    "title",
+    "war_council",
+    "preparation",
+    "forecast",
+    "battle_wave_1",
+    "battle_wave_2",
+    "battle_wave_3",
+    "recovery",
+    "results"
+  ],
+  "semantic_commands": [
+    "start_run",
+    "select_commander:castellan",
+    "select_keep:greywatch",
+    "select_doctrine:pike_line",
+    "inspect_forecast",
+    "place:defender:gatehouse_slot",
+    "place:defender:wall_slot",
+    "begin_assault",
+    "pause_and_inspect:wave_1",
+    "intervene:focus_gatehouse",
+    "resume",
+    "complete_wave:1",
+    "complete_wave:2",
+    "complete_wave:3",
+    "open_recovery",
+    "open_results"
+  ],
+  "checkpoints": ["after_preparation", "after_wave_1", "after_intervention", "after_wave_3", "after_recovery", "after_results"],
+  "screenshot_states": ["war_council", "preparation", "forecast", "battle_wave_1", "recovery", "results"],
+  "time_budget_ms": 45000,
+  "implementation_note": "Wire semantic commands to public preparation and battle commands; do not use coordinate clicks as the authoritative test path."
+}
