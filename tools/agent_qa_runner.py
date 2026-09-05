@@ -132,6 +132,8 @@ def validate_capture(capture_dir: Path, scenario: dict[str, Any]) -> tuple[list[
     trace = manifest.get("state_trace", [])
     if not isinstance(trace, list) or collapsed_states(trace) != scenario["expected_states"]:
         errors.append(f"state sequence {collapsed_states(trace) if isinstance(trace, list) else trace} did not match expected states")
+    elif any(not row.get("readiness_condition") or row.get("frames_after_transition") != 2 for row in trace):
+        errors.append("every captured state must identify its readiness condition and fixed two-frame boundary")
     hashes: dict[str, str] = {}
     screenshots = adapter["state_screenshots"]
     if set(screenshots) != set(scenario["screenshot_states"]):
@@ -254,7 +256,7 @@ def main() -> int:
             journey["state_sequence"] = collapsed_states(trace)
             journey["state_trace"] = trace
             journey["screenshot_paths"] = {state: f"scenario-capture/{name}" for state, name in adapter["state_screenshots"].items()}
-            journey["deterministic_hashes"] = hashes
+            journey["screenshot_sha256"] = hashes
             if errors:
                 journey["evidence_errors"] = errors
                 result.update({"status": "INVALID_EVIDENCE", "exit_code": 2, "note": "Scenario screenshots or readiness trace were invalid."})

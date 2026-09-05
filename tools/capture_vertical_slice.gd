@@ -258,6 +258,11 @@ func _resolve_open_event(ui: Control) -> void:
 func _capture(stem: String, ui: Control) -> void:
 	await process_frame
 	await process_frame
+	var readiness: Dictionary = _capture_readiness(stem, ui)
+	if not bool(readiness.get("ready", false)):
+		push_error("Capture %s did not reach readiness: %s" % [stem, String(readiness.get("condition", "unknown"))])
+		quit(2)
+		return
 	var image: Image = root.get_texture().get_image()
 	if image == null or image.is_empty():
 		push_error("No framebuffer available for %s" % stem)
@@ -287,10 +292,31 @@ func _capture(stem: String, ui: Control) -> void:
 		"wave_active": bool(ui.keep.wave_active),
 		"repair_interval_active": bool(ui.keep.repair_interval_active),
 		"assault_readiness": String(ui.assault_ready_reason),
+		"readiness_condition": String(readiness.get("condition", "")),
 		"frames_after_transition": 2,
 		"screenshot": filename,
 	})
 	print("Captured %s (%s)" % [filename, ui.screen])
+
+func _capture_readiness(stem: String, ui: Control) -> Dictionary:
+	var state_id := _evidence_state_id(stem)
+	match state_id:
+		"title":
+			return {"ready": ui.screen == "title", "condition": "title screen rendered"}
+		"war_council":
+			return {"ready": ui.screen == "setup" and ui.keep.scenario_id == capture_scenario_id, "condition": "War Council rendered with selected scenario"}
+		"preparation":
+			return {"ready": ui.screen == "preparation", "condition": "Preparation rendered after scenario entry"}
+		"forecast":
+			return {"ready": ui.screen == "battle" and ui.keep.wave_active and not ui.assault_ready_reason.is_empty(), "condition": "battle tick-zero forecast ready"}
+		"battle_wave_1", "battle_wave_2", "battle_wave_3":
+			var expected_wave := int(state_id.trim_prefix("battle_wave_"))
+			return {"ready": ui.screen == "battle" and ui.keep.wave_active and ui.keep.wave_index == expected_wave, "condition": "battle wave %d authoritative state ready" % expected_wave}
+		"recovery":
+			return {"ready": ui.screen == "results" and ui.keep.repair_interval_active, "condition": "Recovery rendered with active repair interval"}
+		"results":
+			return {"ready": ui.screen == "results" and not ui.keep.wave_active and not ui.keep.has_next_wave(), "condition": "terminal Results rendered after final assault"}
+	return {"ready": true, "condition": "%s rendered" % state_id}
 
 func _image_is_uniform(image: Image) -> bool:
 	var minimum: float = 1.0

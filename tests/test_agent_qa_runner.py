@@ -38,7 +38,10 @@ class AgentQaRunnerTest(unittest.TestCase):
         assert scenario is not None
         with tempfile.TemporaryDirectory() as temporary:
             capture_dir = Path(temporary)
-            trace = [{"state_id": state} for state in scenario["expected_states"]]
+            trace = [
+                {"state_id": state, "readiness_condition": f"{state} ready", "frames_after_transition": 2}
+                for state in scenario["expected_states"]
+            ]
             manifest = {
                 "resolution": scenario["adapter"]["viewport"],
                 "scenario": scenario["adapter"]["capture_scenario"],
