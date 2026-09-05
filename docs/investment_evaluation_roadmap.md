@@ -124,3 +124,10 @@ Fresh Greywatch and Ash Ford full-flow captures plus a long-form Twilight Road s
 Build `0.67.0-settings-first-watch-hierarchy` gives Settings a dedicated game-facing surface instead of a long command rail. Readability, Display & Sound, Battle Pace, Session Notes, and Input form three balanced desktop columns, keeping every control and Back visible together at 1280×720. The 150% text fallback stacks the same groups without changing preference behavior.
 
 First Watch now opens with a centered three-step briefing, named stage progress, and a concise preview of the keep/pressure/recovery lesson. Passive briefing steps remove the redundant objective helper; interactive steps retain a truthful Refocus Objective action. Fresh settings, tutorial, Greywatch, and Ash Ford captures cover both review resolutions. See `docs/p79_settings_tutorial_hierarchy_verification.md`.
+
+
+## 2026-09-05 audit checkpoint — PTK-GPT56-1C remains open
+
+The current `0.67.0-settings-first-watch-hierarchy` main build passes the full automated suite. The title is clear and authored. War Council now gives the player a strong top-level commitment brief with commander, pairing, supply/morale seed, focus, and Enter Keep — Build Defense. Secondary briefing content begins below the fold, so the top briefing must remain the authoritative explanation and the transition into Fortress must not create competing scroll burden.
+
+The next agent must execute **PTK-GPT56-1C**: prove the full Greywatch creative vertical from this War Council through Fortress placement, deterministic three-wave auto-battle, pause/inspection, one intervention, damage, Recovery, and causal Results. Preserve two viable seeded openings and verify the board-first composition at 1280×720 and 1600×900 before adding the second keep. Evidence is recorded in `docs/audit_report_2026-09-05.md` and `docs/visual_evidence/v0.67.0-settings-first-watch-hierarchy-audit-2026-09-05/`.
