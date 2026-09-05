@@ -230,3 +230,8 @@ The dependency-aware tasks in [`docs/gpt56_investment_execution_packets.md`](doc
 | `docs/visual_evidence/v0.64.0-player-facing-language-review-2026-09-04/` | Fresh 1280×720 title, War Council, and Fortress captures with machine-readable manifest. |
 | `docs/audit_report_2026-09-05.md` | Current main audit with automated result, War Council findings, and PTK-GPT56-1C next task. |
 | `docs/visual_evidence/v0.67.0-settings-first-watch-hierarchy-audit-2026-09-05/` | Fresh title, War Council, Fortress screenshots, and capture manifest. |
+
+
+## Agent QA system
+
+Read [`docs/qa_playbook.md`](docs/qa_playbook.md), [`docs/agent_qa_decision.md`](docs/agent_qa_decision.md), and [`AGENTS.md`](AGENTS.md) before implementation. Run [`scripts/agent_qa.sh`](scripts/agent_qa.sh) to produce a result and evidence bundle. The first semantic journey contract is [`qa/scenarios/pack_greywatch_three_wave.json`](qa/scenarios/pack_greywatch_three_wave.json).
