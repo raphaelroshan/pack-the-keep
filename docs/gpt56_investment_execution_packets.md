@@ -9,6 +9,12 @@ Build one complete Greywatch evaluation path from New Game through commander/kee
 
 Acceptance requires two viable seeded opening plans, a visible reason for each selected pack and room placement, deterministic three-wave replay, save/resume at Preparation/Battle/Recovery/Results, controller and large-text coverage, reduced-motion feedback, and a complete 1600×900 capture sequence. Preserve authoritative `KeepState` outcomes; presentation can stage but never decide combat.
 
+### Follow-up PTK-GPT56-1C — board-first pause and inspection proof
+
+Status: implemented in `0.68.0-assault-threat-dossier`.
+
+The complete Greywatch sequence now includes tick-zero readiness, a post-contact paused threat dossier, one commander intervention, visible damage, both Recovery lulls, and causal terminal Results at 1280×720 and 1600×900. The dossier is a read-only battle snapshot projection; seeded openings, combat, targeting, and outcomes remain owned by `KeepState`.
+
 ## Packet PTK-GPT56-2 — Second keep as a real design question
 
 Select one existing underused keep and turn it into a distinct spatial identity. Its topology, room adjacency, entry pressure, repair priority, and preferred response pattern must differ from Greywatch. Add one teaching scenario, one combined scenario, one recovery rule, one signature pack, and two viable seeded plans. Use the existing state and content catalogs; do not create a parallel keep framework.

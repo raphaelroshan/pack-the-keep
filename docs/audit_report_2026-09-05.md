@@ -21,3 +21,7 @@ The title communicates an authored two-floor defense game and the War Council no
 ## Next task
 
 Execute **PTK-GPT56-1C**: complete the board-first Greywatch creative vertical through placement, deterministic three-wave auto-battle, pause/inspection, one intervention, damage, Recovery, and causal Results. Preserve two viable seeded openings and avoid adding the second keep until the full flow is re-proven at 1280×720 and 1600×900.
+
+## Execution update
+
+PTK-GPT56-1C is implemented in `0.68.0-assault-threat-dossier`. See `docs/p80_assault_threat_dossier_verification.md` and the versioned dual-resolution Greywatch evidence.

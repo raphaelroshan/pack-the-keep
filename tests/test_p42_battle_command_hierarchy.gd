@@ -21,7 +21,8 @@ func _initialize() -> void:
 	_check(ui.screen == "battle" and ui.keep.wave_active, "test setup should enter an active assault")
 	_check(ui.battle_state_label.is_visible_in_tree() and String(ui.battle_state_label.text).contains("PAUSED"), "battle rail should lead with readable live state")
 	_check(ui.pause_button.is_visible_in_tree() and ui.commander_ability_button.is_visible_in_tree(), "time control and commander intervention should remain primary")
-	_check(ui.inspect_enemy_button.is_visible_in_tree() and String(ui.inspect_enemy_button.text).contains("Raider"), "visible threat action should name the focused enemy")
+	_check(ui.battle_focus_panel.is_visible_in_tree() and String(ui.battle_focus_panel.name_label.text).contains("Raider"), "board-first Assault should name the focused enemy in its compact dossier")
+	_check(not ui.inspect_enemy_button.is_visible_in_tree() and not ui.battle_inspection_label.visible and not ui.response_preview_label.visible, "board-first Assault should remove duplicate inspection actions and prose")
 	_check(not ui.battle_tactical_panel.visible and not ui.manual_step_button.is_visible_in_tree() and not ui.speed_button.is_visible_in_tree() and not ui.enemy_option.is_visible_in_tree(), "manual timing and fallback selection should begin collapsed")
 
 	var before_disclosure: String = JSON.stringify(ui.keep.serialize())
@@ -39,7 +40,7 @@ func _initialize() -> void:
 	ui.tutorial.restore_progress({"tutorial_id": "first_watch", "version": 1, "active": true, "step_id": "inspect_raider", "failure_active": false, "failure_message": ""})
 	ui._refresh_ui()
 	ui._focus_tutorial_target("enemy_inspector")
-	_check(root.gui_get_focus_owner() == ui.inspect_enemy_button, "tutorial threat inspection should focus a visible primary control")
+	_check(ui.inspect_enemy_button.is_visible_in_tree() and root.gui_get_focus_owner() == ui.inspect_enemy_button, "tutorial threat inspection should restore and focus its explicit control: visible=%s tree=%s disabled=%s focus=%s" % [ui.inspect_enemy_button.visible, ui.inspect_enemy_button.is_visible_in_tree(), ui.inspect_enemy_button.disabled, root.gui_get_focus_owner().name if root.gui_get_focus_owner() != null else "none"])
 
 	ui._set_ui_scale(2)
 	await process_frame

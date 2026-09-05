@@ -16,6 +16,9 @@ PACKET_REQUIREMENTS = {
     "PTK-GPT56-5": {"clean_install_and_migration", "backup_recovery_and_rollback", "controller_and_scaling", "audio_and_reduced_motion", "offline_operation", "package_provenance", "known_limitations", "settings_tutorial_hierarchy"},
 }
 PACKET_IDS = list(PACKET_REQUIREMENTS)
+FOLLOW_UP_REQUIREMENTS = {
+    "PTK-GPT56-1C": {"board_first_full_flow", "pause_inspection_dossier", "emergency_intervention", "two_seeded_openings", "authoritative_state"},
+}
 
 
 def _load(path: Path, errors: list[str]) -> dict[str, Any]:
@@ -52,7 +55,7 @@ def _catalog(root: Path, folder: str, errors: list[str]) -> dict[str, dict[str, 
     return values
 
 
-def _validate_capture(root: Path, relative: str, scenario: str, build_version: str, errors: list[str], intervention: bool = False) -> None:
+def _validate_capture(root: Path, relative: str, scenario: str, build_version: str, errors: list[str], intervention: bool = False, inspection: bool = False) -> None:
     manifest = _load(root / relative, errors)
     if manifest.get("build_version") != build_version or manifest.get("scenario") != scenario:
         errors.append(f"{relative}: capture identity must match {build_version}/{scenario}")
@@ -64,6 +67,8 @@ def _validate_capture(root: Path, relative: str, scenario: str, build_version: s
         errors.append(f"{relative}: capture is missing a complete three-wave sequence")
     if intervention and (manifest.get("intervention_captured") is not True or "04b_emergency_intervention.png" not in set(files or [])):
         errors.append(f"{relative}: Greywatch capture must include the emergency intervention")
+    if inspection and (manifest.get("battle_inspection_captured") is not True or "04a_paused_threat_dossier.png" not in set(files or [])):
+        errors.append(f"{relative}: Greywatch capture must include the paused threat dossier")
     for filename in files if isinstance(files, list) else []:
         if not _evidence_exists(root, str(Path(relative).parent / filename)):
             errors.append(f"{relative}: missing captured image {filename}")
@@ -115,6 +120,37 @@ def validate_progress(
                     if not isinstance(relative, str) or not _evidence_exists(root, relative):
                         errors.append(f"{packet_id}/{requirement_id} has missing evidence: {relative!r}")
             for missing in sorted(PACKET_REQUIREMENTS[packet_id] - seen):
+                errors.append(f"{packet_id} is missing requirement: {missing}")
+
+    follow_ups = progress.get("follow_up_packets")
+    if not isinstance(follow_ups, list) or [row.get("id") for row in follow_ups if isinstance(row, dict)] != list(FOLLOW_UP_REQUIREMENTS):
+        errors.append("GPT56 follow-up packets must preserve PTK-GPT56-1C")
+    else:
+        for packet in follow_ups:
+            packet_id = str(packet.get("id", ""))
+            if packet.get("status") != "implemented":
+                errors.append(f"{packet_id} must be implemented")
+            requirements = packet.get("requirements")
+            if not isinstance(requirements, list):
+                errors.append(f"{packet_id} requirements must be an array")
+                continue
+            seen: set[str] = set()
+            for requirement in requirements:
+                requirement_id = requirement.get("id") if isinstance(requirement, dict) else None
+                if requirement_id not in FOLLOW_UP_REQUIREMENTS[packet_id] or requirement_id in seen:
+                    errors.append(f"{packet_id} has invalid or duplicate requirement: {requirement_id!r}")
+                    continue
+                seen.add(str(requirement_id))
+                if requirement.get("status") not in {"automated", "documented", "packaged"}:
+                    errors.append(f"{packet_id}/{requirement_id} has invalid status")
+                evidence = requirement.get("evidence")
+                if not isinstance(evidence, list) or not evidence:
+                    errors.append(f"{packet_id}/{requirement_id} needs evidence")
+                    continue
+                for relative in evidence:
+                    if not isinstance(relative, str) or not _evidence_exists(root, relative):
+                        errors.append(f"{packet_id}/{requirement_id} has missing evidence: {relative!r}")
+            for missing in sorted(FOLLOW_UP_REQUIREMENTS[packet_id] - seen):
                 errors.append(f"{packet_id} is missing requirement: {missing}")
 
     source_catalogs = catalogs or {folder: _catalog(root, folder, errors) for folder in ("commanders", "keeps", "packs", "enemies", "scenarios", "events", "pieces")}
@@ -196,8 +232,8 @@ def validate_progress(
         errors.append("GPT56 asset report must distinguish no active temporary assets from the archive")
 
     if validate_captures:
-        _validate_capture(root, "docs/visual_evidence/v0.67.0-settings-first-watch-hierarchy-greywatch-1600x900/capture-manifest.json", "gatehouse_lock", str(progress.get("build_version", "")), errors, True)
-        _validate_capture(root, "docs/visual_evidence/v0.67.0-settings-first-watch-hierarchy-ash-ford-1600x900/capture-manifest.json", "ash_ford_crossing", str(progress.get("build_version", "")), errors)
+        _validate_capture(root, "docs/visual_evidence/v0.68.0-assault-threat-dossier-greywatch-1600x900/capture-manifest.json", "gatehouse_lock", str(progress.get("build_version", "")), errors, True, True)
+        _validate_capture(root, "docs/visual_evidence/v0.68.0-assault-threat-dossier-ash-ford-1600x900/capture-manifest.json", "ash_ford_crossing", str(progress.get("build_version", "")), errors)
     if progress.get("human_evidence_required_for_implementation") is not False or progress.get("human_evidence_status") != "pending":
         errors.append("human evidence must remain pending and non-blocking")
     if progress.get("owner_approval_required_for_distribution") is not True:
@@ -225,7 +261,7 @@ def main() -> int:
         for error in errors:
             print(f"ERROR: {error}")
         return 1
-    print("GPT56 investment packets: PASS (PTK-GPT56-1 through PTK-GPT56-5 plus PTK-GPT56-1B implemented; PTK-P16 remains human-owned)")
+    print("GPT56 investment packets: PASS (PTK-GPT56-1 through PTK-GPT56-5 plus PTK-GPT56-1B and PTK-GPT56-1C implemented; PTK-P16 remains human-owned)")
     return 0
 
 

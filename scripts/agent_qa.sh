@@ -13,9 +13,6 @@ if [[ -z "$SCENARIO" ]]; then
   esac
 fi
 GODOT_BIN="${GODOT_BIN:-godot}"
-if [[ "$GODOT_BIN" == */* ]]; then
-  export PATH="$(dirname "$GODOT_BIN"):$PATH"
-fi
 mkdir -p "$OUTPUT_DIR"
 
 if [[ ! -f "$ROOT/scripts/verify.sh" ]]; then
@@ -28,32 +25,11 @@ python3 "$ROOT/tools/agent_qa_runner.py" \
   --game "$GAME" \
   --output "$OUTPUT_DIR" \
   --timeout "$TIMEOUT_SECONDS" \
+  --godot "$GODOT_BIN" \
+  --capture "${AGENT_QA_CAPTURE:-1}" \
   ${SCENARIO:+--scenario "$SCENARIO"} \
   --verify bash scripts/verify.sh
 STATUS=$?
 set -e
-
-if [[ "${AGENT_QA_CAPTURE:-1}" == "1" ]]; then
-  CAPTURE_DIR="$OUTPUT_DIR/title-capture"
-  mkdir -p "$CAPTURE_DIR"
-  export GODOT_BIN
-  if command -v xvfb-run >/dev/null 2>&1; then
-    xvfb-run -a --server-args='-screen 0 1280x720x24' \
-      "$GODOT_BIN" --path "$ROOT" --editor --quit-after 2 \
-      --script res://tools/agent_qa_capture.gd \
-      -- --output="$CAPTURE_DIR" --state=title --width=1280 --height=720 --frames=8 \
-      > "$OUTPUT_DIR/capture.stdout.log" 2> "$OUTPUT_DIR/capture.stderr.log"
-  else
-    "$GODOT_BIN" --path "$ROOT" --editor --quit-after 2 \
-      --script res://tools/agent_qa_capture.gd \
-      -- --output="$CAPTURE_DIR" --state=title --width=1280 --height=720 --frames=8 \
-      > "$OUTPUT_DIR/capture.stdout.log" 2> "$OUTPUT_DIR/capture.stderr.log"
-  fi
-  CAPTURE_STATUS=$?
-  if [[ "$CAPTURE_STATUS" -ne 0 ]]; then
-    echo "AGENT_QA_CAPTURE_FAILED: see $OUTPUT_DIR/capture.stderr.log" >&2
-    STATUS=1
-  fi
-fi
 
 exit "$STATUS"

@@ -2,6 +2,7 @@ extends SceneTree
 
 var output_dir: String = ""
 var captured_files: Array[String] = []
+var state_trace: Array[Dictionary] = []
 var capture_size: Vector2i = Vector2i(1600, 900)
 var capture_scale_index: int = 1
 var capture_commander_id: String = "castellan"
@@ -15,6 +16,7 @@ var capture_twilight_choice: bool = false
 var capture_starting_defender: bool = false
 var capture_battle_exchange: bool = false
 var capture_battle_exchange_progress: float = 0.28
+var capture_battle_inspection: bool = false
 var capture_repair_feedback: bool = false
 var capture_intervention: bool = false
 var capture_setup_only: bool = false
@@ -41,6 +43,7 @@ func _initialize() -> void:
 	capture_twilight_choice = OS.get_cmdline_user_args().has("--capture-twilight-choice")
 	capture_starting_defender = OS.get_cmdline_user_args().has("--inspect-starting-defender")
 	capture_battle_exchange = OS.get_cmdline_user_args().has("--capture-battle-exchange")
+	capture_battle_inspection = OS.get_cmdline_user_args().has("--capture-battle-inspection")
 	capture_repair_feedback = OS.get_cmdline_user_args().has("--capture-repair-feedback")
 	capture_intervention = OS.get_cmdline_user_args().has("--capture-intervention")
 	capture_setup_only = OS.get_cmdline_user_args().has("--capture-setup-only")
@@ -185,6 +188,13 @@ func _run_capture() -> void:
 		ui.keep_canvas.set_process(false)
 		ui.keep_canvas.queue_redraw()
 	await _capture("04_assault_phase_1", ui)
+	if capture_battle_inspection:
+		if not ui.assault_ready_reason.is_empty():
+			ui._toggle_battle_pause()
+		ui.battle_paused = true
+		ui._on_advance_wave()
+		ui.command_scroll.scroll_vertical = 0
+		await _capture("04a_paused_threat_dossier", ui)
 	if capture_intervention:
 		if not ui.assault_ready_reason.is_empty():
 			ui._toggle_battle_pause()
@@ -248,9 +258,22 @@ func _resolve_open_event(ui: Control) -> void:
 func _capture(stem: String, ui: Control) -> void:
 	await process_frame
 	await process_frame
+	var readiness: Dictionary = _capture_readiness(stem, ui)
+	if not bool(readiness.get("ready", false)):
+		push_error("Capture %s did not reach readiness: %s" % [stem, String(readiness.get("condition", "unknown"))])
+		quit(2)
+		return
 	var image: Image = root.get_texture().get_image()
-	if image == null:
+	if image == null or image.is_empty():
 		push_error("No framebuffer available for %s" % stem)
+		quit(2)
+		return
+	if image.get_size() != capture_size:
+		push_error("Capture %s was %s, expected %s" % [stem, image.get_size(), capture_size])
+		quit(2)
+		return
+	if _image_is_uniform(image):
+		push_error("Capture %s was visually uniform before readiness" % stem)
 		quit(2)
 		return
 	var filename: String = "%s.png" % stem
@@ -261,7 +284,75 @@ func _capture(stem: String, ui: Control) -> void:
 		quit(2)
 		return
 	captured_files.append(filename)
+	state_trace.append({
+		"state_id": _evidence_state_id(stem),
+		"capture_id": stem,
+		"screen": String(ui.screen),
+		"wave_index": int(ui.keep.wave_index),
+		"wave_active": bool(ui.keep.wave_active),
+		"repair_interval_active": bool(ui.keep.repair_interval_active),
+		"assault_readiness": String(ui.assault_ready_reason),
+		"readiness_condition": String(readiness.get("condition", "")),
+		"frames_after_transition": 2,
+		"screenshot": filename,
+	})
 	print("Captured %s (%s)" % [filename, ui.screen])
+
+func _capture_readiness(stem: String, ui: Control) -> Dictionary:
+	var state_id := _evidence_state_id(stem)
+	match state_id:
+		"title":
+			return {"ready": ui.screen == "title", "condition": "title screen rendered"}
+		"war_council":
+			return {"ready": ui.screen == "setup" and ui.keep.scenario_id == capture_scenario_id, "condition": "War Council rendered with selected scenario"}
+		"preparation":
+			return {"ready": ui.screen == "preparation", "condition": "Preparation rendered after scenario entry"}
+		"forecast":
+			return {"ready": ui.screen == "battle" and ui.keep.wave_active and not ui.assault_ready_reason.is_empty(), "condition": "battle tick-zero forecast ready"}
+		"battle_wave_1", "battle_wave_2", "battle_wave_3":
+			var expected_wave := int(state_id.trim_prefix("battle_wave_"))
+			return {"ready": ui.screen == "battle" and ui.keep.wave_active and ui.keep.wave_index == expected_wave, "condition": "battle wave %d authoritative state ready" % expected_wave}
+		"recovery":
+			return {"ready": ui.screen == "results" and ui.keep.repair_interval_active, "condition": "Recovery rendered with active repair interval"}
+		"results":
+			return {"ready": ui.screen == "results" and not ui.keep.wave_active and not ui.keep.has_next_wave(), "condition": "terminal Results rendered after final assault"}
+	return {"ready": true, "condition": "%s rendered" % state_id}
+
+func _image_is_uniform(image: Image) -> bool:
+	var minimum: float = 1.0
+	var maximum: float = 0.0
+	for sample_y in range(1, 8):
+		for sample_x in range(1, 12):
+			var point := Vector2i(
+				int(float(image.get_width() - 1) * float(sample_x) / 12.0),
+				int(float(image.get_height() - 1) * float(sample_y) / 8.0),
+			)
+			var color: Color = image.get_pixelv(point)
+			var luminance: float = color.r * 0.2126 + color.g * 0.7152 + color.b * 0.0722
+			minimum = minf(minimum, luminance)
+			maximum = maxf(maximum, luminance)
+	return maximum - minimum < 0.01
+
+func _evidence_state_id(stem: String) -> String:
+	if stem == "01_title":
+		return "title"
+	if stem == "02_war_council":
+		return "war_council"
+	if stem.begins_with("03"):
+		return "preparation"
+	if stem == "04_assault_phase_1":
+		return "forecast"
+	if stem.begins_with("04"):
+		return "battle_wave_1"
+	if stem == "05_recovery_phase_1" or stem.begins_with("07"):
+		return "recovery"
+	if stem == "06_assault_phase_2":
+		return "battle_wave_2"
+	if stem == "08_assault_phase_3":
+		return "battle_wave_3"
+	if stem == "09_terminal_results":
+		return "results"
+	return stem
 
 func _write_manifest() -> void:
 	var payload: Dictionary = {
@@ -280,6 +371,7 @@ func _write_manifest() -> void:
 		"starting_defender_inspected": capture_starting_defender,
 		"battle_exchange_staged": capture_battle_exchange,
 		"battle_exchange_progress": capture_battle_exchange_progress if capture_battle_exchange else null,
+		"battle_inspection_captured": capture_battle_inspection,
 		"repair_feedback_captured": capture_repair_feedback,
 		"intervention_captured": capture_intervention,
 		"setup_only": capture_setup_only,
@@ -289,6 +381,9 @@ func _write_manifest() -> void:
 		"files": captured_files,
 		"debug_ui": OS.get_cmdline_user_args().has("--debug-ui"),
 		"human_evidence": false,
+		"renderer": String(ProjectSettings.get_setting("rendering/renderer/rendering_method", "unknown")),
+		"locale": TranslationServer.get_locale(),
+		"state_trace": state_trace,
 	}
 	var file: FileAccess = FileAccess.open(output_dir.path_join("capture-manifest.json"), FileAccess.WRITE)
 	if file != null:

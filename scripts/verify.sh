@@ -4,6 +4,15 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+# Let agent tooling point at an installed Godot app bundle without requiring a
+# machine-wide `godot` symlink. `command -v godot` below recognizes this shell
+# function, so the existing verification list keeps one authoritative path.
+if [[ -n "${GODOT_BIN:-}" ]]; then
+  godot() {
+    command "$GODOT_BIN" "$@"
+  }
+fi
+
 python3 tools/validate_runtime_content.py --keeps data/keeps --regions data/regions --pieces data/pieces --packs data/packs --commanders data/commanders --enemies data/enemies --doctrines data/doctrines --scenarios data/scenarios --events data/events --modifiers data/modifiers --manifest content/content_manifest.json --event-schema content/event_schema.json
 python3 tools/validate_player_facing_copy.py
 python3 tests/test_player_facing_copy_validator.py
@@ -22,6 +31,7 @@ python3 tools/validate_investment_progress.py
 python3 tests/test_investment_progress.py
 python3 tools/validate_gpt56_progress.py
 python3 tests/test_gpt56_progress.py
+python3 tests/test_agent_qa_runner.py
 python3 tools/validate_p16_playtests.py --protocol content/p16_playtest_protocol.json --sessions playtests/sessions --ci-manifest tools/ci_manifest.json --alpha-checklist content/p12_alpha_checklist.json
 python3 tests/test_p16_playtest_protocol.py
 python3 tools/summarize_p16_playtests.py --protocol content/p16_playtest_protocol.json --sessions playtests/sessions --ci-manifest tools/ci_manifest.json --alpha-checklist content/p12_alpha_checklist.json
@@ -102,6 +112,7 @@ if command -v godot >/dev/null 2>&1; then
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p77_preparation_first_viewport.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p78_war_council_first_viewport.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p79_settings_tutorial_hierarchy.gd
+  godot --headless --audio-driver Dummy --path . --script res://tests/test_p80_assault_threat_dossier.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p41_inspector_action_hierarchy.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p42_battle_command_hierarchy.gd
   godot --headless --audio-driver Dummy --path . --script res://tests/test_p43_local_playtest_observer.gd
@@ -208,6 +219,7 @@ elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p77_preparation_first_viewport.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p78_war_council_first_viewport.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p79_settings_tutorial_hierarchy.gd
+  godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p80_assault_threat_dossier.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p41_inspector_action_hierarchy.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p42_battle_command_hierarchy.gd
   godot4 --headless --audio-driver Dummy --path . --script res://tests/test_p43_local_playtest_observer.gd

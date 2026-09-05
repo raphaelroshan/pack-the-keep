@@ -1,7 +1,7 @@
 # Pack the Keep — Early Access Requirements
 
 **Status:** Active, machine-checked contract for a skeletal but commercially credible Early Access build
-**Current baseline:** `0.67.0-settings-first-watch-hierarchy`; GPT56, investment, and Early Access gates are machine-checked, all twelve commander/keep geometry fits are authored, War Council and Settings expose complete first-viewport decisions, First Watch opens as an authored briefing, Preparation exposes its compact decision rail beside the fortress, and Assault, Recovery, and terminal Results remain board-first. The progress ledgers record exact evidence, automated candidate status, and the owner-controlled distribution boundary.
+**Current baseline:** `0.68.0-assault-threat-dossier`; GPT56, investment, and Early Access gates are machine-checked, including PTK-GPT56-1C's dual-resolution Greywatch flow. War Council, Settings, First Watch, Preparation, Assault threat inspection, Recovery, and terminal Results retain their first-viewport hierarchy. The progress ledgers record exact evidence, automated candidate status, and the owner-controlled distribution boundary.
 
 ## Product decision
 

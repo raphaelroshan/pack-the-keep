@@ -1,7 +1,7 @@
 # Pack the Keep — GPT-Agent Development Roadmap and Handoff Specification
 
 **Document status:** GPT56 investment packets, Early Access roadmap, and authored-foley follow-up implemented
-**Current development baseline:** `0.67.0-settings-first-watch-hierarchy`; PTK-GPT56-1 through PTK-GPT56-5 plus PTK-GPT56-1B are machine-checked, War Council and Settings fit their complete decisions at 1280×720, First Watch opens as a staged briefing, Preparation keeps its compact decision rail beside the fortress, Assault, Recovery, and terminal Results remain board-first, and all prior investment, Early Access, presentation, accessibility, and package gates remain enforced; optional human evidence and owner distribution approval remain pending
+**Current development baseline:** `0.68.0-assault-threat-dossier`; PTK-GPT56-1 through PTK-GPT56-5 plus PTK-GPT56-1B and PTK-GPT56-1C are machine-checked, War Council and Settings fit their complete decisions at 1280×720, First Watch opens as a staged briefing, Preparation keeps its compact decision rail beside the fortress, Assault keeps its focused target, timing, response, counter, and intervention visible beside the board, Recovery and terminal Results remain board-first, and all prior investment, Early Access, presentation, accessibility, and package gates remain enforced; optional human evidence and owner distribution approval remain pending
 **Release posture:** CI-verified public repository with owner-controlled merges; no public alpha release or storefront claim yet
 **Engine:** Godot 4.x, GDScript-first
 **Target:** Premium single-player Windows strategy game for Steam and Epic Games Store

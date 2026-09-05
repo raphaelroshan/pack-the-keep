@@ -25,11 +25,11 @@ bash scripts/agent_qa.sh
 # Longer run when the full suite is known to be slow.
 AGENT_QA_TIMEOUT_SECONDS=1800 bash scripts/agent_qa.sh
 
-# Disable the title capture when only logic verification is needed.
+# Disable full-flow screenshots when only logic verification is needed.
 AGENT_QA_CAPTURE=0 bash scripts/agent_qa.sh
 ```
 
-The first implementation of `agent_qa.sh` runs the existing verifier and captures a readiness-validated title frame. Game-specific semantic journeys should be added to `qa/scenarios/` and wired to existing Godot fixtures rather than simulated with sleeps or coordinate clicks.
+For Pack the Keep, the default command executes the implemented Greywatch manifest after the authoritative verifier. It runs the semantic Greywatch fixture through War Council, the first plan, three assaults, two Recovery lulls, and terminal Results, then records a readiness-tagged 1280×720 visual trace. `GODOT_BIN` may point directly to a Godot executable or macOS app-bundle binary; the same binary is used by the verifier and journey.
 
 ## PR report format
 
@@ -37,4 +37,4 @@ Agents must report changed files, baseline and final result tables, exact comman
 
 ## Current game-specific priorities
 
-Market of Ash: add a semantic ordinary-trade round trip from first purchase through route, departure, event, arrival, return market, and terminal receipt. Pack the Keep: add a semantic Greywatch run from War Council through placement, three waves, intervention, damage, Recovery, and Results. The Long March: profile slow verifier groups and add a semantic clean-save journey through route, contact, consequence, recovery, arrival, and Debrief.
+Market of Ash: add a semantic ordinary-trade round trip from first purchase through route, departure, event, arrival, return market, and terminal receipt. Pack the Keep: keep the implemented Greywatch command bindings and named screenshots aligned with the vertical slice as it evolves. The Long March: profile slow verifier groups and add a semantic clean-save journey through route, contact, consequence, recovery, arrival, and Debrief.
