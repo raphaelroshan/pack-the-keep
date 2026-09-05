@@ -47,9 +47,28 @@ func _initialize() -> void:
 	_check(ui.keep.wave_index == 3 and ui.keep.enemy_doctrine == "twilight_crossing", "UI fixture should reach the combined final phase")
 	_check(String(ui.forecast_label.text).contains("Twilight Crossing") and String(ui.forecast_label.text).contains("Charge: DELAYED") and String(ui.forecast_label.text).contains("Visibility: REVEALED"), "combined forecast should expose tempo and visibility together")
 	_check(String(ui.enemy_label.text).contains("Outrider") and String(ui.enemy_label.text).contains("Gloam Knife"), "combined Battle roster should name both enemy families")
+	ui.focused_enemy_index = 0
+	ui.keep_canvas.set_focus(0)
+	ui.keep.battle_step = 1
+	_check(bool(ui.keep_canvas.enemy_status_badge_snapshot(0).get("visible", false)), "a crowded assault should retain the focused threat badge")
+	for enemy_index in range(1, ui.keep.enemies.size()):
+		_check(not bool(ui.keep_canvas.enemy_status_badge_snapshot(enemy_index).get("visible", false)), "a crowded assault should defer non-focused badges to the timeline and roster")
+	ui.keep.battle_step = 0
 	var first_origin: Vector2 = ui.keep_canvas._enemy_origin(0)
 	for enemy_index in range(1, ui.keep.enemies.size()):
 		_check(first_origin.distance_to(ui.keep_canvas._enemy_origin(enemy_index)) >= 24.0, "combined approach markers should remain visually separated")
+	var state_before_contact_layout: String = JSON.stringify(ui.keep.serialize())
+	var shared_target: String = String(ui.keep.pieces.keys()[0])
+	for enemy_index in range(ui.keep.enemies.size()):
+		ui.keep.enemies[enemy_index].target = shared_target
+	ui.keep.battle_step = 6
+	var contact_origins: Array[Vector2] = []
+	for enemy_index in range(ui.keep.enemies.size()):
+		var contact_origin: Vector2 = ui.keep_canvas._enemy_origin(enemy_index)
+		for existing_origin in contact_origins:
+			_check(contact_origin.distance_to(existing_origin) >= 28.0, "attackers sharing a target should retain distinct contact positions")
+		contact_origins.append(contact_origin)
+	ui.keep.load_serialized(JSON.parse_string(state_before_contact_layout))
 	var arrivals: Array = ui.keep_canvas.assault_timeline_snapshot().get("arrivals", {}).get("3", [])
 	for marker_index in range(1, arrivals.size()):
 		var previous: Vector2 = ui.keep_canvas._timeline_marker_origin(3, marker_index - 1, arrivals.size())

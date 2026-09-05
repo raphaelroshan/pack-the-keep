@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "build_version": "0.69.0-gameplay-clarity",
+  "build_version": "0.70.0-combat-cadence",
   "status": "implemented",
   "investment_vertical_complete": true,
   "gates": [
     {
       "id": "PTK-I1", "status": "implemented",
       "requirements": [
-        {"id": "normal_flow_capture", "status": "documented", "evidence": ["docs/visual_evidence/v0.69.0-gameplay-clarity-greywatch-1280x720/capture-manifest.json", "docs/visual_evidence/v0.69.0-gameplay-clarity-greywatch-2560x1440/capture-manifest.json"]},
+        {"id": "normal_flow_capture", "status": "documented", "evidence": ["docs/visual_evidence/v0.70.0-combat-cadence-greywatch-1280x720/capture-manifest.json", "docs/visual_evidence/v0.70.0-combat-cadence-greywatch-2560x1440/capture-manifest.json"]},
         {"id": "deterministic_three_wave_run", "status": "automated", "evidence": ["tests/test_ea1_greywatch_anchor.gd", "tests/test_p12_alpha_scenario_matrix.gd"]},
         {"id": "phase_save_resume", "status": "automated", "evidence": ["tests/test_p53_alpha_flow_hardening.gd", "tests/test_p32_terminal_debrief.gd"]},
         {"id": "accessible_input", "status": "automated", "evidence": ["tests/test_p10_controller_scaling.gd", "tests/test_p48_responsive_layout.gd", "tests/test_p53_alpha_flow_hardening.gd", "tests/test_p77_preparation_first_viewport.gd", "tests/test_p78_war_council_first_viewport.gd", "tests/test_p79_settings_tutorial_hierarchy.gd", "tests/test_p80_assault_threat_dossier.gd", "design/p72_board_first_preparation.md"]},
@@ -21,7 +21,7 @@
         {"id": "two_viable_seeded_plans", "status": "automated", "evidence": ["tests/test_p12_alpha_scenario_matrix.gd", "docs/ptk_ea2_ash_ford_verification.md"]},
         {"id": "teaching_and_combination_scenarios", "status": "automated", "evidence": ["data/scenarios/ash_ford_crossing.json", "data/scenarios/millers_debt.json", "tests/test_early_access_campaign.gd"]},
         {"id": "distinct_opening_plan", "status": "automated", "evidence": ["data/keeps/ash_ford_redoubt.json", "tests/test_p33_preparation_answer_quality.gd"]},
-        {"id": "dual_resolution_evidence", "status": "documented", "evidence": ["docs/visual_evidence/v0.69.0-gameplay-clarity-ash-ford-1280x720/capture-manifest.json", "docs/visual_evidence/v0.69.0-gameplay-clarity-ash-ford-2560x1440/capture-manifest.json"]}
+        {"id": "dual_resolution_evidence", "status": "documented", "evidence": ["docs/visual_evidence/v0.70.0-combat-cadence-ash-ford-1280x720/capture-manifest.json", "docs/visual_evidence/v0.70.0-combat-cadence-ash-ford-2560x1440/capture-manifest.json"]}
       ]
     },
     {

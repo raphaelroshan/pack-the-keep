@@ -58,7 +58,7 @@ static func exchange_stage(progress: float, has_defender_response: bool, has_hos
 static func scaled_exchange_duration(battle_speed: float, reduced_motion: bool) -> float:
 	if reduced_motion:
 		return 0.18
-	return clampf(0.82 / maxf(0.5, battle_speed), 0.38, 1.64)
+	return clampf(1.05 / maxf(0.5, battle_speed), 0.45, 2.10)
 
 static func _first_active_enemy(keep: Object) -> int:
 	for index in range(keep.enemies.size()):

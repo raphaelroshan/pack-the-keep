@@ -158,9 +158,12 @@ func _initialize() -> void:
 	var preview_traces: Array[Dictionary] = ui._next_engagement_traces()
 	if preview_traces.is_empty() or String(preview_traces[0].get("style", "")) != "melee":
 		failures.append("engagement traces did not retain the defender's data-driven combat style")
-	ui._process(0.8)
+	ui._process(0.75)
+	if ui.keep.battle_step != 0:
+		failures.append("1x combat advanced before the readable 1.5-second tick interval")
+	ui._process(0.5)
 	if ui.keep.battle_step != 1 or not String(ui.status_label.text).contains("Tick 1"):
-		failures.append("live UI did not refresh status after an automatic deterministic tick")
+		failures.append("live UI did not refresh after the 1.5-second automatic deterministic tick")
 	var space_event: InputEventKey = InputEventKey.new()
 	space_event.physical_keycode = 32
 	space_event.pressed = true

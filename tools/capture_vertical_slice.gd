@@ -77,6 +77,10 @@ func _run_capture() -> void:
 	ui._apply_ui_scale()
 	root.size = capture_size
 	ui._apply_responsive_layout()
+	# Large GL compatibility viewports can need one additional fixed draw pair
+	# after resize before the first framebuffer is populated.
+	await process_frame
+	await process_frame
 	await _capture("01_title", ui)
 	if capture_settings_only:
 		ui._on_open_settings()
