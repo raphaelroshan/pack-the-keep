@@ -56,6 +56,7 @@ const TERMINAL_TWO_COLUMN_EFFECTIVE_WIDTH := 1120.0
 const WAR_COUNCIL_FIRST_VIEWPORT_EFFECTIVE_WIDTH := 1500.0
 const COMPACT_CARD_EFFECTIVE_WIDTH := 920.0
 const PAGE_HORIZONTAL_MARGIN := 48.0
+const BATTLE_SECONDS_PER_TICK := 1.5
 const RESERVED_CONTROLLER_NAVIGATION_BUTTONS := [0, 11, 12, 13, 14]
 const REMAPPABLE_ACTIONS := [
 	"battle_pause", "battle_manual_step", "commander_ability", "placement_arm", "placement_cancel",
@@ -358,7 +359,7 @@ func _process(delta: float) -> void:
 	var breach_before: int = keep.breach_level
 	var engagement_traces: Array[Dictionary] = _next_engagement_traces()
 	var target_snapshot: Dictionary = _combat_target_snapshot()
-	var advance_delta: float = delta * _battle_speed()
+	var advance_delta: float = delta * _battle_speed() / BATTLE_SECONDS_PER_TICK
 	if auto_pause_on_threat and battle_step_before == 0 and last_auto_pause_wave_index != keep.wave_index:
 		advance_delta = minf(advance_delta, maxf(0.0, 1.0 - keep.battle_clock))
 	var result: Dictionary = keep.advance_wave(advance_delta)
@@ -4493,7 +4494,15 @@ class KeepCanvas extends Control:
 			continuous_time += keep.battle_clock
 		var progress: float = clampf(continuous_time / arrival_step, 0.0, 1.0)
 		progress = progress * progress * (3.0 - 2.0 * progress)
-		return start.lerp(_enemy_contact_point(index, fallback_target), progress)
+		var contact: Vector2 = _enemy_contact_point(index, fallback_target)
+		if not String(enemy.get("target", "")).is_empty():
+			contact += _enemy_contact_formation_offset(index)
+		return start.lerp(contact, progress)
+
+	func _enemy_contact_formation_offset(index: int) -> Vector2:
+		var column: int = index % 3
+		var row: int = int(floor(float(index) / 3.0))
+		return Vector2(float(column - 1) * 36.0, float(row) * 30.0)
 
 	func _combat_effect_progress() -> float:
 		if engagement_ttl <= 0.0:
@@ -4715,6 +4724,12 @@ class KeepCanvas extends Control:
 		var arrival_step: int = maxi(1, int(enemy.get("arrival_step", 1)))
 		var in_contact: bool = keep.battle_step >= arrival_step
 		var imminent: bool = _enemy_contact_is_imminent(index)
+		var active_enemy_count: int = 0
+		for active_enemy in keep.enemies:
+			if not bool(active_enemy.get("defeated", false)):
+				active_enemy_count += 1
+		if active_enemy_count >= 4 and not focused:
+			return {"visible": false}
 		if not focused and not imminent:
 			return {"visible": false}
 		var tokens: Array[String] = []

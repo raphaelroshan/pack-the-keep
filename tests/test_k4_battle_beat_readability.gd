@@ -45,7 +45,7 @@ func _initialize() -> void:
 	var impacts: Array[Dictionary] = [{"target_kind": "piece", "target_id": "pike_squad_0", "enemy_index": enemy_index, "attack_style": "melee", "damage": 3, "before_value": 14, "after_value": 11}]
 	ui.keep_canvas.set_reduced_motion(false)
 	ui.keep_canvas.show_combat_exchange(traces, impacts, 1.0)
-	_check(is_equal_approx(ui.keep_canvas.engagement_duration, 0.82), "1x exchange should reserve a readable sub-tick presentation window")
+	_check(is_equal_approx(ui.keep_canvas.engagement_duration, 1.05), "1x exchange should reserve a readable sub-tick presentation window")
 	_check(String(ui.keep_canvas.battle_beat_snapshot().get("id", "")) == "target_lock", "resolved exchange should begin with a short Target Lock beat")
 	ui.keep_canvas.engagement_ttl = ui.keep_canvas.engagement_duration * 0.72
 	_check(String(ui.keep_canvas.battle_beat_snapshot().get("id", "")) == "defender_response", "exchange should stage defender response before hostile damage")
@@ -69,8 +69,8 @@ func _initialize() -> void:
 	ui.keep_canvas.engagement_ttl = ui.keep_canvas.engagement_duration * 0.03
 	_check(String(ui.keep_canvas.battle_beat_snapshot().get("id", "")) == "settle", "exchange should finish on a settle beat")
 
-	_check(is_equal_approx(Beat.scaled_exchange_duration(0.5, false), 1.64), "0.5x exchange should fit its two-second simulation interval")
-	_check(is_equal_approx(Beat.scaled_exchange_duration(2.0, false), 0.41), "2x exchange should fit its half-second simulation interval")
+	_check(is_equal_approx(Beat.scaled_exchange_duration(0.5, false), 2.10), "0.5x exchange should fit its three-second simulation interval")
+	_check(is_equal_approx(Beat.scaled_exchange_duration(2.0, false), 0.525), "2x exchange should fit its three-quarter-second simulation interval")
 	ui.keep_canvas.set_reduced_motion(true)
 	ui.keep_canvas.show_combat_exchange(traces, impacts, 2.0)
 	_check(ui.keep_canvas.engagement_duration <= 0.18 and String(ui.keep_canvas.battle_beat_snapshot().get("id", "")) == "consequence", "reduced motion should use a short static consequence instead of travel animation")

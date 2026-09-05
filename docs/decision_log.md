@@ -1143,3 +1143,11 @@
 **Reason:** Automated multi-scenario review exposed several individually correct facts that formed misleading guidance: a stable room appeared as the first Recovery priority, Results and War Council exposed development vocabulary, normal Settings advertised session instrumentation, and the evidence harness assumed every scenario reached the same lull and intervention beats. These contradictions reduce player trust and can invalidate otherwise useful visual evidence.
 
 **Trade-off:** The normal UI becomes more concise and game-facing, while developer instrumentation remains opt-in. Scenario-specific capture sets may contain fewer screens when an early collapse or short assault makes a requested beat impossible; the manifest records only evidence that was actually captured.
+
+## ADR-144: Real-time assaults use a readable presentation cadence and contact formation
+
+**Decision:** Map 1.5 real seconds to each authoritative combat tick at 1× speed, with the existing 0.5× and 2× controls scaling that cadence proportionally. Keep exchange effects inside each interval and add deterministic presentation-only formation offsets when enemies reach a shared target.
+
+**Reason:** Six one-second ticks made an ordinary phase resolve in roughly six seconds, leaving little time to connect target lines, health changes, and attack effects. At contact, multiple enemies also collapsed onto the same pixel, obscuring silhouettes and health bars precisely when the exchange mattered most.
+
+**Trade-off:** An uninterrupted phase now lasts roughly nine seconds at 1×, while 2× still completes in roughly 4.5 seconds and manual stepping stays immediate. Formation offsets improve readability but are not simulated positions and must never affect range, targeting, damage, or saves.

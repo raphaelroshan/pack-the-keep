@@ -1,7 +1,14 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.69.0",
+  "content_version": "0.70.0",
+  "p82_combat_cadence": {
+    "status": "implemented",
+    "seconds_per_tick_at_1x": 1.5,
+    "supported_speeds": [0.5, 1.0, 2.0],
+    "contact_formation": "deterministic_presentation_only",
+    "authority": "six_tick_combat_outcomes_and_targets_remain_in_keep_state"
+  },
   "p81_gameplay_clarity": {
     "status": "implemented",
     "player_truth": ["no_damage_recovery_priority", "unlocked_target_language", "player_facing_assault_comparison"],

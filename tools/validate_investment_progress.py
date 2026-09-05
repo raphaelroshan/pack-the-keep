@@ -18,9 +18,9 @@ GATE_REQUIREMENTS = {
 }
 GATE_IDS = [f"PTK-I{index}" for index in range(1, 7)]
 BOARD_FIRST_CAPTURES = [
-    ("docs/visual_evidence/v0.69.0-gameplay-clarity-greywatch-1280x720/capture-manifest.json", "gatehouse_lock", {"width": 1280, "height": 720}, False),
-    ("docs/visual_evidence/v0.69.0-gameplay-clarity-ash-ford-1280x720/capture-manifest.json", "ash_ford_crossing", {"width": 1280, "height": 720}, False),
-    ("docs/visual_evidence/v0.69.0-gameplay-clarity-ash-ford-2560x1440/capture-manifest.json", "ash_ford_crossing", {"width": 2560, "height": 1440}, False),
+    ("docs/visual_evidence/v0.70.0-combat-cadence-greywatch-1280x720/capture-manifest.json", "gatehouse_lock", {"width": 1280, "height": 720}, False),
+    ("docs/visual_evidence/v0.70.0-combat-cadence-ash-ford-1280x720/capture-manifest.json", "ash_ford_crossing", {"width": 1280, "height": 720}, False),
+    ("docs/visual_evidence/v0.70.0-combat-cadence-ash-ford-2560x1440/capture-manifest.json", "ash_ford_crossing", {"width": 2560, "height": 1440}, False),
 ]
 
 
