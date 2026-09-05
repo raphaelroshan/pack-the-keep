@@ -1119,3 +1119,11 @@
 **Reason:** The v0.66 audit showed Settings as an unstructured list whose initial focus hid its first control and pushed input below the fold, while the tutorial introduction occupied a shallow strip above a largely empty screen. Both states were functionally complete but looked like utility overlays rather than authored game screens.
 
 **Trade-off:** Settings no longer shares the gameplay command rail, so its grouping is a dedicated presentation composition. Preference handlers, persistence, input actions, tutorial step data, checkpoints, and authoritative game state remain unchanged.
+
+## ADR-141: Board-first Assault projects one focused-threat dossier
+
+**Decision:** At the existing board-first Assault breakpoint, replace repeated inspection instructions, the long response paragraph, and the second generic inspector with one compact dossier built by `BattlePresentationSnapshot`. Keep the explicit full inspector for tutorial and stacked large-text layouts.
+
+**Reason:** The PTK-GPT56-1C audit found pause and intervention controls in the first viewport, but the target, strike, and committed-response evidence began below the command-rail fold. Pausing must reveal the tactical answer beside the keep, not merely expose another scroll task.
+
+**Trade-off:** The compact rail defers the full room/defender inspector and generic save guidance while retaining tactical disclosure and run controls. The dossier remains read-only; target selection, combat resolution, command spending, and saves stay under their existing owners.

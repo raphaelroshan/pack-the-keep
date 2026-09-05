@@ -29,10 +29,12 @@ func _initialize() -> void:
 	_check(String(first.pause_text).contains("Sound the bell") and String(first.state_text).contains("PHASE 1/3"), "snapshot should expose the current primary action and phase")
 	_check(bool(first.focus.active) and String(first.focus.name).contains("Raider"), "snapshot should expose the focused threat identity")
 	_check(String(first.response_text).contains("TARGET") and String(first.response_text).contains("Pike Squad"), "snapshot should include target and counter response evidence")
+	_check(String(first.focus_card.target_route).contains("TARGET —") and String(first.focus_card.timing).contains("STRIKE —") and String(first.focus_card.response).contains("DEFENSE —"), "snapshot should expose compact target, timing, and committed-response fields")
+	_check(String(first.focus_card.counter).contains("COUNTER — Pike Squad") and String(first.focus_card.action).begins_with("FORECAST —"), "snapshot should expose the visible counter and readiness action")
 	_check(bool(first.ability.ready) and String(first.ability.status) == "READY", "snapshot should expose commander intervention availability")
 
 	ui._refresh_battle_presentation()
-	_check(String(ui.battle_state_label.text) == String(first.state_text), "battle state control should render directly from the snapshot")
+	_check(String(ui.battle_state_label.text) == String(first.compact_state_text), "board-first battle state should render the compact snapshot projection")
 	_check(String(ui.response_preview_label.text) == String(first.response_text), "response control should render directly from the snapshot")
 	_check(String(ui.commander_ability_button.text).contains(String(first.ability.status)), "commander control should render snapshot availability")
 

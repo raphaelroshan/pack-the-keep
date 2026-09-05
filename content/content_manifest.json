@@ -1,7 +1,14 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.67.0",
+  "content_version": "0.68.0",
+  "p80_assault_threat_dossier": {
+    "status": "implemented",
+    "roadmap_gate": "PTK-GPT56-1C",
+    "first_view": ["tactical_board", "battle_state", "pause_or_resume", "commander_intervention", "focused_threat_health", "target", "route", "next_strike", "committed_response", "counter"],
+    "fallback": "stacked_and_tutorial_layouts_retain_the_full_inspection_path",
+    "authority": "battle_focus_projection_does_not_choose_targets_or_resolve_combat"
+  },
   "p79_settings_tutorial_hierarchy": {
     "status": "implemented",
     "settings_groups": ["readability", "display_and_sound", "battle_pace", "input", "session_notes"],

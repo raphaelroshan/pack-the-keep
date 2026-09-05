@@ -15,6 +15,7 @@ var capture_twilight_choice: bool = false
 var capture_starting_defender: bool = false
 var capture_battle_exchange: bool = false
 var capture_battle_exchange_progress: float = 0.28
+var capture_battle_inspection: bool = false
 var capture_repair_feedback: bool = false
 var capture_intervention: bool = false
 var capture_setup_only: bool = false
@@ -41,6 +42,7 @@ func _initialize() -> void:
 	capture_twilight_choice = OS.get_cmdline_user_args().has("--capture-twilight-choice")
 	capture_starting_defender = OS.get_cmdline_user_args().has("--inspect-starting-defender")
 	capture_battle_exchange = OS.get_cmdline_user_args().has("--capture-battle-exchange")
+	capture_battle_inspection = OS.get_cmdline_user_args().has("--capture-battle-inspection")
 	capture_repair_feedback = OS.get_cmdline_user_args().has("--capture-repair-feedback")
 	capture_intervention = OS.get_cmdline_user_args().has("--capture-intervention")
 	capture_setup_only = OS.get_cmdline_user_args().has("--capture-setup-only")
@@ -185,6 +187,13 @@ func _run_capture() -> void:
 		ui.keep_canvas.set_process(false)
 		ui.keep_canvas.queue_redraw()
 	await _capture("04_assault_phase_1", ui)
+	if capture_battle_inspection:
+		if not ui.assault_ready_reason.is_empty():
+			ui._toggle_battle_pause()
+		ui.battle_paused = true
+		ui._on_advance_wave()
+		ui.command_scroll.scroll_vertical = 0
+		await _capture("04a_paused_threat_dossier", ui)
 	if capture_intervention:
 		if not ui.assault_ready_reason.is_empty():
 			ui._toggle_battle_pause()
@@ -280,6 +289,7 @@ func _write_manifest() -> void:
 		"starting_defender_inspected": capture_starting_defender,
 		"battle_exchange_staged": capture_battle_exchange,
 		"battle_exchange_progress": capture_battle_exchange_progress if capture_battle_exchange else null,
+		"battle_inspection_captured": capture_battle_inspection,
 		"repair_feedback_captured": capture_repair_feedback,
 		"intervention_captured": capture_intervention,
 		"setup_only": capture_setup_only,

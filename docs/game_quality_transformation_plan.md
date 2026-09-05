@@ -1,7 +1,7 @@
 # Pack the Keep — Game-Quality Transformation Plan
 
 **Audience:** GPT coding agents, art/UX agents, test agents, and the human owner
-**Current baseline:** `0.67.0-settings-first-watch-hierarchy`
+**Current baseline:** `0.68.0-assault-threat-dossier`
 **Current status:** PTK-GPT56-1 through PTK-GPT56-5, PTK-GPT56-1B, PTK-I1 through PTK-I6, and PTK-EA-1 through PTK-EA-6 are implemented. All three keeps expose distinct plans and a complete commander-to-geometry matrix, every major tactical phase is board-first at 1280×720, and Preparation keeps its commander, pack doctrine, forecast, first plan, and Ready Defense action legible together. Human validation and owner distribution approval remain pending.
 **Primary objective:** Turn the existing deterministic fortress-defense systems into a coherent, attractive, immediately understandable game-quality private alpha without rewriting the simulation core.
 

@@ -32,6 +32,7 @@ class GPT56ProgressValidatorTests(unittest.TestCase):
         validator.validate_progress(progress, manifests, ROOT, errors)
         self.assertEqual(errors, [])
         self.assertEqual([packet["id"] for packet in progress["packets"]], [f"PTK-GPT56-{index}" for index in range(1, 6)])
+        self.assertEqual([packet["id"] for packet in progress["follow_up_packets"]], ["PTK-GPT56-1C"])
         self.assertEqual(progress["next_packet"], "PTK-P16")
         self.assertEqual(progress["human_evidence_status"], "pending")
         self.assertTrue(progress["owner_approval_required_for_distribution"])
@@ -62,6 +63,13 @@ class GPT56ProgressValidatorTests(unittest.TestCase):
         joined = "\n".join(errors)
         self.assertIn("cover every active commander", joined)
         self.assertIn("at least two counters", joined)
+
+    def test_rejects_incomplete_follow_up_packet(self) -> None:
+        progress, manifests = self._load()
+        progress["follow_up_packets"][0]["requirements"] = progress["follow_up_packets"][0]["requirements"][:-1]
+        errors: list[str] = []
+        validator.validate_progress(progress, manifests, ROOT, errors, validate_captures=False)
+        self.assertIn("PTK-GPT56-1C is missing requirement: authoritative_state", "\n".join(errors))
 
 
 if __name__ == "__main__":

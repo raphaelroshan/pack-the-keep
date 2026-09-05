@@ -119,7 +119,7 @@ func _initialize() -> void:
 	var battle_viewport: Rect2 = ui.page_scroll.get_global_rect()
 	var visible_battle_board: Rect2 = battle_board_rect.intersection(battle_viewport)
 	_check(visible_battle_board.size.y >= battle_board_rect.size.y * 0.95, "board-first Assault should expose the tactical board and contact timeline in the initial viewport")
-	_check(_inside_scroll_view(ui.pause_button, ui.command_scroll) and _inside_scroll_view(ui.commander_ability_button, ui.command_scroll) and _inside_scroll_view(ui.inspect_enemy_button, ui.command_scroll), "board-first Assault should expose time control, intervention, and focused-threat actions together")
+	_check(_inside_scroll_view(ui.pause_button, ui.command_scroll) and _inside_scroll_view(ui.commander_ability_button, ui.command_scroll) and _inside_scroll_view(ui.battle_focus_panel, ui.command_scroll), "board-first Assault should expose time control, intervention, and focused-threat evidence together")
 	_check(root.gui_get_focus_owner() == ui.pause_button and ui.page_scroll.scroll_vertical == 0, "board-first Assault should open at the board with its command-rail pause action focused")
 	ui._refresh_ui()
 	_check(not ui.main_subtitle_label.visible and not ui.guidance_label.visible and not ui.playtest_button.visible and not ui.playtest_status_label.visible, "normal board-first Assault should remove repeated main-column battle copy and the duplicate pause action")

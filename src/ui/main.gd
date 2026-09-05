@@ -10,6 +10,7 @@ const RecoveryBriefPanelView = preload("res://src/ui/recovery_brief_panel.gd")
 const WarCouncilChoicePanelView = preload("res://src/ui/war_council_choice_panel.gd")
 const PackOfferPanelView = preload("res://src/ui/pack_offer_panel.gd")
 const InspectionPanelView = preload("res://src/ui/inspection_panel.gd")
+const BattleFocusPanelView = preload("res://src/ui/battle_focus_panel.gd")
 const LocalPlaytestObserverView = preload("res://src/ui/local_playtest_observer.gd")
 const BattlePresentationSnapshotView = preload("res://src/ui/battle_presentation_snapshot.gd")
 const BattleBeatPresentationView = preload("res://src/ui/battle_beat_presentation.gd")
@@ -169,6 +170,7 @@ var manual_step_button: Button
 var speed_button: Button
 var battle_state_label: Label
 var battle_inspection_label: Label
+var battle_focus_panel
 var inspect_enemy_button: Button
 var battle_tactical_button: Button
 var battle_tactical_panel: VBoxContainer
@@ -794,7 +796,19 @@ func _apply_responsive_layout() -> void:
 	if preparation_context_label != null:
 		preparation_context_label.visible = preparation_rail_compact_active
 	if input_help_label != null:
-		input_help_label.visible = not preparation_rail_compact_active
+		input_help_label.visible = not preparation_rail_compact_active and not battle_board_first_active
+	if battle_inspection_label != null:
+		battle_inspection_label.visible = screen == "battle" and not battle_board_first_active
+	if battle_focus_panel != null:
+		battle_focus_panel.visible = screen == "battle" and battle_board_first_active
+	if response_preview_label != null:
+		response_preview_label.visible = screen == "battle" and not battle_board_first_active
+	if inspect_enemy_button != null:
+		inspect_enemy_button.visible = screen == "battle" and (not battle_board_first_active or tutorial.active)
+	if screen == "battle":
+		_set_group_visibility(inspection_controls, not battle_board_first_active or tutorial.active)
+	if battle_state_label != null and not battle_presentation_snapshot.is_empty():
+		battle_state_label.text = String(battle_presentation_snapshot.get("compact_state_text" if battle_board_first_active else "state_text", ""))
 	if setup_overview_panel != null:
 		setup_overview_panel.visible = screen == "setup" and not prioritized_decision_flow
 	if main_subtitle_label != null:
@@ -1743,6 +1757,9 @@ func _build_ui() -> void:
 	battle_inspection_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	battle_inspection_label.add_theme_color_override("font_color", Color("#d8c389"))
 	battle_section.add_child(battle_inspection_label)
+	battle_focus_panel = BattleFocusPanelView.new()
+	battle_focus_panel.visible = false
+	battle_section.add_child(battle_focus_panel)
 	inspect_enemy_button = Button.new()
 	inspect_enemy_button.text = "Inspect focused threat"
 	inspect_enemy_button.tooltip_text = "Open the current threat card. Use the map, timeline, or Tab to change focus."
@@ -3082,7 +3099,7 @@ func _refresh_battle_presentation() -> void:
 	if battle_state_label == null or inspect_enemy_button == null or response_preview_label == null:
 		return
 	battle_presentation_snapshot = BattlePresentationSnapshotView.build(keep, battle_paused, assault_ready_reason, focused_enemy_index, _battle_speed())
-	battle_state_label.text = String(battle_presentation_snapshot.get("state_text", ""))
+	battle_state_label.text = String(battle_presentation_snapshot.get("compact_state_text" if battle_board_first_active else "state_text", ""))
 	pause_button.text = String(battle_presentation_snapshot.get("pause_text", "Pause battle (Space)"))
 	manual_step_button.disabled = not bool(battle_presentation_snapshot.get("manual_step_enabled", false))
 	speed_button.text = String(battle_presentation_snapshot.get("speed_text", "Speed: 1.0x (1/2/3)"))
@@ -3094,6 +3111,8 @@ func _refresh_battle_presentation() -> void:
 	inspect_enemy_button.text = String(focus.get("button_text", "Inspect focused threat"))
 	inspect_enemy_button.disabled = not keep.wave_active or not bool(focus.get("active", false))
 	response_preview_label.text = String(battle_presentation_snapshot.get("response_text", ""))
+	if battle_focus_panel != null:
+		battle_focus_panel.render(battle_presentation_snapshot.get("focus_card", {}))
 
 func _refresh_layout_lens() -> void:
 	_refresh_preparation_presentation()
@@ -3685,6 +3704,10 @@ func _refresh_tutorial_panel() -> void:
 		playtest_button.visible = gameplay_screen and (not tutorial.active or tutorial_primary_action) and not (screen == "battle" and battle_board_first_active and not tutorial.active) and not (screen == "results" and recovery_board_first_active and not tutorial.active)
 	if playtest_status_label != null:
 		playtest_status_label.visible = gameplay_screen and (not tutorial.active or tutorial_primary_action) and not (screen == "preparation" and preparation_board_first_active) and not (screen == "battle" and battle_board_first_active and not tutorial.active) and not (screen == "results" and recovery_board_first_active and not tutorial.active)
+	if screen == "battle" and battle_board_first_active:
+		if inspect_enemy_button != null:
+			inspect_enemy_button.visible = tutorial.active
+		_set_group_visibility(inspection_controls, tutorial.active)
 	if not tutorial.active:
 		return
 	var step: Dictionary = tutorial.current_step()
@@ -4145,14 +4168,13 @@ func _refresh_ui() -> void:
 			actor_names.append(String(keep.enemy_definition(String(enemy_id)).get("name", enemy_id)))
 		forecast_label.text += " | Actors: %s" % ", ".join(actor_names)
 	var enemy_lines: Array[String] = []
-	for enemy in keep.enemies:
+	for enemy_index in range(keep.enemies.size()):
+		var enemy: Dictionary = keep.enemies[enemy_index]
 		var enemy_id: String = String(enemy.get("enemy_id", ""))
 		var enemy_definition: Dictionary = keep.enemy_definition(enemy_id)
 		var enemy_state: String = "defeated" if bool(enemy.get("defeated", false)) else "%d/%d hp" % [int(enemy.get("hp", 0)), int(enemy.get("max_health", enemy_definition.get("health", 0)))]
 		var phase: String = "contact" if keep.battle_step >= int(enemy.get("arrival_step", enemy_definition.get("arrival_step", 0))) else "approach"
-		var target: String = String(enemy.get("target", ""))
-		if target.is_empty():
-			target = "approach"
+		var target: String = String(keep.enemy_target_readout(enemy_index).get("summary", "Approaching"))
 		var armor_text: String = " — armor %d" % int(enemy_definition.get("armor", 0)) if int(enemy_definition.get("armor", 0)) > 0 else ""
 		var signal_text: String = " — signal DISRUPTED" if bool(enemy.get("signal_disrupted", false)) else " — signal RELAYED" if enemy_definition.get("disruption_profile") is Dictionary else ""
 		var momentum_text: String = " — charge DELAYED" if bool(enemy.get("momentum_delayed", false)) else " — momentum LIVE" if enemy_definition.get("momentum_profile") is Dictionary else ""
