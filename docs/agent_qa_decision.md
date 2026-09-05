@@ -10,7 +10,7 @@ The repositories already contain valuable game-specific acceptance suites. Repla
 
 ## Pack the Keep adapter
 
-Pack the Keep's Greywatch manifest is executable. The runner first invokes the repository's authoritative verifier, then runs `tests/test_ea1_greywatch_anchor.gd` as the semantic logic journey and `tools/capture_vertical_slice.gd` as its visual witness. The adapter binds every declared command to an existing UI or `KeepState` boundary, records the observed phase sequence, and requires named 1280×720 screenshots before it may return `PASS`.
+Pack the Keep's Greywatch manifest is executable. The runner first invokes the repository's authoritative verifier, then runs `tests/test_ea1_greywatch_anchor.gd` as the semantic logic journey and `tools/capture_vertical_slice.gd` as its visual witness. The adapter binds every declared command to an existing UI or `KeepState` boundary, records the observed phase sequence, and requires named 1280×720 screenshots before it may return `PASS`. Ubuntu CI uses this wrapper as its gated verifier rather than running the same full suite twice; Windows retains the direct verifier, and Ubuntu evidence uploads under `always()`.
 
 ## Trade-offs
 

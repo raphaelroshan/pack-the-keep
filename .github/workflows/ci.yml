@@ -78,10 +78,10 @@ jobs:
       - name: Verify Godot
         run: godot --version
       - name: Run deterministic tests
+        if: matrix.os != 'ubuntu-latest'
         run: bash scripts/verify.sh
       - name: Run agent QA evidence wrapper
         if: matrix.os == 'ubuntu-latest'
-        continue-on-error: true
         env:
           AGENT_QA_GAME: pack-the-keep
           AGENT_QA_SCENARIO: qa/scenarios/pack_greywatch_three_wave.json
