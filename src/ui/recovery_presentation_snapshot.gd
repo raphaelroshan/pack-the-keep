@@ -66,13 +66,17 @@ static func _brief(keep: Object, priorities: Array[Dictionary]) -> Dictionary:
 	var room_needs_attention: bool = not first_priority.is_empty() and int(first_priority.get("score", 0)) > 0
 	if not damaged_piece.is_empty() and not room_needs_attention:
 		matters = "%s is %s at %d/%d health." % [String(damaged_piece.get("name", "A defender")), "DISABLED" if bool(damaged_piece.get("disabled", false)) else "DAMAGED", int(damaged_piece.get("health", 0)), int(damaged_piece.get("maximum", 0))]
-	elif first_priority.is_empty():
-		matters = "No damaged room is currently ranked; preserve flexibility before the next pressure."
+	elif not room_needs_attention:
+		matters = "No room or defender needs repair. Use the lull to prepare for the next pressure."
 	else:
 		matters = "%s is %s at %d%% condition." % [String(first_priority.get("name", "The keep")), String(first_priority.get("state", "STABLE")), int(first_priority.get("condition", 100))]
 	var advice: Dictionary = keep.recovery_advice()
 	var next_pressure: String = "%s · %s" % [String(advice.get("next_doctrine", "next doctrine")).replace("_", " ").capitalize(), String(advice.get("target", "Preserve the most important function."))] if bool(advice.get("ok", false)) else "No further pressure is forecast."
-	var priority_name: String = String(damaged_piece.get("name", "")) if not damaged_piece.is_empty() and not room_needs_attention else String(first_priority.get("name", advice.get("target", "Preserve the most important function.")))
+	var priority_name: String = "Preserve flexibility"
+	if room_needs_attention:
+		priority_name = String(first_priority.get("name", "Protect the weakest room"))
+	elif not damaged_piece.is_empty():
+		priority_name = String(damaged_piece.get("name", "Restore the fighting line"))
 	var alternative_name: String = "flexibility before the next pressure"
 	for priority_index in range(priorities.size()):
 		var candidate: Dictionary = priorities[priority_index]
@@ -84,7 +88,10 @@ static func _brief(keep: Object, priorities: Array[Dictionary]) -> Dictionary:
 	var remaining_after_choice: int = maxi(0, keep.repair_actions_remaining - 1)
 	var sacrifice: String = "No recovery actions remain; unresolved damage carries forward."
 	if keep.repair_actions_remaining > 0:
-		sacrifice = "Commit one action to %s; only %d action%s %s for %s." % [priority_name, remaining_after_choice, "" if remaining_after_choice == 1 else "s", "remains" if remaining_after_choice == 1 else "remain", alternative_name]
+		if not room_needs_attention and damaged_piece.is_empty():
+			sacrifice = "Any assignment spends one action; only %d action%s %s for a later need." % [remaining_after_choice, "" if remaining_after_choice == 1 else "s", "remains" if remaining_after_choice == 1 else "remain"]
+		else:
+			sacrifice = "Commit one action to %s; only %d action%s %s for %s." % [priority_name, remaining_after_choice, "" if remaining_after_choice == 1 else "s", "remains" if remaining_after_choice == 1 else "remain", alternative_name]
 	return {
 		"actions_remaining": keep.repair_actions_remaining,
 		"materials": keep.materials,

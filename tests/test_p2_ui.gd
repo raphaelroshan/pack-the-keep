@@ -112,7 +112,7 @@ func _initialize() -> void:
 		var marker_inspection: Dictionary = ui.keep.inspect_enemy(marker_enemy_index)
 		if map_tooltip != timeline_tooltip:
 			failures.append("map and timeline markers did not expose the same enemy tooltip")
-		if not map_tooltip.contains(String(marker_inspection.get("name", ""))) or not map_tooltip.contains("Route:") or not map_tooltip.contains("HP ") or not map_tooltip.contains("Contact T") or not map_tooltip.contains("Strike every") or not map_tooltip.contains("Target: Approaching") or not map_tooltip.contains("Counter:"):
+		if not map_tooltip.contains(String(marker_inspection.get("name", ""))) or not map_tooltip.contains("Route:") or not map_tooltip.contains("HP ") or not map_tooltip.contains("Contact T") or not map_tooltip.contains("Strike every") or not map_tooltip.contains("Target: Not locked yet") or not map_tooltip.contains("Counter:"):
 			failures.append("enemy tooltip did not expose name, route, health, contact tick, strike cadence, friendly target state, and counter")
 		if ui.keep_canvas._timeline_enemy_hit(marker_view) != marker_enemy_index:
 			failures.append("timeline arrival marker hit testing did not resolve the matching enemy")
@@ -136,7 +136,7 @@ func _initialize() -> void:
 		if ui.focused_enemy_index != 0:
 			failures.append("defeated threat did not hand focus to the next deterministic priority")
 		ui.keep.enemies[1].defeated = false
-	if not String(ui.response_preview_label.text).contains("STRIKE:") or not String(ui.response_preview_label.text).contains("TARGET: Approaching"):
+	if not String(ui.response_preview_label.text).contains("STRIKE:") or not String(ui.response_preview_label.text).contains("TARGET: Not locked yet"):
 		failures.append("focused response preview did not expose strike cadence and friendly target state")
 	if JSON.stringify(ui.keep.serialize()) != focus_state_before:
 		failures.append("threat focus selection or handoff mutated authoritative state")

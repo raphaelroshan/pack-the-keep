@@ -1,7 +1,14 @@
 {
   "schema_version": 1,
   "game_id": "pack-the-keep",
-  "content_version": "0.68.0",
+  "content_version": "0.69.0",
+  "p81_gameplay_clarity": {
+    "status": "implemented",
+    "player_truth": ["no_damage_recovery_priority", "unlocked_target_language", "player_facing_assault_comparison"],
+    "hierarchy": ["replay_experiment_before_chronology", "session_notes_debug_only"],
+    "evidence": ["tutorial_readiness", "early_terminal_capture", "completed_capture_flags"],
+    "authority": "presentation_and_capture_orchestration_only"
+  },
   "p80_assault_threat_dossier": {
     "status": "implemented",
     "roadmap_gate": "PTK-GPT56-1C",

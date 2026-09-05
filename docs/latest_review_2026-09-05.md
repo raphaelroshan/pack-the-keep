@@ -1,23 +1,31 @@
 # Pack the Keep — latest visual and implementation review
 
-**Build:** `0.68.0-assault-threat-dossier`
+**Build:** `0.69.0-gameplay-clarity`
 
-**Roadmap packet:** PTK-GPT56-1C
+**Roadmap packet:** P81
 
 ## Result
 
-The Greywatch creative vertical is complete and legible from War Council through causal Results at 1280×720 and 1600×900. The remaining battle-specific first-viewport gap was pause/inspection: controls were visible, but the target, strike, response, and counter evidence began below the rail fold.
+The 1280×720 and 2560×1440 flows retain the board-first vertical while removing several trust-breaking contradictions found by the gameplay and writing evaluators.
 
-Board-first Assault now presents one focused-threat dossier beside the keep. It shows threat health and doctrine, target and route, next strike, committed defender response, visible counter, commander intervention state, and the next command. Tick-zero readiness, post-contact pause, and spent-intervention states remain read-only projections of authoritative combat. The active-threat roster also replaces internal piece instance IDs with player-facing target summaries.
+- Recovery says `Preserve flexibility` when neither rooms nor defenders need repair; it no longer promotes a stable room as damage control.
+- War Council describes opening pressure and garrison stakes in player language.
+- Targetless approaching enemies read `Not locked yet` consistently in the dossier, roster, inspector, and board tooltip.
+- Results exposes `TRY NEXT` before detailed analysis and replaces implementation labels with assault, plan, and decision language.
+- Normal Settings contains only player options. Session Notes remains a `--debug-ui` instrument.
+- The capture harness recognizes each First Watch briefing, records only completed optional beats, and terminates correctly when Last Stand collapses before Recovery.
 
 ## Evidence reviewed
 
-- `docs/visual_evidence/v0.68.0-assault-threat-dossier-greywatch-1280x720/`
-- `docs/visual_evidence/v0.68.0-assault-threat-dossier-greywatch-1600x900/`
-- `docs/visual_evidence/v0.68.0-assault-threat-dossier-ash-ford-1280x720/`
-- `docs/visual_evidence/v0.68.0-assault-threat-dossier-ash-ford-1600x900/`
+- `docs/visual_evidence/v0.69.0-gameplay-clarity-greywatch-1280x720/`
+- `docs/visual_evidence/v0.69.0-gameplay-clarity-greywatch-2560x1440/`
+- `docs/visual_evidence/v0.69.0-gameplay-clarity-ash-ford-1280x720/`
+- `docs/visual_evidence/v0.69.0-gameplay-clarity-ash-ford-2560x1440/`
+- Temporary branch checks: First Watch introduction, normal Settings, and overwhelming Last Stand early terminal flow.
 
-The Greywatch sequences include the first plan, tick-zero forecast, paused contact dossier, commander intervention, visible damage, two Recovery lulls, repair feedback, three assault phases, and terminal Results. Ash Ford confirms the same dossier remains readable on distinct keep geometry.
+## Next risk
+
+The next bounded experiment is combat pacing and actor congestion at the gate. Current phases remain deterministic six-tick simulations; changing their observable duration or spatial separation requires separate balance and readability evidence.
 
 ## Boundary
 

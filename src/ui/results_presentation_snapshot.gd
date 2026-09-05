@@ -58,10 +58,10 @@ static func build(keep: Object, tutorial_active: bool, tutorial_failure_active: 
 	var packs_text: String = ", ".join(pack_names) if not pack_names.is_empty() else "starter defense only"
 	var uncovered_names: Array = mastery.get("uncovered_names", [])
 	var gap_text: String = "all known pressure covered" if uncovered_names.is_empty() else "uncovered: %s" % ", ".join(uncovered_names)
-	var mastery_summary: String = "SEED PRESSURE — %s\nDOCTRINE FIT — %s (%s)\nRECOVERY COMMITMENT — %s\nPACK PLAN — %s" % [String(variation.get("summary", "Baseline pressure.")), String(mastery.get("coverage_text", "Coverage unavailable")), gap_text, String(mastery.get("recovery_text", "No recovery interval recorded")), packs_text]
+	var mastery_summary: String = "THIS ASSAULT — %s\nWHAT THE PLAN COVERED — %s (%s)\nRECOVERY CHOICES — %s\nDEFENSE BROUGHT — %s" % [String(variation.get("summary", "Familiar pressure.")), String(mastery.get("coverage_text", "Coverage unavailable")), gap_text, String(mastery.get("recovery_text", "No recovery interval recorded")), packs_text]
 	var recovery_branch: Dictionary = mastery.get("recovery_branch", {})
 	if not recovery_branch.is_empty():
-		mastery_summary += "\nRECOVERY BRANCH — %s %s\nFORGONE PREPARATION — %s" % [String(recovery_branch.get("selected_text", "")), String(recovery_branch.get("fit_text", "")), String(recovery_branch.get("forgone_text", ""))]
+		mastery_summary += "\nRECOVERY DECISION — %s %s\nWHAT YOU GAVE UP — %s" % [String(recovery_branch.get("selected_text", "")), String(recovery_branch.get("fit_text", "")), String(recovery_branch.get("forgone_text", ""))]
 	return {
 		"eyebrow": "FINAL DEFENSE · %d PHASES RESOLVED" % int(report.get("wave_rows", []).size()),
 		"outcome": outcome,

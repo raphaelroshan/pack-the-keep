@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "build_version": "0.68.0-assault-threat-dossier",
+  "build_version": "0.69.0-gameplay-clarity",
   "status": "implemented",
   "all_packets_complete": true,
   "packets": [
@@ -16,7 +16,7 @@
         {"id": "deterministic_three_wave_replay", "status": "automated", "evidence": ["tests/test_p12_alpha_scenario_matrix.gd", "tests/test_multi_wave.gd"]},
         {"id": "all_phase_save_resume", "status": "automated", "evidence": ["tests/test_p53_alpha_flow_hardening.gd", "tests/test_p32_terminal_debrief.gd"]},
         {"id": "accessible_input_motion", "status": "automated", "evidence": ["tests/test_p10_controller_scaling.gd", "tests/test_p10_accessibility_preferences.gd", "tests/test_k4_battle_beat_readability.gd"]},
-        {"id": "greywatch_1600_capture", "status": "documented", "evidence": ["docs/visual_evidence/v0.68.0-assault-threat-dossier-greywatch-1600x900/capture-manifest.json"]},
+        {"id": "greywatch_1600_capture", "status": "documented", "evidence": ["docs/visual_evidence/v0.69.0-gameplay-clarity-greywatch-2560x1440/capture-manifest.json"]},
         {"id": "authoritative_state", "status": "automated", "evidence": ["src/core/keep_state.gd", "tests/test_keep_state.gd"]}
       ]
     },
@@ -31,7 +31,7 @@
         {"id": "keep_comparison_and_geometry_matrix", "status": "automated", "evidence": ["src/ui/war_council_presentation_snapshot.gd", "tests/test_p38_war_council_choice_cards.gd"]},
         {"id": "placement_counter_and_failure_forward", "status": "automated", "evidence": ["tests/test_p15_ash_ford_identity.gd", "tests/test_p15_regional_consequence.gd"]},
         {"id": "migration_controller_scaling", "status": "automated", "evidence": ["tests/test_p12_save_recovery.gd", "tests/test_p48_responsive_layout.gd", "tests/test_p53_alpha_flow_hardening.gd"]},
-        {"id": "second_keep_screenshots", "status": "documented", "evidence": ["docs/visual_evidence/v0.68.0-assault-threat-dossier-ash-ford-1600x900/capture-manifest.json", "docs/visual_evidence/v0.68.0-assault-threat-dossier-ash-ford-1280x720/capture-manifest.json"]}
+        {"id": "second_keep_screenshots", "status": "documented", "evidence": ["docs/visual_evidence/v0.69.0-gameplay-clarity-ash-ford-2560x1440/capture-manifest.json", "docs/visual_evidence/v0.69.0-gameplay-clarity-ash-ford-1280x720/capture-manifest.json"]}
       ]
     },
     {
@@ -79,9 +79,9 @@
       "id": "PTK-GPT56-1C",
       "status": "implemented",
       "requirements": [
-        {"id": "board_first_full_flow", "status": "documented", "evidence": ["docs/visual_evidence/v0.68.0-assault-threat-dossier-greywatch-1280x720/capture-manifest.json", "docs/visual_evidence/v0.68.0-assault-threat-dossier-greywatch-1600x900/capture-manifest.json"]},
+        {"id": "board_first_full_flow", "status": "documented", "evidence": ["docs/visual_evidence/v0.69.0-gameplay-clarity-greywatch-1280x720/capture-manifest.json", "docs/visual_evidence/v0.69.0-gameplay-clarity-greywatch-2560x1440/capture-manifest.json"]},
         {"id": "pause_inspection_dossier", "status": "automated", "evidence": ["src/ui/battle_focus_panel.gd", "tests/test_p80_assault_threat_dossier.gd"]},
-        {"id": "emergency_intervention", "status": "automated", "evidence": ["tests/test_p80_assault_threat_dossier.gd", "docs/visual_evidence/v0.68.0-assault-threat-dossier-greywatch-1600x900/04b_emergency_intervention.png"]},
+        {"id": "emergency_intervention", "status": "automated", "evidence": ["tests/test_p80_assault_threat_dossier.gd", "docs/visual_evidence/v0.69.0-gameplay-clarity-greywatch-2560x1440/04b_emergency_intervention.png"]},
         {"id": "two_seeded_openings", "status": "automated", "evidence": ["tests/test_p1_balance.gd", "docs/gpt56_packet_completion.md"]},
         {"id": "authoritative_state", "status": "automated", "evidence": ["src/ui/battle_presentation_snapshot.gd", "tests/test_p44_battle_presentation_snapshot.gd", "tests/test_p80_assault_threat_dossier.gd"]}
       ]

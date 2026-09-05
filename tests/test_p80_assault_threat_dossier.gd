@@ -40,7 +40,7 @@ func _initialize() -> void:
 	for control: Control in [ui.battle_state_label, ui.pause_button, ui.commander_ability_button, ui.battle_focus_panel, ui.battle_tactical_button]:
 		_check(_inside_scroll_view(control, ui.command_scroll), "core Assault control should fit without rail scrolling: %s" % control.name)
 	_check(ui.command_scroll.scroll_vertical == 0 and ui.page_scroll.scroll_vertical == 0, "Assault should open with both scroll surfaces at the top")
-	_check(String(ui.battle_focus_panel.condition_label.text).contains("HEALTH 8/8") and String(ui.battle_focus_panel.target_label.text).contains("TARGET — Approaching") and String(ui.battle_focus_panel.target_label.text).contains("ROUTE — Gate Road"), "the dossier should expose health, target, and route")
+	_check(String(ui.battle_focus_panel.condition_label.text).contains("HEALTH 8/8") and String(ui.battle_focus_panel.target_label.text).contains("TARGET — Not locked yet") and String(ui.battle_focus_panel.target_label.text).contains("ROUTE — Gate Road"), "the dossier should expose health, target-lock state, and route")
 	_check(String(ui.battle_focus_panel.timing_label.text).contains("next T2") and String(ui.battle_focus_panel.response_label.text).contains("Pike Squad") and String(ui.battle_focus_panel.counter_label.text).contains("Lockdown available"), "the dossier should expose next strike, committed defender, counter, and intervention")
 	_check(String(ui.battle_focus_panel.action_label.text).begins_with("FORECAST —"), "tick-zero dossier should lead to the explicit start action")
 	_check(JSON.stringify(ui.keep.serialize()) == state_before, "rendering the dossier must not mutate authoritative state")

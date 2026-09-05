@@ -15,7 +15,7 @@ static func build(keep: Object, commander_id: String, scenario_id: String, tutor
 	if not keep.equipped_modifier_id.is_empty():
 		modifier_name = String(keep.modifier_definition(keep.equipped_modifier_id).get("name", keep.equipped_modifier_id))
 	var collapse_rule: bool = bool(scenario_preview.get("collapse_on_defender_wipe", false))
-	var end_state_summary: String = "defender wipe ends the run" if collapse_rule else "defender wipe is recoverable"
+	var end_state_summary: String = "a routed garrison ends the defense" if collapse_rule else "a routed garrison can regroup"
 	var setup_mode: String = "FIRST WATCH" if tutorial_active else "GUIDED DEFENSE" if guided_setup else "SKIRMISH"
 	var modifier_summary: String = "" if modifier_name == "None" else " · %s" % modifier_name
 	var preparation_focus: String = _concise_focus(String(variation.get("preparation_focus", "Read the first forecast before placing the defense.")))
@@ -91,7 +91,7 @@ static func _seed_pressure(keep: Object, variation: Dictionary) -> String:
 			composition.append("%d %s" % [int(counts[enemy_id]), String(keep.enemy_definition(enemy_id).get("name", enemy_id))])
 		parts.append("final pressure %s" % " + ".join(composition))
 	if parts.is_empty():
-		parts.append("baseline stores and standard pressure")
+		parts.append("usual stores and familiar pressure")
 	return "%s: %s." % [String(variation.get("label", variation.get("id", "standard_bell").replace("_", " ").capitalize())), "; ".join(parts)]
 
 static func _concise_focus(value: String) -> String:

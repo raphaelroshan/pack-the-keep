@@ -27,7 +27,7 @@ func _initialize() -> void:
 	ui._refresh_ui()
 	await process_frame
 	var variation: Dictionary = ui.keep.scenario_variation_preview()
-	_check(String(ui.war_council_choice_panel.summary_label.text).contains("SEED — %s:" % String(variation.get("label", ""))), "War Council should state the concrete seeded variation before entry")
+	_check(String(ui.war_council_choice_panel.summary_label.text).contains("OPENING PRESSURE — %s:" % String(variation.get("label", ""))), "War Council should state the concrete opening variation before entry")
 
 	ui._on_confirm_setup()
 	ui.keep.open_pack("crossbow_watch")
@@ -47,7 +47,8 @@ func _initialize() -> void:
 	await process_frame
 	ui._refresh_terminal_debrief()
 	var mastery_text: String = String(ui.terminal_debrief_panel.causal_label.text)
-	_check(mastery_text.contains("SEED PRESSURE") and mastery_text.contains("DOCTRINE FIT") and mastery_text.contains("RECOVERY COMMITMENT") and mastery_text.contains("PACK PLAN"), "terminal debrief should lead into a complete replay comparison")
+	_check(mastery_text.contains("THIS ASSAULT") and mastery_text.contains("WHAT THE PLAN COVERED") and mastery_text.contains("RECOVERY CHOICES") and mastery_text.contains("DEFENSE BROUGHT"), "terminal debrief should lead into a complete replay comparison")
+	_check(ui.terminal_debrief_panel.replay_label.get_parent().get_index() < ui.terminal_debrief_panel.timeline_box.get_index(), "the concrete replay experiment should appear before chronology")
 	_check(String(ui.terminal_debrief_panel.replay_label.text).contains("Gate Assault"), "terminal replay action should address uncovered pressure")
 
 	var serialized_before: String = JSON.stringify(ui.keep.serialize())

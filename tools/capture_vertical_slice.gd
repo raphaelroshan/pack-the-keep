@@ -23,6 +23,10 @@ var capture_setup_only: bool = false
 var capture_first_plan_transition: bool = false
 var capture_settings_only: bool = false
 var capture_tutorial_intro_only: bool = false
+var battle_inspection_completed: bool = false
+var intervention_completed: bool = false
+var repair_feedback_completed: bool = false
+var terminal_after_early_phase: bool = false
 
 func _initialize() -> void:
 	if DisplayServer.get_name() == "headless":
@@ -191,26 +195,34 @@ func _run_capture() -> void:
 	if capture_battle_inspection:
 		if not ui.assault_ready_reason.is_empty():
 			ui._toggle_battle_pause()
-		ui.battle_paused = true
-		ui._on_advance_wave()
-		ui.command_scroll.scroll_vertical = 0
-		await _capture("04a_paused_threat_dossier", ui)
-	if capture_intervention:
+			ui.battle_paused = true
+			ui._on_advance_wave()
+		if ui.keep.wave_active:
+			ui.command_scroll.scroll_vertical = 0
+			await _capture("04a_paused_threat_dossier", ui)
+			battle_inspection_completed = true
+	if capture_intervention and ui.keep.wave_active:
 		if not ui.assault_ready_reason.is_empty():
 			ui._toggle_battle_pause()
-		ui.battle_paused = true
-		ui._on_advance_wave()
-		ui._on_use_ability()
-		await _capture("04b_emergency_intervention", ui)
+			ui.battle_paused = true
+			ui._on_advance_wave()
+		if ui.keep.wave_active:
+			ui._on_use_ability()
+			await _capture("04b_emergency_intervention", ui)
+			intervention_completed = true
 	if capture_battle_exchange:
 		ui.keep_canvas.set_process(true)
 		ui.keep_canvas._process(ui.keep_canvas.engagement_duration)
 	await _resolve_phase(ui)
+	if await _finish_early_terminal_capture(ui):
+		return
 	await _capture("05_recovery_phase_1", ui)
 	_resolve_open_event(ui)
 	ui._on_finish_interval()
 	await _capture("06_assault_phase_2", ui)
 	await _resolve_phase(ui)
+	if await _finish_early_terminal_capture(ui):
+		return
 	await _capture("07_recovery_phase_2", ui)
 	if capture_repair_feedback and ui.keep.repair_interval_active and ui.keep.active_event_id.is_empty():
 		for room_id_value in ui.keep.room_definitions().keys():
@@ -222,6 +234,7 @@ func _run_capture() -> void:
 			ui.keep_canvas.set_process(false)
 			ui.keep_canvas.queue_redraw()
 			await _capture("07c_room_repair_feedback", ui)
+			repair_feedback_completed = true
 			ui.keep_canvas.set_process(true)
 			break
 	if ui.keep.active_event_id == "twilight_crossroads":
@@ -238,6 +251,18 @@ func _run_capture() -> void:
 	await process_frame
 	print("Vertical-slice capture: PASS (%d screens at %s)" % [captured_files.size(), output_dir])
 	quit(0)
+
+func _finish_early_terminal_capture(ui: Control) -> bool:
+	if ui.screen != "results" or ui.keep.wave_active or ui.keep.has_next_wave() or ui.keep.repair_interval_active:
+		return false
+	terminal_after_early_phase = true
+	await _capture("09_terminal_results", ui)
+	_write_manifest()
+	ui.queue_free()
+	await process_frame
+	print("Vertical-slice capture: PASS (%d screens; defense ended before the final authored phase at %s)" % [captured_files.size(), output_dir])
+	quit(0)
+	return true
 
 func _resolve_phase(ui: Control) -> void:
 	if not ui.assault_ready_reason.is_empty():
@@ -305,6 +330,14 @@ func _capture_readiness(stem: String, ui: Control) -> Dictionary:
 			return {"ready": ui.screen == "title", "condition": "title screen rendered"}
 		"war_council":
 			return {"ready": ui.screen == "setup" and ui.keep.scenario_id == capture_scenario_id, "condition": "War Council rendered with selected scenario"}
+		"tutorial_keep":
+			return {"ready": ui.screen == "title" and ui.tutorial.active and ui.tutorial.current_id() == "intro_keep", "condition": "First Watch keep briefing rendered"}
+		"tutorial_resources":
+			return {"ready": ui.screen == "title" and ui.tutorial.active and ui.tutorial.current_id() == "intro_resources", "condition": "First Watch resource briefing rendered"}
+		"tutorial_cycle":
+			return {"ready": ui.screen == "title" and ui.tutorial.active and ui.tutorial.current_id() == "intro_cycle", "condition": "First Watch defense-cycle briefing rendered"}
+		"tutorial_war_council":
+			return {"ready": ui.screen == "setup" and ui.tutorial.active and ui.tutorial.current_id() == "war_council", "condition": "First Watch War Council rendered"}
 		"preparation":
 			return {"ready": ui.screen == "preparation", "condition": "Preparation rendered after scenario entry"}
 		"forecast":
@@ -336,6 +369,14 @@ func _image_is_uniform(image: Image) -> bool:
 func _evidence_state_id(stem: String) -> String:
 	if stem == "01_title":
 		return "title"
+	if stem == "02_tutorial_keep":
+		return "tutorial_keep"
+	if stem == "03_tutorial_resources":
+		return "tutorial_resources"
+	if stem == "04_tutorial_cycle":
+		return "tutorial_cycle"
+	if stem == "05_tutorial_war_council":
+		return "tutorial_war_council"
 	if stem == "02_war_council":
 		return "war_council"
 	if stem.begins_with("03"):
@@ -371,9 +412,13 @@ func _write_manifest() -> void:
 		"starting_defender_inspected": capture_starting_defender,
 		"battle_exchange_staged": capture_battle_exchange,
 		"battle_exchange_progress": capture_battle_exchange_progress if capture_battle_exchange else null,
-		"battle_inspection_captured": capture_battle_inspection,
-		"repair_feedback_captured": capture_repair_feedback,
-		"intervention_captured": capture_intervention,
+		"battle_inspection_requested": capture_battle_inspection,
+		"battle_inspection_captured": battle_inspection_completed,
+		"repair_feedback_requested": capture_repair_feedback,
+		"repair_feedback_captured": repair_feedback_completed,
+		"intervention_requested": capture_intervention,
+		"intervention_captured": intervention_completed,
+		"terminal_after_early_phase": terminal_after_early_phase,
 		"setup_only": capture_setup_only,
 		"first_plan_transition_captured": capture_first_plan_transition,
 		"settings_only": capture_settings_only,

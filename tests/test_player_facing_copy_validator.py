@@ -32,7 +32,7 @@ class PlayerFacingCopyValidatorTests(unittest.TestCase):
             for relative in validator.UI_SOURCES:
                 path = root / relative
                 path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text('label.text = "automated baseline verified"\n', encoding="utf-8")
+                path.write_text('label.text = "automated baseline verified; SEED — baseline stores"\n', encoding="utf-8")
 
             errors: list[str] = []
             validator.validate_repository(root, errors)
@@ -43,6 +43,8 @@ class PlayerFacingCopyValidatorTests(unittest.TestCase):
             self.assertIn("duplicated", joined)
             self.assertIn("exceeds the compact event-copy budget", joined)
             self.assertIn("automated baseline", joined)
+            self.assertIn("seed —", joined)
+            self.assertIn("baseline stores", joined)
 
 
 if __name__ == "__main__":

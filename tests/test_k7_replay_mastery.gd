@@ -63,7 +63,7 @@ func _initialize() -> void:
 	_check(String(report.get("suggested_experiment", "")).contains("Gate Assault") and String(report.get("suggested_experiment", "")).contains("frontline"), "replay experiment should point at the first uncovered pressure and a viable family")
 
 	var view: Dictionary = ResultsPresentationSnapshot.build(first, false, false, "")
-	_check(String(view.get("mastery_summary", "")).contains("SEED PRESSURE") and String(view.get("mastery_summary", "")).contains("DOCTRINE FIT") and String(view.get("mastery_summary", "")).contains("RECOVERY COMMITMENT") and String(view.get("mastery_summary", "")).contains("PACK PLAN"), "Results snapshot should compose the replay-mastery comparison")
+	_check(String(view.get("mastery_summary", "")).contains("THIS ASSAULT") and String(view.get("mastery_summary", "")).contains("WHAT THE PLAN COVERED") and String(view.get("mastery_summary", "")).contains("RECOVERY CHOICES") and String(view.get("mastery_summary", "")).contains("DEFENSE BROUGHT"), "Results snapshot should compose the replay-mastery comparison in player-facing language")
 	var restored: RefCounted = PackKeepState.new(1)
 	_check(bool(restored.load_serialized(first.serialize()).get("ok", false)), "terminal K7 state should load")
 	_check(JSON.stringify(restored.replay_mastery_summary()) == JSON.stringify(first.replay_mastery_summary()), "save/load should rederive the exact same mastery summary")

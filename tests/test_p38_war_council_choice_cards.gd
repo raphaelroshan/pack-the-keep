@@ -30,7 +30,7 @@ func _initialize() -> void:
 	_check(String(panel.scenario_risk_label.text).contains("Gate Assault") and String(panel.scenario_risk_label.text).contains("Feint and Flank"), "defense card should expose the authored pressure arc")
 	_check(int(ui.war_council_presentation_snapshot.get("scenario", {}).get("wave_count", 0)) == 3, "defense projection should preserve what becomes fixed on entry")
 	_check(String(panel.summary_label.text).contains("PAIRING — The Castellan leads Gatehouse Lock at Greywatch Keep."), "War Council should state the selected commander/defense relationship")
-	_check(String(panel.summary_label.text).contains("SEED —") and String(panel.summary_label.text).contains("FOCUS —"), "War Council should expose concise seeded pressure and preparation focus")
+	_check(String(panel.summary_label.text).contains("OPENING PRESSURE —") and String(panel.summary_label.text).contains("FOCUS —"), "War Council should expose concise opening pressure and preparation focus")
 	_check(not ui.setup_advanced_panel.visible and not ui.commander_option.is_visible_in_tree() and not ui.scenario_option.is_visible_in_tree(), "advanced dropdown selectors should begin collapsed behind the game-facing cards")
 	_check(String(ui.setup_pairing_summary_label.text).contains("CURRENT DEFENSE") and String(ui.setup_pairing_summary_label.text).contains("The Castellan leads Gatehouse Lock"), "the command rail should keep a compact synchronized pairing summary visible")
 	var disclosure_state_before: String = JSON.stringify(ui.keep.serialize())

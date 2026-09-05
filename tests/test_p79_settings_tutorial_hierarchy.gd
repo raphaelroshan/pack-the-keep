@@ -34,10 +34,17 @@ func _initialize() -> void:
 	await process_frame
 	_check(ui.screen == "settings" and ui.settings_hub_panel.visible and not ui.command_panel.visible, "Settings should own a dedicated main surface instead of the gameplay command rail")
 	_check(not ui.settings_columns.vertical and ui.settings_columns.get_child_count() == 3, "1280x720 Settings should use three purpose-led columns")
-	for group: Control in [ui.settings_readability_group, ui.settings_display_group, ui.settings_battle_group, ui.settings_input_group, ui.settings_session_group]:
+	for group: Control in [ui.settings_readability_group, ui.settings_display_group, ui.settings_battle_group, ui.settings_input_group]:
 		_check(_inside_scroll_view(group, ui.page_scroll), "every Settings group should fit in the 1280x720 first viewport: %s" % group.name)
-	for control: Control in [ui.contrast_button, ui.reduced_motion_button, ui.ui_scale_button, ui.mute_button, ui.window_mode_button, ui.resolution_button, ui.effects_volume_button, ui.event_feed_button, ui.auto_pause_button, ui.rebind_action_option, ui.rebind_button, ui.reset_bindings_button, ui.local_metrics_button, ui.local_metrics_export_button, ui.settings_back_button]:
+	for control: Control in [ui.contrast_button, ui.reduced_motion_button, ui.ui_scale_button, ui.mute_button, ui.window_mode_button, ui.resolution_button, ui.effects_volume_button, ui.event_feed_button, ui.auto_pause_button, ui.rebind_action_option, ui.rebind_button, ui.reset_bindings_button, ui.settings_back_button]:
 		_check(_inside_scroll_view(control, ui.page_scroll), "Settings control should be visible without scrolling: %s" % control.name)
+	_check(not ui.settings_session_group.visible and not ui.local_metrics_button.is_visible_in_tree(), "ordinary Settings should not expose playtest-only Session Notes")
+	ui.developer_ui_enabled = true
+	ui._apply_responsive_layout()
+	await process_frame
+	_check(ui.settings_session_group.visible and ui.local_metrics_button.is_visible_in_tree(), "debug UI should retain opt-in Session Notes")
+	ui.developer_ui_enabled = false
+	ui._apply_responsive_layout()
 	_check(ui.page_scroll.scroll_vertical == 0 and root.gui_get_focus_owner() == ui.ui_scale_button, "Settings should open at the top with UI scale focused")
 	_check(JSON.stringify(ui.keep.serialize()) == state_before, "opening and laying out Settings must not mutate authoritative state")
 
@@ -46,6 +53,7 @@ func _initialize() -> void:
 
 	await _apply_layout(ui, Vector2i(1280, 720), 3)
 	_check(ui.settings_columns.vertical, "150 percent text should stack Settings groups")
+	_check(not ui.settings_session_group.visible, "large-text ordinary Settings should keep Session Notes hidden")
 	_check(ui.settings_hub_panel.get_global_rect().end.x <= root.size.x + 1.0, "large-text Settings should remain horizontally in bounds")
 
 	await _apply_layout(ui, Vector2i(1280, 720), 1)

@@ -55,7 +55,7 @@ func _initialize() -> void:
 	_check(root.gui_get_focus_owner() == ui.setup_confirm_button, "responsive War Council should preserve its controller-first Enter Keep action")
 	_check(_inside_scroll_view(ui.setup_confirm_button, ui.page_scroll), "the 1280x720 War Council commit action should remain inside the first viewport")
 	_check(_inside_scroll_view(ui.war_council_choice_panel.commander_next_button, ui.page_scroll) and _inside_scroll_view(ui.war_council_choice_panel.scenario_next_button, ui.page_scroll), "the 1280x720 War Council should expose both next-choice controls without scrolling")
-	_check(String(ui.setup_overview_label.text).contains("PAIRING —") and String(ui.setup_overview_label.text).contains("SEED —"), "the prioritized War Council summary should state pairing and seeded pressure")
+	_check(String(ui.setup_overview_label.text).contains("PAIRING —") and String(ui.setup_overview_label.text).contains("OPENING PRESSURE —"), "the prioritized War Council summary should state pairing and opening pressure")
 
 	await _apply_layout(ui, Vector2i(1280, 720), 3)
 	_check(ui.gameplay_columns.vertical and ui.war_council_choice_panel.choice_row.vertical, "150 percent UI scale should use the compact single-column choice-card fallback")

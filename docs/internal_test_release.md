@@ -1,6 +1,6 @@
 # Pack the Keep — Internal Test Release
 
-**Current build identity:** `0.68.0-assault-threat-dossier` — PTK-GPT56-1 through PTK-GPT56-5, PTK-GPT56-1B, PTK-GPT56-1C, and all prior gates remain enforced; 1280×720 War Council and Settings expose complete decisions, First Watch opens as a staged briefing, Preparation retains its compact plan beside the fortress, and Assault exposes pause, target, strike, response, counter, and intervention together while all-phase save/replay, cross-keep continuation, accessibility, package, forced-close, and original-asset evidence remain green; human sessions and owner distribution approval remain pending
+**Current build identity:** `0.69.0-gameplay-clarity` — PTK-GPT56-1 through PTK-GPT56-5, PTK-GPT56-1B, PTK-GPT56-1C, P81, and all prior gates remain enforced; 1280×720 through 2560×1440 War Council and Settings expose complete player-facing decisions, First Watch opens as a staged briefing, Preparation retains its compact plan beside the fortress, and Assault exposes pause, target, strike, response, counter, and intervention together, while Recovery advice remains truthful, Results leads with a replay experiment, and scenario capture follows actual terminal state; human sessions and owner distribution approval remain pending
 
 ## Purpose
 

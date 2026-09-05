@@ -124,7 +124,7 @@ func _initialize() -> void:
 	_check(ui.screen == "results" and ui.terminal_debrief_panel.visible, "the full flow should reach terminal Results")
 	_check(ui.last_cue_id == "hold" and String(ui.feedback_cue_label.text).contains("HOLD"), "muted terminal success should retain a visible semantic outcome cue")
 	var mastery: String = String(ui.terminal_debrief_panel.causal_label.text)
-	_check(mastery.contains("final pressure") and mastery.contains("preparation focus") and mastery.contains("RECOVERY BRANCH") and mastery.contains("FORGONE PREPARATION"), "terminal Results should retain seed and recovery mastery")
+	_check(mastery.contains("final pressure") and mastery.contains("preparation focus") and mastery.contains("RECOVERY DECISION") and mastery.contains("WHAT YOU GAVE UP"), "terminal Results should retain assault and recovery mastery")
 	_check(ui.gameplay_columns.vertical and _inside_horizontal_viewport(ui.terminal_debrief_panel), "large-text 1440p terminal Results should stack without horizontal clipping")
 	ui._focus_screen_control()
 	await process_frame
