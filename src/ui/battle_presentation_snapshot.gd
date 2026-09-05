@@ -86,6 +86,8 @@ static func _response_view(keep: Object, focused_enemy_index: int, battle_paused
 	var ability_state: String = "available" if bool(keep.commander_ability_preview().get("ok", false)) else "spent or unavailable"
 	var timing_state: String = "PAUSED PREVIEW — commit when ready" if battle_paused else "RUNNING — pause to inspect before committing"
 	var target_text: String = String(keep.enemy_target_readout(focused_enemy_index).get("summary", "Approaching"))
+	if target_text == "Approaching":
+		target_text = "Not locked yet"
 	var counter_id: String = String(inspection.get("counter", ""))
 	var counter_name: String = String(keep.piece_definition(counter_id).get("name", counter_id.replace("_", " ").capitalize())) if not counter_id.is_empty() else "Read the forecast"
 	var response: Dictionary = keep.defender_response_preview(focused_enemy_index)

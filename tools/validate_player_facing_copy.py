@@ -40,6 +40,12 @@ FORBIDDEN_UI_PHRASES = (
     "playtest observation",
     "authoritative combat",
     "authoritative report",
+    "seed pressure",
+    "seed —",
+    "baseline stores",
+    "recovery commitment",
+    "pack plan",
+    "forgone preparation",
 )
 UI_SOURCES = (
     "src/ui/main.gd",

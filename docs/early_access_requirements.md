@@ -1,7 +1,7 @@
 # Pack the Keep — Early Access Requirements
 
 **Status:** Active, machine-checked contract for a skeletal but commercially credible Early Access build
-**Current baseline:** `0.68.0-assault-threat-dossier`; GPT56, investment, and Early Access gates are machine-checked, including PTK-GPT56-1C's dual-resolution Greywatch flow. War Council, Settings, First Watch, Preparation, Assault threat inspection, Recovery, and terminal Results retain their first-viewport hierarchy. The progress ledgers record exact evidence, automated candidate status, and the owner-controlled distribution boundary.
+**Current baseline:** `0.69.0-gameplay-clarity`; GPT56, investment, Early Access, and P81 clarity gates are machine-checked. War Council, Settings, First Watch, Preparation, Assault threat inspection, Recovery, and terminal Results retain their first-viewport hierarchy with truthful no-damage advice, replay-first Results, and debug-only Session Notes. The progress ledgers record exact evidence, automated candidate status, and the owner-controlled distribution boundary.
 
 ## Product decision
 

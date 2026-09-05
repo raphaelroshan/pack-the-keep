@@ -414,7 +414,7 @@ func scenario_variation_preview(id: String = "") -> Dictionary:
 	if not preparation_focus.is_empty():
 		effects.append("preparation focus: %s" % preparation_focus)
 	if effects.is_empty():
-		effects.append("baseline stores and morale; target priorities remain adaptive")
+		effects.append("usual stores and morale; pressure follows the defense it finds")
 	return {
 		"ok": true,
 		"id": variation_id,
@@ -1140,7 +1140,7 @@ func enemy_target_readout(index: int) -> Dictionary:
 	var target_id: String = String(enemy.get("target", ""))
 	if target_id.is_empty():
 		var timing: Dictionary = enemy_attack_timing(index)
-		var summary: String = "No valid target" if bool(timing.get("in_contact", false)) else "Approaching"
+		var summary: String = "No valid target" if bool(timing.get("in_contact", false)) else "Not locked yet"
 		return {"ok": true, "kind": "none", "id": "", "name": summary, "summary": summary, "active": false}
 	if pieces.has(target_id):
 		var instance: Dictionary = pieces[target_id]

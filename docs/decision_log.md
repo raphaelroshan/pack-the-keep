@@ -1135,3 +1135,11 @@
 **Reason:** The first agent-QA wrapper preserved logs and selected the right manifest, but the manifest remained planned and only a title frame was captured. Reusing the proven Greywatch fixtures turns the contract into executable evidence without coordinate clicks, sleeps, or a second gameplay authority.
 
 **Trade-off:** The visual journey proves one deterministic in-memory path. Save/resume permutations, broad content matrices, audio behavior, and packaging remain authoritative verifier responsibilities rather than being duplicated in the screenshot adapter.
+
+## ADR-143: Decision surfaces prefer actionable truth over diagnostic vocabulary
+
+**Decision:** When Recovery has no damage to rank, name preserved flexibility rather than selecting a stable room. Present seeded variation as opening pressure, recast terminal mastery headings in player language, place the replay experiment before chronology, and keep session-only observation controls behind `--debug-ui`. The capture harness branches on the authoritative tutorial, wave, and terminal state it actually reaches.
+
+**Reason:** Automated multi-scenario review exposed several individually correct facts that formed misleading guidance: a stable room appeared as the first Recovery priority, Results and War Council exposed development vocabulary, normal Settings advertised session instrumentation, and the evidence harness assumed every scenario reached the same lull and intervention beats. These contradictions reduce player trust and can invalidate otherwise useful visual evidence.
+
+**Trade-off:** The normal UI becomes more concise and game-facing, while developer instrumentation remains opt-in. Scenario-specific capture sets may contain fewer screens when an early collapse or short assault makes a requested beat impossible; the manifest records only evidence that was actually captured.

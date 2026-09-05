@@ -1,5 +1,8 @@
 extends SceneTree
 
+const PackKeepState = preload("res://src/core/keep_state.gd")
+const RecoveryPresentationSnapshot = preload("res://src/ui/recovery_presentation_snapshot.gd")
+
 var failures: Array[String] = []
 
 func _check(condition: bool, message: String) -> void:
@@ -18,6 +21,16 @@ func _resolve_wave(ui: Control) -> void:
 	_check(guard < 16, "K5 fixture should resolve each phase inside the deterministic guard")
 
 func _initialize() -> void:
+	var pristine_recovery: RefCounted = PackKeepState.new(5207)
+	pristine_recovery.select_scenario("ash_ford_crossing")
+	pristine_recovery.wave_index = 1
+	pristine_recovery.repair_interval_active = true
+	pristine_recovery.repair_actions_remaining = 2
+	pristine_recovery.wave_history.append({"wave": 1, "outcome": "held", "defeated_enemies": 3, "room_damage": 0, "piece_damage": 0})
+	var pristine_brief: Dictionary = RecoveryPresentationSnapshot.build(pristine_recovery, "", "").get("brief", {})
+	_check(String(pristine_brief.get("priority", "")) == "Preserve flexibility", "an undamaged keep should not name a stable room as the first Recovery priority")
+	_check(String(pristine_brief.get("matters", "")).contains("No room or defender needs repair"), "an undamaged keep should explain that the lull can prepare for future pressure")
+
 	var ui: Control = load("res://scenes/Main.tscn").instantiate()
 	root.add_child(ui)
 	await process_frame

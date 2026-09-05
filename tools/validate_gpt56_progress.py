@@ -59,8 +59,8 @@ def _validate_capture(root: Path, relative: str, scenario: str, build_version: s
     manifest = _load(root / relative, errors)
     if manifest.get("build_version") != build_version or manifest.get("scenario") != scenario:
         errors.append(f"{relative}: capture identity must match {build_version}/{scenario}")
-    if manifest.get("resolution") != {"width": 1600, "height": 900}:
-        errors.append(f"{relative}: capture must be 1600x900")
+    if manifest.get("resolution") != {"width": 2560, "height": 1440}:
+        errors.append(f"{relative}: capture must be 2560x1440")
     files = manifest.get("files")
     required = {"01_title.png", "02_war_council.png", "03_preparation.png", "04_assault_phase_1.png", "05_recovery_phase_1.png", "06_assault_phase_2.png", "07_recovery_phase_2.png", "08_assault_phase_3.png", "09_terminal_results.png"}
     if not isinstance(files, list) or not required.issubset(set(files)):
@@ -232,8 +232,8 @@ def validate_progress(
         errors.append("GPT56 asset report must distinguish no active temporary assets from the archive")
 
     if validate_captures:
-        _validate_capture(root, "docs/visual_evidence/v0.68.0-assault-threat-dossier-greywatch-1600x900/capture-manifest.json", "gatehouse_lock", str(progress.get("build_version", "")), errors, True, True)
-        _validate_capture(root, "docs/visual_evidence/v0.68.0-assault-threat-dossier-ash-ford-1600x900/capture-manifest.json", "ash_ford_crossing", str(progress.get("build_version", "")), errors)
+        _validate_capture(root, "docs/visual_evidence/v0.69.0-gameplay-clarity-greywatch-2560x1440/capture-manifest.json", "gatehouse_lock", str(progress.get("build_version", "")), errors, True, True)
+        _validate_capture(root, "docs/visual_evidence/v0.69.0-gameplay-clarity-ash-ford-2560x1440/capture-manifest.json", "ash_ford_crossing", str(progress.get("build_version", "")), errors)
     if progress.get("human_evidence_required_for_implementation") is not False or progress.get("human_evidence_status") != "pending":
         errors.append("human evidence must remain pending and non-blocking")
     if progress.get("owner_approval_required_for_distribution") is not True:

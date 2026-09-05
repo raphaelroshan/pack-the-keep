@@ -789,6 +789,8 @@ func _apply_responsive_layout() -> void:
 		war_council_choice_panel.set_responsive_layout(compact_cards, main_width, war_council_first_viewport_active)
 	if settings_columns != null:
 		settings_columns.vertical = effective_width < PREPARATION_TWO_COLUMN_EFFECTIVE_WIDTH or ui_factor >= 1.5
+	if settings_session_group != null:
+		settings_session_group.visible = developer_ui_enabled
 	if preparation_brief_panel != null:
 		preparation_brief_panel.set_responsive_layout(compact_cards, main_width, preparation_board_first_active)
 	if preparation_pack_offer_panel != null:
@@ -1049,8 +1051,22 @@ func _apply_saved_input_bindings(saved: Variant) -> void:
 func _binding_text(action: String) -> String:
 	var labels: Array[String] = []
 	for event in InputMap.action_get_events(action):
-		if event is InputEventKey or event is InputEventJoypadButton:
-			labels.append(event.as_text())
+		if event is InputEventKey:
+			var key_event: InputEventKey = event
+			var key_parts: Array[String] = []
+			if key_event.ctrl_pressed:
+				key_parts.append("Ctrl")
+			if key_event.alt_pressed:
+				key_parts.append("Alt")
+			if key_event.shift_pressed:
+				key_parts.append("Shift")
+			if key_event.meta_pressed:
+				key_parts.append("Meta")
+			var keycode: int = key_event.physical_keycode if key_event.physical_keycode > 0 else key_event.keycode
+			key_parts.append(OS.get_keycode_string(keycode))
+			labels.append("+".join(key_parts))
+		elif event is InputEventJoypadButton:
+			labels.append("Controller button %d" % int(event.button_index))
 	return " / ".join(labels) if not labels.is_empty() else "Unbound"
 
 func _refresh_binding_controls() -> void:
@@ -1280,7 +1296,7 @@ func _build_ui() -> void:
 
 	settings_overview_panel = _build_overview_panel(
 		"READABILITY BEFORE PRESSURE",
-		"Set how the keep reads, sounds, and responds. These preferences never change battle outcomes; session notes stay local unless you export them."
+		"Set how the keep reads, sounds, and responds. These preferences stay on this device and never change battle outcomes."
 	)
 	settings_overview_panel.custom_minimum_size.y = 92
 	left.add_child(settings_overview_panel)
@@ -2609,7 +2625,7 @@ func _refresh_scenario_preview() -> void:
 	var pack_names: Array[String] = []
 	for pack_id in preview.get("recommended_packs", []):
 		pack_names.append(String(keep.pack_definition(String(pack_id)).get("name", pack_id)))
-	var terminal_rule: String = "Defender wipe ends the run" if bool(preview.get("collapse_on_defender_wipe", false)) else "Defender wipe opens recovery"
+	var terminal_rule: String = "A routed garrison ends the defense" if bool(preview.get("collapse_on_defender_wipe", false)) else "A routed garrison can regroup"
 	scenario_preview_label.add_theme_color_override("font_color", Color("#ef9d78") if bool(preview.get("collapse_on_defender_wipe", false)) else Color("#d8c389"))
 	scenario_preview_label.text = "SCENARIO %d/%d — %s / %s\n%s · Assault phases: %d · Peak pressure: %d attackers\nObjective: %s\nEnemy roster: %s\nPressure plan: %s\nRecommended packs: %s\nEnd state: %s\nLesson: %s\nSeed variation: %s" % [int(preview.get("catalog_index", 0)), int(preview.get("catalog_count", 0)), String(preview.get("keep_name", "Keep")), String(preview.get("name", "")), String(preview.get("difficulty", "standard")).to_upper(), int(preview.get("wave_count", 0)), int(preview.get("peak_wave_size", 0)), String(preview.get("objective", "")), " · ".join(preview.get("enemy_roster", [])), " → ".join(preview.get("doctrine_names", [])), " + ".join(pack_names), terminal_rule, String(preview.get("lesson", "")), String(preview.get("variation_id", "standard"))]
 
@@ -4114,7 +4130,7 @@ func _refresh_war_council_cards() -> void:
 	war_council_presentation_snapshot = WarCouncilPresentationSnapshotView.build(keep, commander_id, scenario_id, tutorial.active, guided_setup)
 	war_council_choice_panel.render(war_council_presentation_snapshot)
 	if setup_pairing_summary_label != null:
-		setup_pairing_summary_label.text = "CURRENT DEFENSE\n%s\n%s\nSEED — %s" % [String(war_council_presentation_snapshot.get("pairing", "Choose a commander and defense.")), String(war_council_presentation_snapshot.get("run_frame", "")), String(war_council_presentation_snapshot.get("seed_pressure", "Baseline pressure."))]
+		setup_pairing_summary_label.text = "CURRENT DEFENSE\n%s\n%s\nOPENING PRESSURE — %s" % [String(war_council_presentation_snapshot.get("pairing", "Choose a commander and defense.")), String(war_council_presentation_snapshot.get("run_frame", "")), String(war_council_presentation_snapshot.get("seed_pressure", "Familiar pressure."))]
 
 func _refresh_ui() -> void:
 	_refresh_phase_header()

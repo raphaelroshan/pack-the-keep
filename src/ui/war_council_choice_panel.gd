@@ -123,17 +123,17 @@ func _render_labels() -> void:
 	var scenario: Dictionary = view_model.get("scenario", {})
 	var locked: bool = bool(view_model.get("locked", false))
 	if first_viewport_mode:
-		summary_label.text = "PAIRING — %s\n%s  •  SEED — %s\nFOCUS — %s" % [
+		summary_label.text = "PAIRING — %s\n%s  •  OPENING PRESSURE — %s\nFOCUS — %s" % [
 			String(view_model.get("pairing", "Choose who leads which defense.")),
-			String(view_model.get("run_frame", "SKIRMISH · STANDARD · defender wipe is recoverable")),
-			String(view_model.get("seed_pressure", "Standard Bell: baseline stores and standard pressure.")),
+			String(view_model.get("run_frame", "SKIRMISH · STANDARD · a routed garrison can regroup")),
+			String(view_model.get("seed_pressure", "Standard Bell: usual stores and familiar pressure.")),
 			String(view_model.get("preparation_focus", "Read the first forecast before placing the defense.")),
 		]
 	else:
-		summary_label.text = "%s\nPAIRING — %s\nSEED — %s\nFOCUS — %s" % [
-			String(view_model.get("run_frame", "SKIRMISH · STANDARD · defender wipe is recoverable")),
+		summary_label.text = "%s\nPAIRING — %s\nOPENING PRESSURE — %s\nFOCUS — %s" % [
+			String(view_model.get("run_frame", "SKIRMISH · STANDARD · a routed garrison can regroup")),
 			String(view_model.get("pairing", "Choose who leads which defense.")),
-			String(view_model.get("seed_pressure", "Standard Bell: baseline stores and standard pressure.")),
+			String(view_model.get("seed_pressure", "Standard Bell: usual stores and familiar pressure.")),
 			String(view_model.get("preparation_focus", "Read the first forecast before placing the defense.")),
 		]
 	lock_label.visible = locked

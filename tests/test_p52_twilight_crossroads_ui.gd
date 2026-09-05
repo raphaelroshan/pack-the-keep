@@ -93,8 +93,8 @@ func _initialize() -> void:
 	await process_frame
 	var terminal_mastery: String = String(ui.terminal_debrief_panel.causal_label.text)
 	_check(terminal_mastery.contains("final pressure") and terminal_mastery.contains("preparation focus"), "terminal Results should retain the seeded composition and preparation emphasis")
-	_check(ui.terminal_debrief_panel.visible and terminal_mastery.contains("RECOVERY BRANCH") and terminal_mastery.contains("Stair lamps revealed") and terminal_mastery.contains("COMPLEMENTARY"), "terminal Results should explain the selected route and its build fit")
-	_check(terminal_mastery.contains("FORGONE PREPARATION") and terminal_mastery.contains("Road stakes were not reinforced"), "terminal Results should name the route preparation that was declined")
+	_check(ui.terminal_debrief_panel.visible and terminal_mastery.contains("RECOVERY DECISION") and terminal_mastery.contains("Stair lamps revealed") and terminal_mastery.contains("COMPLEMENTARY"), "terminal Results should explain the selected route and its build fit")
+	_check(terminal_mastery.contains("WHAT YOU GAVE UP") and terminal_mastery.contains("Road stakes were not reinforced"), "terminal Results should name the route preparation that was declined")
 	_check(String(ui.terminal_debrief_panel.replay_label.text).contains("road stakes"), "terminal replay guidance should propose the opposite recovery branch")
 	await _apply_layout(ui, Vector2i(2560, 1440), 3)
 	ui._refresh_terminal_debrief()

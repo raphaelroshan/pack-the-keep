@@ -55,6 +55,12 @@ func _init() -> void:
 	resource_label.add_theme_constant_override("outline_size", 0)
 	detail_body.add_child(resource_label)
 
+	var replay_panel: PanelContainer = PanelContainer.new()
+	replay_panel.add_theme_stylebox_override("panel", _panel_style(Color("#252d2d"), Color("#5d9b82"), 8))
+	replay_label = _label("", 14, Color("#bfe8cf"))
+	replay_panel.add_child(replay_label)
+	detail_body.add_child(replay_panel)
+
 	detail_body.add_child(_section_heading("WHY THIS DEFENSE ENDED THIS WAY"))
 	causal_label = _label("", 13, Color("#ded4c4"))
 	detail_body.add_child(causal_label)
@@ -70,12 +76,6 @@ func _init() -> void:
 
 	consequence_label = _label("", 12, Color("#aab1b2"))
 	detail_body.add_child(consequence_label)
-
-	var replay_panel: PanelContainer = PanelContainer.new()
-	replay_panel.add_theme_stylebox_override("panel", _panel_style(Color("#252d2d"), Color("#5d9b82"), 8))
-	replay_label = _label("", 14, Color("#bfe8cf"))
-	replay_panel.add_child(replay_label)
-	detail_body.add_child(replay_panel)
 
 	primary_button = Button.new()
 	primary_button.name = "TerminalPrimaryAction"
@@ -122,7 +122,7 @@ func render(view_model: Dictionary) -> void:
 	identity_label.text = "%s · %s" % [String(view_model.get("scenario_name", "Scenario")), String(view_model.get("commander_name", "Commander"))]
 	resource_label.text = "  %s  ·  MORALE %d  ·  MATERIALS %d\n  DEFENDERS %d ACTIVE / %d DISABLED  ·  BREACH %d  " % [outcome.replace("_", " ").to_upper(), int(view_model.get("morale", 0)), int(view_model.get("materials", 0)), int(view_model.get("surviving_pieces", 0)), int(view_model.get("disabled_pieces", 0)), int(view_model.get("breach_level", 0))]
 	_render_timeline(view_model.get("waves", []))
-	causal_label.text = "%s\n\n%s\n\n%s" % [String(view_model.get("causal_summary", "DECISIVE PATTERN — Review the phase evidence below.")), String(view_model.get("mastery_summary", "SEED PRESSURE — Baseline pressure.")), _causal_text(view_model.get("what_worked", []), view_model.get("what_failed", []))]
+	causal_label.text = "%s\n\n%s\n\n%s" % [String(view_model.get("causal_summary", "DECISIVE PATTERN — Review the phase evidence below.")), String(view_model.get("mastery_summary", "THIS ASSAULT — Familiar pressure.")), _causal_text(view_model.get("what_worked", []), view_model.get("what_failed", []))]
 	fortress_label.text = _fortress_text(view_model.get("damaged_rooms", []), view_model.get("damaged_pieces", []))
 	consequence_label.text = String(view_model.get("consequence_text", "")).strip_edges()
 	consequence_label.visible = not consequence_label.text.is_empty()

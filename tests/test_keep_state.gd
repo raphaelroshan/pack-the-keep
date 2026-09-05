@@ -167,7 +167,7 @@ func _test_enemy_target_readout() -> void:
 	keep.place_piece("pike_squad", Vector2i(0, 3), "ground")
 	keep.start_wave("distributed_sabotage")
 	var serialized_before: String = JSON.stringify(keep.serialize())
-	_expect(String(keep.enemy_target_readout(0).get("summary", "")) == "Approaching", "targetless enemy should use a player-facing approach state")
+	_expect(String(keep.enemy_target_readout(0).get("summary", "")) == "Not locked yet", "targetless enemy should use a player-facing unlocked-target state")
 	keep.enemies[0].target = "pike_squad_0"
 	var piece_target: Dictionary = keep.enemy_target_readout(0)
 	_expect(String(piece_target.get("kind", "")) == "piece" and String(piece_target.get("summary", "")).contains("Pike Squad") and String(piece_target.get("summary", "")).contains("14/14 HP"), "piece target readout should expose a friendly name and health")
