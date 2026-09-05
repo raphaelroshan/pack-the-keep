@@ -2,6 +2,7 @@ extends SceneTree
 
 var output_dir: String = ""
 var captured_files: Array[String] = []
+var state_trace: Array[Dictionary] = []
 var capture_size: Vector2i = Vector2i(1600, 900)
 var capture_scale_index: int = 1
 var capture_commander_id: String = "castellan"
@@ -258,8 +259,16 @@ func _capture(stem: String, ui: Control) -> void:
 	await process_frame
 	await process_frame
 	var image: Image = root.get_texture().get_image()
-	if image == null:
+	if image == null or image.is_empty():
 		push_error("No framebuffer available for %s" % stem)
+		quit(2)
+		return
+	if image.get_size() != capture_size:
+		push_error("Capture %s was %s, expected %s" % [stem, image.get_size(), capture_size])
+		quit(2)
+		return
+	if _image_is_uniform(image):
+		push_error("Capture %s was visually uniform before readiness" % stem)
 		quit(2)
 		return
 	var filename: String = "%s.png" % stem
@@ -270,7 +279,54 @@ func _capture(stem: String, ui: Control) -> void:
 		quit(2)
 		return
 	captured_files.append(filename)
+	state_trace.append({
+		"state_id": _evidence_state_id(stem),
+		"capture_id": stem,
+		"screen": String(ui.screen),
+		"wave_index": int(ui.keep.wave_index),
+		"wave_active": bool(ui.keep.wave_active),
+		"repair_interval_active": bool(ui.keep.repair_interval_active),
+		"assault_readiness": String(ui.assault_ready_reason),
+		"frames_after_transition": 2,
+		"screenshot": filename,
+	})
 	print("Captured %s (%s)" % [filename, ui.screen])
+
+func _image_is_uniform(image: Image) -> bool:
+	var minimum: float = 1.0
+	var maximum: float = 0.0
+	for sample_y in range(1, 8):
+		for sample_x in range(1, 12):
+			var point := Vector2i(
+				int(float(image.get_width() - 1) * float(sample_x) / 12.0),
+				int(float(image.get_height() - 1) * float(sample_y) / 8.0),
+			)
+			var color: Color = image.get_pixelv(point)
+			var luminance: float = color.r * 0.2126 + color.g * 0.7152 + color.b * 0.0722
+			minimum = minf(minimum, luminance)
+			maximum = maxf(maximum, luminance)
+	return maximum - minimum < 0.01
+
+func _evidence_state_id(stem: String) -> String:
+	if stem == "01_title":
+		return "title"
+	if stem == "02_war_council":
+		return "war_council"
+	if stem.begins_with("03"):
+		return "preparation"
+	if stem == "04_assault_phase_1":
+		return "forecast"
+	if stem.begins_with("04"):
+		return "battle_wave_1"
+	if stem == "05_recovery_phase_1" or stem.begins_with("07"):
+		return "recovery"
+	if stem == "06_assault_phase_2":
+		return "battle_wave_2"
+	if stem == "08_assault_phase_3":
+		return "battle_wave_3"
+	if stem == "09_terminal_results":
+		return "results"
+	return stem
 
 func _write_manifest() -> void:
 	var payload: Dictionary = {
@@ -299,6 +355,9 @@ func _write_manifest() -> void:
 		"files": captured_files,
 		"debug_ui": OS.get_cmdline_user_args().has("--debug-ui"),
 		"human_evidence": false,
+		"renderer": String(ProjectSettings.get_setting("rendering/renderer/rendering_method", "unknown")),
+		"locale": TranslationServer.get_locale(),
+		"state_trace": state_trace,
 	}
 	var file: FileAccess = FileAccess.open(output_dir.path_join("capture-manifest.json"), FileAccess.WRITE)
 	if file != null:

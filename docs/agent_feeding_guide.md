@@ -202,3 +202,8 @@ For the current investment-evaluation phase, read [`gpt56_investment_execution_p
 ## GPT-5.6 investment execution feed
 
 For the current investment-evaluation phase, read [`gpt56_investment_execution_packets.md`](gpt56_investment_execution_packets.md) and issue the packets in order. Start with **PTK-GPT56-1**, which must complete Greywatch from commander/keep choice through doctrine, placement, forecast, live auto-battle, intervention, damage, recovery, and causal Results. Then issue PTK-GPT56-2 for a genuinely distinct second keep, PTK-GPT56-3 for commander/pack/enemy expression, PTK-GPT56-4 for the campaign skeleton, and PTK-GPT56-5 for alpha hardening. Use deterministic seeded plans, complete-flow fixtures, screenshots, and controller/scaling checks; do not wait for human testing.
+
+
+## Shared agent-QA operating order
+
+Before issuing any implementation feed, direct the agent to read `docs/qa_playbook.md`, `docs/agent_qa_decision.md`, and `AGENTS.md`. The first command is `bash scripts/agent_qa.sh`; the agent must preserve `artifacts/agent-qa/` and classify the result as `PASS`, `FAIL`, `BLOCKED_ENVIRONMENT`, `TIMEOUT_PARTIAL`, or `INVALID_EVIDENCE`. New journey work must use `qa/scenarios/pack_greywatch_three_wave.json` as the semantic contract and must not claim completion until the named preparation, battle, recovery, and results states are produced.

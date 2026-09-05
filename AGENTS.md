@@ -39,3 +39,11 @@ Keep setup shorter than the interesting battle. Support pause, speed controls, g
 ## Art rules
 
 Use a 2D illustrated top-down style with bold fort silhouettes, readable rooms and walls, expressive defenders, clear pack icons, and strong invasion colors. Placeholder art must preserve composition and scale and be replaceable through stable references. Do not add decorative density that hides the keep’s tactical state.
+
+## Agent QA contract
+
+Before changing code, also read `docs/qa_playbook.md`, `docs/agent_qa_decision.md`, the active roadmap, and the latest audit report. Run `bash scripts/agent_qa.sh` and record the exact version, commit, Godot version, viewport, and result classification.
+
+Use semantic commands and named readiness states for new journeys; never treat sleeps, coordinate clicks, or a screenshot taken before readiness as proof. Preserve `artifacts/agent-qa/` on success and failure.
+
+A result must be classified as `PASS`, `FAIL`, `BLOCKED_ENVIRONMENT`, `TIMEOUT_PARTIAL`, or `INVALID_EVIDENCE`. A timeout or missing tool is not a pass. Report changed files, commands, durations, state sequence, screenshot paths, known limitations, and one next task. Human testing is optional unless the active roadmap explicitly assigns an owner approval gate; agents should continue improving automated evidence without waiting.

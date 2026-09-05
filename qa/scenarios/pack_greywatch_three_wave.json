@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "game": "pack-the-keep",
+  "scenario_id": "pack_greywatch_three_wave",
+  "purpose": "Prove the Greywatch investment vertical from preparation through causal battle results.",
+  "status": "implemented",
+  "seed": 5207,
+  "initial_save": "fresh",
+  "expected_states": [
+    "title",
+    "war_council",
+    "preparation",
+    "forecast",
+    "battle_wave_1",
+    "recovery",
+    "battle_wave_2",
+    "recovery",
+    "battle_wave_3",
+    "results"
+  ],
+  "semantic_commands": [
+    "start_run",
+    "select_commander:castellan",
+    "select_keep:greywatch",
+    "select_doctrine:pike_line",
+    "inspect_forecast",
+    "place:defender:gatehouse_slot",
+    "place:defender:wall_slot",
+    "begin_assault",
+    "pause_and_inspect:wave_1",
+    "intervene:focus_gatehouse",
+    "resume",
+    "complete_wave:1",
+    "complete_wave:2",
+    "complete_wave:3",
+    "open_recovery",
+    "open_results"
+  ],
+  "checkpoints": ["after_preparation", "after_wave_1", "after_intervention", "after_wave_3", "after_recovery", "after_results"],
+  "screenshot_states": ["war_council", "preparation", "forecast", "battle_wave_1", "recovery", "results"],
+  "time_budget_ms": 45000,
+  "adapter": {
+    "kind": "godot_semantic_fixture",
+    "logic_script": "res://tests/test_ea1_greywatch_anchor.gd",
+    "capture_script": "res://tools/capture_vertical_slice.gd",
+    "capture_scenario": "gatehouse_lock",
+    "capture_commander": "castellan",
+    "viewport": {"width": 1280, "height": 720},
+    "ui_scale_index": 1,
+    "capture_arguments": [
+      "--capture-first-plan-transition",
+      "--capture-battle-inspection",
+      "--capture-intervention",
+      "--capture-repair-feedback"
+    ],
+    "state_screenshots": {
+      "war_council": "02_war_council.png",
+      "preparation": "03a_first_plan_ready.png",
+      "forecast": "04_assault_phase_1.png",
+      "battle_wave_1": "04a_paused_threat_dossier.png",
+      "recovery": "05_recovery_phase_1.png",
+      "results": "09_terminal_results.png"
+    },
+    "command_bindings": {
+      "start_run": "Main._on_start_custom_setup",
+      "select_commander:castellan": "KeepState.select_commander",
+      "select_keep:greywatch": "KeepState.select_scenario:gatehouse_lock",
+      "select_doctrine:pike_line": "Main._on_recommended_layout",
+      "inspect_forecast": "Main.assault_ready_reason",
+      "place:defender:gatehouse_slot": "KeepState.place_piece:pike_squad",
+      "place:defender:wall_slot": "KeepState.place_piece:repair_station",
+      "begin_assault": "Main._on_start_wave",
+      "pause_and_inspect:wave_1": "Main._on_advance_wave",
+      "intervene:focus_gatehouse": "Main._on_use_ability",
+      "resume": "Main._toggle_battle_pause",
+      "complete_wave:1": "Main._on_advance_wave",
+      "complete_wave:2": "Main._on_advance_wave",
+      "complete_wave:3": "Main._on_advance_wave",
+      "open_recovery": "Main.results:repair_interval_active",
+      "open_results": "Main.terminal_debrief_panel"
+    },
+    "known_limitations": [
+      "The journey proves deterministic in-memory phase progression; save/resume permutations remain covered by the authoritative verifier rather than duplicated in this visual trace.",
+      "Audio output is disabled for the logic fixture and is not evaluated by screenshot evidence."
+    ]
+  },
+  "implementation_note": "The adapter invokes public UI and KeepState command boundaries through deterministic Godot fixtures; it never uses coordinate clicks or sleeps."
+}

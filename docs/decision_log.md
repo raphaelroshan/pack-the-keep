@@ -1127,3 +1127,11 @@
 **Reason:** The PTK-GPT56-1C audit found pause and intervention controls in the first viewport, but the target, strike, and committed-response evidence began below the command-rail fold. Pausing must reveal the tactical answer beside the keep, not merely expose another scroll task.
 
 **Trade-off:** The compact rail defers the full room/defender inspector and generic save guidance while retaining tactical disclosure and run controls. The dossier remains read-only; target selection, combat resolution, command spending, and saves stay under their existing owners.
+
+## ADR-142: Agent QA composes the authoritative Greywatch fixtures
+
+**Decision:** Mark the Greywatch scenario manifest implemented only when every semantic command is bound to an existing UI or `KeepState` boundary. Run the full verifier first, the existing Greywatch logic fixture second, and the vertical-slice capture third; require the exact phase sequence and named 1280×720 screenshots for a `PASS` result.
+
+**Reason:** The first agent-QA wrapper preserved logs and selected the right manifest, but the manifest remained planned and only a title frame was captured. Reusing the proven Greywatch fixtures turns the contract into executable evidence without coordinate clicks, sleeps, or a second gameplay authority.
+
+**Trade-off:** The visual journey proves one deterministic in-memory path. Save/resume permutations, broad content matrices, audio behavior, and packaging remain authoritative verifier responsibilities rather than being duplicated in the screenshot adapter.

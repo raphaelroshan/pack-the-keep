@@ -232,3 +232,8 @@ The dependency-aware tasks in [`docs/gpt56_investment_execution_packets.md`](doc
 | `docs/visual_evidence/v0.67.0-settings-first-watch-hierarchy-audit-2026-09-05/` | Fresh title, War Council, Fortress screenshots, and capture manifest. |
 | `docs/p80_assault_threat_dossier_verification.md` | PTK-GPT56-1C implementation and dual-resolution full-flow verification. |
 | `docs/latest_review_2026-09-05.md` | Current visual review of the focused-threat dossier and complete Greywatch proof. |
+
+
+## Agent QA system
+
+Read [`docs/qa_playbook.md`](docs/qa_playbook.md), [`docs/agent_qa_decision.md`](docs/agent_qa_decision.md), and [`AGENTS.md`](AGENTS.md) before implementation. Run [`scripts/agent_qa.sh`](scripts/agent_qa.sh) to execute the authoritative verifier and the implemented Greywatch journey, producing a classified result, exact state trace, and named screenshots in `artifacts/agent-qa/`. The semantic contract is [`qa/scenarios/pack_greywatch_three_wave.json`](qa/scenarios/pack_greywatch_three_wave.json).
